@@ -1,14 +1,12 @@
 package io.github.huiibuh.audible.api
 
+import java.util.*
+
 interface AudibleAuthor {
     val name: String
     val link: String
 }
 
-interface AudibleTitle {
-    val name: String
-    val link: String
-}
 
 interface AudibleSeries {
     val name: String
@@ -17,10 +15,13 @@ interface AudibleSeries {
 }
 
 interface AudibleSearchResult {
+    val title: String?
+    val link: String?
     val author: AudibleAuthor?
-    val title: AudibleTitle?
     val series: AudibleSeries?
     val imageUrl: String?
+    val language: String?
+    val releaseDate: Date?
 }
 
 enum class AudibleLanguage(val language: Long) {
