@@ -7,13 +7,26 @@ import io.ktor.http.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-abstract class AudibelHandler {
-    abstract val client: HttpClient
-    abstract val url: Url
+internal abstract class AudibleHandler(
+    private val client: HttpClient?,
+    protected val url: Url?,
+    private val document: Document? = null,
+) {
+
+    init {
+        if (this.document == null && (this.client == null || this.url === null)) {
+            throw Exception("you have to set the document, or client and url")
+        }
+        if (this.document != null && (this.client != null || this.url != null)) {
+            throw Exception("you have to set the document, or client and url")
+        }
+    }
 
     abstract suspend fun execute(): Any
-    suspend fun getDocumentFromUrl(): Document {
-        val response: HttpStatement = client.get(url) {
+    suspend fun getDocument(): Document {
+        if (this.document != null) return this.document
+
+        val response: HttpStatement = client!!.get(url!!) {
             headers {
                 append(
                     HttpHeaders.UserAgent,
@@ -34,17 +47,17 @@ abstract class AudibelHandler {
             }
         }
         val body = response.receive<String>()
-        return Jsoup.parse(body)
+        return Jsoup.parse(body, this.url.toString())
     }
 
-    fun asCompleteURL(path: String): String {
-        return Url(
-            URLBuilder(protocol = url.protocol, host = url.host, encodedPath = path)
-        ).toString()
-    }
-
-
-    fun idFromURL(link: String): String {
+    fun idFromURL(link: String?): String {
+        if (link == null) return ""
         return Url(link).encodedPath.split("/").last()
+    }
+
+    fun changeImageResolution(url: String, resolutio: Int = 500): String {
+        var modifiedURL = url.replace(Regex("_SX\\d{2,4}_CR0"), "_SX${resolutio}_CR0")
+        modifiedURL = modifiedURL.replace(Regex(",0,.*"), ",0,$resolutio,${resolutio}__.jpg")
+        return modifiedURL
     }
 }

@@ -1,30 +1,33 @@
-package io.github.huiibuh.audible.api
+package io.github.huiibuh.audible.models
 
 import java.util.*
 
-interface AudibleAuthor {
-    val name: String
+interface AudibleSearchAuthor {
+    val asin: String
+    val name: String?
     val link: String
 }
 
 
-interface AudibleSeries {
+interface AudibleSearchSeries {
+    val asin: String
     val name: String
-    val index: Number
+    val index: Float
     val link: String
 }
 
 interface AudibleSearchResult {
+    val asin: String
     val title: String?
     val link: String?
-    val author: AudibleAuthor?
-    val series: AudibleSeries?
-    val imageUrl: String?
+    val author: AudibleSearchAuthor?
+    val series: AudibleSearchSeries?
+    val image: String?
     val language: String?
     val releaseDate: Date?
 }
 
-enum class AudibleLanguage(val language: Long) {
+enum class AudibleSearchLanguage(val language: Long) {
     Spanish(16290345031),
     English(16290310031),
     German(16290314031),
@@ -37,7 +40,7 @@ enum class AudibleLanguage(val language: Long) {
     Russian(16290340031),
 }
 
-enum class AudiblePageSize(val size: Int) {
+enum class AudibleSearchAmount(val size: Int) {
     Twenty(20),
     Thirty(30),
     Forty(40),

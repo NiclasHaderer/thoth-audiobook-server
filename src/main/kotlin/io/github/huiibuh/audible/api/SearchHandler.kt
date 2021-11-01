@@ -1,16 +1,19 @@
 package io.github.huiibuh.audible.api
 
+import io.github.huiibuh.audible.models.*
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
-class SearchHandler(override val client: HttpClient, override val url: Url) : AudibelHandler() {
+internal class SearchHandler(
+    client: HttpClient?,
+    url: Url?,
+    document: Document?,
+) : AudibleHandler(client, url, document) {
 
     companion object {
         fun fromURL(
@@ -20,8 +23,8 @@ class SearchHandler(override val client: HttpClient, override val url: Url) : Au
             title: String? = null,
             author: String? = null,
             narrator: String? = null,
-            language: AudibleLanguage? = null,
-            pageSize: AudiblePageSize? = null
+            language: AudibleSearchLanguage? = null,
+            pageSize: AudibleSearchAmount? = null
         ): SearchHandler {
             val queryParams = ParametersBuilder()
             queryParams.append("ipRedirectOverride", "true")
@@ -51,12 +54,16 @@ class SearchHandler(override val client: HttpClient, override val url: Url) : Au
                 encodedPath = "/search"
             )
 
-            return SearchHandler(client, url.build())
+            return SearchHandler(client, url.build(), null)
+        }
+
+        fun fromDocument(document: Document): SearchHandler {
+            return SearchHandler(null, null, document)
         }
     }
 
     override suspend fun execute(): List<AudibleSearchResult> {
-        val document = this.getDocumentFromUrl()
+        val document = this.getDocument()
         val searchResultItems = getSearchItems(document)
         return extractSearchInfo(searchResultItems)
     }
@@ -72,19 +79,20 @@ class SearchHandler(override val client: HttpClient, override val url: Url) : Au
                 override val title = extractTitle(it)
                 override val link = extractLink(it)
                 override val series = extractSeriesInfo(it)
-                override val imageUrl = extractImageUrl(it)
+                override val image = extractImageUrl(it)
                 override val language = extractLanguage(it)
                 override val releaseDate = extractReleaseDate(it)
+                override val asin = idFromURL(this.link)
             }
         }
     }
 
     private fun extractLanguage(element: Element): String? {
-        return element.selectFirst(".languageLabel > *")?.text()
+        return element.selectFirst(".languageLabel > *")?.text()?.split(":")?.last()?.trim()
     }
 
     private fun extractReleaseDate(element: Element): Date? {
-        var date = element.selectFirst(".releaseDateLabel > *")?.text() ?: return null;
+        var date = element.selectFirst(".releaseDateLabel > *")?.text() ?: return null
         date = date.split(" ").last()
         val parsedDate = try {
             val enPattern = SimpleDateFormat("MM-dd-yy")
@@ -96,21 +104,20 @@ class SearchHandler(override val client: HttpClient, override val url: Url) : Au
         return parsedDate
     }
 
-
     private fun extractImageUrl(element: Element): String? {
         return element.selectFirst("img")?.attr("data-lazy")
 
     }
 
-    private fun extractAuthorInfo(element: Element): AudibleAuthor? {
+    private fun extractAuthorInfo(element: Element): AudibleSearchAuthor? {
         val authorLink = element.selectFirst(".authorLabel a") ?: return null
-        return object : AudibleAuthor {
-            override val link = asCompleteURL(authorLink.attr("href"))
+        return object : AudibleSearchAuthor {
+            override val link = authorLink.absUrl("href")
             override val name = authorLink.text()
+            override val asin = idFromURL(this.link)
         }
 
     }
-
 
     private fun extractTitle(element: Element): String? {
         val titleLink = element.selectFirst("h3 a") ?: return null
@@ -119,11 +126,10 @@ class SearchHandler(override val client: HttpClient, override val url: Url) : Au
 
     private fun extractLink(element: Element): String? {
         val titleLink = element.selectFirst("h3 a") ?: return null
-        return asCompleteURL(titleLink.attr("href"))
+        return titleLink.absUrl("href")
     }
 
-
-    private fun extractSeriesInfo(element: Element): AudibleSeries? {
+    private fun extractSeriesInfo(element: Element): AudibleSearchSeries? {
         val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return null
         val seriesNameElement = seriesElement.selectFirst("a") ?: return null
 
@@ -131,14 +137,14 @@ class SearchHandler(override val client: HttpClient, override val url: Url) : Au
         seriesIndex = seriesIndex.split(",").last().trim()
         seriesIndex = seriesIndex.filter { it.isDigit() }
 
-        return object : AudibleSeries {
-            override val link = asCompleteURL(seriesNameElement.attr("href"))
+        return object : AudibleSearchSeries {
+            override val link = seriesNameElement.absUrl("href")
             override val name = seriesNameElement.text()
             override val index = seriesIndex.toFloat()
+            override val asin = idFromURL(this.link)
         }
 
     }
-
 }
 
 
