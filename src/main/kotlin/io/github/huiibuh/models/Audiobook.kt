@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Path("{id}")
 open class AudiobookId(
-    @PathParam("The id of the audiobook") val id: String
+    @PathParam("The id of the audiobook") val id: String,
 )
 
 @Path("{id}")
@@ -16,5 +16,5 @@ open class Audiobook(
     val author: String? = null,
     val narrator: String? = null,
     val series: String? = null,
-    val book: Int? = null
+    val book: Int? = null,
 )

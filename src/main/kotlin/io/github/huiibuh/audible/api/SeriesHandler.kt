@@ -1,7 +1,7 @@
 package io.github.huiibuh.audible.api
 
-import io.github.huiibuh.audible.models.AudibleSeries
 import io.github.huiibuh.audible.models.AudibleSearchResult
+import io.github.huiibuh.audible.models.AudibleSeries
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -9,7 +9,7 @@ import org.jsoup.nodes.Element
 
 internal class SeriesHandler(
     client: HttpClient?,
-    url: Url?,
+    url: Url,
     document: Document?,
 ) : AudibleHandler(client, url, document) {
     companion object {
@@ -19,8 +19,8 @@ internal class SeriesHandler(
             return SeriesHandler(client, url.build(), null)
         }
 
-        fun fromDocument(document: Document): SeriesHandler {
-            return SeriesHandler(null, null, document)
+        fun fromDocument(document: Document, url: Url): SeriesHandler {
+            return SeriesHandler(null, url, document)
         }
     }
 
@@ -55,6 +55,6 @@ internal class SeriesHandler(
     }
 
     suspend fun getSeriesBooks(document: Document): List<AudibleSearchResult> {
-        return SearchHandler.fromDocument(document).execute()
+        return SearchHandler.fromDocument(document, this.url).execute()
     }
 }

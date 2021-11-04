@@ -11,7 +11,7 @@ import java.util.*
 
 internal class SearchHandler(
     client: HttpClient?,
-    url: Url?,
+    url: Url,
     document: Document?,
 ) : AudibleHandler(client, url, document) {
 
@@ -24,7 +24,7 @@ internal class SearchHandler(
             author: String? = null,
             narrator: String? = null,
             language: AudibleSearchLanguage? = null,
-            pageSize: AudibleSearchAmount? = null
+            pageSize: AudibleSearchAmount? = null,
         ): SearchHandler {
             val queryParams = ParametersBuilder()
             queryParams.append("ipRedirectOverride", "true")
@@ -57,8 +57,8 @@ internal class SearchHandler(
             return SearchHandler(client, url.build(), null)
         }
 
-        fun fromDocument(document: Document): SearchHandler {
-            return SearchHandler(null, null, document)
+        fun fromDocument(document: Document, url: Url): SearchHandler {
+            return SearchHandler(null, url, document)
         }
     }
 
@@ -116,7 +116,6 @@ internal class SearchHandler(
             override val name = authorLink.text()
             override val asin = idFromURL(this.link)
         }
-
     }
 
     private fun extractTitle(element: Element): String? {
@@ -133,7 +132,7 @@ internal class SearchHandler(
         val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return null
         val seriesNameElement = seriesElement.selectFirst("a") ?: return null
 
-        var seriesIndex = seriesElement.select("span").text()
+        var seriesIndex = seriesElement.selectFirst("span")?.text() ?: return null
         seriesIndex = seriesIndex.split(",").last().trim()
         seriesIndex = seriesIndex.filter { it.isDigit() }
 
