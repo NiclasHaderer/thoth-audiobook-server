@@ -9,16 +9,16 @@ import org.jsoup.nodes.Document
 
 internal abstract class AudibleHandler(
     private val client: HttpClient?,
-    protected val url: Url?,
+    protected val url: Url,
     private val document: Document? = null,
 ) {
 
     init {
-        if (this.document == null && (this.client == null || this.url === null)) {
+        if (this.document == null && this.client == null) {
             throw Exception("you have to set the document, or client and url")
         }
-        if (this.document != null && (this.client != null || this.url != null)) {
-            throw Exception("you have to set the document, or client and url")
+        if (this.document != null && this.client != null) {
+            throw Exception("you cannot set a client and a document")
         }
     }
 
@@ -26,7 +26,7 @@ internal abstract class AudibleHandler(
     suspend fun getDocument(): Document {
         if (this.document != null) return this.document
 
-        val response: HttpStatement = client!!.get(url!!) {
+        val response: HttpStatement = client!!.get(url) {
             headers {
                 append(
                     HttpHeaders.UserAgent,

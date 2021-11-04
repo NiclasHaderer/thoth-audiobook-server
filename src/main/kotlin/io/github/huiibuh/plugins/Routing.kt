@@ -2,7 +2,6 @@ package io.github.huiibuh.plugins
 
 import io.ktor.application.*
 import io.ktor.locations.*
-import io.ktor.routing.*
 
 @OptIn(KtorExperimentalLocationsAPI::class)
 fun Application.configureRouting() {
@@ -10,34 +9,34 @@ fun Application.configureRouting() {
     install(Locations) {
     }
 
-//    routing {
-//        get("/") {
-//            call.respondText("Hello World!")
-//        }
-//        // Static plugin. Try to access `/static/index.html`
-//        static("/static") {
-//            resources("static")
-//        }
-//        get<MyLocation> {
-//            call.respondText("Location: name=${it.name}, arg1=${it.arg1}, arg2=${it.arg2}")
-//        }
-//        // Register nested routes
-//        get<Type.Edit> {
-//            call.respondText("Inside $it")
-//        }
-//        get<Type.List> {
-//            call.respondText("Inside $it")
-//        }
-//        install(StatusPages) {
-//            exception<AuthenticationException> { cause ->
-//                call.respond(HttpStatusCode.Unauthorized)
-//            }
-//            exception<AuthorizationException> { cause ->
-//                call.respond(HttpStatusCode.Forbidden)
-//            }
-//
-//        }
-//    }
+    //    routing {
+    //        get("/") {
+    //            call.respondText("Hello World!")
+    //        }
+    //        // Static plugin. Try to access `/static/index.html`
+    //        static("/static") {
+    //            resources("static")
+    //        }
+    //        get<MyLocation> {
+    //            call.respondText("Location: name=${it.name}, arg1=${it.arg1}, arg2=${it.arg2}")
+    //        }
+    //        // Register nested routes
+    //        get<Type.Edit> {
+    //            call.respondText("Inside $it")
+    //        }
+    //        get<Type.List> {
+    //            call.respondText("Inside $it")
+    //        }
+    //        install(StatusPages) {
+    //            exception<AuthenticationException> { cause ->
+    //                call.respond(HttpStatusCode.Unauthorized)
+    //            }
+    //            exception<AuthorizationException> { cause ->
+    //                call.respond(HttpStatusCode.Forbidden)
+    //            }
+    //
+    //        }
+    //    }
 }
 //
 //@Location("/location/{name}")

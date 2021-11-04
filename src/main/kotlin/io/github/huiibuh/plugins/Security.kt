@@ -1,12 +1,9 @@
 package io.github.huiibuh.plugins
 
-import io.ktor.auth.*
-import io.ktor.util.*
-import io.ktor.sessions.*
 import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
 import io.ktor.routing.*
+import io.ktor.sessions.*
+import kotlin.collections.set
 
 fun Application.configureSecurity() {
 
@@ -18,10 +15,10 @@ fun Application.configureSecurity() {
     }
 
     routing {
-//        get("/session/increment") {
-//            val session = call.sessions.get<MySession>() ?: MySession()
-//            call.sessions.set(session.copy(count = session.count + 1))
-//            call.respondText("Counter is ${session.count}. Refresh to increment.")
-//        }
+        //        get("/session/increment") {
+        //            val session = call.sessions.get<MySession>() ?: MySession()
+        //            call.sessions.set(session.copy(count = session.count + 1))
+        //            call.respondText("Counter is ${session.count}. Refresh to increment.")
+        //        }
     }
 }

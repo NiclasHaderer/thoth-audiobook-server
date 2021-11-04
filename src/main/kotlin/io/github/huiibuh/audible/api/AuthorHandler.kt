@@ -8,9 +8,9 @@ import org.jsoup.nodes.Element
 
 internal class AuthorHandler(
     client: HttpClient?,
-    url: Url?,
+    url: Url,
     document: Document?,
-    private val imageSize: Int
+    private val imageSize: Int,
 ) : AudibleHandler(client, url, document) {
     companion object {
         fun fromURL(client: HttpClient, host: String, authorASIN: String, imageSize: Int = 500): AuthorHandler {
@@ -19,8 +19,8 @@ internal class AuthorHandler(
             return AuthorHandler(client, url.build(), null, imageSize)
         }
 
-        fun fromDocument(document: Document, imageSize: Int = 500): AuthorHandler {
-            return AuthorHandler(null, null, document, imageSize)
+        fun fromDocument(document: Document, url: Url, imageSize: Int = 500): AuthorHandler {
+            return AuthorHandler(null, url, document, imageSize)
         }
     }
 
