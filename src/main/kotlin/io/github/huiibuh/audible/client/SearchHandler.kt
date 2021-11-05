@@ -1,4 +1,4 @@
-package io.github.huiibuh.audible.api
+package io.github.huiibuh.audible.client
 
 import io.github.huiibuh.audible.models.*
 import io.ktor.client.*
@@ -73,7 +73,7 @@ internal class SearchHandler(
     }
 
     private fun extractSearchInfo(elementList: Elements): List<AudibleSearchResult> {
-        return elementList.map { it ->
+        return elementList.map {
             object : AudibleSearchResult {
                 override val author = extractAuthorInfo(it)
                 override val title = extractTitle(it)

@@ -1,4 +1,4 @@
-package io.github.huiibuh.audible.api
+package io.github.huiibuh.audible.client
 
 import io.github.huiibuh.audible.models.AudibleBook
 import io.github.huiibuh.audible.models.AudibleSearchAuthor
