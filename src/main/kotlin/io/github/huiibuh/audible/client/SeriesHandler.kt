@@ -1,4 +1,4 @@
-package io.github.huiibuh.audible.api
+package io.github.huiibuh.audible.client
 
 import io.github.huiibuh.audible.models.AudibleSearchResult
 import io.github.huiibuh.audible.models.AudibleSeries
@@ -26,6 +26,9 @@ internal class SeriesHandler(
 
     override suspend fun execute(): AudibleSeries {
         val document = getDocument()
+        // Audible does not return 404 if a series is not valid, so...
+        document.getElementById("product-list-a11y-skiplink-target")
+            ?: throw AudibleNotFoundException("Series could not be found", 404)
         val booksInSeries = getSeriesBooks(document)
         return object : AudibleSeries {
             override val link = url.toString()
@@ -37,12 +40,10 @@ internal class SeriesHandler(
         }
     }
 
-
     fun getSeriesName(element: Element): String? {
         val authorElement = element.selectFirst("h1.bc-heading") ?: return null
         return authorElement.text()
     }
-
 
     fun getSeriesDescription(element: Element): String? {
         val biographyElement = element.selectFirst(".series-summary-content") ?: return null
@@ -51,7 +52,7 @@ internal class SeriesHandler(
 
     fun getBookCount(element: Element): Int? {
         val imageElement = element.selectFirst(".num-books-in-series") ?: return null
-        return imageElement.text().filter { it.isDigit() }.toInt()
+        return imageElement.text().filter { it.isDigit() }.toIntOrNull()
     }
 
     suspend fun getSeriesBooks(document: Document): List<AudibleSearchResult> {

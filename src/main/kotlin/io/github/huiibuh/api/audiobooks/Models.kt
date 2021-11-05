@@ -1,4 +1,4 @@
-package io.github.huiibuh.models
+package io.github.huiibuh.api.audiobooks
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam

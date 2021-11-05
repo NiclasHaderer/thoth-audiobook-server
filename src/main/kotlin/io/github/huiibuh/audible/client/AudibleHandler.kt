@@ -1,6 +1,7 @@
-package io.github.huiibuh.audible.api
+package io.github.huiibuh.audible.client
 
 import io.ktor.client.*
+import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -46,8 +47,18 @@ internal abstract class AudibleHandler(
                 append("Cache-Control", "no-cache")
             }
         }
-        val body = response.receive<String>()
-        return Jsoup.parse(body, this.url.toString())
+        try {
+            val body = response.receive<String>()
+            return Jsoup.parse(body, this.url.toString())
+        } catch (e: ClientRequestException) {
+            val message = e.localizedMessage.split("Text: ").first()
+            val statusCode = e.response.status
+            if (statusCode == HttpStatusCode.NotFound) {
+                throw AudibleNotFoundException(message, statusCode.value)
+            } else {
+                throw AudibleException(message, statusCode.value)
+            }
+        }
     }
 
     fun idFromURL(link: String?): String {

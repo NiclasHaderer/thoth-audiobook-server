@@ -1,9 +1,9 @@
-package io.github.huiibuh.audible.api
+package io.github.huiibuh.audible.client
 
 import io.github.huiibuh.audible.models.*
 import io.ktor.client.*
 
-class AudibleAPI(
+class AudibleClient(
     private val searchHost: String = "audible.de",
     private val authorHost: String = "audible.com",
     private val authorImageSize: Int = 500,
