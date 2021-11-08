@@ -6,20 +6,18 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 
 object Artists : IntIdTable() {
-    val name = varchar("name", 255)
+    val name = varchar("name", 255).uniqueIndex()
     val description = text("description").nullable()
     val asin = text("asin").nullable()
     val image = blob("image").nullable()
-    //    val albums = TODO()
-    //    val collections = TODO()
 }
 
 
 class Artist(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Artist>(Artists)
 
-    val name by Artists.name
-    val description by Artists.description
-    val asin by Artists.asin
-    val image by Artists.image
+    var name by Artists.name
+    var description by Artists.description
+    var asin by Artists.asin
+    var image by Artists.image
 }

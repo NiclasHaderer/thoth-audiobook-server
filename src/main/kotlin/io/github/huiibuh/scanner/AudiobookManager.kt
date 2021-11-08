@@ -16,58 +16,7 @@
 //}
 //
 //
-//class Track(private val audioFile: AudioFile) {
-//    var title: String?
-//        get() = audioFile.tag.getFirst(FieldKey.TITLE)
-//        set(value) {
-//            audioFile.tag.setField(FieldKey.TITLE, value)
-//        }
-//    var track: Number?
-//        get() = audioFile.tag.getFirst(FieldKey.TRACK).toIntOrNull()
-//        set(value) {
-//            audioFile.tag.setField(FieldKey.TRACK, value.toString())
-//        }
-//    var album: String?
-//        get() = audioFile.tag.getFirst(FieldKey.ALBUM)
-//        set(value) {
-//            audioFile.tag.setField(FieldKey.ALBUM, value)
-//        }
-//    var artist: String?
-//        get() = audioFile.tag.getFirst(FieldKey.ARTIST)
-//        set(value) {
-//            audioFile.tag.setField(FieldKey.ALBUM_ARTIST, value)
-//            audioFile.tag.setField(FieldKey.ARTIST, value)
-//        }
-//    var composer: String?
-//        get() = audioFile.tag.getFirst(FieldKey.COMPOSER)
-//        set(value) {
-//            audioFile.tag.setField(FieldKey.COMPOSER, value)
-//        }
-//    var collection: String?
-//        get() = audioFile.tag.getFirst(FieldKey.GROUPING)
-//        set(value) {
-//            audioFile.tag.setField(FieldKey.GROUPING, value)
-//        }
-//    var collectionIndex: Number?
-//        get() = audioFile.tag.getFirst(FieldKey.CATALOG_NO).toIntOrNull()
-//        set(value) {
-//            audioFile.tag.setField(FieldKey.CATALOG_NO, value.toString())
-//        }
-//    var cover: ByteArray?
-//        get() = audioFile.tag.firstArtwork.binaryData
-//        set(value) {
-//            val artwork = ArtworkFactory.getNew()
-//            artwork.binaryData = value
-//            audioFile.tag.setField(artwork)
-//        }
-//
-//    val coverInformation
-//        get() = CoverInformation(audioFile.tag.firstArtwork.binaryData, audioFile.tag.firstArtwork.mimeType)
-//
-//    fun save() {
-//        AudioFileIO.write(this.audioFile)
-//    }
-//}
+
 //
 //class Album {
 //    private val trackMap = mutableMapOf<String, Track>()

@@ -15,6 +15,7 @@ class AudioFileVisitor(private val callback: (Path, BasicFileAttributes) -> Unit
 
     override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
         if (file.isAudioFile()) {
+            // TODO check if file has required (title, artist, album, trackNr)
             callback(file, attrs)
         }
         return FileVisitResult.CONTINUE
