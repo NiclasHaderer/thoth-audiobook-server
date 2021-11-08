@@ -13,15 +13,15 @@ object Albums : IntIdTable() {
     val collection = integer("collection").references(Collections.id).nullable()
     val collectionIndex = integer("collectionIndex").nullable()
     val cover = blob("cover").nullable()
-//    val tracks = TODO()
 }
 
 class Album(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Album>(Albums)
 
-    val collectionIndex by Albums.collectionIndex
-    val cover by Albums.cover
-    val artist by Artist referencedOn Albums.artist
-    val composer by Artist optionalReferencedOn Albums.composer
-    val collection by Collection optionalBackReferencedOn Albums.collection
+    var name by Albums.name
+    var artist by Artist referencedOn Albums.artist
+    var composer by Artist optionalReferencedOn Albums.composer
+    var collection by Collection optionalReferencedOn Albums.collection
+    var collectionIndex by Albums.collectionIndex
+    var cover by Albums.cover
 }

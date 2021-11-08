@@ -20,3 +20,8 @@ fun traverseAudioFiles(directory: String, callback: (Path, BasicFileAttributes) 
 
     Files.walkFileTree(file, AudioFileVisitor(callback))
 }
+
+fun fileExists(path: String): Boolean {
+    val file = Paths.get(path)
+    return Files.exists(file)
+}
