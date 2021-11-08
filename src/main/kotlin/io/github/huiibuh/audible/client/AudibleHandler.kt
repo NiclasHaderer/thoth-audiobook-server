@@ -27,7 +27,8 @@ internal abstract class AudibleHandler(
     suspend fun getDocument(): Document {
         if (this.document != null) return this.document
 
-        val response: HttpStatement = client!!.get(url) {
+        val urlString = url.toString()
+        val response: HttpStatement = client!!.get(urlString) {
             headers {
                 append(
                     HttpHeaders.UserAgent,

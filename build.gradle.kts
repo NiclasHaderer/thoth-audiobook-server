@@ -6,7 +6,8 @@ val exposedVersion: String by project
 val h2Version: String by project
 val koinVersion: String by project
 val hikariVersion: String by project
-val flywayVersion: String by project
+val reflectVersion: String by project
+val sqliteVersion: String by project
 
 plugins {
     application
@@ -37,14 +38,13 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
+    implementation("org.reflections:reflections:$reflectVersion")
     implementation("com.h2database:h2:$h2Version")
-    implementation("org.flywaydb:flyway-core:$flywayVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     // OpenAPI
     implementation("com.github.papsign:Ktor-OpenAPI-Generator:-SNAPSHOT")
-    // Koin
-    implementation("io.insert-koin:koin-ktor:$koinVersion")
-    implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     // Audio file processing
     implementation("org.bitbucket.ijabz:jaudiotagger:v3.0.1")
     // Ktor
