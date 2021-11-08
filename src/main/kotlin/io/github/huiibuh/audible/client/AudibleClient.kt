@@ -3,7 +3,7 @@ package io.github.huiibuh.audible.client
 import io.github.huiibuh.audible.models.*
 import io.ktor.client.*
 
-class AudibleClient(
+open class AudibleClient(
     private val searchHost: String = "audible.de",
     private val authorHost: String = "audible.com",
     private val authorImageSize: Int = 500,

@@ -5,6 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import io.github.huiibuh.api.ApiTags
+import io.github.huiibuh.audible.client.AudibleClient
 import io.github.huiibuh.audible.client.AudibleError
 import io.github.huiibuh.audible.client.AudibleException
 import io.github.huiibuh.audible.client.AudibleNotFoundException
@@ -12,13 +13,13 @@ import io.github.huiibuh.audible.models.AudibleAuthor
 import io.github.huiibuh.audible.models.AudibleBook
 import io.github.huiibuh.audible.models.AudibleSearchResult
 import io.github.huiibuh.audible.models.AudibleSeries
-import io.github.huiibuh.dependencies.AudibleService
+import io.github.huiibuh.services.AudibleService
 import io.ktor.application.*
 import io.ktor.http.*
-import org.koin.ktor.ext.inject
 
 fun Application.registerAudibleRouting(path: String = "audible") {
-    val audibleService: AudibleService by inject()
+    val audibleService = AudibleService
+
 
     apiRouting {
         throws(HttpStatusCode.NotFound,
@@ -41,7 +42,7 @@ fun Application.registerAudibleRouting(path: String = "audible") {
 }
 
 
-fun NormalOpenAPIRoute.audibleRouting(audibleService: AudibleService) {
+fun NormalOpenAPIRoute.audibleRouting(audibleService: AudibleClient) {
     route("search").get<AudibleSearch, List<AudibleSearchResult>>(
         info("Search for audiobooks")
     ) { query ->

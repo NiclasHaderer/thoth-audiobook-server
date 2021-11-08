@@ -9,4 +9,8 @@
     </root>
     <logger name="org.eclipse.jetty" level="INFO"/>
     <logger name="io.netty" level="INFO"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.reflections" level="WARN"/>
+    <logger name="c.papsign.ktor.openapigen" level="OFF"/>
+    <logger name="c.papsign.ktor" level="OFF"/>
 </configuration>
