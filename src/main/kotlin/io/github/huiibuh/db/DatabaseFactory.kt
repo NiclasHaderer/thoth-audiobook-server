@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.github.huiibuh.config.Settings
 import io.github.huiibuh.db.migration.DatabaseMigrator
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.slf4j.LoggerFactory
 
@@ -20,7 +21,10 @@ object DatabaseFactory {
 
     fun connect() {
         log.info("Initialising database")
-        Database.connect(dataSource())
+        val config = DatabaseConfig.invoke {
+            useNestedTransactions = true
+        }
+        Database.connect(dataSource(), databaseConfig = config)
     }
 
     fun migrate() {

@@ -8,9 +8,9 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 
 object Albums : IntIdTable() {
     val name = varchar("name", 255)
-    val artist = integer("artist").references(Artists.id)
-    val composer = integer("composer").references(Artists.id).nullable()
-    val collection = integer("collection").references(Collections.id).nullable()
+    val artist = reference("artist", Artists)
+    val composer = reference("composer", Artists).nullable()
+    val collection = reference("collection", Collections).nullable()
     val collectionIndex = integer("collectionIndex").nullable()
     val cover = blob("cover").nullable()
 }
