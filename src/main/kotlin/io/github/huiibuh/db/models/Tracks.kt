@@ -1,6 +1,5 @@
 package io.github.huiibuh.db.models
 
-import io.github.huiibuh.db.models.Artists.uniqueIndex
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -9,14 +8,14 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 
 object Tracks : IntIdTable() {
     val title = varchar("title", 255)
-    val trackNr = integer("trackNr")
     val duration = integer("duration")
     val accessTime = long("accessTime")
+    val trackNr = integer("trackNr").nullable()
     val path = text("path").uniqueIndex()
-    val album = integer("album").references(Albums.id)
-    val artist = integer("artist").references(Artists.id)
-    val composer = integer("composer").references(Artists.id).nullable()
-    val collection = integer("collection").references(Collections.id).nullable()
+    val album = reference("album", Albums)
+    val artist = reference("artist", Artists)
+    val composer = reference("composer", Artists).nullable()
+    val collection = reference("collection", Collections).nullable()
     val collectionIndex = integer("collectionIndex").nullable()
 }
 

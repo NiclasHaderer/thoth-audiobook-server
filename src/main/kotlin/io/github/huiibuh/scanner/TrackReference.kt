@@ -21,8 +21,8 @@ class TrackReference(private val audioFile: AudioFile) {
         set(value) {
             audioFile.tag.setField(FieldKey.TITLE, value)
         }
-    var trackNr: Int
-        get() = audioFile.tag.getFirst(FieldKey.TRACK).toIntOrNull() ?: 0
+    var trackNr: Int?
+        get() = audioFile.tag.getFirst(FieldKey.TRACK).toIntOrNull()
         set(value) {
             audioFile.tag.setField(FieldKey.TRACK, value.toString())
         }
@@ -53,7 +53,7 @@ class TrackReference(private val audioFile: AudioFile) {
             audioFile.tag.setField(FieldKey.CATALOG_NO, value.toString())
         }
     var cover: ByteArray?
-        get() = audioFile.tag.firstArtwork.binaryData
+        get() = audioFile.tag.firstArtwork?.binaryData
         set(value) {
             val artwork = ArtworkFactory.getNew()
             artwork.binaryData = value
@@ -69,4 +69,24 @@ class TrackReference(private val audioFile: AudioFile) {
     fun save() {
         AudioFileIO.write(this.audioFile)
     }
+
+    fun hasRequiredAttributes(): Boolean {
+        val artist = audioFile.tag.getFirst(FieldKey.ARTIST)
+        val album = audioFile.tag.getFirst(FieldKey.ALBUM)
+        return artist != null && artist.isNotEmpty() && album != null && album.isNotEmpty()
+    }
+
+    val path: String
+        get() = audioFile.file.absolutePath
 }
+
+
+data class CoverInformation(
+    val cover: ByteArray,
+    val mimetype: String,
+) {
+    val extension: String
+        get() = mimetype.split("/").last()
+}
+
+

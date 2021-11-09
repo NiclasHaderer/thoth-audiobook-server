@@ -14,7 +14,7 @@ fun Path.isAudioFile(): Boolean {
     return this.isRegularFile(LinkOption.NOFOLLOW_LINKS) && this.extension.lowercase() in AUDIO_EXTENSIONS
 }
 
-fun traverseAudioFiles(directory: String, callback: (Path, BasicFileAttributes) -> Unit) {
+fun traverseAudioFiles(directory: String, callback: (TrackReference, BasicFileAttributes, Path) -> Unit) {
     val file = Paths.get(directory)
     if (!Files.exists(file)) return
 

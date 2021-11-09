@@ -17,6 +17,10 @@ object Settings {
         System.getenv("PRODUCTION")?.toBooleanStrictOrNull() ?: false
     }
 
+    val audioFileLocation: String by lazy {
+        System.getenv("AUDIO_FILE_LOCATION") ?: "${System.getProperty("user.home")}/Music/books"
+    }
+
     val database: DatabaseConnection
         get() = if (production) H2Database else SqLite
 
