@@ -22,7 +22,7 @@ object Settings {
     }
 
     val database: DatabaseConnection
-        get() = if (production) H2Database else SqLite
+        get() = if (production) SqLite else H2Database
 
     private object H2Database : DatabaseConnection {
         override val driverClassName: String by lazy {

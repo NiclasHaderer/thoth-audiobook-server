@@ -1,12 +1,13 @@
 package io.github.huiibuh.db.models
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
+import java.util.*
 
 
-object Tracks : IntIdTable() {
+object Tracks : UUIDTable() {
     val title = varchar("title", 255)
     val duration = integer("duration")
     val accessTime = long("accessTime")
@@ -20,8 +21,8 @@ object Tracks : IntIdTable() {
 }
 
 
-class Track(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<Track>(Tracks)
+class Track(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Track>(Tracks)
 
     var title by Tracks.title
     var trackNr by Tracks.trackNr

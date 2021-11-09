@@ -86,8 +86,13 @@ object DB {
         return Track.new {
             this.path = path.toAbsolutePath().toString()
             artist = GetOrCreate.artist(trackRef.artist)
+            composer = if (trackRef.composer != null) GetOrCreate.artist(trackRef.composer!!) else null
+            collection =
+                if (trackRef.collection != null) GetOrCreate.collection(trackRef.collection!!,
+                                                                        artist) else null
+            collectionIndex = trackRef.collectionIndex
 
-            album = GetOrCreate.album(trackRef.album, artist, null, null, null, null)
+            album = GetOrCreate.album(trackRef.album, artist, composer, collection, collectionIndex, trackRef.cover)
         }
     }
 }
