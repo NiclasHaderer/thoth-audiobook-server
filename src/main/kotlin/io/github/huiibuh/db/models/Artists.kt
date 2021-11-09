@@ -1,11 +1,12 @@
 package io.github.huiibuh.db.models
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
+import java.util.*
 
-object Artists : IntIdTable() {
+object Artists : UUIDTable() {
     val name = varchar("name", 255).uniqueIndex()
     val description = text("description").nullable()
     val asin = text("asin").nullable()
@@ -13,8 +14,8 @@ object Artists : IntIdTable() {
 }
 
 
-class Artist(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<Artist>(Artists)
+class Artist(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Artist>(Artists)
 
     var name by Artists.name
     var description by Artists.description

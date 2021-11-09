@@ -9,6 +9,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
+import io.github.huiibuh.services.AudiobookService
 import io.ktor.application.*
 
 
@@ -26,7 +27,7 @@ fun NormalOpenAPIRoute.audiobookRouting() {
     get<AudiobookId, Audiobook>(
         info("Get one Audiobooks")
     ) { params ->
-        respond(Audiobook(""))
+        AudiobookService.get(params.id)
     }
 
     get<Unit, Array<Audiobook>>(

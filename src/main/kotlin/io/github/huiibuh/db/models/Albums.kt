@@ -1,12 +1,13 @@
 package io.github.huiibuh.db.models
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
+import java.util.*
 
 
-object Albums : IntIdTable() {
+object Albums : UUIDTable() {
     val name = varchar("name", 255)
     val artist = reference("artist", Artists)
     val composer = reference("composer", Artists).nullable()
@@ -15,8 +16,8 @@ object Albums : IntIdTable() {
     val cover = blob("cover").nullable()
 }
 
-class Album(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<Album>(Albums)
+class Album(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Album>(Albums)
 
     var name by Albums.name
     var artist by Artist referencedOn Albums.artist
