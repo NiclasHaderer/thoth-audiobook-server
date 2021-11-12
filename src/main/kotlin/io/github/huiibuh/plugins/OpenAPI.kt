@@ -2,6 +2,7 @@ package io.github.huiibuh.plugins
 
 import com.papsign.ktor.openapigen.OpenAPIGen
 import com.papsign.ktor.openapigen.openAPIGen
+import com.papsign.ktor.openapigen.schema.namer.DefaultSchemaNamer
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -14,6 +15,7 @@ fun Application.configureOpenAPI() {
             title = "Audiobook API"
             description = "API for the audiobook server"
         }
+        replaceModule(DefaultSchemaNamer, DefaultSchemaNamer)
     }
     routing {
         get("/openapi.json") {

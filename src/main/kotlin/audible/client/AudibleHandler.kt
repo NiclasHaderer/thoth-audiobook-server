@@ -1,5 +1,7 @@
-package io.github.huiibuh.audible.client
+package audible.client
 
+import api.exceptions.APINotFound
+import api.exceptions.ApiException
 import io.ktor.client.*
 import io.ktor.client.features.*
 import io.ktor.client.request.*
@@ -8,6 +10,7 @@ import io.ktor.http.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
+@Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
 internal abstract class AudibleHandler(
     private val client: HttpClient?,
     protected val url: Url,
@@ -55,9 +58,9 @@ internal abstract class AudibleHandler(
             val message = e.localizedMessage.split("Text: ").first()
             val statusCode = e.response.status
             if (statusCode == HttpStatusCode.NotFound) {
-                throw AudibleNotFoundException(message, statusCode.value)
+                throw APINotFound(message)
             } else {
-                throw AudibleException(message, statusCode.value)
+                throw ApiException(message, statusCode.value)
             }
         }
     }

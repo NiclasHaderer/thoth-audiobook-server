@@ -1,13 +1,14 @@
-package io.github.huiibuh.audible.client
+package audible.client
 
-import io.github.huiibuh.audible.models.AudibleBook
-import io.github.huiibuh.audible.models.AudibleSearchAuthor
-import io.github.huiibuh.audible.models.AudibleSearchSeries
+import audible.models.AudibleBook
+import audible.models.AudibleSearchAuthor
+import audible.models.AudibleSearchSeries
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
+@Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
 internal class BookHandler(
     client: HttpClient?,
     url: Url,
@@ -57,7 +58,8 @@ internal class BookHandler(
     }
 
     private fun extractTitle(document: Document): String? {
-        return document.selectFirst("h1.bc-heading")?.text() ?: return null
+        val title = document.selectFirst("h1.bc-heading")?.text() ?: return null
+        return title.replace(", Book .*".toRegex(), "").replace(" - Gesprochen .*".toRegex(), "")
     }
 
     private fun extractSeriesInfo(element: Element): AudibleSearchSeries? {

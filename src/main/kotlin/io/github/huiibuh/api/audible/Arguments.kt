@@ -1,12 +1,12 @@
 package io.github.huiibuh.api.audible
 
+import audible.models.AudibleSearchAmount
+import audible.models.AudibleSearchLanguage
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
-import io.github.huiibuh.audible.models.AudibleSearchAmount
-import io.github.huiibuh.audible.models.AudibleSearchLanguage
 
-class AudibleSearch(
+data class AudibleSearch(
     @QueryParam("A general keyword which describes the search term") val keywords: String?,
     @QueryParam("The title of the audiobook") val title: String?,
     @QueryParam("The author of the audiobook") val author: String?,
@@ -16,16 +16,16 @@ class AudibleSearch(
 )
 
 @Path("{asin}")
-open class AuthorASIN(
+data class AuthorASIN(
     @PathParam("The asin of the author. Can be retrieved by using the search") val asin: String,
 )
 
 @Path("{asin}")
-open class SeriesASIN(
+data class SeriesASIN(
     @PathParam("The asin of the series. Can be retrieved by using the search") val asin: String,
 )
 
 @Path("{asin}")
-open class AudiobookASIN(
+data class AudiobookASIN(
     @PathParam("The asin of the audiobook. Can be retrieved by using the search") val asin: String,
 )

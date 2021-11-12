@@ -64,5 +64,4 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-
 }

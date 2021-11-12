@@ -5,7 +5,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 object AudiobookService {
-    fun get(id: UUID): Album {
+    fun getBook(id: UUID): Album {
         val album = transaction {
             Album.findById(id)
         }

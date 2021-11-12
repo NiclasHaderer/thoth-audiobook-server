@@ -1,11 +1,13 @@
-package io.github.huiibuh.audible.client
+package audible.client
 
-import io.github.huiibuh.audible.models.AudibleAuthor
+import api.exceptions.APINotFound
+import audible.models.AudibleAuthor
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
+@Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
 internal class AuthorHandler(
     client: HttpClient?,
     url: Url,
@@ -26,6 +28,8 @@ internal class AuthorHandler(
 
     override suspend fun execute(): AudibleAuthor {
         val document = getDocument()
+        document.getElementById("product-list-a11y-skiplink-target")
+            ?: throw APINotFound("Author could not be found")
         return object : AudibleAuthor {
             override val link = url.toString()
             override val asin = idFromURL(this.link)

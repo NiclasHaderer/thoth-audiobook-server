@@ -1,6 +1,6 @@
-package io.github.huiibuh.audible.client
+package audible.client
 
-import io.github.huiibuh.audible.models.*
+import audible.models.*
 import io.ktor.client.*
 
 open class AudibleClient(
