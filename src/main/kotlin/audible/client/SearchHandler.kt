@@ -1,6 +1,6 @@
-package io.github.huiibuh.audible.client
+package audible.client
 
-import io.github.huiibuh.audible.models.*
+import audible.models.*
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -9,6 +9,7 @@ import org.jsoup.select.Elements
 import java.text.SimpleDateFormat
 import java.util.*
 
+@Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
 internal class SearchHandler(
     client: HttpClient?,
     url: Url,

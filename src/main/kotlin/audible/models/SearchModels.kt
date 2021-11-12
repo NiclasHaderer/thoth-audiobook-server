@@ -1,5 +1,7 @@
-package io.github.huiibuh.audible.models
+package audible.models
 
+import io.github.huiibuh.serializers.DateSerializer
+import kotlinx.serialization.Serializable
 import java.util.*
 
 interface AudibleSearchAuthor {
@@ -8,12 +10,29 @@ interface AudibleSearchAuthor {
     val link: String
 }
 
+@Serializable
+class AudibleSearchAuthorImpl(
+    override val asin: String,
+    override val name: String?,
+    override val link: String,
+) : AudibleSearchAuthor
+
 
 interface AudibleSearchSeries {
     val asin: String
     val name: String
     val index: Float
     val link: String
+}
+
+@Serializable
+class AudibleSearchSeriesImpl(
+    override val asin: String,
+    override val name: String,
+    override val index: Float,
+    override val link: String,
+) : AudibleSearchSeries {
+
 }
 
 interface AudibleSearchResult {
@@ -27,6 +46,19 @@ interface AudibleSearchResult {
     val releaseDate: Date?
 }
 
+@Serializable
+class AudibleSearchResultImpl(
+    override val asin: String,
+    override val title: String?,
+    override val link: String?,
+    override val author: AudibleSearchAuthorImpl?,
+    override val series: AudibleSearchSeriesImpl?,
+    override val image: String?,
+    override val language: String?,
+    @Serializable(DateSerializer::class) override val releaseDate: Date?,
+) : AudibleSearchResult
+
+@Serializable
 enum class AudibleSearchLanguage(val language: Long) {
     Spanish(16290345031),
     English(16290310031),
@@ -40,6 +72,7 @@ enum class AudibleSearchLanguage(val language: Long) {
     Russian(16290340031),
 }
 
+@Serializable
 enum class AudibleSearchAmount(val size: Int) {
     Twenty(20),
     Thirty(30),

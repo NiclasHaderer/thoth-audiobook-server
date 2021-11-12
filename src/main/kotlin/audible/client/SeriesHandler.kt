@@ -1,12 +1,14 @@
-package io.github.huiibuh.audible.client
+package audible.client
 
-import io.github.huiibuh.audible.models.AudibleSearchResult
-import io.github.huiibuh.audible.models.AudibleSeries
+import api.exceptions.APINotFound
+import audible.models.AudibleSearchResult
+import audible.models.AudibleSeries
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
+@Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
 internal class SeriesHandler(
     client: HttpClient?,
     url: Url,
@@ -28,7 +30,7 @@ internal class SeriesHandler(
         val document = getDocument()
         // Audible does not return 404 if a series is not valid, so...
         document.getElementById("product-list-a11y-skiplink-target")
-            ?: throw AudibleNotFoundException("Series could not be found", 404)
+            ?: throw APINotFound("Series could not be found")
         val booksInSeries = getSeriesBooks(document)
         return object : AudibleSeries {
             override val link = url.toString()

@@ -1,5 +1,5 @@
 package io.github.huiibuh.services
 
-import io.github.huiibuh.audible.client.AudibleClient
+import audible.client.AudibleClient
 
 object AudibleService : AudibleClient()
