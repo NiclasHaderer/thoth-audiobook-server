@@ -1,5 +1,6 @@
 package io.github.huiibuh.scanner
 
+import api.exceptions.APINotFound
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -10,8 +11,17 @@ class TrackReference(private val audioFile: AudioFile) {
 
     companion object {
         fun fromPath(path: String): TrackReference {
+            val file = File(path)
+            if (!file.exists()) throw APINotFound("Requested file was not found. Database out of sync. Please start syncing process.")
             return TrackReference(
-                AudioFileIO.read(File(path))
+                AudioFileIO.read(file)
+            )
+        }
+
+        fun fromFile(file: File): TrackReference {
+            if (!file.exists()) throw APINotFound("Requested file was not found. Database out of sync. Please start syncing process.")
+            return TrackReference(
+                AudioFileIO.read(file)
             )
         }
     }
