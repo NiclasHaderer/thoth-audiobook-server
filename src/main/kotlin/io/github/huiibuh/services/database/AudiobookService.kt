@@ -1,4 +1,4 @@
-package io.github.huiibuh.services
+package io.github.huiibuh.services.database
 
 import io.github.huiibuh.db.models.Album
 import org.jetbrains.exposed.sql.transactions.transaction

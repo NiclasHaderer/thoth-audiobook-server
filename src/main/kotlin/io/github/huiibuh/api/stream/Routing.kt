@@ -9,6 +9,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.db.models.Track
+import io.github.huiibuh.services.database.TrackService
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
@@ -30,12 +31,8 @@ fun NormalOpenAPIRoute.streamingRouting() {
     get<FileId, RawAudioFile>(
         info("Stream a file")
     ) { fileId ->
-        var track: Track? = null
-        transaction {
-            track = Track.findById(fileId.id) ?: throw APINotFound("Requested file does not exist.")
-        }
-
-        val file = File(track!!.path)
+        val track = TrackService.get(fileId.id)
+        val file = File(track.path)
         if (!file.exists()) {
             throw APINotFound("Database out of sync. Please start syncing process.")
         }

@@ -16,4 +16,7 @@ class Collection(id: EntityID<UUID>) : UUIDEntity(id) {
 
     var name by Collections.name
     var artist by Artist referencedOn Collections.artist
+    fun toModel() = CollectionModel(this.id.value, this.name, this.artist.id.value)
 }
+
+data class CollectionModel(val id: UUID, val name: String, val artist: UUID)
