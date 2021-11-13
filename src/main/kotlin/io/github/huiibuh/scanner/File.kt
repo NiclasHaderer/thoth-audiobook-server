@@ -8,7 +8,7 @@ import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.isRegularFile
 
-val AUDIO_EXTENSIONS = setOf("mp3", "flac", "ogg", "vobis", "mp4", "m4a", "m4p", "m4b", "aiff", "wav", "wma", "dsf")
+val AUDIO_EXTENSIONS = setOf("mp3", "flac", "ogg", "vobis", "m4a", "m4p", "m4b", "aiff", "wav", "wma", "dsf")
 
 fun Path.isAudioFile(): Boolean {
     return this.isRegularFile(LinkOption.NOFOLLOW_LINKS) && this.extension.lowercase() in AUDIO_EXTENSIONS
