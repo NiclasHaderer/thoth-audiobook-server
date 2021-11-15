@@ -4,14 +4,23 @@
             <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="trace">
+    <root level="TRACE">
         <appender-ref ref="STDOUT"/>
     </root>
-    <logger name="org.eclipse.jetty" level="INFO"/>
+
+    <!-- OpenAPI -->
+    <logger name="com.papsign.ktor.openapigen.OpenAPIGen" level="WARN"/>
+    <logger name="com.papsign.ktor.openapigen.modules.handlers.RouteHandler" level="WARN"/>
+    <!-- Webserver -->
     <logger name="io.netty" level="INFO"/>
+    <!-- DB connector -->
     <logger name="com.zaxxer.hikari" level="WARN"/>
+    <!-- Reflection for db migrations -->
     <logger name="org.reflections" level="WARN"/>
-    <logger name="c.papsign.ktor" level="OFF"/>
-    <logger name="Exposed" level="WARN" additivity="false">
-    </logger>
+    <!-- DB connector -->
+    <logger name="Exposed" level="WARN"/>
+    <!-- Reload -->
+    <logger name="ktor.application" level="INFO"/>
+
+
 </configuration>

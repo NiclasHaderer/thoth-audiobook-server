@@ -8,7 +8,7 @@ import java.util.*
 
 
 @Path("{id}")
-data class FileId(
+data class AudioId(
     @PathParam("The id of the file you want to stream") val id: UUID,
 )
 

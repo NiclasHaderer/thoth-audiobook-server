@@ -21,6 +21,10 @@ object Settings {
         System.getenv("AUDIO_FILE_LOCATION") ?: "${System.getProperty("user.home")}/Music/books"
     }
 
+    val webUiPort: Int by lazy {
+        System.getenv("WEB_UI_PORT")?.toIntOrNull() ?: 8080
+    }
+
     val database: DatabaseConnection
         get() = if (production) SqLite else SqLite
 

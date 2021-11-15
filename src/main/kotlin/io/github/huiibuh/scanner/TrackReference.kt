@@ -31,11 +31,6 @@ class TrackReference(private val audioFile: AudioFile) {
         set(value) {
             audioFile.tag.setField(FieldKey.TITLE, value)
         }
-    var trackNr: Int?
-        get() = audioFile.tag.getFirst(FieldKey.TRACK).toIntOrNull()
-        set(value) {
-            audioFile.tag.setField(FieldKey.TRACK, value.toString())
-        }
     var album: String
         get() = audioFile.tag.getFirst(FieldKey.ALBUM)
         set(value) {
@@ -46,6 +41,11 @@ class TrackReference(private val audioFile: AudioFile) {
         set(value) {
             audioFile.tag.setField(FieldKey.ALBUM_ARTIST, value)
             audioFile.tag.setField(FieldKey.ARTIST, value)
+        }
+    var trackNr: Int?
+        get() = audioFile.tag.getFirst(FieldKey.TRACK).toIntOrNull()
+        set(value) {
+            audioFile.tag.setField(FieldKey.TRACK, value.toString())
         }
     var composer: String?
         get() = audioFile.tag.getFirst(FieldKey.COMPOSER)
@@ -76,6 +76,12 @@ class TrackReference(private val audioFile: AudioFile) {
     val duration: Int
         get() = audioFile.audioHeader.trackLength
 
+    val path: String
+        get() = audioFile.file.absolutePath
+
+    val lastModfied: Long
+        get() = audioFile.file.lastModified()
+
     fun save() {
         AudioFileIO.write(this.audioFile)
     }
@@ -83,11 +89,11 @@ class TrackReference(private val audioFile: AudioFile) {
     fun hasRequiredAttributes(): Boolean {
         val artist = audioFile.tag.getFirst(FieldKey.ARTIST)
         val album = audioFile.tag.getFirst(FieldKey.ALBUM)
-        return artist != null && artist.isNotEmpty() && album != null && album.isNotEmpty()
+        return artist != null && artist.trim().isNotEmpty() && album != null && album.trim().isNotEmpty()
     }
 
-    val path: String
-        get() = audioFile.file.absolutePath
+
+
 }
 
 

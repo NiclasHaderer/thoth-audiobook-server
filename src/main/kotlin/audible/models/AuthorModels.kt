@@ -14,5 +14,4 @@ class AudibleAuthorImpl(
     override val asin: String,
     override val name: String?,
     override val link: String,
-) : AudibleAuthor {
-}
+) : AudibleAuthor
