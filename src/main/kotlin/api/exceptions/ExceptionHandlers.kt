@@ -61,10 +61,12 @@ fun NormalOpenAPIRoute.withAllErrorHandlers(routeCallback: NormalOpenAPIRoute.()
 }
 
 fun NormalOpenAPIRoute.withDefaultErrorHandlers(routeCallback: NormalOpenAPIRoute.() -> Unit) {
-    withNotFoundHandling {
-        withBadRequestHandling {
-            withUnauthorizedRequestHandling {
-                withForbiddenRequestHandling(routeCallback)
+    withOpenAPIExceptions {
+        withNotFoundHandling {
+            withBadRequestHandling {
+                withUnauthorizedRequestHandling {
+                    withForbiddenRequestHandling(routeCallback)
+                }
             }
         }
     }
