@@ -1,7 +1,7 @@
 package io.github.huiibuh.services
 
 import io.github.huiibuh.config.Settings
-import io.github.huiibuh.db.models.*
+import io.github.huiibuh.db.tables.*
 import io.github.huiibuh.scanner.TrackReference
 import io.github.huiibuh.scanner.traverseAudioFiles
 import org.jetbrains.exposed.sql.SchemaUtils

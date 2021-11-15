@@ -1,7 +1,7 @@
 package io.github.huiibuh.services.database
 
 import api.exceptions.APINotFound
-import io.github.huiibuh.db.models.Track
+import io.github.huiibuh.db.tables.Track
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 

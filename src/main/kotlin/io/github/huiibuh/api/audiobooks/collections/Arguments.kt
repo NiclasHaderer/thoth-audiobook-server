@@ -14,9 +14,3 @@ data class CollectionId(
 data class CollectionAlbums(
     @PathParam("The id of the collection you want to get") val uuid: UUID,
 )
-
-
-data class QueryLimiter(
-    @QueryParam("How many items do you want to query") val limit: Int = 20,
-    @QueryParam("At what position should the query start") val offset: Long = 0,
-)
