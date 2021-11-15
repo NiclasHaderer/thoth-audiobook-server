@@ -8,17 +8,15 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
-import io.github.huiibuh.db.models.Track
 import io.github.huiibuh.services.database.TrackService
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 
 
 fun NormalOpenAPIRoute.registerStreamingRouting(route: String = "stream") {
-    tag(ApiTags.Stream) {
+    tag(ApiTags.Files) {
         withNotFoundHandling {
             route(route) {
                 streamingRouting()
@@ -28,7 +26,7 @@ fun NormalOpenAPIRoute.registerStreamingRouting(route: String = "stream") {
 }
 
 fun NormalOpenAPIRoute.streamingRouting() {
-    get<FileId, RawAudioFile>(
+    get<AudioId, RawAudioFile>(
         info("Stream a file")
     ) { fileId ->
         val track = TrackService.get(fileId.id)

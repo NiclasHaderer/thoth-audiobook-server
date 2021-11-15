@@ -4,11 +4,13 @@ import api.exceptions.withDefaultErrorHandlers
 import com.papsign.ktor.openapigen.route.apiRouting
 import io.github.huiibuh.api.audible.registerAudibleRouting
 import io.github.huiibuh.api.audiobooks.registerAudiobookRouting
+import io.github.huiibuh.api.images.registerImageRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
+import io.github.huiibuh.config.Settings
 import io.github.huiibuh.db.DatabaseFactory
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.*
-import io.github.huiibuh.services.DB
+import io.github.huiibuh.services.Cache
 import io.ktor.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -17,16 +19,14 @@ import io.ktor.server.netty.*
 fun main() {
     disableJAudioTaggerLogs()
     DatabaseFactory.connectAndMigrate()
-    DB.runValidation()
-    DB.importMissingTracks()
-
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
-        module()
+    Cache.reinitialize()
+    embeddedServer(Netty, port = Settings.webUiPort, host = "0.0.0.0") {
+        webServer()
     }.start(wait = true)
 }
 
 
-fun Application.module() {
+fun Application.webServer() {
     configureOpenAPI()
     configureRouting()
     configureHTTP()
@@ -37,7 +37,7 @@ fun Application.module() {
             registerAudibleRouting()
             registerAudiobookRouting()
             registerStreamingRouting()
+            registerImageRouting()
         }
     }
-
 }

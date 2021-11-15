@@ -4,6 +4,7 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
+import io.github.huiibuh.db.models.AlbumModel
 import io.github.huiibuh.db.models.CollectionModel
 import io.github.huiibuh.services.database.CollectionService
 
@@ -15,8 +16,16 @@ fun NormalOpenAPIRoute.collectionsRouting(path: String = "collections") {
 }
 
 internal fun NormalOpenAPIRoute.routing() {
-    get<Unit, List<CollectionModel>> {
-        val t = CollectionService.getCollections(10, 0)
+    get<QueryLimiter, List<CollectionModel>> {
+        val t = CollectionService.getCollections(it.limit, it.offset)
+        respond(t)
+    }
+    get<CollectionId, CollectionModel> {
+        val t = CollectionService.get(it.uuid)
+        respond(t)
+    }
+    get<CollectionAlbums, List<AlbumModel>> {
+        val t = CollectionService.getBooks(it.uuid)
         respond(t)
     }
 }

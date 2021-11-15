@@ -17,6 +17,7 @@ plugins {
 group = "io.github.huiibuh"
 version = "0.0.1"
 application {
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
     mainClass.set("io.github.huiibuh.ApplicationKt")
 }
 

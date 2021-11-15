@@ -8,12 +8,10 @@ import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object GetOrCreate {
-    fun artist(name: String): Artist {
-        return transaction {
-            val artist = Artist.findOne { Artists.name like name }
-            artist ?: Artist.new {
-                this.name = name
-            }
+    fun artist(name: String) = transaction {
+        val artist = Artist.findOne { Artists.name like name }
+        artist ?: Artist.new {
+            this.name = name
         }
     }
 
@@ -24,29 +22,31 @@ object GetOrCreate {
         collection: Collection?,
         collectionIndex: Int?,
         cover: ByteArray?,
-    ): Album {
-        return transaction {
-            val album = Album.findOne { Albums.name like name and (Albums.artist eq artist.id.value) }
-            album
-                ?: Album.new {
-                    this.name = name
-                    this.artist = artist
-                    this.composer = composer
-                    this.collection = collection
-                    this.collectionIndex = collectionIndex
-                    this.cover = if (cover != null) ExposedBlob(cover) else null
+    ) = transaction {
+        val album = Album.findOne { Albums.title like name and (Albums.artist eq artist.id.value) }
+        album
+            ?: Album.new {
+                this.title = name
+                this.artist = artist
+                this.composer = composer
+                this.collection = collection
+                this.collectionIndex = collectionIndex
+                this.cover = if (cover != null) image(cover) else null
+            }
+    }
 
-                }
+    fun collection(name: String, artist: Artist) = transaction {
+        val collection = Collection.findOne { Collections.title like name }
+        collection ?: Collection.new {
+            this.title = name
+            this.artist = artist
         }
     }
 
-    fun collection(name: String, artist: Artist): Collection {
-        return transaction {
-            val collection = Collection.findOne { Collections.name like name }
-            collection ?: Collection.new {
-                this.name = name
-                this.artist = artist
-            }
-        }
+    fun image(imageBytes: ByteArray) = transaction {
+        val imageBlob = ExposedBlob(imageBytes)
+
+        val img = Image.findOne { Images.image eq imageBlob }
+        img ?: Image.new { image = imageBlob }
     }
 }

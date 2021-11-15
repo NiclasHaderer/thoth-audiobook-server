@@ -10,7 +10,7 @@ open class BaseTest {
     @BeforeTest
     fun setup() {
         testApp = TestApplicationEngine(createTestEnvironment())
-        testApp.application.module()
+        testApp.application.webServer()
         testApp.start(true)
     }
 
