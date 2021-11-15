@@ -12,12 +12,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class `01_CreateTables` : Migration() {
     override fun migrate(db: Database) {
-        transaction {
-            SchemaUtils.create(Albums)
-            SchemaUtils.create(Tracks)
-            SchemaUtils.create(Collections)
-            SchemaUtils.create(Artists)
-        }
+//        transaction {
+//            SchemaUtils.create(Albums)
+//            SchemaUtils.create(Tracks)
+//            SchemaUtils.create(Collections)
+//            SchemaUtils.create(Artists)
+//        }
     }
 
 
