@@ -1,4 +1,4 @@
-package io.github.huiibuh.db.models
+package io.github.huiibuh.db.tables
 
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable

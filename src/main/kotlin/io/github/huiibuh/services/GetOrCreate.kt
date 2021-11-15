@@ -1,8 +1,8 @@
 package io.github.huiibuh.services
 
 import io.github.huiibuh.db.findOne
-import io.github.huiibuh.db.models.*
-import io.github.huiibuh.db.models.Collection
+import io.github.huiibuh.db.tables.*
+import io.github.huiibuh.db.tables.Collection
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction

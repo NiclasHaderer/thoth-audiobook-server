@@ -1,7 +1,7 @@
 package io.github.huiibuh.services
 
-import io.github.huiibuh.db.models.*
-import io.github.huiibuh.db.models.Collection
+import io.github.huiibuh.db.tables.*
+import io.github.huiibuh.db.tables.Collection
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object RemoveEmpty {
