@@ -12,7 +12,7 @@ import io.github.huiibuh.services.database.ArtistService
 import io.github.huiibuh.services.database.CollectionService
 
 
-fun NormalOpenAPIRoute.artistsRouting(path: String = "collections") {
+fun NormalOpenAPIRoute.artistsRouting(path: String = "artists") {
     route(path) {
         routing()
     }

@@ -29,8 +29,8 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 }
 
 repositories {
-    mavenCentral()
     maven("https://jitpack.io")
+    mavenCentral()
 }
 
 dependencies {
@@ -43,7 +43,7 @@ dependencies {
     // Migration
     implementation("org.reflections:reflections:$reflectVersion")
     // OpenAPI
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:-SNAPSHOT")
+    implementation("com.github.papsign:Ktor-OpenAPI-Generator:0.3-beta.2")
     // Audio file processing
     implementation("org.bitbucket.ijabz:jaudiotagger:v3.0.1")
     // Ktor
