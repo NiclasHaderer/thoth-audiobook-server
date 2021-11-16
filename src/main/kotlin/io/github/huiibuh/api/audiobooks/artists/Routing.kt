@@ -5,11 +5,8 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.github.huiibuh.api.audiobooks.QueryLimiter
-import io.github.huiibuh.db.tables.AlbumModel
-import io.github.huiibuh.db.tables.ArtistModel
-import io.github.huiibuh.services.database.AlbumService
+import io.github.huiibuh.models.ArtistModel
 import io.github.huiibuh.services.database.ArtistService
-import io.github.huiibuh.services.database.CollectionService
 
 
 fun NormalOpenAPIRoute.artistsRouting(path: String = "artists") {

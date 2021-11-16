@@ -1,5 +1,6 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.models.CollectionModel
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -27,12 +28,3 @@ class Collection(id: EntityID<UUID>) : UUIDEntity(id) {
 
     fun toModel() = CollectionModel(id.value, title, asin, description, artistID.value)
 }
-
-@Serializable
-data class CollectionModel(
-    @Serializable(UUIDSerializer::class) val id: UUID,
-    val name: String,
-    val asin: String?,
-    val description: String?,
-    @Serializable(UUIDSerializer::class) val artist: UUID,
-)

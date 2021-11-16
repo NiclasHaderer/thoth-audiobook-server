@@ -65,16 +65,3 @@ data class AlbumModel(
     val collectionIndex: Int?,
     @Serializable(UUIDSerializer::class) val cover: UUID?,
 )
-
-@Serializable
-data class AlbumWithTracks(
-    @Serializable(UUIDSerializer::class) val value: UUID,
-    val title: String,
-    val description: String?,
-    val asin: String?,
-    @Serializable(UUIDSerializer::class) val artist: UUID,
-    @Serializable(UUIDSerializer::class) val composer: UUID?,
-    @Serializable(UUIDSerializer::class) val collection: UUID?,
-    val collectionIndex: Int?,
-    @Serializable(UUIDSerializer::class) val cover: UUID?,
-)

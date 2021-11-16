@@ -1,5 +1,6 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.models.ArtistModel
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -28,12 +29,3 @@ class Artist(id: EntityID<UUID>) : UUIDEntity(id) {
 
     fun toModel() = ArtistModel(id.value, name, biography, asin, imageID?.value)
 }
-
-@Serializable
-data class ArtistModel(
-    @Serializable(UUIDSerializer::class) val id: UUID,
-    val name: String,
-    val biography: String?,
-    val asin: String?,
-    @Serializable(UUIDSerializer::class) val image: UUID?,
-)

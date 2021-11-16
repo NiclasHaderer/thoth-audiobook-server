@@ -1,5 +1,6 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.models.ImageModel
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -20,9 +21,3 @@ class Image(id: EntityID<UUID>) : UUIDEntity(id) {
 
     fun toModel() = ImageModel(id.value, image.bytes)
 }
-
-@Serializable
-data class ImageModel(
-    @Serializable(UUIDSerializer::class) val id: UUID,
-    val image: ByteArray,
-)
