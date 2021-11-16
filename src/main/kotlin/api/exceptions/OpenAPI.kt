@@ -13,19 +13,19 @@ import io.ktor.http.*
 
 fun NormalOpenAPIRoute.withOpenAPIExceptions(routeCallback: NormalOpenAPIRoute.() -> Unit) {
     throws(HttpStatusCode.BadRequest,
-           OpenAPIBadContentException::class,
+           null,
            { ex: OpenAPIBadContentException -> APIBadRequest(ex.message ?: "").toModel() }) {
         throws(HttpStatusCode.BadRequest,
-               OpenAPINoSerializerException::class,
+               null,
                { ex: OpenAPINoSerializerException -> APIBadRequest(ex.message ?: "").toModel() }) {
             throws(HttpStatusCode.BadRequest,
-                   OpenAPINoParserException::class,
+                   null,
                    { ex: OpenAPINoParserException -> APIBadRequest(ex.message ?: "").toModel() }) {
                 throws(HttpStatusCode.BadRequest,
-                       OpenAPIParseException::class,
+                       null,
                        { ex: OpenAPIParseException -> APIBadRequest(ex.message ?: "").toModel() }) {
                     throws(HttpStatusCode.BadRequest,
-                           OpenAPIRequiredFieldException::class,
+                           null,
                            { ex: OpenAPIRequiredFieldException -> APIBadRequest(ex.message).toModel() }) {
                         this.routeCallback()
                     }
