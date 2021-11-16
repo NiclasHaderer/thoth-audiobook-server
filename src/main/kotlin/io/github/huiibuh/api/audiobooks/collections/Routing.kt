@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.github.huiibuh.api.audiobooks.QueryLimiter
 import io.github.huiibuh.db.tables.AlbumModel
-import io.github.huiibuh.db.tables.CollectionModel
+import io.github.huiibuh.models.CollectionModel
 import io.github.huiibuh.services.database.CollectionService
 
 
