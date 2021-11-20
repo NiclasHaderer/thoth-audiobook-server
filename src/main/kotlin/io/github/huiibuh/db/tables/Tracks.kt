@@ -22,7 +22,7 @@ object Tracks : UUIDTable() {
 }
 
 
-class Track(id: EntityID<UUID>) : UUIDEntity(id) {
+class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
     companion object : UUIDEntityClass<Track>(Tracks)
 
     val albumID by Tracks.album
@@ -41,14 +41,14 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id) {
     var collection by Collection optionalReferencedOn Tracks.collection
     var collectionIndex by Tracks.collectionIndex
 
-    fun toModel() = TrackModel(id.value,
-                               title,
-                               trackNr,
-                               duration,
-                               accessTime,
-                               albumID.value,
-                               artistID.value,
-                               composerID?.value,
-                               collectionID?.value,
-                               collectionIndex)
+    override fun toModel() = TrackModel(id.value,
+                                        title,
+                                        trackNr,
+                                        duration,
+                                        accessTime,
+                                        albumID.value,
+                                        artistID.value,
+                                        composerID?.value,
+                                        collectionID?.value,
+                                        collectionIndex)
 }

@@ -14,10 +14,10 @@ object Images : UUIDTable() {
 }
 
 
-class Image(id: EntityID<UUID>) : UUIDEntity(id) {
+class Image(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ImageModel> {
     companion object : UUIDEntityClass<Image>(Images)
 
     var image by Images.image
 
-    fun toModel() = ImageModel(id.value, image.bytes)
+    override fun toModel() = ImageModel(id.value, image.bytes)
 }
