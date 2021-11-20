@@ -60,7 +60,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     // Audible scraping
     implementation("org.jsoup:jsoup:$jsoupVersion")
-    // Logback
+    // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")

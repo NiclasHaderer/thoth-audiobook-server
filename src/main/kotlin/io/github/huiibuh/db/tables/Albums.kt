@@ -1,5 +1,6 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.models.AlbumModel
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -21,7 +22,7 @@ object Albums : UUIDTable() {
     val cover = reference("cover", Images).nullable()
 }
 
-class Album(id: EntityID<UUID>) : UUIDEntity(id) {
+class Album(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AlbumModel> {
     companion object : UUIDEntityClass<Album>(Albums)
 
     private val artistID by Albums.artist
@@ -39,7 +40,7 @@ class Album(id: EntityID<UUID>) : UUIDEntity(id) {
     var collectionIndex by Albums.collectionIndex
     var cover by Image optionalReferencedOn Albums.cover
 
-    fun toModel() =
+    override fun toModel() =
         AlbumModel(id.value,
                    title,
                    language,
@@ -51,17 +52,3 @@ class Album(id: EntityID<UUID>) : UUIDEntity(id) {
                    collectionIndex,
                    coverID?.value)
 }
-
-@Serializable
-data class AlbumModel(
-    @Serializable(UUIDSerializer::class) val value: UUID,
-    val title: String,
-    val language: String?,
-    val description: String?,
-    val asin: String?,
-    @Serializable(UUIDSerializer::class) val artist: UUID,
-    @Serializable(UUIDSerializer::class) val composer: UUID?,
-    @Serializable(UUIDSerializer::class) val collection: UUID?,
-    val collectionIndex: Int?,
-    @Serializable(UUIDSerializer::class) val cover: UUID?,
-)

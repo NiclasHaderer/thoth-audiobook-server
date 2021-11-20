@@ -16,7 +16,7 @@ object Collections : UUIDTable() {
     val artist = reference("artist", Artists)
 }
 
-class Collection(id: EntityID<UUID>) : UUIDEntity(id) {
+class Collection(id: EntityID<UUID>) : UUIDEntity(id), ToModel<CollectionModel> {
     companion object : UUIDEntityClass<Collection>(Collections)
 
     private val artistID by Collections.artist
@@ -26,5 +26,5 @@ class Collection(id: EntityID<UUID>) : UUIDEntity(id) {
     var description by Collections.description
     var artist by Artist referencedOn Collections.artist
 
-    fun toModel() = CollectionModel(id.value, title, asin, description, artistID.value)
+    override fun toModel() = CollectionModel(id.value, title, asin, description, artistID.value)
 }

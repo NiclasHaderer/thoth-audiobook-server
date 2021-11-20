@@ -1,8 +1,6 @@
 package io.github.huiibuh.db.tables
 
 import io.github.huiibuh.models.ArtistModel
-import io.github.huiibuh.serializers.UUIDSerializer
-import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -17,7 +15,7 @@ object Artists : UUIDTable() {
 }
 
 
-class Artist(id: EntityID<UUID>) : UUIDEntity(id) {
+class Artist(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ArtistModel> {
     companion object : UUIDEntityClass<Artist>(Artists)
 
     private val imageID by Artists.image
@@ -27,5 +25,5 @@ class Artist(id: EntityID<UUID>) : UUIDEntity(id) {
     var asin by Artists.asin
     var image by Image optionalReferencedOn Artists.image
 
-    fun toModel() = ArtistModel(id.value, name, biography, asin, imageID?.value)
+    override fun toModel() = ArtistModel(id.value, name, biography, asin, imageID?.value)
 }

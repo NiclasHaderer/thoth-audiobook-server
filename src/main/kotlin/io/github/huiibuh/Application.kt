@@ -8,11 +8,16 @@ import io.github.huiibuh.api.images.registerImageRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
 import io.github.huiibuh.config.Settings
 import io.github.huiibuh.db.DatabaseFactory
+import io.github.huiibuh.db.tables.Artist
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.*
+import io.github.huiibuh.ws.registerUpdateRoutes
 import io.ktor.application.*
+import io.ktor.response.*
+import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import org.jetbrains.exposed.sql.transactions.transaction
 
 
 fun main() {
@@ -29,8 +34,20 @@ fun Application.webServer() {
     configureOpenAPI()
     configureRouting()
     configureHTTP()
+    configureSockets()
     configureMonitoring()
     configureSerialization()
+    routing {
+        get("/updateMe") {
+            val artist = transaction {
+                val artist = Artist.all().first()
+                artist.asin = "${(0..10000000).random()}"
+                artist
+            }
+            call.respond(artist.toModel())
+        }
+        registerUpdateRoutes()
+    }
     apiRouting {
         withDefaultErrorHandlers {
             registerAudibleRouting()
