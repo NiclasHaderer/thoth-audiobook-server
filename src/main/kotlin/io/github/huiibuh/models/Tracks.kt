@@ -4,6 +4,7 @@ import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 
+@Serializable
 data class TrackModel(
     @Serializable(UUIDSerializer::class) val id: UUID,
     val title: String,

@@ -18,7 +18,7 @@ fun NormalOpenAPIRoute.seriesRouting(path: String = "series") {
 
 internal fun NormalOpenAPIRoute.routing() {
     get<QueryLimiter, List<SeriesModel>> {
-        val t = SeriesService.getSeries(it.limit, it.offset)
+        val t = SeriesService.getMultiple(it.limit, it.offset)
         respond(t)
     }
     get<SeriesId, SeriesModel> {

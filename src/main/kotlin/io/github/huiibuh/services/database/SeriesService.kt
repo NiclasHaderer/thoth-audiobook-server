@@ -9,7 +9,7 @@ import java.util.*
 
 object SeriesService {
 
-    fun getSeries(limit: Int, offset: Long) = transaction {
+    fun getMultiple(limit: Int, offset: Long) = transaction {
         Series.all().limit(limit, offset).map {
             it.toModel()
         }

@@ -15,7 +15,7 @@ import io.ktor.response.*
 import java.io.File
 
 
-fun NormalOpenAPIRoute.registerStreamingRouting(route: String = "stream") {
+fun NormalOpenAPIRoute.registerStreamingRouting(route: String = "audio") {
     tag(ApiTags.Files) {
         withNotFoundHandling {
             route(route) {
@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.registerStreamingRouting(route: String = "stream") {
 
 fun NormalOpenAPIRoute.streamingRouting() {
     get<AudioId, RawAudioFile>(
-        info("Stream a file")
+        info("Stream a audio file")
     ) { fileId ->
         val track = TrackService.get(fileId.id)
         val file = File(track.path)

@@ -8,7 +8,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import java.util.*
 
 
-object TBooks : UUIDTable("books") {
+object TBooks : UUIDTable("Books") {
     val title = varchar("title", 255)
     val language = varchar("language", 255).nullable()
     val description = text("description").nullable()
