@@ -5,8 +5,8 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import io.github.huiibuh.api.audiobooks.QueryLimiter
-import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.models.SeriesModel
+import io.github.huiibuh.models.SeriesModelWithBooks
 import io.github.huiibuh.services.database.SeriesService
 
 
@@ -21,12 +21,8 @@ internal fun NormalOpenAPIRoute.routing() {
         val t = SeriesService.getMultiple(it.limit, it.offset)
         respond(t)
     }
-    get<SeriesId, SeriesModel> {
+    get<SeriesId, SeriesModelWithBooks> {
         val t = SeriesService.get(it.uuid)
-        respond(t)
-    }
-    get<SeriesBooks, List<BookModel>> {
-        val t = SeriesService.getBooks(it.uuid)
         respond(t)
     }
 }

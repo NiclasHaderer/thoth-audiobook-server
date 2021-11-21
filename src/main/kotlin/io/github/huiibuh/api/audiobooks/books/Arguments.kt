@@ -5,6 +5,6 @@ import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import java.util.*
 
 @Path("{uuid}")
-data class BookId(
+internal data class BookId(
     @PathParam("The id of the book you want to get") val uuid: UUID,
 )
