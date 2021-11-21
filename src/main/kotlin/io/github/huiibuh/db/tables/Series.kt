@@ -7,7 +7,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import java.util.*
 
-object TSeries : UUIDTable("series") {
+object TSeries : UUIDTable("Series") {
     val title = varchar("title", 250).uniqueIndex()
     val asin = char("asin", 10).uniqueIndex().nullable()
     val description = text("description").nullable()

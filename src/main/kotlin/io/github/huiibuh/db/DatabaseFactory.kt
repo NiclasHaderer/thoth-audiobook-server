@@ -45,7 +45,7 @@ object DatabaseFactory {
             throw Exception("Please connect to the database before running the migrations")
         }
 
-        DatabaseMigrator(dbInstance!!, "db.migration").runMigrations()
+        DatabaseMigrator(dbInstance!!, "db.migrations").runMigrations()
     }
 
 }

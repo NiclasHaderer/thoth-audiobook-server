@@ -7,7 +7,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import java.util.*
 
-object TImages : UUIDTable("images") {
+object TImages : UUIDTable("Images") {
     val image = blob("image").uniqueIndex()
 }
 

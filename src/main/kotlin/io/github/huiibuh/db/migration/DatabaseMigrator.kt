@@ -9,7 +9,7 @@ import kotlin.reflect.full.createInstance
 
 class DatabaseMigrator(val db: Database, val packageName: String) {
     private val log = LoggerFactory.getLogger(this::class.java)
-    private val classNameMatcher = "(d+)_.*".toRegex()
+    private val classNameMatcher = "(\\d+)_.*".toRegex()
 
     private val classes: List<Migration> by lazy {
         val reflections = Reflections(this.packageName)
@@ -26,7 +26,7 @@ class DatabaseMigrator(val db: Database, val packageName: String) {
     fun runMigrations() {
         // Create table if not exist
         transaction(db = db) {
-            SchemaUtils.create(SchemaTrackers)
+            SchemaUtils.create(TSchemaTrackers)
         }
 
         // Get all applied migrations
@@ -45,7 +45,7 @@ class DatabaseMigrator(val db: Database, val packageName: String) {
     private fun getVersionFromString(versionString: String): Int {
         // Cannot be null, because we filter after the regex
         val result = classNameMatcher.find(versionString)!!
-        return result.groupValues[0].toInt()
+        return result.groupValues[1].toInt()
     }
 
     private fun applyMigrations(fromVersion: Int) {
@@ -53,7 +53,9 @@ class DatabaseMigrator(val db: Database, val packageName: String) {
             try {
                 val migrationVersion = getVersionFromString(it.javaClass.simpleName)
                 if (migrationVersion > fromVersion) {
+                    log.info("Applying migration ${it.javaClass.simpleName}")
                     it.migrate(db)
+                    saveMigrationInDatabase(migrationVersion)
                 }
             } catch (migrationException: Exception) {
                 log.error("Error during migration")
@@ -65,14 +67,21 @@ class DatabaseMigrator(val db: Database, val packageName: String) {
                     rollbackException
                 }
 
-                log.error(migrationException.toString())
+                log.error(migrationException.message, migrationException)
                 if (rollbackException != null) {
-                    log.error(rollbackException.toString())
+                    log.error(rollbackException.message, rollbackException)
                 } else {
                     log.error("Rollback succeeded")
                 }
                 throw Exception("Could not migrate.")
             }
+        }
+    }
+
+    fun saveMigrationInDatabase(migrationVersion: Int) = transaction(db = db) {
+        SchemaTracker.new {
+            date = System.currentTimeMillis() / 1000L
+            version = migrationVersion
         }
     }
 

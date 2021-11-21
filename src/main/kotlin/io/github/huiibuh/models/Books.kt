@@ -2,10 +2,6 @@ package io.github.huiibuh.models
 
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.UUIDTable
 import java.util.*
 
 
@@ -30,9 +26,26 @@ data class BookWithTracks(
     val language: String?,
     val description: String?,
     val asin: String?,
+    val tracks: List<TrackModel>,
     @Serializable(UUIDSerializer::class) val author: UUID,
     @Serializable(UUIDSerializer::class) val narrator: UUID?,
     @Serializable(UUIDSerializer::class) val series: UUID?,
     val seriesIndex: Int?,
     @Serializable(UUIDSerializer::class) val cover: UUID?,
-)
+) {
+    companion object {
+        fun fromBookModel(book: BookModel, tracks: List<TrackModel>) = BookWithTracks(
+            id = book.id,
+            title = book.title,
+            language = book.language,
+            description = book.description,
+            asin = book.asin,
+            tracks = tracks,
+            author = book.author,
+            narrator = book.narrator,
+            series = book.series,
+            seriesIndex = book.seriesIndex,
+            cover = book.cover
+        )
+    }
+}

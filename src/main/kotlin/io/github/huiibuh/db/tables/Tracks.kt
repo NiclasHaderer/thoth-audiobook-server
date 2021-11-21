@@ -8,7 +8,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import java.util.*
 
 
-object TTracks : UUIDTable("tracks") {
+object TTracks : UUIDTable("Tracks") {
     val title = varchar("title", 255)
     val duration = integer("duration")
     val accessTime = long("accessTime")
@@ -18,7 +18,7 @@ object TTracks : UUIDTable("tracks") {
     val author = reference("author", TAuthors)
     val narrator = reference("narrator", TAuthors).nullable()
     val series = reference("series", TSeries).nullable()
-    val seriesIndex = integer("series").nullable()
+    val seriesIndex = integer("seriesIndex").nullable()
 }
 
 
