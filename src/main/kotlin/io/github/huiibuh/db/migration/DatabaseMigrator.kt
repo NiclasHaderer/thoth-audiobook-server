@@ -25,16 +25,20 @@ class DatabaseMigrator(val db: Database, val packageName: String) {
 
     fun runMigrations() {
         // Create table if not exist
-        transaction {
+        transaction(db = db) {
             SchemaUtils.create(SchemaTrackers)
         }
 
         // Get all applied migrations
-        val appliedMigrations = transaction {
+        val appliedMigrations = transaction(db = db) {
             SchemaTracker.all()
         }
         // Get the latest version of applied migration versions
-        val latestVersion = appliedMigrations.maxOf { it.version }
+        val latestVersion = try {
+            transaction(db = db) { appliedMigrations.maxOf { it.version } }
+        } catch (_: Exception) {
+            -1
+        }
         applyMigrations(latestVersion)
     }
 

@@ -8,7 +8,7 @@ import io.github.huiibuh.api.images.registerImageRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
 import io.github.huiibuh.config.Settings
 import io.github.huiibuh.db.DatabaseFactory
-import io.github.huiibuh.db.tables.Artist
+import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.*
 import io.github.huiibuh.ws.registerUpdateRoutes
@@ -39,12 +39,12 @@ fun Application.webServer() {
     configureSerialization()
     routing {
         get("/updateMe") {
-            val artist = transaction {
-                val artist = Artist.all().first()
-                artist.asin = "${(0..10000000).random()}"
-                artist
+            val author = transaction {
+                val author = Author.all().first()
+                author.asin = "${(0..10000000).random()}"
+                author
             }
-            call.respond(artist.toModel())
+            call.respond(author.toModel())
         }
         registerUpdateRoutes()
     }

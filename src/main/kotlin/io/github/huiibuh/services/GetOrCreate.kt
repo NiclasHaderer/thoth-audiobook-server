@@ -2,51 +2,51 @@ package io.github.huiibuh.services
 
 import io.github.huiibuh.db.findOne
 import io.github.huiibuh.db.tables.*
-import io.github.huiibuh.db.tables.Collection
+import io.github.huiibuh.db.tables.Series
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object GetOrCreate {
-    fun artist(name: String) = transaction {
-        val artist = Artist.findOne { Artists.name like name }
-        artist ?: Artist.new {
+    fun author(name: String) = transaction {
+        val author = Author.findOne { TAuthors.name like name }
+        author ?: Author.new {
             this.name = name
         }
     }
 
-    fun album(
+    fun book(
         name: String,
-        artist: Artist,
-        composer: Artist?,
-        collection: Collection?,
-        collectionIndex: Int?,
+        author: Author,
+        composer: Author?,
+        series: Series?,
+        seriesIndex: Int?,
         cover: ByteArray?,
     ) = transaction {
-        val album = Album.findOne { Albums.title like name and (Albums.artist eq artist.id.value) }
-        album
-            ?: Album.new {
+        val book = Book.findOne { TBooks.title like name and (TBooks.author eq author.id.value) }
+        book
+            ?: Book.new {
                 this.title = name
-                this.artist = artist
-                this.composer = composer
-                this.collection = collection
-                this.collectionIndex = collectionIndex
+                this.author = author
+                this.narrator = composer
+                this.series = series
+                this.seriesIndex = seriesIndex
                 this.cover = if (cover != null) image(cover) else null
             }
     }
 
-    fun collection(name: String, artist: Artist) = transaction {
-        val collection = Collection.findOne { Collections.title like name }
-        collection ?: Collection.new {
+    fun series(name: String, author: Author) = transaction {
+        val series = Series.findOne { TSeries.title like name }
+        series ?: Series.new {
             this.title = name
-            this.artist = artist
+            this.author = author
         }
     }
 
     fun image(imageBytes: ByteArray) = transaction {
         val imageBlob = ExposedBlob(imageBytes)
 
-        val img = Image.findOne { Images.image eq imageBlob }
+        val img = Image.findOne { TImages.image eq imageBlob }
         img ?: Image.new { image = imageBlob }
     }
 }

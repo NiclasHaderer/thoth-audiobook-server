@@ -12,29 +12,12 @@ import org.slf4j.LoggerFactory
 
 
 object DatabaseFactory {
+    private var dbInstance: Database? = null
     private val log = LoggerFactory.getLogger(this::class.java)
-
-    fun connectAndMigrate() {
-        connect()
-        migrate()
+    private val dbConfig = DatabaseConfig.invoke {
+        useNestedTransactions = true
     }
-
-    fun connect() {
-        log.info("Initialising database")
-        val config = DatabaseConfig.invoke {
-            useNestedTransactions = true
-        }
-        Database.connect(dataSource(), databaseConfig = config)
-    }
-
-    fun migrate() {
-        log.info("Migrating database")
-        val db = Database.connect(dataSource())
-        DatabaseMigrator(db, "db.migration").runMigrations()
-    }
-
-
-    private fun dataSource(): HikariDataSource {
+    private val dataSource by lazy {
         val dbConfig = Settings.database
         val config = HikariConfig().apply {
             driverClassName = dbConfig.driverClassName
@@ -43,12 +26,26 @@ object DatabaseFactory {
             isAutoCommit = dbConfig.autoCommit
             transactionIsolation = dbConfig.transactionIsolation
         }.also { it.validate() }
-        return HikariDataSource(config)
+        HikariDataSource(config)
     }
 
+    fun connectAndMigrate() {
+        connect()
+        migrate()
+    }
 
-    suspend fun <T> dbQuery(
-        block: suspend () -> T,
-    ): T =
-        newSuspendedTransaction { block() }
+    fun connect() {
+        log.info("Initialising database")
+        dbInstance = Database.connect(dataSource, databaseConfig = dbConfig)
+    }
+
+    fun migrate() {
+        log.info("Migrating database")
+        if (dbInstance == null) {
+            throw Exception("Please connect to the database before running the migrations")
+        }
+
+        DatabaseMigrator(dbInstance!!, "db.migration").runMigrations()
+    }
+
 }

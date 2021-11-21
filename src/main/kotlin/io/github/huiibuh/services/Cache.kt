@@ -20,7 +20,7 @@ object Cache {
     private fun clear() {
         logger.info("Clearing cache")
         transaction {
-            val databases = arrayOf<Table>(Tracks, Albums, Artists, Collections, Images)
+            val databases = arrayOf<Table>(TTracks, TBooks, TAuthors, TSeries, TImages)
             SchemaUtils.drop(*databases)
             SchemaUtils.create(*databases)
         }
@@ -39,18 +39,18 @@ object Cache {
     private fun createTrack(trackRef: TrackReference) = Track.new {
         title = trackRef.title
         duration = trackRef.duration
-        accessTime = trackRef.lastModfied
+        accessTime = trackRef.lastModified
         trackNr = trackRef.trackNr
         path = trackRef.path
-        artist = GetOrCreate.artist(trackRef.artist)
-        composer = if (trackRef.composer != null) GetOrCreate.artist(trackRef.composer!!) else null
-        collection = if (trackRef.collection != null) GetOrCreate.collection(trackRef.collection!!, artist) else null
-        album = GetOrCreate.album(trackRef.album,
-                                  artist,
-                                  composer,
-                                  collection,
-                                  trackRef.collectionIndex,
-                                  trackRef.cover)
-        collectionIndex = trackRef.collectionIndex
+        author = GetOrCreate.author(trackRef.author)
+        composer = if (trackRef.narrator != null) GetOrCreate.author(trackRef.narrator!!) else null
+        series = if (trackRef.series != null) GetOrCreate.series(trackRef.series!!, author) else null
+        book = GetOrCreate.book(trackRef.book,
+                                author,
+                                composer,
+                                series,
+                                trackRef.seriesIndex,
+                                trackRef.cover)
+        seriesIndex = trackRef.seriesIndex
     }
 }

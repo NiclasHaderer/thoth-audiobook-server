@@ -1,10 +1,10 @@
-package io.github.huiibuh.api.audiobooks.artists
+package io.github.huiibuh.api.audiobooks.authors
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import java.util.*
 
 @Path("{uuid}")
-data class ArtistId(
-    @PathParam("The id of the artist you want to get") val uuid: UUID,
+data class AuthorId(
+    @PathParam("The id of the author you want to get") val uuid: UUID,
 )

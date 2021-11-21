@@ -31,12 +31,12 @@ class TrackReference(private val audioFile: AudioFile) {
         set(value) {
             audioFile.tag.setField(FieldKey.TITLE, value)
         }
-    var album: String
+    var book: String
         get() = audioFile.tag.getFirst(FieldKey.ALBUM)
         set(value) {
             audioFile.tag.setField(FieldKey.ALBUM, value)
         }
-    var artist: String
+    var author: String
         get() = audioFile.tag.getFirst(FieldKey.ARTIST)
         set(value) {
             audioFile.tag.setField(FieldKey.ALBUM_ARTIST, value)
@@ -47,17 +47,17 @@ class TrackReference(private val audioFile: AudioFile) {
         set(value) {
             audioFile.tag.setField(FieldKey.TRACK, value.toString())
         }
-    var composer: String?
+    var narrator: String?
         get() = audioFile.tag.getFirst(FieldKey.COMPOSER)
         set(value) {
             audioFile.tag.setField(FieldKey.COMPOSER, value)
         }
-    var collection: String?
+    var series: String?
         get() = audioFile.tag.getFirst(FieldKey.GROUPING)
         set(value) {
             audioFile.tag.setField(FieldKey.GROUPING, value)
         }
-    var collectionIndex: Int?
+    var seriesIndex: Int?
         get() = audioFile.tag.getFirst(FieldKey.CATALOG_NO).toIntOrNull()
         set(value) {
             audioFile.tag.setField(FieldKey.CATALOG_NO, value.toString())
@@ -79,7 +79,7 @@ class TrackReference(private val audioFile: AudioFile) {
     val path: String
         get() = audioFile.file.absolutePath
 
-    val lastModfied: Long
+    val lastModified: Long
         get() = audioFile.file.lastModified()
 
     fun save() {
@@ -87,12 +87,10 @@ class TrackReference(private val audioFile: AudioFile) {
     }
 
     fun hasRequiredAttributes(): Boolean {
-        val artist = audioFile.tag.getFirst(FieldKey.ARTIST)
-        val album = audioFile.tag.getFirst(FieldKey.ALBUM)
-        return artist != null && artist.trim().isNotEmpty() && album != null && album.trim().isNotEmpty()
+        val author: String? = this.author
+        val book: String? = this.book
+        return author != null && author.trim().isNotEmpty() && book != null && book.trim().isNotEmpty()
     }
-
-
 
 }
 
