@@ -16,6 +16,6 @@ object BookService {
     fun get(uuid: UUID) = transaction {
         val book = Book.findById(uuid)?.toModel() ?: throw APINotFound("Could not find album")
         val tracks = Track.find { TTracks.book eq uuid }.map { it.toModel() }
-        BookWithTracks.fromBookModel(book, tracks)
+        BookWithTracks.fromModel(book, tracks)
     }
 }

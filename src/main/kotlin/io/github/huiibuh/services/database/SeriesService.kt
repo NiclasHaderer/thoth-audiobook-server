@@ -4,6 +4,7 @@ import api.exceptions.APINotFound
 import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.db.tables.TBooks
 import io.github.huiibuh.db.tables.Series
+import io.github.huiibuh.models.SeriesModelWithBooks
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -15,11 +16,9 @@ object SeriesService {
         }
     }
 
-    fun getBooks(id: UUID) = transaction {
-        Book.find { TBooks.series eq id }.map { it.toModel() }
-    }
-
     fun get(id: UUID) = transaction {
-        Series.findById(id)?.toModel() ?: throw APINotFound("Could not find series")
+        val series = Series.findById(id)?.toModel() ?: throw APINotFound("Could not find series")
+        val books = Book.find { TBooks.series eq id }.map { it.toModel() }
+        SeriesModelWithBooks.fromModel(series, books)
     }
 }

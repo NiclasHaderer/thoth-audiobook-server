@@ -5,12 +5,6 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.throws
 import io.ktor.http.*
 
-// OpenAPIBadContentException
-// OpenAPINoParserException
-// OpenAPINoSerializerException
-// OpenAPIParseException
-// OpenAPIRequiredFieldException
-
 fun NormalOpenAPIRoute.withOpenAPIExceptions(routeCallback: NormalOpenAPIRoute.() -> Unit) {
     throws(HttpStatusCode.BadRequest,
            null,

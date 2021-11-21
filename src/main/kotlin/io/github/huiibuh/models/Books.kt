@@ -34,7 +34,7 @@ data class BookWithTracks(
     @Serializable(UUIDSerializer::class) val cover: UUID?,
 ) {
     companion object {
-        fun fromBookModel(book: BookModel, tracks: List<TrackModel>) = BookWithTracks(
+        fun fromModel(book: BookModel, tracks: List<TrackModel>) = BookWithTracks(
             id = book.id,
             title = book.title,
             language = book.language,

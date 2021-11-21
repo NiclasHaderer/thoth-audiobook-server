@@ -4,8 +4,9 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
-import io.github.huiibuh.api.audiobooks.books.bookRouting
 import io.github.huiibuh.api.audiobooks.authors.authorRouting
+import io.github.huiibuh.api.audiobooks.books.bookRouting
+import io.github.huiibuh.api.audiobooks.search.searchRouting
 import io.github.huiibuh.api.audiobooks.series.seriesRouting
 
 fun NormalOpenAPIRoute.registerAudiobookRouting(route: String = "audiobooks") {
@@ -16,9 +17,11 @@ fun NormalOpenAPIRoute.registerAudiobookRouting(route: String = "audiobooks") {
         tag(ApiTags.Authors) {
             authorRouting()
         }
-
         tag(ApiTags.Series) {
             seriesRouting()
+        }
+        tag(ApiTags.Search) {
+            searchRouting()
         }
     }
 }

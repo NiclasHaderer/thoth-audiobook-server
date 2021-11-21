@@ -21,7 +21,7 @@ fun NormalOpenAPIRoute.registerAudibleRouting(path: String = "audible") {
 }
 
 
-fun NormalOpenAPIRoute.audibleRouting() {
+internal fun NormalOpenAPIRoute.audibleRouting() {
     route("search").get<AudibleSearch, List<AudibleSearchResult>>(info("Search for audiobooks")) {
         search(it)
     }

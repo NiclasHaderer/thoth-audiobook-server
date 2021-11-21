@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
 import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
 
-data class AudibleSearch(
+internal data class AudibleSearch(
     @QueryParam("A general keyword which describes the search term") val keywords: String?,
     @QueryParam("The title of the audiobook") val title: String?,
     @QueryParam("The author of the audiobook") val author: String?,
@@ -16,16 +16,16 @@ data class AudibleSearch(
 )
 
 @Path("{asin}")
-data class AuthorASIN(
+internal data class AuthorASIN(
     @PathParam("The asin of the author. Can be retrieved by using the search") val asin: String,
 )
 
 @Path("{asin}")
-data class SeriesASIN(
+internal data class SeriesASIN(
     @PathParam("The asin of the series. Can be retrieved by using the search") val asin: String,
 )
 
 @Path("{asin}")
-data class AudiobookASIN(
+internal data class AudiobookASIN(
     @PathParam("The asin of the audiobook. Can be retrieved by using the search") val asin: String,
 )

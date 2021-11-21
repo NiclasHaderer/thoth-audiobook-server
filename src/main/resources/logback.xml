@@ -18,7 +18,7 @@
     <!-- Reflection for db migrations -->
     <logger name="org.reflections" level="WARN"/>
     <!-- DB connector -->
-    <logger name="Exposed" level="WARN"/>
+    <logger name="Exposed" level="INFO"/>
     <!-- Reload -->
     <logger name="ktor.application" level="INFO"/>
 

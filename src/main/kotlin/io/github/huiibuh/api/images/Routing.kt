@@ -21,8 +21,7 @@ fun NormalOpenAPIRoute.registerImageRouting(route: String = "image") {
     }
 }
 
-fun NormalOpenAPIRoute.imageRouting() {
-
+internal fun NormalOpenAPIRoute.imageRouting() {
     get<ImageId, RawImageFile> {
         val image = ImageService.get(it.id)
         respond(
