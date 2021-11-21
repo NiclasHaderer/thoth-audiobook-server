@@ -1,34 +1,34 @@
 package io.github.huiibuh.services
 
 import io.github.huiibuh.db.tables.*
-import io.github.huiibuh.db.tables.Collection
+import io.github.huiibuh.db.tables.Series
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object RemoveEmpty {
-    fun collections() {
+    fun series() {
         transaction {
-            Collection.all().forEach {
-                if (Track.find { Tracks.collection eq it.id.value }.empty()) {
+            Series.all().forEach {
+                if (Track.find { TTracks.series eq it.id.value }.empty()) {
                     it.delete()
                 }
             }
         }
     }
 
-    fun artists() {
+    fun authors() {
         transaction {
-            Artist.all().forEach {
-                if (Track.find { Tracks.artist eq it.id.value }.empty()) {
+            Author.all().forEach {
+                if (Track.find { TTracks.author eq it.id.value }.empty()) {
                     it.delete()
                 }
             }
         }
     }
 
-    fun albums() {
+    fun books() {
         transaction {
-            Album.all().forEach {
-                if (Track.find { Tracks.album eq it.id.value }.empty()) {
+            Book.all().forEach {
+                if (Track.find { TTracks.book eq it.id.value }.empty()) {
                     it.delete()
                 }
             }

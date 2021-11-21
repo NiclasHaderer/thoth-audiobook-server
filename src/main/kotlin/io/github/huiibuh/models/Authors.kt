@@ -9,10 +9,10 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import java.util.*
 
 @Serializable
-data class CollectionModel(
+data class AuthorModel(
     @Serializable(UUIDSerializer::class) val id: UUID,
     val name: String,
+    val biography: String?,
     val asin: String?,
-    val description: String?,
-    @Serializable(UUIDSerializer::class) val artist: UUID,
+    @Serializable(UUIDSerializer::class) val image: UUID?,
 )

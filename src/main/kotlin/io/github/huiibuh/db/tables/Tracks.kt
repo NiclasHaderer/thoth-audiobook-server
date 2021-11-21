@@ -8,47 +8,49 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import java.util.*
 
 
-object Tracks : UUIDTable() {
+object TTracks : UUIDTable("tracks") {
     val title = varchar("title", 255)
     val duration = integer("duration")
     val accessTime = long("accessTime")
     val trackNr = integer("trackNr").nullable()
     val path = text("path").uniqueIndex()
-    val album = reference("album", Albums)
-    val artist = reference("artist", Artists)
-    val composer = reference("composer", Artists).nullable()
-    val collection = reference("collection", Collections).nullable()
-    val collectionIndex = integer("collectionIndex").nullable()
+    val book = reference("book", TBooks)
+    val author = reference("author", TAuthors)
+    val narrator = reference("narrator", TAuthors).nullable()
+    val series = reference("series", TSeries).nullable()
+    val seriesIndex = integer("series").nullable()
 }
 
 
 class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
-    companion object : UUIDEntityClass<Track>(Tracks)
+    companion object : UUIDEntityClass<Track>(TTracks)
 
-    val albumID by Tracks.album
-    val artistID by Tracks.artist
-    val composerID by Tracks.composer
-    val collectionID by Tracks.collection
+    private val bookID by TTracks.book
+    private val authorID by TTracks.author
+    private val narratorID by TTracks.narrator
+    private val seriesID by TTracks.series
 
-    var title by Tracks.title
-    var trackNr by Tracks.trackNr
-    var duration by Tracks.duration
-    var accessTime by Tracks.accessTime
-    var path by Tracks.path
-    var album by Album referencedOn Tracks.album
-    var artist by Artist referencedOn Tracks.artist
-    var composer by Artist optionalReferencedOn Tracks.composer
-    var collection by Collection optionalReferencedOn Tracks.collection
-    var collectionIndex by Tracks.collectionIndex
+    var title by TTracks.title
+    var trackNr by TTracks.trackNr
+    var duration by TTracks.duration
+    var accessTime by TTracks.accessTime
+    var path by TTracks.path
+    var book by Book referencedOn TTracks.book
+    var author by Author referencedOn TTracks.author
+    var composer by Author optionalReferencedOn TTracks.narrator
+    var series by Series optionalReferencedOn TTracks.series
+    var seriesIndex by TTracks.seriesIndex
 
-    override fun toModel() = TrackModel(id.value,
-                                        title,
-                                        trackNr,
-                                        duration,
-                                        accessTime,
-                                        albumID.value,
-                                        artistID.value,
-                                        composerID?.value,
-                                        collectionID?.value,
-                                        collectionIndex)
+    override fun toModel() = TrackModel(
+        id = id.value,
+        title = title,
+        trackNr = trackNr,
+        duration = duration,
+        accessTime = accessTime,
+        book = bookID.value,
+        author = authorID.value,
+        narrator = narratorID?.value,
+        series = seriesID?.value,
+        seriesIndex = seriesIndex
+    )
 }
