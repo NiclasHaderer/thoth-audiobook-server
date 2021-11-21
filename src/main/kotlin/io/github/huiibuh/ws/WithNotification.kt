@@ -27,16 +27,6 @@ fun Route.withNotifications(path: String, table: Table, type: NotificationType) 
         }
     }
 
-    // TODO pass data of change object to the event
-    //    if (it.entityClass is UUIDEntityClass) {
-    //        val id = (it.entityId as EntityID<UUID>).value
-    //        val model = (it.entityClass as UUIDEntityClass).findById(id)
-    //        Json.encodeToString((model as ToModel<*>).toModel() as ArtistModel)
-    //    } else {
-    //        null
-    //    }
-    //    ))
-
     webSocket(path) {
         sockets.add(this)
     }
