@@ -1,6 +1,10 @@
 package audible.client
 
-import audible.models.*
+import audible.models.AudibleSearchAmount
+import audible.models.AudibleSearchAuthor
+import audible.models.AudibleSearchLanguage
+import audible.models.AudibleSearchResult
+import audible.models.AudibleSearchSeries
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document

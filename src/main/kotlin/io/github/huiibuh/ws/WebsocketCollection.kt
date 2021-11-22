@@ -12,10 +12,10 @@ import java.util.*
 data class ChangeEvent(
     val type: String,
     val ids: String,
-    val data: String?
+    val data: String?,
 )
 
-class WebsocketCollection() {
+class WebsocketCollection {
     private val connections = Collections.synchronizedList<DefaultWebSocketServerSession>(mutableListOf())
 
     fun add(connection: DefaultWebSocketServerSession) {

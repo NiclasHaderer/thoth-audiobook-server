@@ -1,5 +1,6 @@
 package io.github.huiibuh.scanner
 
+import io.github.huiibuh.db.tables.Track
 import io.ktor.util.*
 import java.nio.file.Files
 import java.nio.file.LinkOption
@@ -14,14 +15,13 @@ fun Path.isAudioFile(): Boolean {
     return this.isRegularFile(LinkOption.NOFOLLOW_LINKS) && this.extension.lowercase() in AUDIO_EXTENSIONS
 }
 
-fun traverseAudioFiles(directory: String, callback: (TrackReference, BasicFileAttributes, Path) -> Unit) {
+fun traverseAudioFiles(
+    directory: String,
+    add: (TrackReference, BasicFileAttributes, Path, Track?) -> Unit,
+    removeSubtree: (Path) -> Unit,
+) {
     val file = Paths.get(directory)
     if (!Files.exists(file)) return
 
-    Files.walkFileTree(file, AudioFileVisitor(callback))
-}
-
-fun fileExists(path: String): Boolean {
-    val file = Paths.get(path)
-    return Files.exists(file)
+    Files.walkFileTree(file, AudioFileVisitor(add = add, removeSubtree = removeSubtree))
 }

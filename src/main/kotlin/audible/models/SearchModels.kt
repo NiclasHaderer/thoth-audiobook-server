@@ -31,9 +31,7 @@ class AudibleSearchSeriesImpl(
     override val name: String,
     override val index: Float,
     override val link: String,
-) : AudibleSearchSeries {
-
-}
+) : AudibleSearchSeries
 
 interface AudibleSearchResult {
     val asin: String
