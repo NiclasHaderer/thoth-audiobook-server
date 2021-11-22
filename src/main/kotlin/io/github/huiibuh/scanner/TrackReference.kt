@@ -110,8 +110,8 @@ class TrackReference(private val audioFile: AudioFile) {
     }
 
     fun hasRequiredAttributes(): Boolean {
-        val author: String? = this.author
-        val book: String? = this.book
+        val author: String? = audioFile.tag.getFirst(FieldKey.ARTIST)
+        val book: String? = audioFile.tag.getFirst(FieldKey.ALBUM)
         return author != null && author.trim().isNotEmpty() && book != null && book.trim().isNotEmpty()
     }
 
