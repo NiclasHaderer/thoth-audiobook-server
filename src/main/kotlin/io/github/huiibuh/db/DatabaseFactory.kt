@@ -7,7 +7,6 @@ import io.github.huiibuh.config.Settings
 import io.github.huiibuh.db.migration.DatabaseMigrator
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.slf4j.LoggerFactory
 
 

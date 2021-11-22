@@ -9,7 +9,7 @@ import java.util.*
 
 object TSeries : UUIDTable("Series") {
     val title = varchar("title", 250).uniqueIndex()
-    val asin = char("asin", 10).uniqueIndex().nullable()
+    val asin = char("asin", 10).nullable()
     val description = text("description").nullable()
     val author = reference("author", TAuthors)
 }
@@ -26,7 +26,7 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
 
     override fun toModel() = SeriesModel(
         id = id.value,
-        name = title,
+        title = title,
         asin = asin,
         description = description,
         author = authorID.value

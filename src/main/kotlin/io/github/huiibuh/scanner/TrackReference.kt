@@ -1,6 +1,11 @@
 package io.github.huiibuh.scanner
 
 import api.exceptions.APINotFound
+import io.github.huiibuh.db.tables.Track
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -25,6 +30,24 @@ class TrackReference(private val audioFile: AudioFile) {
             )
         }
     }
+
+    var asin: String
+        get() = audioFile.tag.getFirst(FieldKey.AMAZON_ID)
+        set(value) {
+            audioFile.tag.setField(FieldKey.AMAZON_ID, value)
+        }
+
+    var description: String
+        get() = audioFile.tag.getFirst(FieldKey.COMMENT)
+        set(value) {
+            audioFile.tag.setField(FieldKey.COMMENT, value)
+        }
+
+    var language: String
+        get() = audioFile.tag.getFirst(FieldKey.LANGUAGE)
+        set(value) {
+            audioFile.tag.setField(FieldKey.LANGUAGE, value)
+        }
 
     var title: String
         get() = audioFile.tag.getFirst(FieldKey.TITLE)
@@ -104,3 +127,22 @@ data class CoverInformation(
 }
 
 
+fun List<TrackReference>.saveToFile() = runBlocking {
+    val parent = Job()
+    this@saveToFile.forEach {
+        launch(parent) {
+            it.save()
+        }
+    }
+    parent.children.forEach { it.join() }
+}
+
+fun List<Track>.toTrackModel() = runBlocking {
+    val parent = Job()
+    val t = this@toTrackModel.map {
+        async(parent) {
+            TrackReference.fromPath(it.path)
+        }
+    }
+    t.map { it.await() }
+}

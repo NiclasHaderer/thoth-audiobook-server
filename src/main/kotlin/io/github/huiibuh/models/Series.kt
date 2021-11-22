@@ -7,7 +7,7 @@ import java.util.*
 @Serializable
 data class SeriesModel(
     @Serializable(UUIDSerializer::class) val id: UUID,
-    val name: String,
+    val title: String,
     val asin: String?,
     val description: String?,
     @Serializable(UUIDSerializer::class) val author: UUID,
@@ -16,7 +16,7 @@ data class SeriesModel(
 @Serializable
 data class SeriesModelWithBooks(
     @Serializable(UUIDSerializer::class) val id: UUID,
-    val name: String,
+    val title: String,
     val asin: String?,
     val description: String?,
     val books: List<BookModel>,
@@ -25,7 +25,7 @@ data class SeriesModelWithBooks(
     companion object {
         fun fromModel(series: SeriesModel, books: List<BookModel>) = SeriesModelWithBooks(
             id = series.id,
-            name = series.name,
+            title = series.title,
             asin = series.asin,
             description = series.description,
             books = books,

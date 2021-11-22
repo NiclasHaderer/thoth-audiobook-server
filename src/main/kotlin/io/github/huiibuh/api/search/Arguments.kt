@@ -1,4 +1,4 @@
-package io.github.huiibuh.api.audiobooks.search
+package io.github.huiibuh.api.search
 
 import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
 

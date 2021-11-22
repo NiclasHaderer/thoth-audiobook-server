@@ -55,7 +55,7 @@ internal abstract class AudibleHandler(
             val body = response.receive<String>()
             return Jsoup.parse(body, this.url.toString())
         } catch (e: ClientRequestException) {
-            val message = e.localizedMessage.split("Text: ").first()
+            val message = e.localizedMessage.split("Text: ").firstOrNull() ?: ""
             val statusCode = e.response.status
             if (statusCode == HttpStatusCode.NotFound) {
                 throw APINotFound(message)

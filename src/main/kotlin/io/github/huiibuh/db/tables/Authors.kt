@@ -10,7 +10,7 @@ import java.util.*
 object TAuthors : UUIDTable("Authors") {
     val name = varchar("name", 255).uniqueIndex()
     val biography = text("biography").nullable()
-    val asin = text("asin").uniqueIndex().nullable()
+    val asin = text("asin").nullable()
     val image = reference("image", TImages).nullable()
 }
 

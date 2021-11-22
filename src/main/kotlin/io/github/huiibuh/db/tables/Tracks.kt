@@ -19,6 +19,7 @@ object TTracks : UUIDTable("Tracks") {
     val narrator = reference("narrator", TAuthors).nullable()
     val series = reference("series", TSeries).nullable()
     val seriesIndex = integer("seriesIndex").nullable()
+    val scanIndex = integer("scanIndex")
 }
 
 
@@ -37,9 +38,10 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
     var path by TTracks.path
     var book by Book referencedOn TTracks.book
     var author by Author referencedOn TTracks.author
-    var composer by Author optionalReferencedOn TTracks.narrator
+    var narrator by Author optionalReferencedOn TTracks.narrator
     var series by Series optionalReferencedOn TTracks.series
     var seriesIndex by TTracks.seriesIndex
+    var scanIndex by TTracks.scanIndex
 
     override fun toModel() = TrackModel(
         id = id.value,

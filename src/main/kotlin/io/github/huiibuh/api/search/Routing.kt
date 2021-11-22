@@ -1,4 +1,4 @@
-package io.github.huiibuh.api.audiobooks.search
+package io.github.huiibuh.api.search
 
 import api.exceptions.APIBadRequest
 import api.exceptions.APINotImplemented
@@ -7,19 +7,22 @@ import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
-import io.github.huiibuh.api.images.imageRouting
+import com.papsign.ktor.openapigen.route.tag
+import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.models.SearchModel
 import io.github.huiibuh.services.database.SearchService
 
 
-fun NormalOpenAPIRoute.searchRouting(route: String = "search") {
+fun NormalOpenAPIRoute.registerSearchRouting(route: String = "search") {
     route(route) {
-        imageRouting()
+        tag(ApiTags.Search) {
+            routing()
+        }
     }
 }
 
 
-internal fun NormalOpenAPIRoute.searchRouting() {
+internal fun NormalOpenAPIRoute.routing() {
 
     withNotImplementedRequestHandling {
         get<SearchQuery, SearchModel> {

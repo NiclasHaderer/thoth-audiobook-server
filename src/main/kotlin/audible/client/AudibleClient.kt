@@ -1,6 +1,11 @@
 package audible.client
 
-import audible.models.*
+import audible.models.AudibleAuthor
+import audible.models.AudibleBook
+import audible.models.AudibleSearchAmount
+import audible.models.AudibleSearchLanguage
+import audible.models.AudibleSearchResult
+import audible.models.AudibleSeries
 import io.ktor.client.*
 
 open class AudibleClient(

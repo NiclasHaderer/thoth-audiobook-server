@@ -1,6 +1,10 @@
 package api.exceptions
 
-import com.papsign.ktor.openapigen.exceptions.*
+import com.papsign.ktor.openapigen.exceptions.OpenAPIBadContentException
+import com.papsign.ktor.openapigen.exceptions.OpenAPINoParserException
+import com.papsign.ktor.openapigen.exceptions.OpenAPINoSerializerException
+import com.papsign.ktor.openapigen.exceptions.OpenAPIParseException
+import com.papsign.ktor.openapigen.exceptions.OpenAPIRequiredFieldException
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.throws
 import io.ktor.http.*

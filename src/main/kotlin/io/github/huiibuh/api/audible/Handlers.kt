@@ -1,11 +1,11 @@
 package io.github.huiibuh.api.audible
 
-import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
-import com.papsign.ktor.openapigen.route.response.respond
 import audible.models.AudibleAuthor
 import audible.models.AudibleBook
 import audible.models.AudibleSearchResult
 import audible.models.AudibleSeries
+import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
+import com.papsign.ktor.openapigen.route.response.respond
 import io.github.huiibuh.services.AudibleService
 
 internal suspend fun OpenAPIPipelineResponseContext<List<AudibleSearchResult>>.search(query: AudibleSearch) {

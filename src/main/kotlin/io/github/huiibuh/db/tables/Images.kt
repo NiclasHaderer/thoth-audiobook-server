@@ -8,7 +8,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import java.util.*
 
 object TImages : UUIDTable("Images") {
-    val image = blob("image").uniqueIndex()
+    val image = blob("image")
 }
 
 
