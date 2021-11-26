@@ -1,5 +1,7 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.models.NamedId
+import io.github.huiibuh.models.TitledId
 import io.github.huiibuh.models.TrackModel
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -10,9 +12,10 @@ import java.util.*
 
 object TTracks : UUIDTable("Tracks") {
     val title = varchar("title", 255)
+    val trackNr = integer("trackNr").nullable()
+    val cover = reference("cover", TImages).nullable()
     val duration = integer("duration")
     val accessTime = long("accessTime")
-    val trackNr = integer("trackNr").nullable()
     val path = text("path").uniqueIndex()
     val book = reference("book", TBooks)
     val author = reference("author", TAuthors)
@@ -26,13 +29,11 @@ object TTracks : UUIDTable("Tracks") {
 class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
     companion object : UUIDEntityClass<Track>(TTracks)
 
-    private val bookID by TTracks.book
-    private val authorID by TTracks.author
-    private val narratorID by TTracks.narrator
-    private val seriesID by TTracks.series
+    private val coverID by TTracks.cover
 
     var title by TTracks.title
     var trackNr by TTracks.trackNr
+    var cover by Image optionalReferencedOn TTracks.cover
     var duration by TTracks.duration
     var accessTime by TTracks.accessTime
     var path by TTracks.path
@@ -46,13 +47,26 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
     override fun toModel() = TrackModel(
         id = id.value,
         title = title,
+        cover = coverID?.value,
         trackNr = trackNr,
         duration = duration,
         accessTime = accessTime,
-        book = bookID.value,
-        author = authorID.value,
-        narrator = narratorID?.value,
-        series = seriesID?.value,
+        book = TitledId(
+            title = book.title,
+            id = book.id.value
+        ),
+        author = NamedId(
+            name = author.name,
+            id = author.id.value
+        ),
+        narrator = if (narrator != null) NamedId(
+            name = narrator!!.name,
+            id = narrator!!.id.value
+        ) else null,
+        series = if (series != null) TitledId(
+            title = series!!.title,
+            id = series!!.id.value
+        ) else null,
         seriesIndex = seriesIndex
     )
 }

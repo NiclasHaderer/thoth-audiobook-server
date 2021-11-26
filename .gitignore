@@ -71,3 +71,4 @@ outTmp/
 kotlin-ide/
 javacore*
 *.db
+gen/

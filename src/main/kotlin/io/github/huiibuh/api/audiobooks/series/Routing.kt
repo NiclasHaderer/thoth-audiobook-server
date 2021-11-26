@@ -24,12 +24,14 @@ fun NormalOpenAPIRoute.registerSeriesRouting(path: String = "series") {
 
 internal fun NormalOpenAPIRoute.routing() {
     get<QueryLimiter, List<SeriesModel>> {
-        val t = SeriesService.getMultiple(it.limit, it.offset)
-        respond(t)
+        respond(
+            SeriesService.getMultiple(it.limit, it.offset)
+        )
     }
     get<SeriesId, SeriesModelWithBooks> {
-        val t = SeriesService.get(it.uuid)
-        respond(t)
+        respond(
+            SeriesService.get(it.uuid)
+        )
     }
     patch(body = OpenAPIPipelineResponseContext<SeriesModel>::patchSeries)
 }

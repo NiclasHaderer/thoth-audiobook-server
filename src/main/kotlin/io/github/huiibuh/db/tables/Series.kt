@@ -1,5 +1,6 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.models.NamedId
 import io.github.huiibuh.models.SeriesModel
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -17,8 +18,6 @@ object TSeries : UUIDTable("Series") {
 class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
     companion object : UUIDEntityClass<Series>(TSeries)
 
-    private val authorID by TSeries.author
-
     var title by TSeries.title
     var asin by TSeries.asin
     var description by TSeries.description
@@ -28,7 +27,11 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
         id = id.value,
         title = title,
         asin = asin,
+        amount = Book.find { TBooks.series eq id.value }.count(),
         description = description,
-        author = authorID.value
+        author = NamedId(
+            name = author.name,
+            id = author.id.value
+        )
     )
 }

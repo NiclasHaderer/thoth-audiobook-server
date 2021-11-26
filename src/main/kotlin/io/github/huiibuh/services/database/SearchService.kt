@@ -18,37 +18,40 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 @Serializable
 object SearchService {
-    fun everywhere(query: String): SearchModel {
+    fun everywhere(query: String, limit: Int = 5): SearchModel {
         val preparedQuery = prepareQuery(query)
         return SearchModel(
-            books = everywhereBook(preparedQuery),
-            series = everywhereSeries(preparedQuery),
-            authors = everywhereAuthor(preparedQuery)
+            books = everywhereBook(preparedQuery, limit),
+            series = everywhereSeries(preparedQuery, limit),
+            authors = everywhereAuthor(preparedQuery, limit),
         )
     }
 
-    fun everywhereAuthor(strQuery: String): List<AuthorModel> = transaction {
+    fun everywhereAuthor(strQuery: String, limit: Int): List<AuthorModel> = transaction {
         val query = TAuthors
                 .leftJoin(TSeries, { TAuthors.id }, { TSeries.author })
                 .leftJoin(TBooks, { TAuthors.id }, { TBooks.author })
                 .select { everywhereQuery(strQuery) }
-        Author.wrapRows(query).distinctBy { it.id }.map { it.toModel() }
+        Author.wrapRows(query).limit(limit).sortedBy { it.name }
+                .distinctBy { it.id }.map { it.toModel() }
     }
 
-    private fun everywhereSeries(strQuery: String) = transaction {
+    private fun everywhereSeries(strQuery: String, limit: Int) = transaction {
         val query = TSeries
                 .leftJoin(TAuthors, { TSeries.author }, { TAuthors.id })
                 .leftJoin(TBooks, { TSeries.id }, { TBooks.series })
                 .select { everywhereQuery(strQuery) }
-        Series.wrapRows(query).distinctBy { it.id }.map { it.toModel() }
+        Series.wrapRows(query).limit(limit).sortedBy { it.title }
+                .distinctBy { it.id }.map { it.toModel() }
     }
 
-    private fun everywhereBook(strQuery: String) = transaction {
+    private fun everywhereBook(strQuery: String, limit: Int) = transaction {
         val query = TBooks
                 .leftJoin(TSeries, { TBooks.series }, { id })
                 .leftJoin(TAuthors, { TBooks.author }, { id })
                 .select { everywhereQuery(strQuery) }
-        Book.wrapRows(query).distinctBy { it.id }.map { it.toModel() }
+        Book.wrapRows(query).limit(limit).sortedBy { it.title }
+                .distinctBy { it.id }.map { it.toModel() }
     }
 
     private fun prepareQuery(query: String): String {
@@ -56,14 +59,14 @@ object SearchService {
     }
 
     private fun everywhereQuery(strQuery: String) = buildExpression {
-        // Series of an author
+        // Authors
         (TAuthors.name like strQuery) or
                 (TAuthors.biography like strQuery) or
-                // Series which match the query
+                // Series
                 (TSeries.title like strQuery) or
                 (TSeries.asin like strQuery) or
                 (TSeries.description like strQuery) or
-                // Series which match the books which match the query
+                // Books
                 (TBooks.title like strQuery) or
                 (TBooks.description like strQuery) or
                 (TBooks.asin like strQuery)

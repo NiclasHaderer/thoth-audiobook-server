@@ -70,6 +70,7 @@ object Database {
                 author = author
             ) else null
             book = GetOrCreate.book(title = trackRef.book,
+                                    year = trackRef.year,
                                     description = trackRef.description,
                                     language = trackRef.language,
                                     asin = trackRef.asin,
@@ -79,6 +80,7 @@ object Database {
                                     author = author,
                                     narrator = narrator
             )
+            cover = book.cover
             seriesIndex = trackRef.seriesIndex
             this.scanIndex = scanIndex
         }
@@ -98,6 +100,7 @@ object Database {
                 author = author
             ) else null
             book = GetOrCreate.book(title = trackRef.book,
+                                    year = trackRef.year,
                                     description = trackRef.description,
                                     language = trackRef.language,
                                     asin = trackRef.asin,

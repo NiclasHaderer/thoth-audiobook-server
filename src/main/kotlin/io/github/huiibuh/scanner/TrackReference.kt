@@ -11,6 +11,8 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.nameWithoutExtension
 
 class TrackReference(private val audioFile: AudioFile) {
 
@@ -31,26 +33,39 @@ class TrackReference(private val audioFile: AudioFile) {
         }
     }
 
-    var asin: String
-        get() = audioFile.tag.getFirst(FieldKey.AMAZON_ID)
+    var asin: String?
+        get() = stringOrNull(audioFile.tag.getFirst(FieldKey.AMAZON_ID))
         set(value) {
             audioFile.tag.setField(FieldKey.AMAZON_ID, value)
         }
 
-    var description: String
-        get() = audioFile.tag.getFirst(FieldKey.COMMENT)
+    var description: String?
+        get() = stringOrNull(audioFile.tag.getFirst(FieldKey.COMMENT))
         set(value) {
             audioFile.tag.setField(FieldKey.COMMENT, value)
         }
 
-    var language: String
-        get() = audioFile.tag.getFirst(FieldKey.LANGUAGE)
+    var language: String?
+        get() = stringOrNull(audioFile.tag.getFirst(FieldKey.LANGUAGE))
         set(value) {
             audioFile.tag.setField(FieldKey.LANGUAGE, value)
         }
 
+    var year: Int?
+        get() {
+            val year = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull()
+            val albumYear = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull()
+            return year ?: albumYear
+        }
+        set(value) {
+            audioFile.tag.setField(FieldKey.YEAR, value.toString())
+        }
+
     var title: String
-        get() = audioFile.tag.getFirst(FieldKey.TITLE)
+        get() {
+            val title = stringOrNull(audioFile.tag.getFirst(FieldKey.TITLE))
+            return title ?: Path.of(path).nameWithoutExtension
+        }
         set(value) {
             audioFile.tag.setField(FieldKey.TITLE, value)
         }
@@ -71,12 +86,12 @@ class TrackReference(private val audioFile: AudioFile) {
             audioFile.tag.setField(FieldKey.TRACK, value.toString())
         }
     var narrator: String?
-        get() = audioFile.tag.getFirst(FieldKey.COMPOSER)
+        get() = stringOrNull(audioFile.tag.getFirst(FieldKey.COMPOSER))
         set(value) {
             audioFile.tag.setField(FieldKey.COMPOSER, value)
         }
     var series: String?
-        get() = audioFile.tag.getFirst(FieldKey.GROUPING)
+        get() = stringOrNull(audioFile.tag.getFirst(FieldKey.GROUPING))
         set(value) {
             audioFile.tag.setField(FieldKey.GROUPING, value)
         }
@@ -113,6 +128,10 @@ class TrackReference(private val audioFile: AudioFile) {
         val author: String? = audioFile.tag.getFirst(FieldKey.ARTIST)
         val book: String? = audioFile.tag.getFirst(FieldKey.ALBUM)
         return author != null && author.trim().isNotEmpty() && book != null && book.trim().isNotEmpty()
+    }
+
+    private fun stringOrNull(str: String): String? {
+        return if (str.isEmpty()) null else str
     }
 
 }

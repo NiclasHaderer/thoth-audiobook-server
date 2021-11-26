@@ -8,12 +8,13 @@ import java.util.*
 data class TrackModel(
     @Serializable(UUIDSerializer::class) val id: UUID,
     val title: String,
+    @Serializable(UUIDSerializer::class) val cover: UUID?,
     val trackNr: Int?,
     val duration: Int,
     val accessTime: Long,
-    @Serializable(UUIDSerializer::class) val book: UUID,
-    @Serializable(UUIDSerializer::class) val author: UUID,
-    @Serializable(UUIDSerializer::class) val narrator: UUID?,
-    @Serializable(UUIDSerializer::class) val series: UUID?,
+    val book: TitledId,
+    val author: NamedId,
+    val narrator: NamedId?,
+    val series: TitledId?,
     val seriesIndex: Int?,
 )
