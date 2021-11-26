@@ -44,6 +44,8 @@ dependencies {
     implementation("org.reflections:reflections:$reflectVersion")
     // OpenAPI
     implementation("com.github.papsign:Ktor-OpenAPI-Generator:0.3-beta.2")
+    // Typescript code generation
+    implementation("com.github.ntrrgc:ts-generator:1.1.1")
     // Audio file processing
     implementation("org.bitbucket.ijabz:jaudiotagger:v3.0.1")
     // Ktor

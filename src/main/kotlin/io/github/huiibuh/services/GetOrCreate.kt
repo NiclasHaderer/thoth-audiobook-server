@@ -31,6 +31,7 @@ object GetOrCreate {
 
     fun book(
         title: String,
+        year: Int?,
         language: String?,
         description: String?,
         asin: String?,
@@ -44,6 +45,7 @@ object GetOrCreate {
         book
             ?: Book.new {
                 this.title = title
+                this.year = year
                 this.language = language
                 this.description = description
                 this.asin = asin

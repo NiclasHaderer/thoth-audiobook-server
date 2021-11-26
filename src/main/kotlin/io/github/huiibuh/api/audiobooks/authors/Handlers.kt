@@ -11,6 +11,7 @@ import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.scanner.TrackReference
 import io.github.huiibuh.scanner.saveToFile
 import io.github.huiibuh.scanner.toTrackModel
+import io.github.huiibuh.services.database.TrackService
 import io.github.huiibuh.utils.uriToFile
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -20,7 +21,7 @@ internal suspend fun OpenAPIPipelineResponseContext<AuthorModel>.patchAuthor(id:
     val author = transaction {
         val author = Author.findById(id.uuid) ?: throw APINotFound("Author could not be found")
 
-        val tracks = Track.find { TTracks.author eq id.uuid }.toList()
+        val tracks = TrackService.forAuthor(id.uuid)
         val trackReferences = tracks.toTrackModel()
 
         if (patchAuthor.name != null) {

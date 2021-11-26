@@ -30,7 +30,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 fun main() {
     disableJAudioTaggerLogs()
     DatabaseFactory.connectAndMigrate()
-    Database.rescan()
+//    Database.rescan()
     embeddedServer(Netty, port = Settings.webUiPort, host = "0.0.0.0") {
         webServer()
     }.start(wait = true)
