@@ -25,6 +25,13 @@ object Settings {
         System.getenv("WEB_UI_PORT")?.toIntOrNull() ?: 8080
     }
 
+    val audibleSearchHost: String by lazy {
+        System.getenv("AUDIBLE_SEARCH_HOST") ?: "audible.de"
+    }
+    val audibleAuthorHost: String by lazy {
+        System.getenv("AUDIBLE_AUTHOR_HOST") ?: "audible.de"
+    }
+
     val database: DatabaseConnection
         get() = if (production) SqLite else SqLite
 

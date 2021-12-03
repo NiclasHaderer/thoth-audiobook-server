@@ -14,7 +14,7 @@ data class TrackModel(
     val accessTime: Long,
     val book: TitledId,
     val author: NamedId,
-    val narrator: NamedId?,
+    val narrator: String?,
     val series: TitledId?,
     val seriesIndex: Int?,
 )

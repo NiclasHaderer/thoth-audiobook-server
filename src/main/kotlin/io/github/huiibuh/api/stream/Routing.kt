@@ -10,7 +10,6 @@ import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.services.database.TrackService
 import io.ktor.application.*
-import io.ktor.http.*
 import io.ktor.response.*
 import java.io.File
 
@@ -34,10 +33,10 @@ fun NormalOpenAPIRoute.streamingRouting() {
         if (!file.exists()) {
             throw APINotFound("Database out of sync. Please start syncing process.")
         }
-        pipeline.call.response.header(
-            HttpHeaders.ContentDisposition,
-            ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, file.name).toString()
-        )
+        //        pipeline.call.response.header(
+        //            HttpHeaders.ContentDisposition,
+        //            ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, file.name).toString()
+        //        )
         pipeline.call.respondFile(file)
     }
 }

@@ -9,22 +9,22 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 @Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
-internal class BookHandler(
-    client: HttpClient?,
-    url: Url,
-    document: Document?,
-) : AudibleHandler(client, url, document) {
+internal class BookHandler : AudibleHandler {
     companion object {
         fun fromUrl(client: HttpClient, host: String, bookASIN: String): BookHandler {
             val url = URLBuilder(protocol = URLProtocol.HTTPS, host = host, encodedPath = "/pd/$bookASIN")
             url.parameters.append("ipRedirectOverride", "true")
-            return BookHandler(client, url.build(), null)
+            return BookHandler(client, url.build())
         }
 
         fun fromDocument(document: Document, url: Url): BookHandler {
-            return BookHandler(null, url, document)
+            return BookHandler(document, url)
         }
     }
+
+    constructor(client: HttpClient, url: Url) : super(client, url)
+
+    constructor(document: Document, url: Url) : super(document, url)
 
     override suspend fun execute(): AudibleBook {
         val document = getDocument()

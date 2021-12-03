@@ -14,6 +14,7 @@ object Database {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun rescan() {
+        logger.info("Starting import of tracks")
         val initializedStartAt = System.currentTimeMillis()
 
         val settings = SharedSettingsService.get()
@@ -39,7 +40,6 @@ object Database {
     }
 
     private fun importTracks(settings: SharedSettings) {
-        logger.info("Scanning for files")
         traverseAudioFiles(
             Settings.audioFileLocation,
             add = { trackReference, _, _, track ->
@@ -52,7 +52,6 @@ object Database {
                 transaction { Track.find { TTracks.path like "$path%" }.forEach { it.delete() } }
             })
 
-        logger.info("Scan completed")
     }
 
     private fun createTrack(trackRef: TrackReference, scanIndex: Int) = transaction {
@@ -64,7 +63,7 @@ object Database {
             trackNr = trackRef.trackNr
             path = trackRef.path
             author = GetOrCreate.author(name = trackRef.author)
-            narrator = if (trackRef.narrator != null) GetOrCreate.author(trackRef.narrator!!) else null
+            narrator = trackRef.narrator
             series = if (trackRef.series != null) GetOrCreate.series(
                 title = trackRef.series!!,
                 author = author
@@ -94,7 +93,7 @@ object Database {
             trackNr = trackRef.trackNr
             path = trackRef.path
             author = GetOrCreate.author(name = trackRef.author)
-            narrator = if (trackRef.narrator != null) GetOrCreate.author(trackRef.narrator!!) else null
+            narrator = trackRef.narrator
             series = if (trackRef.series != null) GetOrCreate.series(
                 title = trackRef.series!!,
                 author = author

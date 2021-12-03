@@ -8,21 +8,26 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 @Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
-internal class AuthorHandler(
-    client: HttpClient?,
-    url: Url,
-    document: Document?,
-    private val imageSize: Int,
-) : AudibleHandler(client, url, document) {
+internal class AuthorHandler : AudibleHandler {
+    private val imageSize: Int
+
+    constructor(client: HttpClient, url: Url, imageSize: Int) : super(client, url) {
+        this.imageSize = imageSize
+    }
+
+    constructor(document: Document, url: Url, imageSize: Int) : super(document, url) {
+        this.imageSize = imageSize
+    }
+
     companion object {
         fun fromURL(client: HttpClient, host: String, authorASIN: String, imageSize: Int = 500): AuthorHandler {
             val url = URLBuilder(protocol = URLProtocol.HTTPS, host = host, encodedPath = "/author/$authorASIN")
             url.parameters.append("ipRedirectOverride", "true")
-            return AuthorHandler(client, url.build(), null, imageSize)
+            return AuthorHandler(client, url.build(), imageSize)
         }
 
         fun fromDocument(document: Document, url: Url, imageSize: Int = 500): AuthorHandler {
-            return AuthorHandler(null, url, document, imageSize)
+            return AuthorHandler(document, url, imageSize)
         }
     }
 

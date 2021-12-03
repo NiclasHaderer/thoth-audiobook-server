@@ -14,11 +14,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
-internal class SearchHandler(
-    client: HttpClient?,
-    url: Url,
-    document: Document?,
-) : AudibleHandler(client, url, document) {
+internal class SearchHandler : AudibleHandler {
+
+    constructor(client: HttpClient, url: Url) : super(client, url)
+
+    constructor(document: Document, url: Url) : super(document, url)
 
     companion object {
         fun fromURL(
@@ -59,11 +59,11 @@ internal class SearchHandler(
                 encodedPath = "/search"
             )
 
-            return SearchHandler(client, url.build(), null)
+            return SearchHandler(client, url.build())
         }
 
         fun fromDocument(document: Document, url: Url): SearchHandler {
-            return SearchHandler(null, url, document)
+            return SearchHandler(document, url)
         }
     }
 
@@ -86,9 +86,19 @@ internal class SearchHandler(
                 override val series = extractSeriesInfo(it)
                 override val image = extractImageUrl(it)
                 override val language = extractLanguage(it)
+                override val narrator = extractNarrator(it)
                 override val releaseDate = extractReleaseDate(it)
                 override val asin = idFromURL(this.link)
             }
+        }
+    }
+
+    private fun extractNarrator(element: Element): AudibleSearchAuthor? {
+        val narratorLink = element.selectFirst(".narratorLabel a") ?: return null
+        return object : AudibleSearchAuthor {
+            override val link = narratorLink.absUrl("href")
+            override val name = narratorLink.text()
+            override val asin = idFromURL(this.link)
         }
     }
 
@@ -144,7 +154,7 @@ internal class SearchHandler(
         return object : AudibleSearchSeries {
             override val link = seriesNameElement.absUrl("href")
             override val name = seriesNameElement.text()
-            override val index = seriesIndex.toFloat()
+            override val index = seriesIndex.toFloatOrNull()
             override val asin = idFromURL(this.link)
         }
 

@@ -9,20 +9,22 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 @Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
-internal class SeriesHandler(
-    client: HttpClient?,
-    url: Url,
-    document: Document?,
-) : AudibleHandler(client, url, document) {
+internal class SeriesHandler : AudibleHandler {
+
+    constructor(client: HttpClient, url: Url) : super(client, url)
+
+    constructor(document: Document, url: Url) : super(document, url)
+
+
     companion object {
         fun fromURL(client: HttpClient, host: String, seriesASIN: String): SeriesHandler {
             val url = URLBuilder(protocol = URLProtocol.HTTPS, host = host, encodedPath = "/series/$seriesASIN")
             url.parameters.append("ipRedirectOverride", "true")
-            return SeriesHandler(client, url.build(), null)
+            return SeriesHandler(client, url.build())
         }
 
         fun fromDocument(document: Document, url: Url): SeriesHandler {
-            return SeriesHandler(null, url, document)
+            return SeriesHandler(document, url)
         }
     }
 

@@ -17,7 +17,7 @@ object TBooks : UUIDTable("Books") {
     val description = text("description").nullable()
     val author = reference("author", TAuthors)
     val asin = char("asin", 10).nullable()
-    val narrator = reference("narrator", TAuthors).nullable()
+    val narrator = varchar("name", 255).nullable()
     val series = reference("series", TSeries).nullable()
     val seriesIndex = integer("seriesIndex").nullable()
     val cover = reference("cover", TImages).nullable()
@@ -34,7 +34,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
     var description by TBooks.description
     var asin by TBooks.asin
     var author by Author referencedOn TBooks.author
-    var narrator by Author optionalReferencedOn TBooks.narrator
+    var narrator by TBooks.narrator
     var series by Series optionalReferencedOn TBooks.series
     var seriesIndex by TBooks.seriesIndex
     var cover by Image optionalReferencedOn TBooks.cover
@@ -50,10 +50,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
             name = author.name,
             id = author.id.value
         ),
-        narrator = if (narrator != null) NamedId(
-            name = narrator!!.name,
-            id = narrator!!.id.value
-        ) else null,
+        narrator = narrator,
         series = if (series != null) TitledId(
             title = series!!.title,
             id = series!!.id.value

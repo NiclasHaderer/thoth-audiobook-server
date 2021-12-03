@@ -14,6 +14,7 @@ import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.configureHTTP
 import io.github.huiibuh.plugins.configureMonitoring
 import io.github.huiibuh.plugins.configureOpenAPI
+import io.github.huiibuh.plugins.configurePartialContent
 import io.github.huiibuh.plugins.configureRouting
 import io.github.huiibuh.plugins.configureSerialization
 import io.github.huiibuh.plugins.configureSockets
@@ -24,13 +25,21 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
+@OptIn(DelicateCoroutinesApi::class)
 fun main() {
     disableJAudioTaggerLogs()
     DatabaseFactory.connectAndMigrate()
-//    Database.rescan()
+
+    GlobalScope.launch {
+        Database.rescan()
+    }
+
     embeddedServer(Netty, port = Settings.webUiPort, host = "0.0.0.0") {
         webServer()
     }.start(wait = true)
@@ -40,6 +49,7 @@ fun main() {
 fun Application.webServer() {
     configureOpenAPI()
     configureRouting()
+    configurePartialContent()
     configureHTTP()
     configureSockets()
     configureMonitoring()
