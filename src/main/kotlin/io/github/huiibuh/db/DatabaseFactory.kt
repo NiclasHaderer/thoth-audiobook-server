@@ -45,6 +45,7 @@ object DatabaseFactory {
         }
 
         DatabaseMigrator(dbInstance!!, "db.migrations").runMigrations()
+        log.info("Migrations done")
     }
 
 }

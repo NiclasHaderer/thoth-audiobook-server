@@ -10,6 +10,7 @@ interface AudibleSearchAuthor {
     val link: String
 }
 
+
 @Serializable
 class AudibleSearchAuthorImpl(
     override val asin: String,
@@ -21,7 +22,7 @@ class AudibleSearchAuthorImpl(
 interface AudibleSearchSeries {
     val asin: String
     val name: String
-    val index: Float
+    val index: Float?
     val link: String
 }
 
@@ -29,7 +30,7 @@ interface AudibleSearchSeries {
 class AudibleSearchSeriesImpl(
     override val asin: String,
     override val name: String,
-    override val index: Float,
+    override val index: Float?,
     override val link: String,
 ) : AudibleSearchSeries
 
@@ -38,6 +39,7 @@ interface AudibleSearchResult {
     val title: String?
     val link: String?
     val author: AudibleSearchAuthor?
+    val narrator: AudibleSearchAuthor?
     val series: AudibleSearchSeries?
     val image: String?
     val language: String?
@@ -50,6 +52,7 @@ class AudibleSearchResultImpl(
     override val title: String?,
     override val link: String?,
     override val author: AudibleSearchAuthorImpl?,
+    override val narrator: AudibleSearchAuthorImpl?,
     override val series: AudibleSearchSeriesImpl?,
     override val image: String?,
     override val language: String?,

@@ -1,7 +1,6 @@
 package io.github.huiibuh.models
 
 import io.github.huiibuh.db.tables.Track
-import io.github.huiibuh.scanner.toTrackModel
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
@@ -16,7 +15,7 @@ data class BookModel(
     val description: String?,
     val asin: String?,
     val author: NamedId,
-    val narrator: NamedId?,
+    val narrator: String?,
     val series: TitledId?,
     val seriesIndex: Int?,
     @Serializable(UUIDSerializer::class) val cover: UUID?,
@@ -32,7 +31,7 @@ data class BookModelWithTracks(
     val asin: String?,
     val tracks: List<TrackModel>,
     val author: NamedId,
-    val narrator: NamedId?,
+    val narrator: String?,
     val series: TitledId?,
     val seriesIndex: Int?,
     @Serializable(UUIDSerializer::class) val cover: UUID?,

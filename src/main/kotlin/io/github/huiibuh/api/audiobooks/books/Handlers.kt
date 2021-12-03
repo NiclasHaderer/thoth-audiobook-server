@@ -11,7 +11,6 @@ import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.scanner.saveToFile
 import io.github.huiibuh.scanner.toTrackModel
 import io.github.huiibuh.services.GetOrCreate
-import io.github.huiibuh.services.database.TrackService
 import io.github.huiibuh.utils.uriToFile
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -50,8 +49,7 @@ internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: Boo
         }
 
         if (patchBook.narrator != null) {
-            val narrator = GetOrCreate.author(patchBook.narrator)
-            book.author = narrator
+            book.narrator = patchBook.narrator
             trackReferences.forEach { it.narrator = patchBook.narrator }
         }
 

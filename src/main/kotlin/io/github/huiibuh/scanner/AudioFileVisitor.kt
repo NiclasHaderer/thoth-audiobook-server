@@ -5,6 +5,8 @@ import io.github.huiibuh.db.findOne
 import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.services.database.SharedSettingsService
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -19,7 +21,7 @@ import kotlin.io.path.absolutePathString
 import kotlin.io.path.getLastModifiedTime
 
 class AudioFileVisitor(
-    private val add: (TrackReference, BasicFileAttributes, Path, Track?) -> Unit,
+    private val add: suspend (TrackReference, BasicFileAttributes, Path, Track?) -> Unit,
     private val removeSubtree: (Path) -> Unit,
 ) : FileVisitor<Path> {
     private val settings = SharedSettingsService.get()
@@ -36,22 +38,32 @@ class AudioFileVisitor(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
         if (file.isAudioFile()) {
-            // Get the db track
-            val dbTrack = transaction { Track.findOne { TTracks.path eq file.absolutePathString() } }
-
-            // Check if the track has not been updated and if yes, skip it
-            if (dbTrack != null && dbTrack.accessTime >= file.getLastModifiedTime().toMillis()) {
-                transaction { dbTrack.scanIndex = settings.scanIndex + 1 }
-                return FileVisitResult.CONTINUE
+            //            GlobalScope.launch {
+            runBlocking {
+                handleFile(file, attrs)
             }
-            sendToUpdateCallback(file, attrs, dbTrack)
+            //            }
         }
         return FileVisitResult.CONTINUE
     }
 
-    private fun sendToUpdateCallback(file: Path, attrs: BasicFileAttributes, dbTrack: Track?) {
+
+    private suspend fun handleFile(file: Path, attrs: BasicFileAttributes) {
+        // Get the db track
+        val dbTrack = transaction { Track.findOne { TTracks.path eq file.absolutePathString() } }
+
+        // Check if the track has not been updated and if yes, skip it
+        if (dbTrack != null && dbTrack.accessTime >= file.getLastModifiedTime().toMillis()) {
+            transaction { dbTrack.scanIndex = settings.scanIndex + 1 }
+            return
+        }
+        sendToUpdateCallback(file, attrs, dbTrack)
+    }
+
+    private suspend fun sendToUpdateCallback(file: Path, attrs: BasicFileAttributes, dbTrack: Track?) {
         // Check if the file has all required attributes
         val audioFile = TrackReference.fromPath(file.absolutePathString())
         if (audioFile.hasRequiredAttributes()) {
@@ -63,6 +75,7 @@ class AudioFileVisitor(
             log.info("The file will be ignored")
         }
     }
+
 
     override fun visitFileFailed(file: Path, exc: IOException?) = FileVisitResult.CONTINUE
 

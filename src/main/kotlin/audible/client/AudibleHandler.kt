@@ -11,20 +11,14 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
 @Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
-internal abstract class AudibleHandler(
+internal abstract class AudibleHandler private constructor(
     private val client: HttpClient?,
     protected val url: Url,
     private val document: Document? = null,
 ) {
 
-    init {
-        if (this.document == null && this.client == null) {
-            throw Exception("you have to set the document, or client and url")
-        }
-        if (this.document != null && this.client != null) {
-            throw Exception("you cannot set a client and a document")
-        }
-    }
+    constructor(client: HttpClient, url: Url) : this(client, url, null)
+    constructor(document: Document, url: Url) : this(null, url, document)
 
     abstract suspend fun execute(): Any
     suspend fun getDocument(): Document {
@@ -51,18 +45,18 @@ internal abstract class AudibleHandler(
                 append("Cache-Control", "no-cache")
             }
         }
-        try {
-            val body = response.receive<String>()
-            return Jsoup.parse(body, this.url.toString())
+        val body = try {
+            response.receive<String>()
         } catch (e: ClientRequestException) {
             val message = e.localizedMessage.split("Text: ").firstOrNull() ?: ""
             val statusCode = e.response.status
             if (statusCode == HttpStatusCode.NotFound) {
-                throw APINotFound(message)
+                throw APINotFound("$message, $url")
             } else {
-                throw ApiException(message, statusCode.value)
+                throw ApiException("$message, $url", statusCode.value)
             }
         }
+        return Jsoup.parse(body, this.url.toString())
     }
 
     fun idFromURL(link: String?): String {

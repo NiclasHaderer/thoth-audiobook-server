@@ -25,7 +25,7 @@ data class SeriesModelWithBooks(
     @Serializable(UUIDSerializer::class) val id: UUID,
     val title: String,
     val amount: Long,
-    val narrators: List<NamedId>,
+    val narrators: List<String>,
     val yearRange: YearRange?,
     val asin: String?,
     val description: String?,
@@ -34,7 +34,7 @@ data class SeriesModelWithBooks(
 ) {
     companion object {
         fun fromModel(series: SeriesModel, books: List<BookModel>): SeriesModelWithBooks {
-            val narrators = books.mapNotNull { it.narrator }.distinctBy { it.id }
+            val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
             val years = books.mapNotNull { it.year }
             val startYear = years.minOrNull()
             val endYear = years.maxOrNull()

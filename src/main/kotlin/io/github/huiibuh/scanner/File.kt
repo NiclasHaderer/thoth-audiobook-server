@@ -17,7 +17,7 @@ fun Path.isAudioFile(): Boolean {
 
 fun traverseAudioFiles(
     directory: String,
-    add: (TrackReference, BasicFileAttributes, Path, Track?) -> Unit,
+    add: suspend (TrackReference, BasicFileAttributes, Path, Track?) -> Unit,
     removeSubtree: (Path) -> Unit,
 ) {
     val file = Paths.get(directory)

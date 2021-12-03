@@ -19,7 +19,7 @@ object TTracks : UUIDTable("Tracks") {
     val path = text("path").uniqueIndex()
     val book = reference("book", TBooks)
     val author = reference("author", TAuthors)
-    val narrator = reference("narrator", TAuthors).nullable()
+    val narrator = varchar("name", 255).nullable()
     val series = reference("series", TSeries).nullable()
     val seriesIndex = integer("seriesIndex").nullable()
     val scanIndex = integer("scanIndex")
@@ -39,7 +39,7 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
     var path by TTracks.path
     var book by Book referencedOn TTracks.book
     var author by Author referencedOn TTracks.author
-    var narrator by Author optionalReferencedOn TTracks.narrator
+    var narrator by TTracks.narrator
     var series by Series optionalReferencedOn TTracks.series
     var seriesIndex by TTracks.seriesIndex
     var scanIndex by TTracks.scanIndex
@@ -59,10 +59,7 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
             name = author.name,
             id = author.id.value
         ),
-        narrator = if (narrator != null) NamedId(
-            name = narrator!!.name,
-            id = narrator!!.id.value
-        ) else null,
+        narrator = narrator,
         series = if (series != null) TitledId(
             title = series!!.title,
             id = series!!.id.value
