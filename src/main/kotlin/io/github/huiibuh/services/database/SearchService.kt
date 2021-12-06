@@ -3,78 +3,43 @@ package io.github.huiibuh.services.database
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.db.tables.Series
-import io.github.huiibuh.db.tables.TAuthors
-import io.github.huiibuh.db.tables.TBooks
-import io.github.huiibuh.db.tables.TSeries
-import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.models.SearchModel
+import io.github.huiibuh.utils.fuzzy
+import io.github.huiibuh.utils.to
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.leftJoin
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+
 
 @Serializable
 object SearchService {
     fun everywhere(query: String, limit: Int = 5): SearchModel {
-        val preparedQuery = prepareQuery(query)
         return SearchModel(
-            books = everywhereBook(preparedQuery, limit),
-            series = everywhereSeries(preparedQuery, limit),
-            authors = everywhereAuthor(preparedQuery, limit),
+            books = everywhereBook(query, limit),
+            series = everywhereSeries(query, limit),
+            authors = everywhereAuthor(query, limit),
         )
     }
 
-    fun everywhereAuthor(strQuery: String, limit: Int): List<AuthorModel> = transaction {
-        val query = TAuthors
-                .leftJoin(TSeries, { TAuthors.id }, { TSeries.author })
-                .leftJoin(TBooks, { TAuthors.id }, { TBooks.author })
-                .select { everywhereQuery(strQuery) }
-        Author.wrapRows(query).limit(limit).sortedBy { it.name }
-                .distinctBy { it.id }.map { it.toModel() }
+    private fun everywhereAuthor(query: String, limit: Int) = transaction {
+        val authors = Author.all().fuzzy(query) { listOfNotNull(it.name, it.asin) }.to(limit)
+        val bookAuthors = Book.all().fuzzy(query) { listOfNotNull(it.title, it.narrator, it.series?.title) }
+                .to(limit).map { it.author }
+        (authors + bookAuthors).distinctBy { it.id }.to(limit).map { it.toModel() }
     }
 
-    private fun everywhereSeries(strQuery: String, limit: Int) = transaction {
-        val query = TSeries
-                .leftJoin(TAuthors, { TSeries.author }, { TAuthors.id })
-                .leftJoin(TBooks, { TSeries.id }, { TBooks.series })
-                .select { everywhereQuery(strQuery) }
-        Series.wrapRows(query).limit(limit).sortedBy { it.title }
-                .distinctBy { it.id }.map { it.toModel() }
+    private fun everywhereSeries(query: String, limit: Int) = transaction {
+        val series = Series.all().fuzzy(query) { listOfNotNull(it.title, it.asin) }.to(limit)
+        val authorSeries = Book.all().fuzzy(query) { listOfNotNull(it.title, it.narrator, it.author.name) }
+                .to(limit).mapNotNull { it.series }
+        (series + authorSeries).distinctBy { it.id }.to(limit).map { it.toModel() }
     }
 
-    private fun everywhereBook(strQuery: String, limit: Int) = transaction {
-        val query = TBooks
-                .leftJoin(TSeries, { TBooks.series }, { id })
-                .leftJoin(TAuthors, { TBooks.author }, { id })
-                .select { everywhereQuery(strQuery) }
-        Book.wrapRows(query).limit(limit).sortedBy { it.title }
-                .distinctBy { it.id }.map { it.toModel() }
+    private fun everywhereBook(query: String, limit: Int) = transaction {
+        val books = Book.all().fuzzy(query) { listOfNotNull(it.title, it.asin) }
+                .to(limit)
+        val booksAndOther = Book.all().fuzzy(query) { listOfNotNull(it.author.name, it.series?.title, it.narrator) }
+                .to(limit)
+        (books + booksAndOther).distinctBy { it.id }.to(limit).map { it.toModel() }
     }
-
-    private fun prepareQuery(query: String): String {
-        return "%${query.replace("%", "\\%")}%"
-    }
-
-    private fun everywhereQuery(strQuery: String) = buildExpression {
-        // Authors
-        (TAuthors.name like strQuery) or
-                (TAuthors.biography like strQuery) or
-                // Series
-                (TSeries.title like strQuery) or
-                (TSeries.asin like strQuery) or
-                (TSeries.description like strQuery) or
-                // Books
-                (TBooks.title like strQuery) or
-                (TBooks.description like strQuery) or
-                (TBooks.asin like strQuery)
-    }
-
-    private fun buildExpression(where: SqlExpressionBuilder.() -> Op<Boolean>): Op<Boolean> {
-        return SqlExpressionBuilder.where()
-    }
-
 }
 

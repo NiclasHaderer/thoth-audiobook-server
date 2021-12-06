@@ -16,7 +16,7 @@ object SeriesService {
 
     fun get(id: UUID) = transaction {
         val series = Series.findById(id)?.toModel() ?: throw APINotFound("Could not find series")
-        val books = BookService.forSeries(id).sortedBy { it.seriesIndex }
+        val books = BookService.forSeries(id).sortedBy { it.year }.sortedBy { it.seriesIndex }
         SeriesModelWithBooks.fromModel(series, books)
     }
 }

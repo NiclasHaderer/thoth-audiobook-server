@@ -62,6 +62,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     // Audible scraping
     implementation("org.jsoup:jsoup:$jsoupVersion")
+    implementation("me.xdrop:fuzzywuzzy:1.3.1")
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     // Tests
