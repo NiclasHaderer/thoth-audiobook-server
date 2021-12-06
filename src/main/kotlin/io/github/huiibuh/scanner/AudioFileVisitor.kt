@@ -1,7 +1,7 @@
 package io.github.huiibuh.scanner
 
 import io.github.huiibuh.config.Settings
-import io.github.huiibuh.db.findOne
+import io.github.huiibuh.utils.findOne
 import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.services.database.SharedSettingsService

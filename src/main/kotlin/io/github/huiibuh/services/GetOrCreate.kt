@@ -1,7 +1,7 @@
 package io.github.huiibuh.services
 
 import api.exceptions.ApiException
-import io.github.huiibuh.db.findOne
+import io.github.huiibuh.utils.findOne
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.db.tables.Image
