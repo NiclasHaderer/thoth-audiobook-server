@@ -1,5 +1,6 @@
 package io.github.huiibuh.api.audiobooks.books
 
+import api.exceptions.APIBadRequest
 import api.exceptions.APINotFound
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
@@ -11,9 +12,11 @@ import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.scanner.saveToFile
 import io.github.huiibuh.scanner.toTrackModel
 import io.github.huiibuh.services.GetOrCreate
+import io.github.huiibuh.services.database.ImageService
 import io.github.huiibuh.utils.uriToFile
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: BookId, patchBook: PatchBook) {
     val book = transaction {
@@ -22,56 +25,77 @@ internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: Boo
         val tracks = Track.find { TTracks.book eq id.uuid }.toList()
         val trackReferences = tracks.toTrackModel()
 
-        if (patchBook.title != null) {
+        // Attributes cannot be empty
+        if (patchBook.title.isEmpty() || patchBook.author.isEmpty()) {
+            throw APIBadRequest("Title and Author cannot be empty strings")
+        }
+
+        // Update title
+        if (book.title != patchBook.title) {
             book.title = patchBook.title
             trackReferences.forEach { it.title = patchBook.title }
         }
 
-        if (patchBook.language != null) {
-            book.language = patchBook.language
-            trackReferences.forEach { it.language = patchBook.language }
-        }
-
-        if (patchBook.description != null) {
-            book.description = patchBook.description
-            trackReferences.forEach { it.description = patchBook.description }
-        }
-
-        if (patchBook.asin != null) {
-            book.asin = patchBook.asin
-            trackReferences.forEach { it.asin = patchBook.asin }
-        }
-
-        if (patchBook.author != null) {
+        // Update author
+        if (patchBook.author != book.author.name) {
             val author = GetOrCreate.author(patchBook.author)
             book.author = author
             trackReferences.forEach { it.author = patchBook.author }
         }
 
-        if (patchBook.narrator != null) {
+        if (patchBook.language != book.language) {
+            book.language = patchBook.language
+            trackReferences.forEach { it.language = patchBook.language }
+        }
+
+        if (patchBook.description != book.description) {
+            book.description = patchBook.description
+            trackReferences.forEach { it.description = patchBook.description }
+        }
+
+        if (patchBook.asin != book.asin) {
+            book.asin = patchBook.asin
+            trackReferences.forEach { it.asin = patchBook.asin }
+        }
+
+        if (patchBook.narrator != book.narrator) {
             book.narrator = patchBook.narrator
             trackReferences.forEach { it.narrator = patchBook.narrator }
         }
 
-        if (patchBook.series != null) {
-            val series = GetOrCreate.series(patchBook.series, book.author)
+        if (patchBook.series != book.series?.title) {
+            val series = if (patchBook.series != null) GetOrCreate.series(patchBook.series, book.author) else null
             book.series = series
             trackReferences.forEach { it.series = patchBook.series }
         }
 
-        if (patchBook.seriesIndex != null) {
+        if (patchBook.seriesIndex != book.seriesIndex) {
             book.seriesIndex = patchBook.seriesIndex
             trackReferences.forEach { it.seriesIndex = patchBook.seriesIndex }
         }
+        if (patchBook.year != book.year) {
+            book.year = patchBook.year
+            trackReferences.forEach { it.year = patchBook.year }
+        }
 
-        if (patchBook.cover != null) {
-            val cover = patchBook.cover.uriToFile()
-            book.cover = Image.new { image = ExposedBlob(cover) }
+        val patchCover = try {
+            ImageService.get(UUID.fromString(patchBook.cover))
+        } catch (_: Exception) {
+            null
+        }
+
+        if ( // Cover exists or is null for the new and the old values
+            patchCover?.id != book.cover?.id?.value ||
+            // Cover does not exist and the base64 representation is not the same
+            patchCover == null && patchBook.cover != Base64.getEncoder().encode(book.cover?.image?.bytes).toString()
+        ) {
+            val cover = patchBook.cover?.uriToFile()
+            book.cover = if (cover == null) null else Image.new { image = ExposedBlob(cover) }
             trackReferences.forEach { it.cover = cover }
         }
 
         trackReferences.saveToFile()
-        book
+        book.toModel()
     }
-    respond(book.toModel())
+    respond(book)
 }

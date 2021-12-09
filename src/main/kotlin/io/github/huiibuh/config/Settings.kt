@@ -8,7 +8,6 @@ interface DatabaseConnection {
     val transactionIsolation: String
 }
 
-
 object Settings {
     val ignoreFile: String by lazy {
         System.getenv("IGNORE_FILE") ?: ".audignore"

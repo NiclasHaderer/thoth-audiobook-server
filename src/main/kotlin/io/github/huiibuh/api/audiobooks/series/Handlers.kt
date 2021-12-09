@@ -17,6 +17,8 @@ internal suspend fun OpenAPIPipelineResponseContext<SeriesModel>.patchSeries(id:
         val tracks = Track.find { TTracks.series eq id.uuid }.toList()
         val trackReferences = tracks.toTrackModel()
 
+
+
         if (patchSeries.title != null) {
             series.title = patchSeries.title
             trackReferences.forEach { it.series = patchSeries.title }

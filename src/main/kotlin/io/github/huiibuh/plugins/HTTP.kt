@@ -8,10 +8,10 @@ fun Application.configureHTTP() {
     install(CORS) {
         method(HttpMethod.Options)
         method(HttpMethod.Put)
-        method(HttpMethod.Delete)
         method(HttpMethod.Patch)
+        method(HttpMethod.Delete)
         header(HttpHeaders.Authorization)
-        //        allowCredentials = true
+        header(HttpHeaders.ContentType)
         anyHost() // @TODO: Don't do this in production if possible. Try to limit it.
     }
 

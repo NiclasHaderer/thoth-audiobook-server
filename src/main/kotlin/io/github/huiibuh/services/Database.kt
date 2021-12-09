@@ -9,11 +9,24 @@ import io.github.huiibuh.scanner.traverseAudioFiles
 import io.github.huiibuh.services.database.SharedSettingsService
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicBoolean
+
+val isScanning = AtomicBoolean(false)
 
 object Database {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun rescan() {
+        if (isScanning.get()) return
+        isScanning.set(true)
+        try {
+            rescanFiles()
+        } finally {
+            isScanning.set(false)
+        }
+    }
+
+    private fun rescanFiles() {
         logger.info("Starting import of tracks")
         val initializedStartAt = System.currentTimeMillis()
 

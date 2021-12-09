@@ -26,13 +26,13 @@ class FuzzyResult<T>(
     val value: T,
 ) {
     val matches: Boolean
-        get() = match > 60
+        get() = match > 80
 
 }
 
 
 fun <T> String.fuzzy(query: String, value: T): FuzzyResult<T> {
-    val fuz = FuzzySearch.partialRatio(query, this)
+    val fuz = FuzzySearch.partialRatio(query.lowercase(), this.lowercase())
     return FuzzyResult(fuz, value)
 }
 

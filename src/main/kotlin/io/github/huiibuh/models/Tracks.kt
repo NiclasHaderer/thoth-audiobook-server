@@ -16,5 +16,5 @@ data class TrackModel(
     val author: NamedId,
     val narrator: String?,
     val series: TitledId?,
-    val seriesIndex: Int?,
+    val seriesIndex: Float?,
 )

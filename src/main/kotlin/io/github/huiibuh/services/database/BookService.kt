@@ -4,12 +4,13 @@ import api.exceptions.APINotFound
 import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.db.tables.TBooks
 import io.github.huiibuh.models.BookModelWithTracks
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 object BookService {
-    fun getMultiple(limit: Int, offset: Long) = transaction {
-        Book.all().limit(limit, offset * limit).sortedBy { it.title }.map { it.toModel() }
+    fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {
+        Book.all().limit(limit, offset * limit).orderBy(TBooks.title to order).map { it.toModel() }
     }
 
     fun get(uuid: UUID) = transaction {
@@ -18,7 +19,7 @@ object BookService {
         BookModelWithTracks.fromModel(book, tracks)
     }
 
-    fun forSeries(seriesId: UUID) = transaction {
-        Book.find { TBooks.series eq seriesId }.sortedBy { it.title }.map { it.toModel() }
+    fun forSeries(seriesId: UUID, order: SortOrder = SortOrder.ASC) = transaction {
+        Book.find { TBooks.series eq seriesId }.orderBy(TBooks.title to order).map { it.toModel() }
     }
 }
