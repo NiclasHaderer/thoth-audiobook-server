@@ -4,6 +4,9 @@ import audible.models.AudibleAuthor
 import audible.models.AudibleBook
 import audible.models.AudibleSearchResultImpl
 import audible.models.AudibleSeries
+import io.github.huiibuh.api.audiobooks.authors.PatchAuthor
+import io.github.huiibuh.api.audiobooks.books.PatchBook
+import io.github.huiibuh.api.audiobooks.series.PatchSeries
 import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.models.AuthorModelWithBooks
 import io.github.huiibuh.models.BookModel
@@ -12,6 +15,7 @@ import io.github.huiibuh.models.SearchModel
 import io.github.huiibuh.models.SeriesModel
 import io.github.huiibuh.models.SeriesModelWithBooks
 import io.github.huiibuh.models.TrackModel
+import io.github.huiibuh.ws.ChangeEvent
 import me.ntrrgc.tsGenerator.TypeScriptGenerator
 import java.io.File
 import java.nio.file.Files
@@ -30,8 +34,12 @@ fun main() {
         SearchModel::class,
         SearchModel::class,
         SeriesModel::class,
+        PatchAuthor::class,
+        PatchSeries::class,
+        PatchBook::class,
         SeriesModelWithBooks::class,
         TrackModel::class,
+        ChangeEvent::class
     ))
 
     audiobookDefinitions = audiobookDefinitions.replace("interface", "export interface")

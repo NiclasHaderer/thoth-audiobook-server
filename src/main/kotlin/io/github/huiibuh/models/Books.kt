@@ -17,7 +17,7 @@ data class BookModel(
     val author: NamedId,
     val narrator: String?,
     val series: TitledId?,
-    val seriesIndex: Int?,
+    val seriesIndex: Float?,
     @Serializable(UUIDSerializer::class) val cover: UUID?,
 )
 
@@ -33,7 +33,7 @@ data class BookModelWithTracks(
     val author: NamedId,
     val narrator: String?,
     val series: TitledId?,
-    val seriesIndex: Int?,
+    val seriesIndex: Float?,
     @Serializable(UUIDSerializer::class) val cover: UUID?,
 ) {
     companion object {

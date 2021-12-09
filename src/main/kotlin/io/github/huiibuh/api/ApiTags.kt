@@ -6,6 +6,7 @@ import com.papsign.ktor.openapigen.APITag
 enum class ApiTags(override val description: String = "hello world") : APITag {
     Series("All things concerning series"),
     Books("All things concerning books"),
+    Rescan("Rescan folders for changes"),
     Authors("All things concerning authors"),
     Audible("Wrapper for the audible api"),
     Search("Search for books, authors and series"),

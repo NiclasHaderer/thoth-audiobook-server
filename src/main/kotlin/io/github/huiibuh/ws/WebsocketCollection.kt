@@ -6,11 +6,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.dao.EntityChangeType
 import java.util.*
 
 @Serializable
 data class ChangeEvent(
-    val type: String,
+    val type: EntityChangeType,
     val ids: String,
     val data: String?,
 )

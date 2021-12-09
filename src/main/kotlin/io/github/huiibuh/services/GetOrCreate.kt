@@ -1,7 +1,6 @@
 package io.github.huiibuh.services
 
 import api.exceptions.ApiException
-import io.github.huiibuh.utils.findOne
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.db.tables.Image
@@ -10,6 +9,7 @@ import io.github.huiibuh.db.tables.TAuthors
 import io.github.huiibuh.db.tables.TBooks
 import io.github.huiibuh.db.tables.TImages
 import io.github.huiibuh.db.tables.TSeries
+import io.github.huiibuh.utils.findOne
 import io.github.huiibuh.utils.imageFromString
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.and
@@ -61,7 +61,7 @@ object GetOrCreate {
         author: Author,
         narrator: String?,
         series: Series?,
-        seriesIndex: Int?,
+        seriesIndex: Float?,
         cover: ByteArray?,
     ) = transaction {
         val book = Book.findOne { TBooks.title like title and (TBooks.author eq author.id.value) }
@@ -97,7 +97,7 @@ object GetOrCreate {
         }
 
         if (seriesInfo == null) {
-            log.debug("Could not find series information for ${author.name}")
+            log.debug("Could not find series information for ${title}")
         }
 
         Series.new {

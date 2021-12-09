@@ -21,7 +21,7 @@ object TTracks : UUIDTable("Tracks") {
     val author = reference("author", TAuthors)
     val narrator = varchar("name", 255).nullable()
     val series = reference("series", TSeries).nullable()
-    val seriesIndex = integer("seriesIndex").nullable()
+    val seriesIndex = float("seriesIndex").nullable()
     val scanIndex = integer("scanIndex")
 }
 

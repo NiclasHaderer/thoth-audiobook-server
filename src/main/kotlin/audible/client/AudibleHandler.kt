@@ -64,9 +64,9 @@ internal abstract class AudibleHandler private constructor(
         return Url(link).encodedPath.split("/").last()
     }
 
-    fun changeImageResolution(url: String, resolutio: Int = 500): String {
-        var modifiedURL = url.replace(Regex("_SX\\d{2,4}_CR0"), "_SX${resolutio}_CR0")
-        modifiedURL = modifiedURL.replace(Regex(",0,.*"), ",0,$resolutio,${resolutio}__.jpg")
+    fun changeImageResolution(url: String, resolution: Int): String {
+        var modifiedURL = url.replace(Regex("_SX\\d{2,4}_CR0"), "_SX${resolution}_CR0")
+        modifiedURL = modifiedURL.replace(Regex(",0,.*"), ",0,0,0__.jpg")
         return modifiedURL
     }
 }

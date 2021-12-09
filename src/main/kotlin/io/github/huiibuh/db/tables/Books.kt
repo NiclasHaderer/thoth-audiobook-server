@@ -19,7 +19,7 @@ object TBooks : UUIDTable("Books") {
     val asin = char("asin", 10).nullable()
     val narrator = varchar("name", 255).nullable()
     val series = reference("series", TSeries).nullable()
-    val seriesIndex = integer("seriesIndex").nullable()
+    val seriesIndex = float("seriesIndex").nullable()
     val cover = reference("cover", TImages).nullable()
 }
 

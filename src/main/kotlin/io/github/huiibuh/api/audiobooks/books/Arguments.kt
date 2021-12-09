@@ -2,8 +2,6 @@ package io.github.huiibuh.api.audiobooks.books
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
-import io.github.huiibuh.serializers.UUIDSerializer
-import kotlinx.serialization.Serializable
 import java.util.*
 
 @Path("{uuid}")
@@ -13,13 +11,14 @@ internal data class BookId(
 
 
 internal data class PatchBook(
-    val title: String?,
+    val title: String,
     val language: String?,
     val description: String?,
     val asin: String?,
-    val author: String?,
+    val author: String,
     val narrator: String?,
     val series: String?,
-    val seriesIndex: Int?,
+    val seriesIndex: Float?,
     val cover: String?,
+    val year: Int?,
 )
