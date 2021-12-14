@@ -12,8 +12,10 @@ import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.scanner.saveToFile
 import io.github.huiibuh.scanner.toTrackModel
 import io.github.huiibuh.services.GetOrCreate
+import io.github.huiibuh.services.RemoveEmpty
 import io.github.huiibuh.services.database.ImageService
 import io.github.huiibuh.utils.uriToFile
+import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -95,7 +97,9 @@ internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: Boo
         }
 
         trackReferences.saveToFile()
+        flushCache()
         book.toModel()
     }
     respond(book)
+    RemoveEmpty.all()
 }

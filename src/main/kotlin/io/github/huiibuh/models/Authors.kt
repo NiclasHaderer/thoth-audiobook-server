@@ -18,14 +18,16 @@ data class AuthorModelWithBooks(
     val name: String,
     val biography: String?,
     val asin: String?,
+    val position: Int,
     val books: List<BookModel>,
     @Serializable(UUIDSerializer::class) val image: UUID?,
 ) {
     companion object {
-        fun fromModel(author: AuthorModel, books: List<BookModel>) = AuthorModelWithBooks(
+        fun fromModel(author: AuthorModel, books: List<BookModel>, position: Int) = AuthorModelWithBooks(
             id = author.id,
             name = author.name,
             biography = author.biography,
+            position = position,
             asin = author.asin,
             image = author.image,
             books = books

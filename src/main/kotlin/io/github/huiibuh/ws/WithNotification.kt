@@ -2,6 +2,7 @@ package io.github.huiibuh.ws
 
 import io.ktor.routing.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.dao.EntityChangeType
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.Table
@@ -19,17 +20,21 @@ fun Route.withNotifications(path: String, table: Table, type: NotificationType) 
     EntityHook.subscribe {
         if (type.changeType.contains(it.changeType)) {
             if (it.entityClass.table == table) {
-                sockets.emit(ChangeEvent(
-                    type = it.changeType,
-                    ids = it.entityId.value.toString(),
-                    data = null
-                ))
+                runBlocking {
+                    sockets.emit(ChangeEvent(
+                        type = it.changeType,
+                        id = it.entityId.value.toString(),
+                    ))
+                }
             }
         }
     }
 
     webSocket(path) {
         sockets.add(this)
+        for (frame in incoming) {
+        }
+        sockets.remove(this)
     }
 
 }

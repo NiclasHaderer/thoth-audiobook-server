@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
-import io.github.huiibuh.services.Database
+import io.github.huiibuh.services.Scanner
 import io.ktor.application.*
 import io.ktor.response.*
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -25,7 +25,7 @@ internal fun NormalOpenAPIRoute.routing() {
     post<Unit, Unit, Unit> { _, _ ->
         pipeline.call.respond(Unit)
         GlobalScope.launch {
-            Database.rescan()
+            Scanner.rescan()
         }
     }
 }

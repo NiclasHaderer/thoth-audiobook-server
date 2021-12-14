@@ -8,16 +8,17 @@ import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.models.SeriesModel
 import io.github.huiibuh.scanner.toTrackModel
+import io.github.huiibuh.services.RemoveEmpty
+import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.sql.transactions.transaction
 
 internal suspend fun OpenAPIPipelineResponseContext<SeriesModel>.patchSeries(id: SeriesId, patchSeries: PatchSeries) {
+    // TODO update logic
     val series = transaction {
         val series = Series.findById(id.uuid) ?: throw APINotFound("Series could not be found")
 
         val tracks = Track.find { TTracks.series eq id.uuid }.toList()
         val trackReferences = tracks.toTrackModel()
-
-
 
         if (patchSeries.title != null) {
             series.title = patchSeries.title
@@ -31,7 +32,9 @@ internal suspend fun OpenAPIPipelineResponseContext<SeriesModel>.patchSeries(id:
         if (patchSeries.description != null) {
             series.description = patchSeries.description
         }
+        flushCache()
         series
     }
     respond(series.toModel())
+    RemoveEmpty.all()
 }

@@ -17,7 +17,7 @@ import io.github.huiibuh.plugins.configurePartialContent
 import io.github.huiibuh.plugins.configureRouting
 import io.github.huiibuh.plugins.configureSerialization
 import io.github.huiibuh.plugins.configureSockets
-import io.github.huiibuh.services.Database
+import io.github.huiibuh.services.Scanner
 import io.github.huiibuh.ws.registerUpdateRoutes
 import io.ktor.application.*
 import io.ktor.routing.*
@@ -32,12 +32,11 @@ import kotlinx.coroutines.launch
 fun main() {
     disableJAudioTaggerLogs()
     DatabaseFactory.connectAndMigrate()
-
+    GlobalScope.launch {
+        Scanner.rescan()
+    }
     embeddedServer(Netty, port = Settings.webUiPort, host = "0.0.0.0") {
         webServer()
-        GlobalScope.launch {
-            Database.rescan()
-        }
     }.start(wait = true)
 }
 
@@ -50,10 +49,10 @@ fun Application.webServer() {
     configureSockets()
     configureMonitoring()
     configureSerialization()
+    routing {
+        registerUpdateRoutes()
+    }
     apiRouting {
-        routing {
-            registerUpdateRoutes()
-        }
         withDefaultErrorHandlers {
             registerAudibleRouting()
             registerAudiobookRouting()

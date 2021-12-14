@@ -12,6 +12,7 @@ import io.github.huiibuh.api.audiobooks.QueryLimiter
 import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.models.BookModelWithTracks
 import io.github.huiibuh.services.database.BookService
+import java.util.*
 
 
 fun NormalOpenAPIRoute.registerBookRouting(path: String = "books") {
@@ -26,6 +27,11 @@ internal fun NormalOpenAPIRoute.routing() {
     get<QueryLimiter, List<BookModel>> {
         respond(
             BookService.getMultiple(it.limit, it.offset)
+        )
+    }
+    route("sorting").get<QueryLimiter, List<UUID>> { query ->
+        respond(
+            BookService.getMultiple(query.limit, query.offset).map { it.id }
         )
     }
     get<BookId, BookModelWithTracks> {
