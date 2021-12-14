@@ -27,13 +27,14 @@ data class SeriesModelWithBooks(
     val amount: Long,
     val narrators: List<String>,
     val yearRange: YearRange?,
+    val position: Int,
     val asin: String?,
     val description: String?,
     val books: List<BookModel>,
     val author: NamedId,
 ) {
     companion object {
-        fun fromModel(series: SeriesModel, books: List<BookModel>): SeriesModelWithBooks {
+        fun fromModel(series: SeriesModel, books: List<BookModel>, position: Int): SeriesModelWithBooks {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
             val years = books.mapNotNull { it.year }
             val startYear = years.minOrNull()
@@ -49,6 +50,7 @@ data class SeriesModelWithBooks(
                 title = series.title,
                 amount = series.amount,
                 yearRange = yearRange,
+                position = position,
                 narrators = narrators,
                 asin = series.asin,
                 description = series.description,

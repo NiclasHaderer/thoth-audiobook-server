@@ -1,6 +1,5 @@
 package io.github.huiibuh.db.tables
 
-import io.github.huiibuh.models.NamedId
 import io.github.huiibuh.models.TitledId
 import io.github.huiibuh.models.TrackModel
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -33,15 +32,11 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
 
     var title by TTracks.title
     var trackNr by TTracks.trackNr
-    var cover by Image optionalReferencedOn TTracks.cover
     var duration by TTracks.duration
     var accessTime by TTracks.accessTime
     var path by TTracks.path
     var book by Book referencedOn TTracks.book
-    var author by Author referencedOn TTracks.author
-    var narrator by TTracks.narrator
-    var series by Series optionalReferencedOn TTracks.series
-    var seriesIndex by TTracks.seriesIndex
+
     var scanIndex by TTracks.scanIndex
 
     override fun toModel() = TrackModel(
@@ -55,15 +50,5 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
             title = book.title,
             id = book.id.value
         ),
-        author = NamedId(
-            name = author.name,
-            id = author.id.value
-        ),
-        narrator = narrator,
-        series = if (series != null) TitledId(
-            title = series!!.title,
-            id = series!!.id.value
-        ) else null,
-        seriesIndex = seriesIndex
     )
 }

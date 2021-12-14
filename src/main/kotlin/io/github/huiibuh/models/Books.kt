@@ -29,6 +29,7 @@ data class BookModelWithTracks(
     val language: String?,
     val description: String?,
     val asin: String?,
+    val position: Int,
     val tracks: List<TrackModel>,
     val author: NamedId,
     val narrator: String?,
@@ -37,7 +38,7 @@ data class BookModelWithTracks(
     @Serializable(UUIDSerializer::class) val cover: UUID?,
 ) {
     companion object {
-        fun fromModel(book: BookModel, tracks: List<Track>): BookModelWithTracks {
+        fun fromModel(book: BookModel, tracks: List<Track>, position: Int): BookModelWithTracks {
 
             val sortedTracks = if (tracks.any { it.trackNr == null }) {
                 tracks.sortedBy { it.path }
@@ -52,6 +53,7 @@ data class BookModelWithTracks(
                 language = book.language,
                 description = book.description,
                 asin = book.asin,
+                position = position,
                 tracks = sortedTracks.map { it.toModel() },
                 author = book.author,
                 narrator = book.narrator,

@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 val isScanning = AtomicBoolean(false)
 
-object Database {
+object Scanner {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun rescan() {
@@ -43,9 +43,7 @@ object Database {
         SharedSettingsService.save(settings)
         logger.info("Removing empty series, authors and albums")
         // Remove all empty collections
-        RemoveEmpty.authors()
-        RemoveEmpty.books()
-        RemoveEmpty.series()
+        RemoveEmpty.all()
 
         val finishedAt = System.currentTimeMillis()
         val elapsedTimeInSeconds = (finishedAt - initializedStartAt) / 1_000.0
@@ -75,25 +73,17 @@ object Database {
             accessTime = trackRef.lastModified
             trackNr = trackRef.trackNr
             path = trackRef.path
-            author = GetOrCreate.author(name = trackRef.author)
-            narrator = trackRef.narrator
-            series = if (trackRef.series != null) GetOrCreate.series(
-                title = trackRef.series!!,
-                author = author
-            ) else null
             book = GetOrCreate.book(title = trackRef.book,
                                     year = trackRef.year,
                                     description = trackRef.description,
                                     language = trackRef.language,
                                     asin = trackRef.asin,
-                                    series = series,
+                                    series = trackRef.series,
                                     seriesIndex = trackRef.seriesIndex,
                                     cover = trackRef.cover,
-                                    author = author,
-                                    narrator = narrator
+                                    author = trackRef.author,
+                                    narrator = trackRef.narrator
             )
-            cover = book.cover
-            seriesIndex = trackRef.seriesIndex
             this.scanIndex = scanIndex
         }
     }
@@ -105,24 +95,17 @@ object Database {
             accessTime = trackRef.lastModified
             trackNr = trackRef.trackNr
             path = trackRef.path
-            author = GetOrCreate.author(name = trackRef.author)
-            narrator = trackRef.narrator
-            series = if (trackRef.series != null) GetOrCreate.series(
-                title = trackRef.series!!,
-                author = author
-            ) else null
             book = GetOrCreate.book(title = trackRef.book,
                                     year = trackRef.year,
                                     description = trackRef.description,
                                     language = trackRef.language,
                                     asin = trackRef.asin,
-                                    series = series,
+                                    series = trackRef.series,
                                     seriesIndex = trackRef.seriesIndex,
                                     cover = trackRef.cover,
-                                    author = author,
-                                    narrator = narrator
+                                    author = trackRef.author,
+                                    narrator = trackRef.narrator
             )
-            seriesIndex = trackRef.seriesIndex
             this.scanIndex = scanIndex
         }
     }

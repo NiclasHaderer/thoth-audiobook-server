@@ -12,6 +12,7 @@ import io.github.huiibuh.api.audiobooks.QueryLimiter
 import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.models.AuthorModelWithBooks
 import io.github.huiibuh.services.database.AuthorService
+import java.util.*
 
 
 fun NormalOpenAPIRoute.registerAuthorRouting(path: String = "authors") {
@@ -28,10 +29,16 @@ internal fun NormalOpenAPIRoute.routing() {
             AuthorService.getMultiple(it.limit, it.offset)
         )
     }
+    route("sorting").get<QueryLimiter, List<UUID>> { query ->
+        respond(
+            AuthorService.getMultiple(query.limit, query.offset).map { it.id }
+        )
+    }
     get<AuthorId, AuthorModelWithBooks> {
         respond(
             AuthorService.get(it.uuid)
         )
     }
+
     patch(body = OpenAPIPipelineResponseContext<AuthorModel>::patchAuthor)
 }

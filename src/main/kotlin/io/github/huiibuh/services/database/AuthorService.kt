@@ -11,10 +11,11 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 object AuthorService {
-    fun get(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
+    fun get(uuid: UUID, bookOrder: SortOrder = SortOrder.ASC, authorOrder: SortOrder = SortOrder.ASC) = transaction {
         val author = Author.findById(uuid)?.toModel() ?: throw APINotFound("Could not find author")
-        val books = Book.find { TBooks.author eq uuid }.orderBy(TBooks.year to order).map { it.toModel() }
-        AuthorModelWithBooks.fromModel(author, books)
+        val books = Book.find { TBooks.author eq uuid }.orderBy(TBooks.year to bookOrder).map { it.toModel() }
+        val index = Author.all().orderBy(TAuthors.name to authorOrder).indexOfFirst { it.id.value == uuid }
+        AuthorModelWithBooks.fromModel(author, books, index)
     }
 
     fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {

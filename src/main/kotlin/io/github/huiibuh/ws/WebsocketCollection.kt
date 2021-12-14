@@ -12,8 +12,7 @@ import java.util.*
 @Serializable
 data class ChangeEvent(
     val type: EntityChangeType,
-    val ids: String,
-    val data: String?,
+    val id: String,
 )
 
 class WebsocketCollection {
@@ -21,10 +20,6 @@ class WebsocketCollection {
 
     fun add(connection: DefaultWebSocketServerSession) {
         connections.add(connection)
-        runBlocking {
-            connection.closeReason.await()
-            connections.remove(connection)
-        }
     }
 
     fun closeAll() {
@@ -36,15 +31,17 @@ class WebsocketCollection {
         }
     }
 
-    fun emit(value: String) {
-        runBlocking {
-            connections.forEach {
-                it.send(value)
-            }
+    fun remove(conn: DefaultWebSocketServerSession) {
+        connections.remove(conn)
+    }
+
+    suspend fun emit(value: String) {
+        connections.forEach {
+            it.send(value)
         }
     }
 
-    fun emit(value: ChangeEvent) {
+    suspend fun emit(value: ChangeEvent) {
         val str = Json.encodeToString(value)
         emit(str)
     }

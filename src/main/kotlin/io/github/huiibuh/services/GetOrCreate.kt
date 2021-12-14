@@ -58,13 +58,15 @@ object GetOrCreate {
         language: String?,
         description: String?,
         asin: String?,
-        author: Author,
+        author: String,
         narrator: String?,
-        series: Series?,
+        series: String?,
         seriesIndex: Float?,
         cover: ByteArray?,
     ) = transaction {
-        val book = Book.findOne { TBooks.title like title and (TBooks.author eq author.id.value) }
+        val authorItem = GetOrCreate.author(author)
+        val seriesItem = if (series == null) null else GetOrCreate.series(title, authorItem)
+        val book = Book.findOne { TBooks.title like title and (TBooks.author eq authorItem.id.value) }
         book
             ?: Book.new {
                 this.title = title
@@ -72,9 +74,9 @@ object GetOrCreate {
                 this.language = language
                 this.description = description
                 this.asin = asin
-                this.author = author
+                this.author = authorItem
                 this.narrator = narrator
-                this.series = series
+                this.series = seriesItem
                 this.seriesIndex = seriesIndex
                 this.cover = if (cover != null) image(cover) else null
             }
