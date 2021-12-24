@@ -72,3 +72,5 @@ kotlin-ide/
 javacore*
 *.db
 gen/
+*.db-journal
+*.jar

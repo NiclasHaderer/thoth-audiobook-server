@@ -15,7 +15,7 @@ internal data class AuthorId(
 )
 
 internal data class PatchAuthor(
-    val name: String?,
+    val name: String,
     val biography: String?,
     val asin: String?,
     val image: String?,
