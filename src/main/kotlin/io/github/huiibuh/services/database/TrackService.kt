@@ -1,6 +1,8 @@
 package io.github.huiibuh.services.database
 
 import api.exceptions.APINotFound
+import io.github.huiibuh.db.tables.Book
+import io.github.huiibuh.db.tables.TBooks
 import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
 import org.jetbrains.exposed.sql.SortOrder
@@ -21,6 +23,13 @@ object TrackService {
     }
 
     fun forAuthor(uuid: UUID) = transaction {
-        Track.find { TTracks.author eq uuid }.toList()
+        Book.find { TBooks.author eq uuid }.flatMap {
+            Track.find { TTracks.book eq it.id }.toList()
+        }
+    }
+
+    fun forSeries(uuid: UUID) = transaction {
+        Book.find { TBooks.series eq uuid }
+                .flatMap { Track.find { TTracks.book eq it.id }.toList() }
     }
 }

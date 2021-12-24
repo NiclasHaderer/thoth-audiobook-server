@@ -24,20 +24,21 @@ import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 
 @OptIn(DelicateCoroutinesApi::class)
-fun main() {
+fun main(): Unit = runBlocking {
     disableJAudioTaggerLogs()
     DatabaseFactory.connectAndMigrate()
-    GlobalScope.launch {
-        Scanner.rescan()
+    launch { Scanner.rescan() }
+
+    launch {
+        embeddedServer(Netty, port = Settings.webUiPort, host = "0.0.0.0") {
+            webServer()
+        }.start(wait = true)
     }
-    embeddedServer(Netty, port = Settings.webUiPort, host = "0.0.0.0") {
-        webServer()
-    }.start(wait = true)
 }
 
 

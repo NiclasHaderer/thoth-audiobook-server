@@ -12,23 +12,16 @@ import java.util.*
 object TTracks : UUIDTable("Tracks") {
     val title = varchar("title", 255)
     val trackNr = integer("trackNr").nullable()
-    val cover = reference("cover", TImages).nullable()
     val duration = integer("duration")
     val accessTime = long("accessTime")
     val path = text("path").uniqueIndex()
     val book = reference("book", TBooks)
-    val author = reference("author", TAuthors)
-    val narrator = varchar("name", 255).nullable()
-    val series = reference("series", TSeries).nullable()
-    val seriesIndex = float("seriesIndex").nullable()
     val scanIndex = integer("scanIndex")
 }
 
 
 class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
     companion object : UUIDEntityClass<Track>(TTracks)
-
-    private val coverID by TTracks.cover
 
     var title by TTracks.title
     var trackNr by TTracks.trackNr
@@ -42,7 +35,6 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
     override fun toModel() = TrackModel(
         id = id.value,
         title = title,
-        cover = coverID?.value,
         trackNr = trackNr,
         duration = duration,
         accessTime = accessTime,

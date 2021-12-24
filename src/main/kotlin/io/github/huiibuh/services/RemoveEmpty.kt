@@ -16,10 +16,9 @@ object RemoveEmpty {
     }
 
     fun series() {
-        // TODO remove series with only one book in it
         transaction {
             Series.all().forEach {
-                if (Book.find { TBooks.series eq it.id.value }.empty()) {
+                if (Book.find { TBooks.series eq it.id.value }.count() < 2) {
                     it.delete()
                 }
             }

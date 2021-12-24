@@ -3,7 +3,7 @@ package io.github.huiibuh.api
 import com.papsign.ktor.openapigen.APITag
 
 
-enum class ApiTags(override val description: String = "hello world") : APITag {
+enum class ApiTags(override val description: String) : APITag {
     Series("All things concerning series"),
     Books("All things concerning books"),
     Rescan("Rescan folders for changes"),
