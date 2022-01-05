@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import java.util.*
 
 @Serializable
-data class ImageModel(
+class ImageModel(
     @Serializable(UUIDSerializer::class) val id: UUID,
     val image: ByteArray,
 )
