@@ -5,38 +5,51 @@ import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 
+interface IBookModel {
+    val id: UUID
+    val title: String
+    val year: Int?
+    val language: String?
+    val description: String?
+    val asin: String?
+    val author: NamedId
+    val narrator: String?
+    val series: TitledId?
+    val seriesIndex: Float?
+    val cover: UUID?
+}
 
 @Serializable
 data class BookModel(
-    @Serializable(UUIDSerializer::class) val id: UUID,
-    val title: String,
-    val year: Int?,
-    val language: String?,
-    val description: String?,
-    val asin: String?,
-    val author: NamedId,
-    val narrator: String?,
-    val series: TitledId?,
-    val seriesIndex: Float?,
-    @Serializable(UUIDSerializer::class) val cover: UUID?,
-)
+    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val title: String,
+    override val year: Int?,
+    override val language: String?,
+    override val description: String?,
+    override val asin: String?,
+    override val author: NamedId,
+    override val narrator: String?,
+    override val series: TitledId?,
+    override val seriesIndex: Float?,
+    @Serializable(UUIDSerializer::class) override val cover: UUID?,
+) : IBookModel
 
 @Serializable
 data class BookModelWithTracks(
-    @Serializable(UUIDSerializer::class) val id: UUID,
-    val title: String,
-    val year: Int?,
-    val language: String?,
-    val description: String?,
-    val asin: String?,
+    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val title: String,
+    override val year: Int?,
+    override val language: String?,
+    override val description: String?,
+    override val asin: String?,
+    override val author: NamedId,
+    override val narrator: String?,
+    override val series: TitledId?,
+    override val seriesIndex: Float?,
+    @Serializable(UUIDSerializer::class) override val cover: UUID?,
     val position: Int,
     val tracks: List<TrackModel>,
-    val author: NamedId,
-    val narrator: String?,
-    val series: TitledId?,
-    val seriesIndex: Float?,
-    @Serializable(UUIDSerializer::class) val cover: UUID?,
-) {
+) : IBookModel {
     companion object {
         fun fromModel(book: BookModel, tracks: List<Track>, position: Int): BookModelWithTracks {
 

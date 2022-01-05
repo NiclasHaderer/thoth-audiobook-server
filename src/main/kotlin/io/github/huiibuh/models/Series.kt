@@ -4,35 +4,47 @@ import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 
+interface ISeriesModel {
+    val id: UUID
+    val title: String
+    val amount: Long
+    val asin: String?
+    val description: String?
+    val author: NamedId
+    val images: List<@Serializable(UUIDSerializer::class) UUID>
+}
+
 @Serializable
 data class SeriesModel(
-    @Serializable(UUIDSerializer::class) val id: UUID,
-    val title: String,
-    val amount: Long,
-    val asin: String?,
-    val description: String?,
-    val author: NamedId,
-)
+    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val title: String,
+    override val amount: Long,
+    override val asin: String?,
+    override val description: String?,
+    override val author: NamedId,
+    override val images: List<@Serializable(UUIDSerializer::class) UUID>,
+) : ISeriesModel
 
 @Serializable
 data class YearRange(
     val start: Int,
-    val end: Int
+    val end: Int,
 )
 
 @Serializable
 data class SeriesModelWithBooks(
-    @Serializable(UUIDSerializer::class) val id: UUID,
-    val title: String,
-    val amount: Long,
+    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val title: String,
+    override val amount: Long,
     val narrators: List<String>,
     val yearRange: YearRange?,
     val position: Int,
-    val asin: String?,
-    val description: String?,
+    override val asin: String?,
+    override val description: String?,
     val books: List<BookModel>,
-    val author: NamedId,
-) {
+    override val author: NamedId,
+    override val images: List<@Serializable(UUIDSerializer::class) UUID>,
+) : ISeriesModel {
     companion object {
         fun fromModel(series: SeriesModel, books: List<BookModel>, position: Int): SeriesModelWithBooks {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
@@ -41,7 +53,7 @@ data class SeriesModelWithBooks(
             val endYear = years.maxOrNull()
 
             var yearRange: YearRange? = null
-            if(startYear != null && endYear != null){
+            if (startYear != null && endYear != null) {
                 yearRange = YearRange(start = startYear, end = endYear)
             }
 
@@ -55,7 +67,8 @@ data class SeriesModelWithBooks(
                 asin = series.asin,
                 description = series.description,
                 books = books,
-                author = series.author
+                author = series.author,
+                images = series.images
             )
         }
     }

@@ -23,15 +23,21 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
     var description by TSeries.description
     var author by Author referencedOn TSeries.author
 
-    override fun toModel() = SeriesModel(
-        id = id.value,
-        title = title,
-        asin = asin,
-        amount = Book.find { TBooks.series eq id.value }.count(),
-        description = description,
-        author = NamedId(
-            name = author.name,
-            id = author.id.value
+    override fun toModel(): SeriesModel {
+        val books = Book.find { TBooks.series eq id.value }
+        return SeriesModel(
+            id = id.value,
+            title = title,
+            asin = asin,
+            amount = books.count(),
+            description = description,
+            author = NamedId(
+                name = author.name,
+                id = author.id.value
+            ),
+            images = books.mapNotNull { it.cover?.id?.value }
         )
-    )
+    }
+
+
 }
