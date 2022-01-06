@@ -11,6 +11,7 @@ import io.github.huiibuh.config.Settings
 import io.github.huiibuh.db.DatabaseFactory
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.configureHTTP
+import io.github.huiibuh.plugins.configureKoin
 import io.github.huiibuh.plugins.configureMonitoring
 import io.github.huiibuh.plugins.configureOpenAPI
 import io.github.huiibuh.plugins.configurePartialContent
@@ -43,6 +44,7 @@ fun main(): Unit = runBlocking {
 
 
 fun Application.webServer() {
+    configureKoin()
     configureOpenAPI()
     configureRouting()
     configurePartialContent()

@@ -7,6 +7,7 @@ val h2Version: String by project
 val hikariVersion: String by project
 val reflectVersion: String by project
 val sqliteVersion: String by project
+val koinVersion: String by project
 
 plugins {
     application
@@ -40,6 +41,11 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
+    // Dependency Injection
+    // Koin for Ktor
+    implementation("io.insert-koin:koin-ktor:$koinVersion")
+    // SLF4J Logger
+    implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     // Migration
     implementation("org.reflections:reflections:$reflectVersion")
     // OpenAPI

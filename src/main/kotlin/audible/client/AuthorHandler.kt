@@ -1,7 +1,8 @@
 package audible.client
 
 import api.exceptions.APINotFound
-import audible.models.AudibleAuthor
+import io.github.huiibuh.metadata.AuthorMetadata
+import io.github.huiibuh.metadata.ProviderWithID
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -31,30 +32,34 @@ internal class AuthorHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): AudibleAuthor {
+    override suspend fun execute(): AuthorMetadata {
         val document = getDocument()
         document.getElementById("product-list-a11y-skiplink-target")
             ?: throw APINotFound("Author could not be found")
-        return object : AudibleAuthor {
-            override val link = url.toString()
-            override val asin = idFromURL(this.link)
+        val link = url.toString()
+        return object : AuthorMetadata {
+            override val link = link
+            override val id = object : ProviderWithID {
+                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
+                override val id = idFromURL(link)
+            }
             override val name = getAuthorName(document)
             override val image = getAuthorImage(document)
             override val biography = getAuthorBiography(document)
         }
     }
 
-    fun getAuthorName(element: Element): String? {
+    private fun getAuthorName(element: Element): String? {
         val authorElement = element.selectFirst("h1.bc-heading") ?: return null
         return authorElement.text()
     }
 
-    fun getAuthorBiography(element: Element): String? {
+    private fun getAuthorBiography(element: Element): String? {
         val biographyElement = element.selectFirst(".bc-expander span.bc-text") ?: return null
         return biographyElement.text()
     }
 
-    fun getAuthorImage(element: Element): String? {
+    private fun getAuthorImage(element: Element): String? {
         val imageElement = element.selectFirst("img.author-image-outline") ?: return null
         return changeImageResolution(imageElement.attr("src"), imageSize)
     }
