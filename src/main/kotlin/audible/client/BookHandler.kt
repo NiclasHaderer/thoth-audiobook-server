@@ -1,8 +1,9 @@
 package audible.client
 
-import audible.models.AudibleBook
-import audible.models.AudibleSearchAuthor
-import audible.models.AudibleSearchSeries
+import io.github.huiibuh.metadata.BookMetadata
+import io.github.huiibuh.metadata.ProviderWithID
+import io.github.huiibuh.metadata.SearchAuthorMetadata
+import io.github.huiibuh.metadata.SearchSeriesMetadata
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -26,11 +27,15 @@ internal class BookHandler : AudibleHandler {
 
     constructor(document: Document, url: Url) : super(document, url)
 
-    override suspend fun execute(): AudibleBook {
+    override suspend fun execute(): BookMetadata {
         val document = getDocument()
-        return object : AudibleBook {
-            override val link = url.toString()
-            override val asin = idFromURL(link)
+        val link = url.toString()
+        return object : BookMetadata {
+            override val link = link
+            override val id = object : ProviderWithID {
+                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
+                override val id = idFromURL(link)
+            }
             override val description = getDescription(document)
             override val title = extractTitle(document)
             override val image = extractImageUrl(document)
@@ -40,12 +45,16 @@ internal class BookHandler : AudibleHandler {
         }
     }
 
-    private fun extractAuthorInfo(document: Document): AudibleSearchAuthor? {
+    private fun extractAuthorInfo(document: Document): SearchAuthorMetadata? {
         val authorLink = document.selectFirst(".authorLabel a") ?: return null
-        return object : AudibleSearchAuthor {
-            override val link = authorLink.absUrl("href")
+        val link = authorLink.absUrl("href")
+        return object : SearchAuthorMetadata {
+            override val link = link
             override val name = authorLink.text()
-            override val asin = idFromURL(this.link)
+            override val id = object : ProviderWithID {
+                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
+                override val id = idFromURL(link)
+            }
         }
     }
 
@@ -62,18 +71,22 @@ internal class BookHandler : AudibleHandler {
         return title.replace(", Book .*".toRegex(), "").replace(" - Gesprochen .*".toRegex(), "")
     }
 
-    private fun extractSeriesInfo(element: Element): AudibleSearchSeries? {
+    private fun extractSeriesInfo(element: Element): SearchSeriesMetadata? {
         val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return null
         val seriesNameElement = seriesElement.selectFirst("a") ?: return null
 
         var seriesIndex = seriesElement.text().split(",").last().trim()
         seriesIndex = seriesIndex.filter { it.isDigit() }
+        val link = seriesNameElement.absUrl("href")
 
-        return object : AudibleSearchSeries {
-            override val link = seriesNameElement.absUrl("href")
+        return object : SearchSeriesMetadata {
+            override val link = link
             override val name = seriesNameElement.text()
             override val index = seriesIndex.toFloat()
-            override val asin = idFromURL(this.link)
+            override val id = object : ProviderWithID {
+                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
+                override val id = idFromURL(link)
+            }
         }
 
     }

@@ -1,8 +1,9 @@
 package audible.client
 
 import api.exceptions.APINotFound
-import audible.models.AudibleSearchResult
-import audible.models.AudibleSeries
+import io.github.huiibuh.metadata.ProviderWithID
+import io.github.huiibuh.metadata.SearchResultMetadata
+import io.github.huiibuh.metadata.SeriesMetadata
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -28,15 +29,19 @@ internal class SeriesHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): AudibleSeries {
+    override suspend fun execute(): SeriesMetadata {
         val document = getDocument()
         // Audible does not return 404 if a series is not valid, so...
         document.getElementById("product-list-a11y-skiplink-target")
             ?: throw APINotFound("Series could not be found")
         val booksInSeries = getSeriesBooks(document)
-        return object : AudibleSeries {
-            override val link = url.toString()
-            override val asin = idFromURL(this.link)
+        val link = url.toString()
+        return object : SeriesMetadata {
+            override val link = link
+            override val id = object : ProviderWithID {
+                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
+                override val id = idFromURL(link)
+            }
             override val name = getSeriesName(document)
             override val description = getSeriesDescription(document)
             override val amount = getBookCount(document)
@@ -44,22 +49,22 @@ internal class SeriesHandler : AudibleHandler {
         }
     }
 
-    fun getSeriesName(element: Element): String? {
+    private fun getSeriesName(element: Element): String? {
         val authorElement = element.selectFirst("h1.bc-heading") ?: return null
         return authorElement.text()
     }
 
-    fun getSeriesDescription(element: Element): String? {
+    private fun getSeriesDescription(element: Element): String? {
         val biographyElement = element.selectFirst(".series-summary-content") ?: return null
         return biographyElement.text()
     }
 
-    fun getBookCount(element: Element): Int? {
+    private fun getBookCount(element: Element): Int? {
         val imageElement = element.selectFirst(".num-books-in-series") ?: return null
         return imageElement.text().filter { it.isDigit() }.toIntOrNull()
     }
 
-    suspend fun getSeriesBooks(document: Document): List<AudibleSearchResult> {
+    private suspend fun getSeriesBooks(document: Document): List<SearchResultMetadata> {
         return SearchHandler.fromDocument(document, this.url).execute()
     }
 }

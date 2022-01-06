@@ -59,12 +59,12 @@ internal abstract class AudibleHandler private constructor(
         return Jsoup.parse(body, this.url.toString())
     }
 
-    fun idFromURL(link: String?): String {
+    protected fun idFromURL(link: String?): String {
         if (link == null) return ""
         return Url(link).encodedPath.split("/").last()
     }
 
-    fun changeImageResolution(url: String, resolution: Int): String {
+    protected fun changeImageResolution(url: String, resolution: Int): String {
         var modifiedURL = url.replace(Regex("_SX\\d{2,4}_CR0"), "_SX${resolution}_CR0")
         modifiedURL = modifiedURL.replace(Regex(",0,.*"), ",0,0,0__.jpg")
         return modifiedURL
