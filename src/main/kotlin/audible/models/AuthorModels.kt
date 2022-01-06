@@ -1,17 +1,14 @@
 package audible.models
 
+import io.github.huiibuh.metadata.AuthorMetadata
+import io.github.huiibuh.metadata.ProviderWithID
 import kotlinx.serialization.Serializable
-
-interface AudibleAuthor : AudibleSearchAuthor {
-    val image: String?
-    val biography: String?
-}
 
 @Serializable
 class AudibleAuthorImpl(
     override val image: String?,
     override val biography: String?,
-    override val asin: String,
+    override val id: ProviderWithID,
     override val name: String?,
     override val link: String,
-) : AudibleAuthor
+) : AuthorMetadata

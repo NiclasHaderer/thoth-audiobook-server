@@ -1,54 +1,33 @@
 package audible.models
 
+import io.github.huiibuh.metadata.MetadataLanguage
+import io.github.huiibuh.metadata.MetadataSearchCount
+import io.github.huiibuh.metadata.ProviderWithID
+import io.github.huiibuh.metadata.SearchAuthorMetadata
+import io.github.huiibuh.metadata.SearchResultMetadata
+import io.github.huiibuh.metadata.SearchSeriesMetadata
 import io.github.huiibuh.serializers.DateSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 
-interface AudibleSearchAuthor {
-    val asin: String
-    val name: String?
-    val link: String
-}
-
-
 @Serializable
 class AudibleSearchAuthorImpl(
-    override val asin: String,
+    override val id: ProviderWithID,
     override val name: String?,
     override val link: String,
-) : AudibleSearchAuthor
-
-
-interface AudibleSearchSeries {
-    val asin: String
-    val name: String
-    val index: Float?
-    val link: String
-}
+) : SearchAuthorMetadata
 
 @Serializable
 class AudibleSearchSeriesImpl(
-    override val asin: String,
+    override val id: ProviderWithID,
     override val name: String,
     override val index: Float?,
     override val link: String,
-) : AudibleSearchSeries
-
-interface AudibleSearchResult {
-    val asin: String
-    val title: String?
-    val link: String?
-    val author: AudibleSearchAuthor?
-    val narrator: AudibleSearchAuthor?
-    val series: AudibleSearchSeries?
-    val image: String?
-    val language: String?
-    val releaseDate: Date?
-}
+) : SearchSeriesMetadata
 
 @Serializable
 class AudibleSearchResultImpl(
-    override val asin: String,
+    override val id: ProviderWithID,
     override val title: String?,
     override val link: String?,
     override val author: AudibleSearchAuthorImpl?,
@@ -57,7 +36,7 @@ class AudibleSearchResultImpl(
     override val image: String?,
     override val language: String?,
     @Serializable(DateSerializer::class) override val releaseDate: Date?,
-) : AudibleSearchResult
+) : SearchResultMetadata
 
 @Serializable
 enum class AudibleSearchLanguage(val language: Long) {
@@ -70,7 +49,25 @@ enum class AudibleSearchLanguage(val language: Long) {
     Finnish(16290312031),
     Norwegian(16290333031),
     Swedish(16290346031),
-    Russian(16290340031),
+    Russian(16290340031);
+
+
+    companion object {
+        fun from(language: MetadataLanguage): AudibleSearchLanguage {
+            return when (language) {
+                MetadataLanguage.Danish -> Danish
+                MetadataLanguage.English -> English
+                MetadataLanguage.Finnish -> Finnish
+                MetadataLanguage.Spanish -> Spanish
+                MetadataLanguage.German -> German
+                MetadataLanguage.French -> French
+                MetadataLanguage.Italian -> Italian
+                MetadataLanguage.Norwegian -> Norwegian
+                MetadataLanguage.Swedish -> Swedish
+                MetadataLanguage.Russian -> Russian
+            }
+        }
+    }
 }
 
 @Serializable
@@ -78,5 +75,17 @@ enum class AudibleSearchAmount(val size: Int) {
     Twenty(20),
     Thirty(30),
     Forty(40),
-    Fifty(50),
+    Fifty(50);
+
+
+    companion object {
+        fun from(searchCount: MetadataSearchCount): AudibleSearchAmount {
+            return when (searchCount) {
+                MetadataSearchCount.Small -> Twenty
+                MetadataSearchCount.Medium -> Thirty
+                MetadataSearchCount.Large -> Forty
+                MetadataSearchCount.ExtraLarge -> Fifty
+            }
+        }
+    }
 }
