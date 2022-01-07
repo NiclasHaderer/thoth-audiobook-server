@@ -13,15 +13,15 @@ interface MetadataProvider {
         pageSize: MetadataSearchCount? = null,
     ): List<SearchResultMetadata>
 
-    suspend fun getAuthorByID(authorID: ProviderWithID): AuthorMetadata?
+    suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata?
 
     suspend fun getAuthorByName(authorName: String): AuthorMetadata?
 
-    suspend fun getBookByID(bookID: ProviderWithID): BookMetadata?
+    suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata?
 
     suspend fun getBookByName(bookName: String): BookMetadata?
 
-    suspend fun getSeriesByID(seriesID: ProviderWithID): SeriesMetadata?
+    suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata?
 
     suspend fun getSeriesByName(seriesName: String): SeriesMetadata?
 }

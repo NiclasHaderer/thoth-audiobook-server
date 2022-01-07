@@ -1,5 +1,6 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.db.ToModel
 import io.github.huiibuh.models.ImageModel
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass

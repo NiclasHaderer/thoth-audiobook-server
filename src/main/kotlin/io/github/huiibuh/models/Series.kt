@@ -8,7 +8,7 @@ interface ISeriesModel {
     val id: UUID
     val title: String
     val amount: Long
-    val asin: String?
+    val providerID: ProviderIDModel?
     val description: String?
     val author: NamedId
     val images: List<@Serializable(UUIDSerializer::class) UUID>
@@ -19,7 +19,7 @@ data class SeriesModel(
     @Serializable(UUIDSerializer::class) override val id: UUID,
     override val title: String,
     override val amount: Long,
-    override val asin: String?,
+    override val providerID: ProviderIDModel?,
     override val description: String?,
     override val author: NamedId,
     override val images: List<@Serializable(UUIDSerializer::class) UUID>,
@@ -39,7 +39,7 @@ data class SeriesModelWithBooks(
     val narrators: List<String>,
     val yearRange: YearRange?,
     val position: Int,
-    override val asin: String?,
+    override val providerID: ProviderIDModel?,
     override val description: String?,
     val books: List<BookModel>,
     override val author: NamedId,
@@ -64,7 +64,7 @@ data class SeriesModelWithBooks(
                 yearRange = yearRange,
                 position = position,
                 narrators = narrators,
-                asin = series.asin,
+                providerID = series.providerID,
                 description = series.description,
                 books = books,
                 author = series.author,

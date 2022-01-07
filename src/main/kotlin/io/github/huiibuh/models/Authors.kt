@@ -8,7 +8,7 @@ interface IAuthorModel {
     val id: UUID
     val name: String
     val biography: String?
-    val asin: String?
+    val providerID: ProviderIDModel?
     val image: UUID?
 }
 
@@ -17,7 +17,7 @@ data class AuthorModel(
     @Serializable(UUIDSerializer::class) override val id: UUID,
     override val name: String,
     override val biography: String?,
-    override val asin: String?,
+    override val providerID: ProviderIDModel?,
     @Serializable(UUIDSerializer::class) override val image: UUID?,
 ) : IAuthorModel
 
@@ -25,7 +25,7 @@ data class AuthorModelWithBooks(
     @Serializable(UUIDSerializer::class) override val id: UUID,
     override val name: String,
     override val biography: String?,
-    override val asin: String?,
+    override val providerID: ProviderIDModel?,
     @Serializable(UUIDSerializer::class) override val image: UUID?,
     val position: Int,
     val books: List<BookModel>,
@@ -36,7 +36,7 @@ data class AuthorModelWithBooks(
             name = author.name,
             biography = author.biography,
             position = position,
-            asin = author.asin,
+            providerID = author.providerID,
             image = author.image,
             books = books
         )

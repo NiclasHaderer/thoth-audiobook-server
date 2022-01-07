@@ -3,11 +3,8 @@ package io.github.huiibuh.api.audiobooks.series
 import api.exceptions.APINotFound
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
-import io.github.huiibuh.db.tables.Book
+import io.github.huiibuh.db.tables.ProviderID
 import io.github.huiibuh.db.tables.Series
-import io.github.huiibuh.db.tables.TBooks
-import io.github.huiibuh.db.tables.TTracks
-import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.models.SeriesModel
 import io.github.huiibuh.scanner.toTrackModel
 import io.github.huiibuh.services.RemoveEmpty
@@ -31,8 +28,9 @@ internal suspend fun OpenAPIPipelineResponseContext<SeriesModel>.patchSeries(
             trackReferences.forEach { it.series = patchSeries.title }
         }
 
-        if (patchSeries.asin != series.asin) {
-            series.asin = patchSeries.asin
+        val newProviderID = patchSeries.id
+        if (ProviderID.eq(series.providerID, newProviderID)) {
+            series.providerID = if (newProviderID == null) null else ProviderID.newFrom(newProviderID)
         }
 
         if (patchSeries.description != series.description) {

@@ -1,9 +1,9 @@
 package io.github.huiibuh.scanner
 
 import io.github.huiibuh.config.Settings
-import io.github.huiibuh.utils.findOne
 import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
+import io.github.huiibuh.extensions.findOne
 import io.github.huiibuh.services.database.SharedSettingsService
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking

@@ -2,6 +2,7 @@ package io.github.huiibuh.api.audiobooks.books
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
+import io.github.huiibuh.models.ProviderIDModel
 import java.util.*
 
 @Path("{uuid}")
@@ -14,7 +15,7 @@ internal data class PatchBook(
     val title: String,
     val language: String?,
     val description: String?,
-    val asin: String?,
+    val providerID: ProviderIDModel?,
     val author: String,
     val narrator: String?,
     val series: String?,

@@ -2,7 +2,6 @@ package io.github.huiibuh.ws
 
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -22,13 +21,11 @@ class WebsocketCollection {
         connections.add(connection)
     }
 
-    fun closeAll() {
-        runBlocking {
-            connections.forEach {
-                it.close(CloseReason(CloseReason.Codes.NORMAL, "server closed connection"))
-            }
-            connections.clear()
+    suspend fun closeAll() {
+        connections.forEach {
+            it.close(CloseReason(CloseReason.Codes.NORMAL, "server closed connection"))
         }
+        connections.clear()
     }
 
     fun remove(conn: DefaultWebSocketServerSession) {

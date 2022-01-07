@@ -4,12 +4,14 @@ import api.exceptions.ApiException
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.db.tables.Image
+import io.github.huiibuh.db.tables.ProviderID
 import io.github.huiibuh.db.tables.Series
 import io.github.huiibuh.db.tables.TAuthors
 import io.github.huiibuh.db.tables.TBooks
 import io.github.huiibuh.db.tables.TImages
 import io.github.huiibuh.db.tables.TSeries
-import io.github.huiibuh.utils.findOne
+import io.github.huiibuh.extensions.findOne
+import io.github.huiibuh.models.ProviderIDModel
 import io.github.huiibuh.utils.imageFromString
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.and
@@ -24,7 +26,7 @@ object GetOrCreate {
     fun author(
         name: String,
         biography: String? = null,
-        asin: String? = null,
+        providerID: ProviderID? = null,
         image: Image? = null,
     ) = transaction {
         var author = Author.findOne { TAuthors.name like name }
@@ -38,13 +40,13 @@ object GetOrCreate {
         }
 
         if (authorInfo == null) {
-            log.debug("Could not find author information for $author")
+            log.debug("Could not find author information for $name")
         }
 
         author = Author.new {
             this.name = name
             this.biography = biography ?: authorInfo?.biography
-            this.asin = asin ?: authorInfo?.asin
+            this.providerID = providerID ?: ProviderID.newFrom(authorInfo?.id)
             this.image = image ?: if (authorInfo?.image != null) {
                 GetOrCreate.image(runBlocking { imageFromString(authorInfo.image!!) })
             } else null
@@ -57,7 +59,7 @@ object GetOrCreate {
         year: Int?,
         language: String?,
         description: String?,
-        asin: String?,
+        providerID: ProviderIDModel?,
         author: String,
         narrator: String?,
         series: String?,
@@ -73,7 +75,7 @@ object GetOrCreate {
                 this.year = year
                 this.language = language
                 this.description = description
-                this.asin = asin
+                this.providerID = ProviderID.newFrom(providerID)
                 this.author = authorItem
                 this.narrator = narrator
                 this.series = seriesItem
@@ -85,7 +87,7 @@ object GetOrCreate {
     fun series(
         title: String,
         author: Author,
-        asin: String? = null,
+        providerID: ProviderID? = null,
         description: String? = null,
     ) = transaction {
         val series = Series.findOne { TSeries.title like title }
@@ -99,12 +101,15 @@ object GetOrCreate {
         }
 
         if (seriesInfo == null) {
-            log.debug("Could not find series information for ${title}")
+            log.debug("Could not find series information for $title")
         }
 
         Series.new {
             this.title = title
-            this.asin = asin ?: seriesInfo?.asin
+            this.providerID = providerID ?: if (seriesInfo?.id != null) ProviderID.new {
+                this.itemID = seriesInfo.id.itemID
+                this.provider = seriesInfo.id.provider
+            } else null
             this.description = description ?: seriesInfo?.description
             this.author = author
         }

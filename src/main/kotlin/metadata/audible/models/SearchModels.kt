@@ -1,8 +1,8 @@
-package audible.models
+package metadata.audible.models
 
 import io.github.huiibuh.metadata.MetadataLanguage
 import io.github.huiibuh.metadata.MetadataSearchCount
-import io.github.huiibuh.metadata.ProviderWithID
+import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SearchAuthorMetadata
 import io.github.huiibuh.metadata.SearchResultMetadata
 import io.github.huiibuh.metadata.SearchSeriesMetadata
@@ -12,14 +12,14 @@ import java.util.*
 
 @Serializable
 class AudibleSearchAuthorImpl(
-    override val id: ProviderWithID,
+    override val id: ProviderWithIDMetadata,
     override val name: String?,
     override val link: String,
 ) : SearchAuthorMetadata
 
 @Serializable
 class AudibleSearchSeriesImpl(
-    override val id: ProviderWithID,
+    override val id: ProviderWithIDMetadata,
     override val name: String,
     override val index: Float?,
     override val link: String,
@@ -27,7 +27,7 @@ class AudibleSearchSeriesImpl(
 
 @Serializable
 class AudibleSearchResultImpl(
-    override val id: ProviderWithID,
+    override val id: ProviderWithIDMetadata,
     override val title: String?,
     override val link: String?,
     override val author: AudibleSearchAuthorImpl?,

@@ -2,10 +2,14 @@ package io.github.huiibuh.scanner
 
 import api.exceptions.APINotFound
 import io.github.huiibuh.db.tables.Track
+import io.github.huiibuh.models.ProviderIDModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -33,10 +37,17 @@ class TrackReference(private val audioFile: AudioFile) {
         }
     }
 
-    var asin: String?
-        get() = stringOrNull(audioFile.tag.getFirst(FieldKey.AMAZON_ID))
+    var providerId: ProviderIDModel?
+        get() {
+            return try {
+                Json.decodeFromString(audioFile.tag.getFirst(FieldKey.AMAZON_ID))
+            } catch (e: Exception) {
+                null
+            }
+        }
         set(value) {
-            setOrDelete(FieldKey.AMAZON_ID, value)
+            val valueStr = Json.encodeToString(value)
+            setOrDelete(FieldKey.AMAZON_ID, valueStr)
         }
 
     var description: String?

@@ -1,12 +1,12 @@
-package generator.typescript
+package generators.typescript
 
-import audible.models.AudibleAuthor
-import audible.models.AudibleBook
-import audible.models.AudibleSearchResultImpl
-import audible.models.AudibleSeries
 import io.github.huiibuh.api.audiobooks.authors.PatchAuthor
 import io.github.huiibuh.api.audiobooks.books.PatchBook
 import io.github.huiibuh.api.audiobooks.series.PatchSeries
+import io.github.huiibuh.metadata.AuthorMetadata
+import io.github.huiibuh.metadata.BookMetadata
+import io.github.huiibuh.metadata.SearchResultMetadata
+import io.github.huiibuh.metadata.SeriesMetadata
 import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.models.AuthorModelWithBooks
 import io.github.huiibuh.models.BookModel
@@ -45,21 +45,21 @@ fun main() {
     audiobookDefinitions = audiobookDefinitions.replace("interface", "export interface")
 
     var audibleDefinitions = generate(setOf(
-        AudibleAuthor::class,
-        AudibleBook::class,
-        AudibleSearchResultImpl::class,
-        AudibleSeries::class
+        AuthorMetadata::class,
+        BookMetadata::class,
+        SearchResultMetadata::class,
+        SeriesMetadata::class
     ))
     audibleDefinitions = audibleDefinitions.replace("interface", "export interface")
 
-    if (!Files.exists(Path.of("generator/typescript"))) {
-        Files.createDirectories(Path.of("generator/typescript"))
+    if (!Files.exists(Path.of("generators/typescript"))) {
+        Files.createDirectories(Path.of("generators/typescript"))
     }
 
-    File("generator/typescript/audiobook.ts").printWriter().use { out ->
+    File("generators/typescript/audiobook.ts").printWriter().use { out ->
         out.println(audiobookDefinitions)
     }
-    File("generator/typescript/audible.ts").printWriter().use { out ->
+    File("generators/typescript/audible.ts").printWriter().use { out ->
         out.println(audibleDefinitions)
     }
 
@@ -69,9 +69,9 @@ fun main() {
 fun generate(classes: Iterable<KClass<*>>) = TypeScriptGenerator(
     rootClasses = classes,
     mappings = mapOf(
-        LocalDateTime::class to "Date",
-        LocalDate::class to "Date",
-        Date::class to "Date",
+        LocalDateTime::class to "number",
+        LocalDate::class to "number",
+        Date::class to "number",
         UUID::class to "string"
     )
 ).definitionsText

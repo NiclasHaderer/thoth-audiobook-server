@@ -32,8 +32,7 @@ fun Route.withNotifications(path: String, table: Table, type: NotificationType) 
 
     webSocket(path) {
         sockets.add(this)
-        for (frame in incoming) {
-        }
+        this.closeReason.await()
         sockets.remove(this)
     }
 

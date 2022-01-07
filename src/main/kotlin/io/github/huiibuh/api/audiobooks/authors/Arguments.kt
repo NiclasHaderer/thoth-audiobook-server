@@ -2,11 +2,7 @@ package io.github.huiibuh.api.audiobooks.authors
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
-import io.ktor.client.*
-import io.ktor.client.features.*
-import io.ktor.client.request.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import io.github.huiibuh.models.ProviderIDModel
 import java.util.*
 
 @Path("{uuid}")
@@ -17,6 +13,6 @@ internal data class AuthorId(
 internal data class PatchAuthor(
     val name: String,
     val biography: String?,
-    val asin: String?,
+    val providerID: ProviderIDModel,
     val image: String?,
 )

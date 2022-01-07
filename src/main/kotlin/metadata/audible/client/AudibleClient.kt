@@ -1,19 +1,19 @@
-package audible.client
+package metadata.audible.client
 
-import audible.models.AudibleSearchAmount
-import audible.models.AudibleSearchLanguage
+import metadata.audible.models.AudibleSearchAmount
+import metadata.audible.models.AudibleSearchLanguage
 import io.github.huiibuh.metadata.AuthorMetadata
 import io.github.huiibuh.metadata.BookMetadata
 import io.github.huiibuh.metadata.MetadataLanguage
 import io.github.huiibuh.metadata.MetadataProvider
 import io.github.huiibuh.metadata.MetadataSearchCount
-import io.github.huiibuh.metadata.ProviderWithID
+import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SearchResultMetadata
 import io.github.huiibuh.metadata.SeriesMetadata
 import io.ktor.client.*
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
-const val AUDIBLE_PROVIDER_NAME = "audible"
+const val AUDIBLE_PROVIDER_NAME = "metadata"
 
 open class AudibleClient(
     private val searchHost: String = "audible.de",
@@ -44,63 +44,63 @@ open class AudibleClient(
         return handler.execute()
     }
 
-    override suspend fun getAuthorByID(authorID: ProviderWithID): AuthorMetadata? {
-        val handler = AuthorHandler.fromURL(this.client, this.authorHost, authorID.id, this.authorImageSize)
+    override suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata? {
+        val handler = AuthorHandler.fromURL(this.client, this.authorHost, authorID.itemID, this.authorImageSize)
         return handler.execute()
     }
 
     override suspend fun getAuthorByName(authorName: String): AuthorMetadata? {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, author = authorName)
         val searchResult = handler.execute()
-        val authorResult = searchResult.filter { it.author != null && it.author?.id?.id != "search" }
+        val authorResult = searchResult.filter { it.author != null && it.author?.id?.itemID != "search" }
         if (authorResult.isEmpty()) return null
 
         val author = FuzzySearch.extractOne(authorName, authorResult) { it.author!!.name }
         if (author.score < searchScore) return null
 
-        return getAuthorByID(object : ProviderWithID {
-            override val uniqueProviderName = uniqueName
-            override val id = author.referent.author!!.id.id
+        return getAuthorByID(object : ProviderWithIDMetadata {
+            override val provider = uniqueName
+            override val itemID = author.referent.author!!.id.itemID
         })
     }
 
     override suspend fun getBookByName(bookName: String): BookMetadata? {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, title = bookName)
         val searchResult = handler.execute()
-        val bookResult = searchResult.filter { it.title != null && it.id.id != "search" }
+        val bookResult = searchResult.filter { it.title != null && it.id.itemID != "search" }
         if (bookResult.isEmpty()) return null
 
         val book = FuzzySearch.extractOne(bookName, bookResult) { it.title }
         if (book.score < searchScore) return null
 
-        return getBookByID(object : ProviderWithID {
-            override val uniqueProviderName = uniqueName
-            override val id = book.referent.id.id
+        return getBookByID(object : ProviderWithIDMetadata {
+            override val provider = uniqueName
+            override val itemID = book.referent.id.itemID
         })
     }
 
-    override suspend fun getBookByID(bookID: ProviderWithID): BookMetadata? {
-        val handler = BookHandler.fromUrl(this.client, this.searchHost, bookID.id)
+    override suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata? {
+        val handler = BookHandler.fromUrl(this.client, this.searchHost, bookID.itemID)
         return handler.execute()
     }
 
-    override suspend fun getSeriesByID(seriesID: ProviderWithID): SeriesMetadata? {
-        val handler = SeriesHandler.fromURL(this.client, this.searchHost, seriesID.id)
+    override suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata? {
+        val handler = SeriesHandler.fromURL(this.client, this.searchHost, seriesID.itemID)
         return handler.execute()
     }
 
     override suspend fun getSeriesByName(seriesName: String): SeriesMetadata? {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, keywords = seriesName)
         val searchResult = handler.execute()
-        val seriesResult = searchResult.filter { it.series != null && it.series?.id?.id != "search" }
+        val seriesResult = searchResult.filter { it.series != null && it.series?.id?.itemID != "search" }
         if (seriesResult.isEmpty()) return null
 
         val series = FuzzySearch.extractOne(seriesName, seriesResult) { it.series!!.name }
         if (series.score < searchScore) return null
 
-        return getSeriesByID(object : ProviderWithID {
-            override val uniqueProviderName = uniqueName
-            override val id = series.referent.series!!.id.id
+        return getSeriesByID(object : ProviderWithIDMetadata {
+            override val provider = uniqueName
+            override val itemID = series.referent.series!!.id.itemID
         })
     }
 
