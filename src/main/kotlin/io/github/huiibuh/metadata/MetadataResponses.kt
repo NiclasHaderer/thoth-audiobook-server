@@ -30,20 +30,20 @@ interface AuthorMetadata : SearchAuthorMetadata {
     val biography: String?
 }
 
-interface ProviderWithID {
-    val uniqueProviderName: String
-    val id: String
+interface ProviderWithIDMetadata {
+    val provider: String
+    val itemID: String
 }
 
 interface SearchAuthorMetadata {
-    val id: ProviderWithID
+    val id: ProviderWithIDMetadata
     val name: String?
     val link: String
 }
 
 interface BookMetadata {
     val description: String?
-    val id: ProviderWithID
+    val id: ProviderWithIDMetadata
     val title: String?
     val link: String?
     val author: SearchAuthorMetadata?
@@ -52,7 +52,7 @@ interface BookMetadata {
 }
 
 interface SeriesMetadata {
-    val id: ProviderWithID
+    val id: ProviderWithIDMetadata
     val link: String
     val name: String?
     val description: String?
@@ -61,14 +61,14 @@ interface SeriesMetadata {
 }
 
 interface SearchSeriesMetadata {
-    val id: ProviderWithID
+    val id: ProviderWithIDMetadata
     val name: String
     val index: Float?
     val link: String
 }
 
 interface SearchResultMetadata {
-    val id: ProviderWithID
+    val id: ProviderWithIDMetadata
     val title: String?
     val link: String?
     val author: SearchAuthorMetadata?

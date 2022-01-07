@@ -1,5 +1,6 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.db.ToModel
 import io.github.huiibuh.models.TitledId
 import io.github.huiibuh.models.TrackModel
 import org.jetbrains.exposed.dao.UUIDEntity

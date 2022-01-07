@@ -1,5 +1,6 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.db.ToModel
 import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.models.NamedId
 import io.github.huiibuh.models.TitledId
@@ -16,7 +17,7 @@ object TBooks : UUIDTable("Books") {
     val language = varchar("language", 255).nullable()
     val description = text("description").nullable()
     val author = reference("author", TAuthors)
-    val asin = char("asin", 10).nullable()
+    val providerID = reference("providerID", TProviderID).nullable()
     val narrator = varchar("name", 255).nullable()
     val series = reference("series", TSeries).nullable()
     val seriesIndex = float("seriesIndex").nullable()
@@ -32,7 +33,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
     var year by TBooks.year
     var language by TBooks.language
     var description by TBooks.description
-    var asin by TBooks.asin
+    var providerID by ProviderID optionalReferencedOn TBooks.providerID
     var author by Author referencedOn TBooks.author
     var narrator by TBooks.narrator
     var series by Series optionalReferencedOn TBooks.series
@@ -45,7 +46,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
         year = year,
         language = language,
         description = description,
-        asin = asin,
+        providerID = providerID?.toModel(),
         author = NamedId(
             name = author.name,
             id = author.id.value

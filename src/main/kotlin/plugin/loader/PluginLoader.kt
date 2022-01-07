@@ -8,7 +8,7 @@ import java.net.URLClassLoader
 
 
 class PluginLoader(private val pluginBasePath: String, private val pluginConfigLocation: String) {
-    private val classLoader = Thread.currentThread().contextClassLoader;
+    private val classLoader = Thread.currentThread().contextClassLoader
     private val log = LoggerFactory.getLogger(this::class.java)
     val searchPlugins: List<SearchPlugin>
     val scanPlugins: List<ScanPlugin>
@@ -32,7 +32,7 @@ class PluginLoader(private val pluginBasePath: String, private val pluginConfigL
         val jarURL = jarLocation.toURI().toURL()
         val pluginClassLoader = URLClassLoader(arrayOf(jarURL), this.javaClass.classLoader)
         return try {
-            Thread.currentThread().contextClassLoader = pluginClassLoader;
+            Thread.currentThread().contextClassLoader = pluginClassLoader
             val classToLoad = Class.forName(className, true, pluginClassLoader)
             val m = classToLoad.getDeclaredConstructor().newInstance().javaClass.methods
             classToLoad.getDeclaredConstructor().newInstance()
@@ -40,7 +40,7 @@ class PluginLoader(private val pluginBasePath: String, private val pluginConfigL
             log.error("Could not find plugin with class $className in $pluginLocation.\n Ignoring plugin.")
             null
         } finally {
-            Thread.currentThread().contextClassLoader = classLoader;
+            Thread.currentThread().contextClassLoader = classLoader
         }
     }
 }

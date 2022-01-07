@@ -1,4 +1,4 @@
-package audible.client
+package metadata.audible.client
 
 import api.exceptions.APINotFound
 import api.exceptions.ApiException

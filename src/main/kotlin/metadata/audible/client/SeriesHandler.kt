@@ -1,7 +1,7 @@
-package audible.client
+package metadata.audible.client
 
 import api.exceptions.APINotFound
-import io.github.huiibuh.metadata.ProviderWithID
+import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SearchResultMetadata
 import io.github.huiibuh.metadata.SeriesMetadata
 import io.ktor.client.*
@@ -38,9 +38,9 @@ internal class SeriesHandler : AudibleHandler {
         val link = url.toString()
         return object : SeriesMetadata {
             override val link = link
-            override val id = object : ProviderWithID {
-                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
-                override val id = idFromURL(link)
+            override val id = object : ProviderWithIDMetadata {
+                override val provider = AUDIBLE_PROVIDER_NAME
+                override val itemID = idFromURL(link)
             }
             override val name = getSeriesName(document)
             override val description = getSeriesDescription(document)

@@ -1,7 +1,7 @@
-package audible.client
+package metadata.audible.client
 
 import io.github.huiibuh.metadata.BookMetadata
-import io.github.huiibuh.metadata.ProviderWithID
+import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SearchAuthorMetadata
 import io.github.huiibuh.metadata.SearchSeriesMetadata
 import io.ktor.client.*
@@ -32,9 +32,9 @@ internal class BookHandler : AudibleHandler {
         val link = url.toString()
         return object : BookMetadata {
             override val link = link
-            override val id = object : ProviderWithID {
-                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
-                override val id = idFromURL(link)
+            override val id = object : ProviderWithIDMetadata {
+                override val provider = AUDIBLE_PROVIDER_NAME
+                override val itemID = idFromURL(link)
             }
             override val description = getDescription(document)
             override val title = extractTitle(document)
@@ -51,9 +51,9 @@ internal class BookHandler : AudibleHandler {
         return object : SearchAuthorMetadata {
             override val link = link
             override val name = authorLink.text()
-            override val id = object : ProviderWithID {
-                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
-                override val id = idFromURL(link)
+            override val id = object : ProviderWithIDMetadata {
+                override val provider = AUDIBLE_PROVIDER_NAME
+                override val itemID = idFromURL(link)
             }
         }
     }
@@ -83,9 +83,9 @@ internal class BookHandler : AudibleHandler {
             override val link = link
             override val name = seriesNameElement.text()
             override val index = seriesIndex.toFloat()
-            override val id = object : ProviderWithID {
-                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
-                override val id = idFromURL(link)
+            override val id = object : ProviderWithIDMetadata {
+                override val provider = AUDIBLE_PROVIDER_NAME
+                override val itemID = idFromURL(link)
             }
         }
 

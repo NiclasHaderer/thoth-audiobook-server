@@ -1,7 +1,7 @@
 package plugin.loader
 
-import audible.models.AudibleSearchAmount
-import audible.models.AudibleSearchLanguage
+import metadata.audible.models.AudibleSearchAmount
+import metadata.audible.models.AudibleSearchLanguage
 
 
 interface ScanPlugin {

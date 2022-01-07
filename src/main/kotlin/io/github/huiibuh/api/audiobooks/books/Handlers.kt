@@ -6,15 +6,16 @@ import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
 import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.db.tables.Image
+import io.github.huiibuh.db.tables.ProviderID
 import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
+import io.github.huiibuh.extensions.uriToFile
 import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.scanner.saveToFile
 import io.github.huiibuh.scanner.toTrackModel
 import io.github.huiibuh.services.GetOrCreate
 import io.github.huiibuh.services.RemoveEmpty
 import io.github.huiibuh.services.database.ImageService
-import io.github.huiibuh.utils.uriToFile
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -55,9 +56,9 @@ internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: Boo
             trackReferences.forEach { it.description = patchBook.description }
         }
 
-        if (patchBook.asin != book.asin) {
-            book.asin = patchBook.asin
-            trackReferences.forEach { it.asin = patchBook.asin }
+        val newProviderID = patchBook.providerID
+        if (ProviderID.eq(book.providerID, newProviderID)) {
+            book.providerID = ProviderID.newFrom(newProviderID)
         }
 
         if (patchBook.narrator != book.narrator) {

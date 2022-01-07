@@ -20,8 +20,8 @@ class MetadataWrapper constructor(
         return providerList.flatMap { it.search(keywords, title, author, narrator, language, pageSize) }
     }
 
-    override suspend fun getAuthorByID(authorID: ProviderWithID): AuthorMetadata? {
-        val provider = providerMap[authorID.uniqueProviderName] ?: return null
+    override suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata? {
+        val provider = providerMap[authorID.provider] ?: return null
         return provider.getAuthorByID(authorID)
     }
 
@@ -32,8 +32,8 @@ class MetadataWrapper constructor(
         return FuzzySearch.extractOne(authorName, authors) { it?.name }.referent
     }
 
-    override suspend fun getBookByID(bookID: ProviderWithID): BookMetadata? {
-        val provider = providerMap[bookID.uniqueProviderName] ?: return null
+    override suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata? {
+        val provider = providerMap[bookID.provider] ?: return null
         return provider.getBookByID(bookID)
     }
 
@@ -44,8 +44,8 @@ class MetadataWrapper constructor(
         return FuzzySearch.extractOne(bookName, books) { it?.title }.referent
     }
 
-    override suspend fun getSeriesByID(seriesID: ProviderWithID): SeriesMetadata? {
-        val provider = providerMap[seriesID.uniqueProviderName] ?: return null
+    override suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata? {
+        val provider = providerMap[seriesID.provider] ?: return null
         return provider.getSeriesByID(seriesID)
     }
 

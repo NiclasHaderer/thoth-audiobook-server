@@ -6,13 +6,14 @@ import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.db.tables.Image
+import io.github.huiibuh.db.tables.ProviderID
+import io.github.huiibuh.extensions.uriToFile
 import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.scanner.saveToFile
 import io.github.huiibuh.scanner.toTrackModel
 import io.github.huiibuh.services.RemoveEmpty
 import io.github.huiibuh.services.database.ImageService
 import io.github.huiibuh.services.database.TrackService
-import io.github.huiibuh.utils.uriToFile
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -36,8 +37,9 @@ internal suspend fun OpenAPIPipelineResponseContext<AuthorModel>.patchAuthor(id:
             author.name = patchAuthor.name
         }
 
-        if (patchAuthor.asin != author.asin) {
-            author.asin = patchAuthor.asin
+        val newProviderID = patchAuthor.providerID
+        if (ProviderID.eq(author.providerID, newProviderID)) {
+            author.providerID = ProviderID.newFrom(newProviderID)
         }
 
         if (patchAuthor.biography != author.biography) {

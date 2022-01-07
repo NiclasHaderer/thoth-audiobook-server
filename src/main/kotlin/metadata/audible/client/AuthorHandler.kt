@@ -1,8 +1,8 @@
-package audible.client
+package metadata.audible.client
 
 import api.exceptions.APINotFound
 import io.github.huiibuh.metadata.AuthorMetadata
-import io.github.huiibuh.metadata.ProviderWithID
+import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -39,9 +39,9 @@ internal class AuthorHandler : AudibleHandler {
         val link = url.toString()
         return object : AuthorMetadata {
             override val link = link
-            override val id = object : ProviderWithID {
-                override val uniqueProviderName = AUDIBLE_PROVIDER_NAME
-                override val id = idFromURL(link)
+            override val id = object : ProviderWithIDMetadata {
+                override val provider = AUDIBLE_PROVIDER_NAME
+                override val itemID = idFromURL(link)
             }
             override val name = getAuthorName(document)
             override val image = getAuthorImage(document)

@@ -4,6 +4,7 @@ import io.github.huiibuh.db.migration.Migration
 import io.github.huiibuh.db.tables.TAuthors
 import io.github.huiibuh.db.tables.TBooks
 import io.github.huiibuh.db.tables.TImages
+import io.github.huiibuh.db.tables.TProviderID
 import io.github.huiibuh.db.tables.TSeries
 import io.github.huiibuh.db.tables.TSharedSettings
 import io.github.huiibuh.db.tables.TTracks
@@ -21,9 +22,10 @@ class `01_Create_Tables` : Migration() {
                 TAuthors,
                 TBooks,
                 TImages,
+                TProviderID,
                 TSeries,
+                TSharedSettings,
                 TTracks,
-                TSharedSettings
             )
         }
     }
