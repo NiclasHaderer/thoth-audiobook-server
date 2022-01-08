@@ -1,4 +1,4 @@
-package metadata.audible.models
+package io.github.huiibuh.metadata.impl.audible.models
 
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SeriesMetadata

@@ -1,4 +1,4 @@
-package metadata.audible.client
+package io.github.huiibuh.metadata.impl.audible.client
 
 import io.github.huiibuh.metadata.BookMetadata
 import io.github.huiibuh.metadata.ProviderWithIDMetadata

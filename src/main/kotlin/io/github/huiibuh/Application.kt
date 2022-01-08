@@ -32,13 +32,13 @@ import kotlinx.coroutines.runBlocking
 @OptIn(DelicateCoroutinesApi::class)
 fun main(): Unit = runBlocking {
     disableJAudioTaggerLogs()
-    DatabaseFactory.connect()
-    DatabaseFactory.migrate()
-    launch { Scanner.rescan() }
 
     launch {
         embeddedServer(Netty, port = getPort(), host = "0.0.0.0") {
             webServer()
+            DatabaseFactory.connect()
+            DatabaseFactory.migrate()
+            launch { Scanner.rescan() }
         }.start(wait = true)
     }
 }

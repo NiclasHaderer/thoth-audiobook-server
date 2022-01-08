@@ -1,4 +1,4 @@
-package io.github.huiibuh.file.analyzer.impl.tag
+package io.github.huiibuh.file.analyzer.impl
 
 import io.github.huiibuh.file.analyzer.AnalysisResult
 import io.github.huiibuh.file.analyzer.AudioFileAnalysisValueImpl
@@ -26,7 +26,8 @@ class AudioTagScanner(settings: Settings) : AudioFileAnalyzer(settings) {
             cover = tagger.cover,
             duration = tagger.duration,
             path = tagger.path,
-            lastModified = tagger.lastModified
+            lastModified = tagger.lastModified,
+            providerId = tagger.providerId
         ))
     }
 }

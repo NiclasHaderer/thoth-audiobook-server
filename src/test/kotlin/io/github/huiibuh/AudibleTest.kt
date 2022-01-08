@@ -1,8 +1,8 @@
 package io.github.huiibuh
 
-import metadata.audible.models.AudibleAuthorImpl
-import metadata.audible.models.AudibleBookImpl
-import metadata.audible.models.AudibleSeriesImpl
+import io.github.huiibuh.metadata.impl.audible.models.AudibleAuthorImpl
+import io.github.huiibuh.metadata.impl.audible.models.AudibleBookImpl
+import io.github.huiibuh.metadata.impl.audible.models.AudibleSeriesImpl
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.ExperimentalSerializationApi

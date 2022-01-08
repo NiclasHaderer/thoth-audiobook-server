@@ -6,7 +6,7 @@ import io.github.huiibuh.db.tables.TBooks
 import io.github.huiibuh.db.tables.TImages
 import io.github.huiibuh.db.tables.TProviderID
 import io.github.huiibuh.db.tables.TSeries
-import io.github.huiibuh.db.tables.TSharedSettings
+import io.github.huiibuh.db.tables.TKeyValueSettings
 import io.github.huiibuh.db.tables.TTracks
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -24,7 +24,7 @@ class `01_Create_Tables` : Migration() {
                 TImages,
                 TProviderID,
                 TSeries,
-                TSharedSettings,
+                TKeyValueSettings,
                 TTracks,
             )
         }
