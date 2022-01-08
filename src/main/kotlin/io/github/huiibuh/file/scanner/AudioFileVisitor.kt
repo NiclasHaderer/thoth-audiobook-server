@@ -1,6 +1,6 @@
-package io.github.huiibuh.scanner
+package io.github.huiibuh.file.scanner
 
-import io.github.huiibuh.config.Settings
+import io.github.huiibuh.settings.Settings
 import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.extensions.findOne
@@ -21,15 +21,16 @@ import kotlin.io.path.absolutePathString
 import kotlin.io.path.getLastModifiedTime
 
 class AudioFileVisitor(
+    private val settings: Settings,
+    private val scanIndex: Int,
     private val add: suspend (TrackReference, BasicFileAttributes, Path, Track?) -> Unit,
     private val removeSubtree: (Path) -> Unit,
 ) : FileVisitor<Path> {
-    private val settings = SharedSettingsService.get()
     private val log = LoggerFactory.getLogger(this::class.java)
 
     override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes?): FileVisitResult {
         val ignoreFile =
-            Paths.get("${dir.absolutePathString()}${FileSystems.getDefault().separator}${Settings.ignoreFile}")
+            Paths.get("${dir.absolutePathString()}${FileSystems.getDefault().separator}${settings.ignoreFile}")
         return if (!Files.exists(ignoreFile)) {
             FileVisitResult.CONTINUE
         } else {
@@ -57,7 +58,7 @@ class AudioFileVisitor(
 
         // Check if the track has not been updated and if yes, skip it
         if (dbTrack != null && dbTrack.accessTime >= file.getLastModifiedTime().toMillis()) {
-            transaction { dbTrack.scanIndex = settings.scanIndex + 1 }
+            transaction { dbTrack.scanIndex = scanIndex + 1 }
             return
         }
         sendToUpdateCallback(file, attrs, dbTrack)

@@ -2,12 +2,11 @@ package io.github.huiibuh
 
 import api.exceptions.withDefaultErrorHandlers
 import com.papsign.ktor.openapigen.route.apiRouting
-import io.github.huiibuh.api.audible.registerAudibleRouting
 import io.github.huiibuh.api.audiobooks.registerAudiobookRouting
 import io.github.huiibuh.api.images.registerImageRouting
+import io.github.huiibuh.api.metadata.registerMetadataRouting
 import io.github.huiibuh.api.search.registerSearchRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
-import io.github.huiibuh.config.Settings
 import io.github.huiibuh.db.DatabaseFactory
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.configureHTTP
@@ -19,6 +18,7 @@ import io.github.huiibuh.plugins.configureRouting
 import io.github.huiibuh.plugins.configureSerialization
 import io.github.huiibuh.plugins.configureSockets
 import io.github.huiibuh.services.Scanner
+import io.github.huiibuh.settings.getPort
 import io.github.huiibuh.ws.registerUpdateRoutes
 import io.ktor.application.*
 import io.ktor.routing.*
@@ -32,11 +32,12 @@ import kotlinx.coroutines.runBlocking
 @OptIn(DelicateCoroutinesApi::class)
 fun main(): Unit = runBlocking {
     disableJAudioTaggerLogs()
-    DatabaseFactory.connectAndMigrate()
+    DatabaseFactory.connect()
+    DatabaseFactory.migrate()
     launch { Scanner.rescan() }
 
     launch {
-        embeddedServer(Netty, port = Settings.webUiPort, host = "0.0.0.0") {
+        embeddedServer(Netty, port = getPort(), host = "0.0.0.0") {
             webServer()
         }.start(wait = true)
     }
@@ -57,7 +58,7 @@ fun Application.webServer() {
     }
     apiRouting {
         withDefaultErrorHandlers {
-            registerAudibleRouting()
+            registerMetadataRouting()
             registerAudiobookRouting()
             registerSearchRouting()
             registerStreamingRouting()

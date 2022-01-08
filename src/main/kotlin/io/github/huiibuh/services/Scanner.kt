@@ -1,21 +1,23 @@
 package io.github.huiibuh.services
 
-import io.github.huiibuh.config.Settings
 import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.models.SharedSettings
-import io.github.huiibuh.scanner.TrackReference
-import io.github.huiibuh.scanner.traverseAudioFiles
+import io.github.huiibuh.file.scanner.TrackReference
+import io.github.huiibuh.file.scanner.traverseAudioFiles
 import io.github.huiibuh.services.database.SharedSettingsService
+import io.github.huiibuh.settings.Settings
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 val isScanning = AtomicBoolean(false)
 
-object Scanner {
+object Scanner : KoinComponent {
     private val logger = LoggerFactory.getLogger(this::class.java)
-
+    private val settings by inject<Settings>()
     fun rescan() {
         if (isScanning.get()) return
         isScanning.set(true)
@@ -50,14 +52,14 @@ object Scanner {
         logger.info("Database maintenance took $elapsedTimeInSeconds seconds.")
     }
 
-    private fun importTracks(settings: SharedSettings) {
+    private fun importTracks(sharedSettings: SharedSettings) {
         traverseAudioFiles(
-            Settings.audioFileLocation,
+            settings.audioFileLocation,
             add = { trackReference, _, _, track ->
                 if (track != null) {
-                    updateTrack(trackReference, track, settings.scanIndex + 1)
+                    updateTrack(trackReference, track, sharedSettings.scanIndex + 1)
                 } else {
-                    createTrack(trackReference, settings.scanIndex + 1)
+                    createTrack(trackReference, sharedSettings.scanIndex + 1)
                 }
             }, removeSubtree = { path ->
                 transaction { Track.find { TTracks.path like "$path%" }.forEach { it.delete() } }
@@ -66,7 +68,6 @@ object Scanner {
     }
 
     private fun createTrack(trackRef: TrackReference, scanIndex: Int) = transaction {
-
         Track.new {
             title = trackRef.title
             duration = trackRef.duration

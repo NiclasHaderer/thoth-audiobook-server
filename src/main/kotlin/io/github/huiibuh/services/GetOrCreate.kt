@@ -11,17 +11,20 @@ import io.github.huiibuh.db.tables.TBooks
 import io.github.huiibuh.db.tables.TImages
 import io.github.huiibuh.db.tables.TSeries
 import io.github.huiibuh.extensions.findOne
+import io.github.huiibuh.metadata.MetadataProvider
 import io.github.huiibuh.models.ProviderIDModel
 import io.github.huiibuh.utils.imageFromString
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 
-object GetOrCreate {
+object GetOrCreate : KoinComponent {
     private val log = LoggerFactory.getLogger(this::class.java)
-
+    private val metadataProvider by inject<MetadataProvider>()
 
     fun author(
         name: String,
@@ -33,7 +36,7 @@ object GetOrCreate {
         if (author != null) return@transaction author
 
         val authorInfo = try {
-            runBlocking { AudibleService.getAuthorByName(name) }
+            runBlocking { metadataProvider.getAuthorByName(name) }
         } catch (e: ApiException) {
             log.debug("$e, Author: $name")
             null
@@ -94,7 +97,7 @@ object GetOrCreate {
         if (series != null) return@transaction series
 
         val seriesInfo = try {
-            runBlocking { AudibleService.getSeriesByName(title) }
+            runBlocking { metadataProvider.getSeriesByName(title) }
         } catch (e: ApiException) {
             log.debug("$e, Series: $title")
             null
