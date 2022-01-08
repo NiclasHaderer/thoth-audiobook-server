@@ -1,6 +1,6 @@
 package io.github.huiibuh.api.images
 
-import api.exceptions.withNotFoundHandling
+import io.github.huiibuh.api.exceptions.withNotFoundHandling
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond

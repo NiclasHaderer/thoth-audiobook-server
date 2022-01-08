@@ -1,6 +1,6 @@
 package io.github.huiibuh.api.audiobooks.series
 
-import api.exceptions.APINotFound
+import io.github.huiibuh.api.exceptions.APINotFound
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
 import io.github.huiibuh.db.tables.ProviderID

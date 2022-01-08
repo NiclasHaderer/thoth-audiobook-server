@@ -1,6 +1,6 @@
 package io.github.huiibuh
 
-import api.exceptions.withDefaultErrorHandlers
+import io.github.huiibuh.api.exceptions.withDefaultErrorHandlers
 import com.papsign.ktor.openapigen.route.apiRouting
 import io.github.huiibuh.api.audiobooks.registerAudiobookRouting
 import io.github.huiibuh.api.images.registerImageRouting

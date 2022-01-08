@@ -1,6 +1,6 @@
 package io.github.huiibuh.services.database
 
-import api.exceptions.APINotFound
+import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.tables.Series
 import io.github.huiibuh.db.tables.TSeries
 import io.github.huiibuh.models.BookModel

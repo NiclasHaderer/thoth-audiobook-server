@@ -1,4 +1,4 @@
-package api.exceptions
+package io.github.huiibuh.api.exceptions
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.throws

@@ -1,6 +1,6 @@
 package io.github.huiibuh.metadata.impl.audible.client
 
-import api.exceptions.APINotFound
+import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.metadata.AuthorMetadata
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.ktor.client.*

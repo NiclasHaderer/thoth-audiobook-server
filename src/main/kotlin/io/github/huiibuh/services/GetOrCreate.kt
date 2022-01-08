@@ -1,6 +1,6 @@
 package io.github.huiibuh.services
 
-import api.exceptions.ApiException
+import io.github.huiibuh.api.exceptions.ApiException
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.db.tables.Image
