@@ -1,4 +1,4 @@
-package io.github.huiibuh.api.audible
+package io.github.huiibuh.api.metadata
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
@@ -7,7 +7,7 @@ import io.github.huiibuh.metadata.MetadataLanguage
 import io.github.huiibuh.metadata.MetadataSearchCount
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 
-internal data class AudibleSearch(
+internal data class MetadataSearch(
     @QueryParam("A general keyword which describes the search term") val keywords: String?,
     @QueryParam("The title of the audiobook") val title: String?,
     @QueryParam("The author of the audiobook") val author: String?,

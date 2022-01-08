@@ -11,8 +11,8 @@ import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.extensions.uriToFile
 import io.github.huiibuh.models.BookModel
-import io.github.huiibuh.scanner.saveToFile
-import io.github.huiibuh.scanner.toTrackModel
+import io.github.huiibuh.file.scanner.saveToFile
+import io.github.huiibuh.file.scanner.toTrackModel
 import io.github.huiibuh.services.GetOrCreate
 import io.github.huiibuh.services.RemoveEmpty
 import io.github.huiibuh.services.database.ImageService

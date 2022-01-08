@@ -1,4 +1,4 @@
-package io.github.huiibuh.api.audible
+package io.github.huiibuh.api.metadata
 
 import api.exceptions.APINotFound
 import api.exceptions.withNotFoundHandling
@@ -11,12 +11,13 @@ import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.extensions.inject
 import io.github.huiibuh.metadata.AuthorMetadata
+import io.github.huiibuh.metadata.BookMetadata
 import io.github.huiibuh.metadata.MetadataProvider
 import io.github.huiibuh.metadata.SearchResultMetadata
 import io.github.huiibuh.metadata.SeriesMetadata
 
-fun NormalOpenAPIRoute.registerAudibleRouting(path: String = "metadata") {
-    tag(ApiTags.Audible) {
+fun NormalOpenAPIRoute.registerMetadataRouting(path: String = "metadata") {
+    tag(ApiTags.Metadata) {
         route(path) {
             routing()
         }
@@ -27,7 +28,7 @@ fun NormalOpenAPIRoute.registerAudibleRouting(path: String = "metadata") {
 internal fun NormalOpenAPIRoute.routing() {
     val searchService: MetadataProvider by inject()
 
-    route("search").get<AudibleSearch, List<SearchResultMetadata>>(
+    route("search").get<MetadataSearch, List<SearchResultMetadata>>(
         info("Search for audiobooks")
     ) { params ->
         respond(searchService.search(params.keywords,
@@ -44,11 +45,11 @@ internal fun NormalOpenAPIRoute.routing() {
 
             respond(author)
         }
-        route("author").get<AuthorID, AuthorMetadata> { id ->
-            val author = searchService.getAuthorByID(id)
+        route("book").get<BookID, BookMetadata> { id ->
+            val book = searchService.getBookByID(id)
                 ?: throw APINotFound("Author with ${id.itemID} by provider ${id.provider} was not found")
 
-            respond(author)
+            respond(book)
         }
         route("series").get<SeriesID, SeriesMetadata> { id ->
             val series = searchService.getSeriesByID(id)

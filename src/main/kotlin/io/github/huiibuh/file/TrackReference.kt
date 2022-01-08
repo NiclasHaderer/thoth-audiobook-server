@@ -1,4 +1,4 @@
-package io.github.huiibuh.scanner
+package io.github.huiibuh.file
 
 import api.exceptions.APINotFound
 import io.github.huiibuh.db.tables.Track

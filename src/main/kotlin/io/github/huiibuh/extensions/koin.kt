@@ -7,3 +7,4 @@ inline fun <reified T : Any> NormalOpenAPIRoute.inject(
 ): Lazy<T> {
     return this.ktorRoute.inject()
 }
+

@@ -6,7 +6,7 @@ import com.papsign.ktor.openapigen.route.response.respond
 import io.github.huiibuh.db.tables.ProviderID
 import io.github.huiibuh.db.tables.Series
 import io.github.huiibuh.models.SeriesModel
-import io.github.huiibuh.scanner.toTrackModel
+import io.github.huiibuh.file.scanner.toTrackModel
 import io.github.huiibuh.services.RemoveEmpty
 import io.github.huiibuh.services.database.TrackService
 import org.jetbrains.exposed.dao.flushCache
