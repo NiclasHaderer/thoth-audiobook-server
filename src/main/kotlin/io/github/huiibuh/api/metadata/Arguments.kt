@@ -19,18 +19,32 @@ internal data class MetadataSearch(
 @Path("{id}")
 internal data class AuthorID(
     @PathParam("The id of the author. Can be retrieved by using the search") override val itemID: String,
-    @PathParam("The id of search provider the id is associated to") override val provider: String,
+    @QueryParam("The id of search provider the id is associated to") override val provider: String,
 ) : ProviderWithIDMetadata
 
 @Path("{id}")
 internal data class SeriesID(
     @PathParam("The id of the series. Can be retrieved by using the search") override val itemID: String,
-    @PathParam("The id of search provider the id is associated to") override val provider: String,
+    @QueryParam("The id of search provider the id is associated to") override val provider: String,
 ) : ProviderWithIDMetadata
 
 @Path("{asin}")
 internal data class BookID(
     @PathParam("The asin of the series. Can be retrieved by using the search") override val itemID: String,
-    @PathParam("The id of search provider the id is associated to") override val provider: String,
+    @QueryParam("The id of search provider the id is associated to") override val provider: String,
 ) : ProviderWithIDMetadata
 
+@Path("{name}")
+internal data class SeriesName(
+    @PathParam("The name of the series you want to look for") val name: String,
+)
+
+@Path("{name}")
+internal data class BookName(
+    @PathParam("The name of the book you want to look for") val name: String,
+)
+
+@Path("{name}")
+internal data class AuthorName(
+    @PathParam("The name of the author you want to look for") val name: String,
+)
