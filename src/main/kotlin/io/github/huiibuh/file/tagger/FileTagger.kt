@@ -1,6 +1,6 @@
 package io.github.huiibuh.file.tagger
 
-import io.github.huiibuh.file.TrackReference
+import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.models.ProviderIDModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -28,7 +28,7 @@ interface FileTagger : ReadonlyFileTagger {
     override var series: String?
     override var seriesIndex: Float?
     override var cover: ByteArray?
-    fun save(): Unit
+    fun save()
 }
 
 
@@ -117,7 +117,7 @@ open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger
 }
 
 
-fun List<TrackReference>.saveToFile() = runBlocking {
+fun List<FileTagger>.saveToFile() = runBlocking {
     val parent = Job()
     this@saveToFile.forEach {
         launch(parent) {
@@ -127,7 +127,7 @@ fun List<TrackReference>.saveToFile() = runBlocking {
     parent.children.forEach { it.join() }
 }
 
-fun List<FileTaggerImpl>.toTrackModel() = runBlocking {
+fun List<Track>.toTrackModel() = runBlocking {
     val parent = Job()
     val t = this@toTrackModel.map {
         async(parent) {

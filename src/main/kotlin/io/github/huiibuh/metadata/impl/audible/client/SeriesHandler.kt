@@ -1,4 +1,4 @@
-package metadata.audible.client
+package io.github.huiibuh.metadata.impl.audible.client
 
 import api.exceptions.APINotFound
 import io.github.huiibuh.metadata.ProviderWithIDMetadata

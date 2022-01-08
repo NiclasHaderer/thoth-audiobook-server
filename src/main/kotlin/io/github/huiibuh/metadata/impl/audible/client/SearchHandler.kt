@@ -1,7 +1,7 @@
-package metadata.audible.client
+package io.github.huiibuh.metadata.impl.audible.client
 
-import metadata.audible.models.AudibleSearchAmount
-import metadata.audible.models.AudibleSearchLanguage
+import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchAmount
+import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchLanguage
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SearchAuthorMetadata
 import io.github.huiibuh.metadata.SearchResultMetadata

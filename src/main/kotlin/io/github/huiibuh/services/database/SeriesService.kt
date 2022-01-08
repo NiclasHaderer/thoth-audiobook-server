@@ -17,10 +17,10 @@ object SeriesService {
         }
     }
 
-    fun get(id: UUID, order: SortOrder = SortOrder.ASC) = transaction {
+    fun get(id: UUID, seriesOrder: SortOrder = SortOrder.ASC) = transaction {
         val series = Series.findById(id)?.toModel() ?: throw APINotFound("Could not find series")
         val books = BookService.forSeries(id).sortedWith(compareBy(BookModel::year, BookModel::seriesIndex))
-        val index = Series.all().orderBy(TSeries.title to order).indexOfFirst { it.id.value === id }
+        val index = Series.all().orderBy(TSeries.title to seriesOrder).indexOfFirst { it.id.value === id }
         SeriesModelWithBooks.fromModel(series, books, index)
     }
 }

@@ -1,7 +1,7 @@
 package plugin.loader
 
-import metadata.audible.models.AudibleSearchAmount
-import metadata.audible.models.AudibleSearchLanguage
+import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchAmount
+import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchLanguage
 
 
 interface ScanPlugin {

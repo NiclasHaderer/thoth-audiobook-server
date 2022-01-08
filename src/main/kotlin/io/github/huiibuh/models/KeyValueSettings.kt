@@ -1,5 +1,5 @@
 package io.github.huiibuh.models
 
-data class SharedSettings(
+data class KeyValueSettings(
     var scanIndex: Int,
 )

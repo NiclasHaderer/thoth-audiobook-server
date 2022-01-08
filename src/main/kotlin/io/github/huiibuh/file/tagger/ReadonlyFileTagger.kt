@@ -23,9 +23,9 @@ interface ReadonlyFileTagger {
     val series: String?
     val seriesIndex: Float?
     val cover: ByteArray?
-    val duration: Int?
-    val path: String?
-    val lastModified: Long?
+    val duration: Int
+    val path: String
+    val lastModified: Long
 }
 
 

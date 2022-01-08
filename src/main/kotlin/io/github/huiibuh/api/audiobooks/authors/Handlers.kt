@@ -8,9 +8,9 @@ import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.db.tables.Image
 import io.github.huiibuh.db.tables.ProviderID
 import io.github.huiibuh.extensions.uriToFile
+import io.github.huiibuh.file.tagger.saveToFile
+import io.github.huiibuh.file.tagger.toTrackModel
 import io.github.huiibuh.models.AuthorModel
-import io.github.huiibuh.file.scanner.saveToFile
-import io.github.huiibuh.file.scanner.toTrackModel
 import io.github.huiibuh.services.RemoveEmpty
 import io.github.huiibuh.services.database.ImageService
 import io.github.huiibuh.services.database.TrackService

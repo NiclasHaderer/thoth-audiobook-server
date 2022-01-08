@@ -1,4 +1,4 @@
-package io.github.huiibuh.file.analyzer.impl.tag
+package io.github.huiibuh.file.analyzer.impl
 
 import io.github.huiibuh.extensions.countParents
 import io.github.huiibuh.extensions.grandGrandParentName
@@ -21,7 +21,7 @@ class AudioFolderScanner(settings: Settings) : AudioFileAnalyzer(settings) {
         if (parentCount != 2 && parentCount != 3) return AnalysisResult(false, null)
 
         val result = this.getInformation(cleanPath, parentCount)
-        return AnalysisResult(false, null)
+        return AnalysisResult(false, result)
     }
 
     private fun getInformation(path: Path, parentCount: Int): AudioFileAnalysisValue {
@@ -44,7 +44,8 @@ class AudioFolderScanner(settings: Settings) : AudioFileAnalyzer(settings) {
             cover = tagger.cover,
             duration = tagger.duration,
             path = tagger.path,
-            lastModified = tagger.lastModified
+            lastModified = tagger.lastModified,
+            providerId = tagger.providerId
         )
     }
 }
