@@ -50,16 +50,19 @@ class TrackReference(private val audioFile: AudioFile) {
             setOrDelete(FieldKey.AMAZON_ID, valueStr)
         }
 
+    var title: String
+        get() {
+            val title = stringOrNull(audioFile.tag.getFirst(FieldKey.TITLE))
+            return title ?: Path.of(path).nameWithoutExtension
+        }
+        set(value) {
+            setOrDelete(FieldKey.TITLE, value)
+        }
+
     var description: String?
         get() = stringOrNull(audioFile.tag.getFirst(FieldKey.COMMENT))
         set(value) {
             setOrDelete(FieldKey.COMMENT, value)
-        }
-
-    var language: String?
-        get() = stringOrNull(audioFile.tag.getFirst(FieldKey.LANGUAGE))
-        set(value) {
-            setOrDelete(FieldKey.LANGUAGE, value)
         }
 
     var year: Int?
@@ -72,20 +75,12 @@ class TrackReference(private val audioFile: AudioFile) {
             setOrDelete(FieldKey.YEAR, value)
         }
 
-    var title: String
-        get() {
-            val title = stringOrNull(audioFile.tag.getFirst(FieldKey.TITLE))
-            return title ?: Path.of(path).nameWithoutExtension
-        }
+    var language: String?
+        get() = stringOrNull(audioFile.tag.getFirst(FieldKey.LANGUAGE))
         set(value) {
-            setOrDelete(FieldKey.TITLE, value)
+            setOrDelete(FieldKey.LANGUAGE, value)
         }
 
-    var book: String
-        get() = audioFile.tag.getFirst(FieldKey.ALBUM)
-        set(value) {
-            setOrDelete(FieldKey.ALBUM, value)
-        }
 
     var author: String
         get() = audioFile.tag.getFirst(FieldKey.ARTIST)
@@ -94,6 +89,13 @@ class TrackReference(private val audioFile: AudioFile) {
             setOrDelete(FieldKey.ALBUM_ARTIST, value)
             setOrDelete(FieldKey.ARTIST, value)
         }
+
+    var book: String
+        get() = audioFile.tag.getFirst(FieldKey.ALBUM)
+        set(value) {
+            setOrDelete(FieldKey.ALBUM, value)
+        }
+
 
     var trackNr: Int?
         get() = audioFile.tag.getFirst(FieldKey.TRACK).toIntOrNull()
