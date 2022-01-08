@@ -1,8 +1,8 @@
 package io.github.huiibuh.api.search
 
-import api.exceptions.APIBadRequest
-import api.exceptions.APINotImplemented
-import api.exceptions.withNotImplementedRequestHandling
+import io.github.huiibuh.api.exceptions.APIBadRequest
+import io.github.huiibuh.api.exceptions.APINotImplemented
+import io.github.huiibuh.api.exceptions.withNotImplementedRequestHandling
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond

@@ -1,4 +1,4 @@
-package api.exceptions
+package io.github.huiibuh.api.exceptions
 
 import com.papsign.ktor.openapigen.exceptions.OpenAPIBadContentException
 import com.papsign.ktor.openapigen.exceptions.OpenAPINoParserException

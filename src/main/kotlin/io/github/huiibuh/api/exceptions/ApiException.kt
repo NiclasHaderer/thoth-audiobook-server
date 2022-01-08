@@ -1,4 +1,4 @@
-package api.exceptions
+package io.github.huiibuh.api.exceptions
 
 import kotlinx.serialization.Serializable
 

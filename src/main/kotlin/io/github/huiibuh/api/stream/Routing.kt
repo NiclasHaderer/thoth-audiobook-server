@@ -1,7 +1,7 @@
 package io.github.huiibuh.api.stream
 
-import api.exceptions.APINotFound
-import api.exceptions.withNotFoundHandling
+import io.github.huiibuh.api.exceptions.APINotFound
+import io.github.huiibuh.api.exceptions.withNotFoundHandling
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
