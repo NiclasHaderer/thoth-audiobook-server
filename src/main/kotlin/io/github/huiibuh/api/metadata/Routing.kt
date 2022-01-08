@@ -1,7 +1,5 @@
 package io.github.huiibuh.api.metadata
 
-import io.github.huiibuh.api.exceptions.APINotFound
-import io.github.huiibuh.api.exceptions.withNotFoundHandling
 import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
@@ -9,6 +7,8 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
+import io.github.huiibuh.api.exceptions.APINotFound
+import io.github.huiibuh.api.exceptions.withNotFoundHandling
 import io.github.huiibuh.extensions.inject
 import io.github.huiibuh.metadata.AuthorMetadata
 import io.github.huiibuh.metadata.BookMetadata
@@ -56,12 +56,20 @@ internal fun NormalOpenAPIRoute.routing() {
                 ?: throw APINotFound("Series with ${id.itemID} by provider ${id.provider} was not found")
             respond(series)
         }
-        // TODO
-        //        route("series/name").get<SeriesID, SeriesMetadata> { id ->
-        //        }
-        //        route("book/title").get<BookID, BookMetadata> { id ->
-        //        }
-        //        route("author/name").get<AuthorID, AuthorMetadata> { id ->
-        //        }
+        route("series/search/").get<SeriesName, SeriesMetadata> { name ->
+            val author = searchService.getSeriesByName(name.name)
+                ?: throw APINotFound("Series with name ${name.name} was not found")
+            respond(author)
+        }
+        route("book/title").get<AuthorName, BookMetadata> { name ->
+            val author = searchService.getBookByName(name.name)
+                ?: throw APINotFound("Book with name ${name.name} was not found")
+            respond(author)
+        }
+        route("author/name").get<BookName, AuthorMetadata> { name ->
+            val author = searchService.getAuthorByName(name.name)
+                ?: throw APINotFound("Author with name ${name.name} was not found")
+            respond(author)
+        }
     }
 }

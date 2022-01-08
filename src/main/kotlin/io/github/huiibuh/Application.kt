@@ -1,16 +1,16 @@
 package io.github.huiibuh
 
-import io.github.huiibuh.api.exceptions.withDefaultErrorHandlers
 import com.papsign.ktor.openapigen.route.apiRouting
 import io.github.huiibuh.api.audiobooks.registerAudiobookRouting
+import io.github.huiibuh.api.exceptions.withDefaultErrorHandlers
 import io.github.huiibuh.api.images.registerImageRouting
 import io.github.huiibuh.api.metadata.registerMetadataRouting
 import io.github.huiibuh.api.search.registerSearchRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
 import io.github.huiibuh.db.DatabaseFactory
+import io.github.huiibuh.di.configureKoin
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.configureHTTP
-import io.github.huiibuh.plugins.configureKoin
 import io.github.huiibuh.plugins.configureMonitoring
 import io.github.huiibuh.plugins.configureOpenAPI
 import io.github.huiibuh.plugins.configurePartialContent
@@ -33,19 +33,20 @@ import kotlinx.coroutines.runBlocking
 fun main(): Unit = runBlocking {
     disableJAudioTaggerLogs()
 
+    configureKoin()
+    DatabaseFactory.connect()
+    DatabaseFactory.migrate()
     launch {
-        embeddedServer(Netty, port = getPort(), host = "0.0.0.0") {
-            webServer()
-            DatabaseFactory.connect()
-            DatabaseFactory.migrate()
-            launch { Scanner.rescan() }
-        }.start(wait = true)
+        Scanner.rescan()
     }
+
+    embeddedServer(Netty, port = getPort(), host = "0.0.0.0") {
+        webServer()
+    }.start(wait = false)
 }
 
 
 fun Application.webServer() {
-    configureKoin()
     configureOpenAPI()
     configureRouting()
     configurePartialContent()

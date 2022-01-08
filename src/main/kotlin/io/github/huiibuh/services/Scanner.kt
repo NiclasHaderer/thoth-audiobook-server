@@ -21,9 +21,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.getLastModifiedTime
 
-val isScanning = AtomicBoolean(false)
 
 object Scanner : KoinComponent {
+    private val isScanning = AtomicBoolean(false)
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val settings by inject<Settings>()
     private val fileAnalyzer by inject<AudioFileAnalyzer>()
