@@ -1,11 +1,15 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.ToModel
 import io.github.huiibuh.models.AuthorModel
+import io.github.huiibuh.models.AuthorModelWithBooks
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 object TAuthors : UUIDTable("Authors") {
@@ -17,7 +21,26 @@ object TAuthors : UUIDTable("Authors") {
 
 
 class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
-    companion object : UUIDEntityClass<Author>(TAuthors)
+    companion object : UUIDEntityClass<Author>(TAuthors) {
+        fun removeUnused() = transaction {
+            all().forEach {
+                if (Book.find { TBooks.author eq it.id.value }.empty()) {
+                    it.delete()
+                }
+            }
+        }
+
+        fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
+            val author = Author.findById(uuid)?.toModel() ?: throw APINotFound("Could not find author")
+            val books = Book.find { TBooks.author eq uuid }.orderBy(TBooks.year to order).map { it.toModel() }
+            val index = Author.all().orderBy(TAuthors.name to order).indexOfFirst { it.id.value == uuid }
+            AuthorModelWithBooks.fromModel(author, books, index)
+        }
+
+        fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {
+            Author.all().limit(limit, offset * limit).orderBy(TAuthors.name to order).map { it.toModel() }
+        }
+    }
 
     private val imageID by TAuthors.image
 

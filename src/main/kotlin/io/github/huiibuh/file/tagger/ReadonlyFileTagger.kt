@@ -12,6 +12,7 @@ import kotlin.io.path.nameWithoutExtension
 
 
 interface ReadonlyFileTagger {
+    val providerId: ProviderIDModel?
     val title: String
     val description: String?
     val year: Int?
@@ -40,7 +41,7 @@ open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFi
             return title ?: Path.of(path).nameWithoutExtension
         }
 
-    open val providerId: ProviderIDModel?
+    override val providerId: ProviderIDModel?
         get() {
             return try {
                 Json.decodeFromString(audioFile.tag.getFirst(FieldKey.AMAZON_ID))
@@ -87,7 +88,7 @@ open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFi
         get() = audioFile.audioHeader.trackLength
 
     override val path: String
-        get() = audioFile.file.absolutePath
+        get() = audioFile.file.normalize().absolutePath
 
     override val lastModified: Long
         get() = audioFile.file.lastModified()

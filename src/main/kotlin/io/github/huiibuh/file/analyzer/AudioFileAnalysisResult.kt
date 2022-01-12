@@ -2,7 +2,7 @@ package io.github.huiibuh.file.analyzer
 
 import io.github.huiibuh.models.ProviderIDModel
 
-class AudioFileAnalysisValueImpl(
+class AudioFileAnalysisResultImpl(
     override val title: String,
     override val author: String,
     override val book: String,
@@ -18,9 +18,9 @@ class AudioFileAnalysisValueImpl(
     override val seriesIndex: Float? = null,
     override val cover: ByteArray? = null,
     override val providerId: ProviderIDModel? = null,
-) : AudioFileAnalysisValue
+) : AudioFileAnalysisResult
 
-interface AudioFileAnalysisValue {
+interface AudioFileAnalysisResult {
     val title: String
     val author: String
     val book: String
@@ -37,8 +37,3 @@ interface AudioFileAnalysisValue {
     val path: String
     val lastModified: Long
 }
-
-data class AnalysisResult(
-    val success: Boolean,
-    val value: AudioFileAnalysisValue?,
-)

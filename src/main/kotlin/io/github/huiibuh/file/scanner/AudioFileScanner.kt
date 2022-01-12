@@ -1,9 +1,8 @@
 package io.github.huiibuh.file.scanner
 
-import io.github.huiibuh.file.analyzer.AudioFileAnalysisValue
-import io.github.huiibuh.file.analyzer.AudioFileAnalyzer
+import io.github.huiibuh.file.analyzer.AudioFileAnalysisResult
+import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapper
 import io.github.huiibuh.settings.Settings
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -16,14 +15,15 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
+import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
 
 
 class AudioFileScanner(
-    private val pathHandler: AudioFileAnalyzer,
+    private val pathHandler: AudioFileAnalyzerWrapper,
     private val removeSubtree: (Path) -> Unit,
     private val shouldUpdateFile: (Path) -> Boolean,
-    private val addOrUpdate: (file: Path, attrs: BasicFileAttributes, result: AudioFileAnalysisValue) -> Unit,
+    private val addOrUpdate: (file: Path, attrs: BasicFileAttributes, result: AudioFileAnalysisResult) -> Unit,
 ) : FileVisitor<Path>, KoinComponent {
     private val settings: Settings by inject()
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -34,21 +34,19 @@ class AudioFileScanner(
         return if (!Files.exists(ignoreFile)) {
             FileVisitResult.CONTINUE
         } else {
-            removeSubtree(dir)
+            removeSubtree(dir.absolute().normalize())
+            log.debug("Ignoring directory ${dir.absolute().normalize()}")
             FileVisitResult.SKIP_SUBTREE
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-        if (file.isAudioFile() && shouldUpdateFile(file)) {
-            val (success, value) = runBlocking { pathHandler.analyze(file, attrs) }
-            if (success) {
-                if (value == null) {
-                    log.warn("One of the file analyzers returned success with a null value. This is not allowed")
-                    return FileVisitResult.CONTINUE
-                }
-                addOrUpdate(file, attrs, value)
+        if (file.isAudioFile() && shouldUpdateFile(file.normalize())) {
+            val value = runBlocking { pathHandler.analyze(file, attrs) }
+            if (value != null) {
+                addOrUpdate(file.absolute().normalize(), attrs, value)
+            } else {
+                log.debug("Ignoring file ${file.absolute().absolute().normalize()}")
             }
         }
         return FileVisitResult.CONTINUE

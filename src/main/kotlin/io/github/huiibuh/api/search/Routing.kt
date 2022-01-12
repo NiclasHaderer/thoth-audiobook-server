@@ -10,7 +10,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.models.SearchModel
-import io.github.huiibuh.services.database.SearchService
+import io.github.huiibuh.services.SearchService
 
 
 fun NormalOpenAPIRoute.registerSearchRouting(route: String = "search") {

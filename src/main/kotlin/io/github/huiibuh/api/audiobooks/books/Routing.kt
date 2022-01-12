@@ -9,9 +9,9 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.api.audiobooks.QueryLimiter
+import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.models.BookModelWithTracks
-import io.github.huiibuh.services.database.BookService
 import java.util.*
 
 
@@ -26,17 +26,17 @@ fun NormalOpenAPIRoute.registerBookRouting(path: String = "books") {
 internal fun NormalOpenAPIRoute.routing() {
     get<QueryLimiter, List<BookModel>> {
         respond(
-            BookService.getMultiple(it.limit, it.offset)
+            Book.getMultiple(it.limit, it.offset)
         )
     }
     route("sorting").get<QueryLimiter, List<UUID>> { query ->
         respond(
-            BookService.getMultiple(query.limit, query.offset).map { it.id }
+            Book.getMultiple(query.limit, query.offset).map { it.id }
         )
     }
     get<BookId, BookModelWithTracks> {
         respond(
-            BookService.get(it.uuid)
+            Book.getById(it.uuid)
         )
     }
 

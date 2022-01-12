@@ -1,9 +1,15 @@
 package io.github.huiibuh.di
 
-import org.koin.core.context.GlobalContext.startKoin
+import io.ktor.application.*
+import org.koin.ktor.ext.Koin
+import org.koin.logger.slf4jLogger
 
-fun configureKoin() {
-    startKoin {
+/**
+ * Application is necessary to force the start of Koin in the App module
+ */
+fun Application.configureKoin() {
+    install(Koin) {
         modules(DI_MODULE)
+        slf4jLogger()
     }
 }

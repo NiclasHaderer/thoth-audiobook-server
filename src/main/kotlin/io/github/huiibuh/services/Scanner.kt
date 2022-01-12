@@ -1,14 +1,15 @@
 package io.github.huiibuh.services
 
+import io.github.huiibuh.db.removeAllUnusedFromDb
+import io.github.huiibuh.db.tables.KeyValueSettings
 import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.extensions.findOne
-import io.github.huiibuh.file.analyzer.AudioFileAnalysisValue
-import io.github.huiibuh.file.analyzer.AudioFileAnalyzer
+import io.github.huiibuh.file.analyzer.AudioFileAnalysisResult
+import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapper
 import io.github.huiibuh.file.scanner.AudioFileScanner
-import io.github.huiibuh.models.KeyValueSettings
-import io.github.huiibuh.services.database.KeyValueSettingsService
 import io.github.huiibuh.settings.Settings
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -18,6 +19,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.getLastModifiedTime
 
@@ -26,7 +28,7 @@ object Scanner : KoinComponent {
     private val isScanning = AtomicBoolean(false)
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val settings by inject<Settings>()
-    private val fileAnalyzer by inject<AudioFileAnalyzer>()
+    private val fileAnalyzer by inject<AudioFileAnalyzerWrapper>()
 
     fun rescan() {
         if (isScanning.get()) return
@@ -42,24 +44,18 @@ object Scanner : KoinComponent {
         logger.info("Starting import of tracks")
         val initializedStartAt = System.currentTimeMillis()
 
-        val kvSettings = KeyValueSettingsService.get()
-
         // Import tracks
-        importTracks(kvSettings)
+        importTracks()
 
         // Remove tracks which where not found and the scanIndex could therefore not be updated
-        transaction {
-            Track.find { TTracks.scanIndex eq kvSettings.scanIndex }
-                    .forEach { it.delete() }
-        }
+        Track.removeUntouched()
 
-        // Update the scan index
-        kvSettings.scanIndex += 1
-        KeyValueSettingsService.save(kvSettings)
+        // Update the scan index after removing all tracks which are no longer valid
+        KeyValueSettings.get().incrementScanIndex()
 
         // Remove all empty collections
         logger.info("Removing empty series, authors and albums")
-        RemoveEmpty.all()
+        removeAllUnusedFromDb()
 
         // Print some statistics
         val finishedAt = System.currentTimeMillis()
@@ -67,39 +63,57 @@ object Scanner : KoinComponent {
         logger.info("Database maintenance took $elapsedTimeInSeconds seconds.")
     }
 
-    private fun importTracks(sharedSettings: KeyValueSettings) {
+    fun fileDeleted(path: Path) {
+        transaction { Track.findOne { TTracks.path eq path.toString() }?.delete() }
+        removeAllUnusedFromDb()
+    }
+
+    fun fileCreated(path: Path) {
+        if (!shouldUpdate(path)) return
+        val attrs = Files.readAttributes(path, BasicFileAttributes::class.java)
+        val trackInfo = runBlocking { fileAnalyzer.analyze(path, attrs) } ?: return
+        addOrUpdate(path, attrs, trackInfo)
+    }
+
+    private fun importTracks() {
         val scanner = AudioFileScanner(
             fileAnalyzer,
             removeSubtree = { path ->
-                transaction { Track.find { TTracks.path like "$path%" }.forEach { it.delete() } }
+                transaction { Track.find { TTracks.path like "${path.absolute()}%" }.forEach { it.delete() } }
             },
-            shouldUpdateFile = {
-                val dbTrack = transaction { Track.findOne { TTracks.path eq it.absolutePathString() } }
-                // If the track has already been imported and the access time has not changed skip
-                if (dbTrack != null && dbTrack.accessTime >= it.getLastModifiedTime().toMillis()) {
-                    // Mark as touched, so the tracks don't get removed
-                    transaction { dbTrack.scanIndex = sharedSettings.scanIndex + 1 }
-                    return@AudioFileScanner false
-                }
-                return@AudioFileScanner true
-            },
-            addOrUpdate = { path: Path, _: BasicFileAttributes, analysisResult: AudioFileAnalysisValue ->
-                val dbTrack = transaction { Track.findOne { TTracks.path eq path.absolutePathString() } }
-                if (dbTrack != null) {
-                    this.updateTrack(analysisResult, dbTrack)
-                } else {
-                    this.createTrack(analysisResult)
-                }
-            }
+            shouldUpdateFile = Scanner::shouldUpdate,
+            addOrUpdate = Scanner::addOrUpdate
         )
 
         val file = Paths.get(settings.audioFileLocation)
         Files.walkFileTree(file, scanner)
     }
 
-    private fun createTrack(trackRef: AudioFileAnalysisValue) = transaction {
-        val kvSettings = KeyValueSettingsService.get()
+    private fun shouldUpdate(path: Path): Boolean {
+        val dbTrack = transaction { Track.findOne { TTracks.path eq path.absolutePathString() } }
+        // If the track has already been imported and the access time has not changed skip
+        if (dbTrack != null && !dbTrack.hasBeenUpdated(path.getLastModifiedTime().toMillis())) {
+            // Mark as touched, so the tracks don't get removed
+            dbTrack.markAsTouched()
+            return false
+        }
+        return true
+    }
 
+
+    private fun addOrUpdate(path: Path, attrs: BasicFileAttributes, analysisResult: AudioFileAnalysisResult) {
+        val dbTrack = transaction { Track.findOne { TTracks.path eq path.absolutePathString() } }
+        runBlocking {
+            if (dbTrack != null) {
+                updateTrack(analysisResult, dbTrack)
+            } else {
+                createTrack(analysisResult)
+            }
+        }
+    }
+
+    private fun createTrack(trackRef: AudioFileAnalysisResult) = transaction {
+        val kvSettings = KeyValueSettings.get()
         Track.new {
             title = trackRef.title
             duration = trackRef.duration
@@ -117,12 +131,12 @@ object Scanner : KoinComponent {
                                     author = trackRef.author,
                                     narrator = trackRef.narrator
             )
-            this.scanIndex = kvSettings.scanIndex
+            this.scanIndex = kvSettings.scanIndex + 1
         }
     }
 
-    private fun updateTrack(trackRef: AudioFileAnalysisValue, track: Track) = transaction {
-        val kvSettings = KeyValueSettingsService.get()
+    private fun updateTrack(trackRef: AudioFileAnalysisResult, track: Track) = transaction {
+        val kvSettings = KeyValueSettings.get()
 
         track.apply {
             title = trackRef.title
@@ -141,7 +155,7 @@ object Scanner : KoinComponent {
                                     author = trackRef.author,
                                     narrator = trackRef.narrator
             )
-            this.scanIndex = kvSettings.scanIndex
+            this.scanIndex = kvSettings.scanIndex + 1
         }
     }
 }
