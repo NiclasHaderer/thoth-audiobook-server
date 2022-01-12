@@ -38,20 +38,20 @@ object GetOrCreate : KoinComponent {
         val authorInfo = try {
             runBlocking { metadataProvider.getAuthorByName(name) }
         } catch (e: ApiException) {
-            log.debug("$e, Author: $name")
+            log.warn("$e, Author: $name")
             null
         }
 
         if (authorInfo == null) {
-            log.debug("Could not find author information for $name")
+            log.info("Could not find author information for $name")
         }
 
         author = Author.new {
             this.name = name
             this.biography = biography ?: authorInfo?.biography
-            this.providerID = providerID ?: ProviderID.newFrom(authorInfo?.id)
+            this.providerID = providerID ?: ProviderID.getOrCreate(authorInfo?.id)
             this.image = image ?: if (authorInfo?.image != null) {
-                GetOrCreate.image(runBlocking { imageFromString(authorInfo.image!!) })
+                image(runBlocking { imageFromString(authorInfo.image!!) })
             } else null
         }
         return@transaction author
@@ -69,8 +69,8 @@ object GetOrCreate : KoinComponent {
         seriesIndex: Float?,
         cover: ByteArray?,
     ) = transaction {
-        val authorItem = GetOrCreate.author(author)
-        val seriesItem = if (series == null) null else GetOrCreate.series(title, authorItem)
+        val authorItem = author(author)
+        val seriesItem = if (series == null) null else series(series, authorItem)
         val book = Book.findOne { TBooks.title like title and (TBooks.author eq authorItem.id.value) }
         book
             ?: Book.new {
@@ -78,7 +78,7 @@ object GetOrCreate : KoinComponent {
                 this.year = year
                 this.language = language
                 this.description = description
-                this.providerID = ProviderID.newFrom(providerID)
+                this.providerID = ProviderID.getOrCreate(providerID)
                 this.author = authorItem
                 this.narrator = narrator
                 this.series = seriesItem

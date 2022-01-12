@@ -41,10 +41,11 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
+
+    // Pined, because of exposed compatability
+    implementation("com.h2database:h2:1.4.199")
     // Dependency Injection
-    // Koin for Ktor
     implementation("io.insert-koin:koin-ktor:$koinVersion")
-    // SLF4J Logger
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     // Migration
     implementation("org.reflections:reflections:$reflectVersion")
@@ -54,6 +55,8 @@ dependencies {
     implementation("com.github.ntrrgc:ts-generator:1.1.1")
     // Audio file processing
     implementation("org.bitbucket.ijabz:jaudiotagger:v3.0.1")
+    // Folder watching
+    implementation("io.methvin:directory-watcher:0.15.0")
     // Ktor
     implementation("io.ktor:ktor-jackson:$ktorVersion")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -73,7 +76,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-    testImplementation("com.h2database:h2:$h2Version")
     testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
 
 }

@@ -9,6 +9,7 @@ import io.github.huiibuh.api.search.registerSearchRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
 import io.github.huiibuh.db.DatabaseFactory
 import io.github.huiibuh.di.configureKoin
+import io.github.huiibuh.file.scanner.UpdateService
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.configureHTTP
 import io.github.huiibuh.plugins.configureMonitoring
@@ -24,23 +25,20 @@ import io.ktor.application.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 
-@OptIn(DelicateCoroutinesApi::class)
-fun main(): Unit = runBlocking {
+fun main() {
     disableJAudioTaggerLogs()
-
-    configureKoin()
-    DatabaseFactory.connect()
-    DatabaseFactory.migrate()
-    launch {
-        Scanner.rescan()
-    }
-
     embeddedServer(Netty, port = getPort(), host = "0.0.0.0") {
+        // Has to be done in here for some strange scoping reasons
+        configureKoin()
+        launch {
+            DatabaseFactory.connect()
+            DatabaseFactory.migrate()
+            Scanner.rescan()
+            UpdateService().watch()
+        }
         webServer()
     }.start(wait = false)
 }

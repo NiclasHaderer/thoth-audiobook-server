@@ -1,13 +1,17 @@
 package io.github.huiibuh.db.tables
 
+import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.ToModel
 import io.github.huiibuh.models.BookModel
+import io.github.huiibuh.models.BookModelWithTracks
 import io.github.huiibuh.models.NamedId
 import io.github.huiibuh.models.TitledId
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 
@@ -25,7 +29,30 @@ object TBooks : UUIDTable("Books") {
 }
 
 class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
-    companion object : UUIDEntityClass<Book>(TBooks)
+    companion object : UUIDEntityClass<Book>(TBooks) {
+        fun removeUnused() = transaction {
+            all().forEach {
+                if (Track.find { TTracks.book eq it.id.value }.empty()) {
+                    it.delete()
+                }
+            }
+        }
+
+        fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {
+            Book.all().limit(limit, offset * limit).orderBy(TBooks.title to order).map { it.toModel() }
+        }
+
+        fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
+            val book = Book.findById(uuid)?.toModel() ?: throw APINotFound("Could not find album")
+            val tracks = Track.forBook(uuid)
+            val index = Book.all().orderBy(TBooks.title to order).indexOfFirst { it.id.value == uuid }
+            BookModelWithTracks.fromModel(book, tracks, index)
+        }
+
+        fun forSeries(seriesId: UUID, order: SortOrder = SortOrder.ASC) = transaction {
+            Book.find { TBooks.series eq seriesId }.orderBy(TBooks.title to order).map { it.toModel() }
+        }
+    }
 
     private val coverID by TBooks.cover
 

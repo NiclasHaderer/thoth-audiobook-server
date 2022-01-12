@@ -1,4 +1,4 @@
-package io.github.huiibuh.services.database
+package io.github.huiibuh.services
 
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.db.tables.Book

@@ -8,9 +8,6 @@ import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.services.Scanner
 import io.ktor.application.*
 import io.ktor.response.*
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 fun NormalOpenAPIRoute.registerRescan(path: String = "rescan") {
     route(path) {
@@ -20,12 +17,9 @@ fun NormalOpenAPIRoute.registerRescan(path: String = "rescan") {
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 internal fun NormalOpenAPIRoute.routing() {
     post<Unit, Unit, Unit> { _, _ ->
         pipeline.call.respond(Unit)
-        GlobalScope.launch {
-            Scanner.rescan()
-        }
+        Scanner.rescan()
     }
 }

@@ -11,6 +11,8 @@
     <!-- OpenAPI -->
     <logger name="com.papsign.ktor.openapigen.OpenAPIGen" level="WARN"/>
     <logger name="com.papsign.ktor.openapigen.modules.handlers.RouteHandler" level="WARN"/>
+    <!--  Watchservice  -->
+    <logger name="io.methvin.watcher.DirectoryWatcher" level="INFO"/>
     <!-- Webserver -->
     <logger name="io.netty" level="INFO"/>
     <!-- DB connector -->

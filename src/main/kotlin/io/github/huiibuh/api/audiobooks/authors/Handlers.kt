@@ -1,19 +1,18 @@
 package io.github.huiibuh.api.audiobooks.authors
 
-import io.github.huiibuh.api.exceptions.APIBadRequest
-import io.github.huiibuh.api.exceptions.APINotFound
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
+import io.github.huiibuh.api.exceptions.APIBadRequest
+import io.github.huiibuh.api.exceptions.APINotFound
+import io.github.huiibuh.db.removeAllUnusedFromDb
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.db.tables.Image
 import io.github.huiibuh.db.tables.ProviderID
+import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.extensions.uriToFile
 import io.github.huiibuh.file.tagger.saveToFile
 import io.github.huiibuh.file.tagger.toTrackModel
 import io.github.huiibuh.models.AuthorModel
-import io.github.huiibuh.services.RemoveEmpty
-import io.github.huiibuh.services.database.ImageService
-import io.github.huiibuh.services.database.TrackService
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -29,7 +28,7 @@ internal suspend fun OpenAPIPipelineResponseContext<AuthorModel>.patchAuthor(id:
             throw APIBadRequest("Author name cannot be enpty")
         }
 
-        val tracks = TrackService.forAuthor(id.uuid)
+        val tracks = Track.forAuthor(id.uuid)
         val trackReferences = tracks.toTrackModel()
 
         if (patchAuthor.name != author.name) {
@@ -39,7 +38,7 @@ internal suspend fun OpenAPIPipelineResponseContext<AuthorModel>.patchAuthor(id:
 
         val newProviderID = patchAuthor.providerID
         if (ProviderID.eq(author.providerID, newProviderID)) {
-            author.providerID = ProviderID.newFrom(newProviderID)
+            author.providerID = ProviderID.getOrCreate(newProviderID)
         }
 
         if (patchAuthor.biography != author.biography) {
@@ -53,7 +52,7 @@ internal suspend fun OpenAPIPipelineResponseContext<AuthorModel>.patchAuthor(id:
         }
 
         val patchImage = try {
-            ImageService.get(UUID.fromString(patchAuthor.image))
+            Image.getById(UUID.fromString(patchAuthor.image))
         } catch (_: Exception) {
             null
         }
@@ -72,5 +71,5 @@ internal suspend fun OpenAPIPipelineResponseContext<AuthorModel>.patchAuthor(id:
         author
     }
     respond(author.toModel())
-    RemoveEmpty.all()
+    removeAllUnusedFromDb()
 }

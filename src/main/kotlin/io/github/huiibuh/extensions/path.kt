@@ -5,7 +5,7 @@ import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
 
 
-fun Path.hasParent() = this.parent != null
+fun Path.hasParent() = this.parent != null && this.parent.name.isNotEmpty()
 fun Path.replacePart(replaceString: String): Path {
     val absReplace = Path.of(replaceString).toAbsolutePath().normalize().absolutePathString()
     val absPath = this.toAbsolutePath().normalize().absolutePathString()

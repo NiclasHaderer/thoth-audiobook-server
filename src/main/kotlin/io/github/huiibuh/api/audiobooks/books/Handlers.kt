@@ -1,9 +1,10 @@
 package io.github.huiibuh.api.audiobooks.books
 
-import io.github.huiibuh.api.exceptions.APIBadRequest
-import io.github.huiibuh.api.exceptions.APINotFound
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
+import io.github.huiibuh.api.exceptions.APIBadRequest
+import io.github.huiibuh.api.exceptions.APINotFound
+import io.github.huiibuh.db.removeAllUnusedFromDb
 import io.github.huiibuh.db.tables.Book
 import io.github.huiibuh.db.tables.Image
 import io.github.huiibuh.db.tables.ProviderID
@@ -14,8 +15,6 @@ import io.github.huiibuh.file.tagger.saveToFile
 import io.github.huiibuh.file.tagger.toTrackModel
 import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.services.GetOrCreate
-import io.github.huiibuh.services.RemoveEmpty
-import io.github.huiibuh.services.database.ImageService
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -58,7 +57,7 @@ internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: Boo
 
         val newProviderID = patchBook.providerID
         if (ProviderID.eq(book.providerID, newProviderID)) {
-            book.providerID = ProviderID.newFrom(newProviderID)
+            book.providerID = ProviderID.getOrCreate(newProviderID)
         }
 
         if (patchBook.narrator != book.narrator) {
@@ -82,7 +81,7 @@ internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: Boo
         }
 
         val patchCover = try {
-            ImageService.get(UUID.fromString(patchBook.cover))
+            Image.getById(UUID.fromString(patchBook.cover))
         } catch (_: Exception) {
             null
         }
@@ -102,5 +101,5 @@ internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: Boo
         book.toModel()
     }
     respond(book)
-    RemoveEmpty.all()
+    removeAllUnusedFromDb()
 }

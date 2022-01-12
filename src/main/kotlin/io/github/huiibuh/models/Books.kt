@@ -1,6 +1,5 @@
 package io.github.huiibuh.models
 
-import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
@@ -51,7 +50,7 @@ data class BookModelWithTracks(
     val tracks: List<TrackModel>,
 ) : IBookModel {
     companion object {
-        fun fromModel(book: BookModel, tracks: List<Track>, position: Int): BookModelWithTracks {
+        fun fromModel(book: BookModel, tracks: List<TrackModel>, position: Int): BookModelWithTracks {
 
             val sortedTracks = if (tracks.any { it.trackNr == null }) {
                 tracks.sortedBy { it.path }
@@ -67,7 +66,7 @@ data class BookModelWithTracks(
                 description = book.description,
                 providerID = book.providerID,
                 position = position,
-                tracks = sortedTracks.map { it.toModel() },
+                tracks = sortedTracks,
                 author = book.author,
                 narrator = book.narrator,
                 series = book.series,

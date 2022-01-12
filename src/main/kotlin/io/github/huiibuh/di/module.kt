@@ -1,7 +1,7 @@
 package io.github.huiibuh.di
 
-import io.github.huiibuh.file.analyzer.AudioFileAnalyzer
 import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapper
+import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapperImpl
 import io.github.huiibuh.file.analyzer.impl.AudioFolderScanner
 import io.github.huiibuh.file.analyzer.impl.AudioTagScanner
 import io.github.huiibuh.metadata.MetadataProvider
@@ -23,7 +23,7 @@ val DI_MODULE = module {
             AudibleClient(settings.audibleSearchHost, settings.audibleAuthorHost)
         ))
     }
-    single<AudioFileAnalyzer> {
-        AudioFileAnalyzerWrapper(get(), listOf(AudioTagScanner(get()), AudioFolderScanner(get())))
+    single<AudioFileAnalyzerWrapper> {
+        AudioFileAnalyzerWrapperImpl(listOf(AudioTagScanner(get()), AudioFolderScanner(get())))
     }
 }

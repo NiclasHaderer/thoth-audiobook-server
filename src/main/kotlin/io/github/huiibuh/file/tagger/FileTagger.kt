@@ -17,6 +17,7 @@ import java.nio.file.Path
 
 
 interface FileTagger : ReadonlyFileTagger {
+    override var providerId: ProviderIDModel?
     override var title: String
     override var description: String?
     override var year: Int?

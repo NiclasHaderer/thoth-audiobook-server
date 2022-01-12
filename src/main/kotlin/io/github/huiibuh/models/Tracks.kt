@@ -12,4 +12,5 @@ data class TrackModel(
     val duration: Int,
     val accessTime: Long,
     val book: TitledId,
+    val path: String,
 )
