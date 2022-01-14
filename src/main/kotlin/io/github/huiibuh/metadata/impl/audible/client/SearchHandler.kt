@@ -1,11 +1,11 @@
 package io.github.huiibuh.metadata.impl.audible.client
 
-import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchAmount
-import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchLanguage
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SearchAuthorMetadata
 import io.github.huiibuh.metadata.SearchResultMetadata
 import io.github.huiibuh.metadata.SearchSeriesMetadata
+import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchAmount
+import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchLanguage
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -68,8 +68,8 @@ internal class SearchHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): List<SearchResultMetadata> {
-        val document = this.getDocument()
+    override suspend fun execute(): List<SearchResultMetadata>? {
+        val document = this.getDocument() ?: return null
         val searchResultItems = getSearchItems(document)
         return extractSearchInfo(searchResultItems)
     }

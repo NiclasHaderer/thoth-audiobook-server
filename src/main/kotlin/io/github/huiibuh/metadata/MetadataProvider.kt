@@ -25,3 +25,9 @@ interface MetadataProvider {
 
     suspend fun getSeriesByName(seriesName: String): SeriesMetadata?
 }
+
+interface MetadataProviderWrapper : MetadataProvider {
+    override suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata
+    override suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata
+    override suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata
+}

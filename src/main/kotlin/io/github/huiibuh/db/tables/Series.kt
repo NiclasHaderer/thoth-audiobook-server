@@ -13,6 +13,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import kotlin.jvm.Throws
 
 object TSeries : UUIDTable("Series") {
     val title = varchar("title", 250).uniqueIndex()
@@ -37,6 +38,7 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
             }
         }
 
+        @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val series = Series.findById(uuid)?.toModel() ?: throw APINotFound("Could not find series")
             val books = Book.forSeries(uuid).sortedWith(compareBy(BookModel::year, BookModel::seriesIndex))

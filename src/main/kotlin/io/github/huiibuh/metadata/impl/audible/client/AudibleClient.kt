@@ -1,7 +1,5 @@
 package io.github.huiibuh.metadata.impl.audible.client
 
-import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchAmount
-import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchLanguage
 import io.github.huiibuh.metadata.AuthorMetadata
 import io.github.huiibuh.metadata.BookMetadata
 import io.github.huiibuh.metadata.MetadataLanguage
@@ -10,6 +8,8 @@ import io.github.huiibuh.metadata.MetadataSearchCount
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SearchResultMetadata
 import io.github.huiibuh.metadata.SeriesMetadata
+import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchAmount
+import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchLanguage
 import io.ktor.client.*
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
@@ -41,7 +41,7 @@ open class AudibleClient(
                                             language = if (language != null) AudibleSearchLanguage.from(language) else null,
                                             pageSize = if (pageSize != null) AudibleSearchAmount.from(pageSize) else AudibleSearchAmount.Twenty
         )
-        return handler.execute()
+        return handler.execute() ?: listOf()
     }
 
     override suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata? {
@@ -51,7 +51,7 @@ open class AudibleClient(
 
     override suspend fun getAuthorByName(authorName: String): AuthorMetadata? {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, author = authorName)
-        val searchResult = handler.execute()
+        val searchResult = handler.execute() ?: return null
         val authorResult = searchResult.filter { it.author != null && it.author?.id?.itemID != "search" }
         if (authorResult.isEmpty()) return null
 
@@ -66,7 +66,7 @@ open class AudibleClient(
 
     override suspend fun getBookByName(bookName: String): BookMetadata? {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, title = bookName)
-        val searchResult = handler.execute()
+        val searchResult = handler.execute() ?: return null
         val bookResult = searchResult.filter { it.title != null && it.id.itemID != "search" }
         if (bookResult.isEmpty()) return null
 
@@ -91,7 +91,7 @@ open class AudibleClient(
 
     override suspend fun getSeriesByName(seriesName: String): SeriesMetadata? {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, keywords = seriesName)
-        val searchResult = handler.execute()
+        val searchResult = handler.execute() ?: return null
         val seriesResult = searchResult.filter { it.series != null && it.series?.id?.itemID != "search" }
         if (seriesResult.isEmpty()) return null
 

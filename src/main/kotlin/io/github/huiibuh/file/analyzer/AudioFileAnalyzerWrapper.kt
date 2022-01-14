@@ -1,13 +1,13 @@
 package io.github.huiibuh.file.analyzer
 
+import io.github.huiibuh.extensions.classLogger
 import io.github.huiibuh.file.tagger.ReadonlyFileTaggerImpl
-import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
 class AudioFileAnalyzerWrapperImpl(private val analyzers: List<AudioFileAnalyzer>) :
     AudioFileAnalyzerWrapper {
-    private val log = LoggerFactory.getLogger(this::class.java)
+    private val log = classLogger()
 
     override suspend fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult? {
         val tags = ReadonlyFileTaggerImpl(path)

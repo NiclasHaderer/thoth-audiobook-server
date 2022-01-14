@@ -11,6 +11,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import kotlin.jvm.Throws
 
 
 object TProviderID : UUIDTable("ProviderID") {
@@ -26,6 +27,7 @@ class ProviderID(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ProviderIDModel> 
             return provider?.provider === providerIdCopy?.provider && provider?.itemID === providerIdCopy?.itemID
         }
 
+        @Throws(APINotFound::class)
         fun getById(uuid: UUID) = transaction {
             findById(uuid)?.toModel() ?: throw APINotFound("Could not find provider")
         }

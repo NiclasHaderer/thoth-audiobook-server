@@ -1,7 +1,6 @@
 package io.github.huiibuh.metadata.impl.audible.client
 
-import io.github.huiibuh.api.exceptions.APINotFound
-import io.github.huiibuh.api.exceptions.ApiException
+import io.github.huiibuh.extensions.classLogger
 import io.ktor.client.*
 import io.ktor.client.features.*
 import io.ktor.client.request.*
@@ -16,12 +15,13 @@ internal abstract class AudibleHandler private constructor(
     protected val url: Url,
     private val document: Document? = null,
 ) {
+    private val log = classLogger()
 
     constructor(client: HttpClient, url: Url) : this(client, url, null)
     constructor(document: Document, url: Url) : this(null, url, document)
 
-    abstract suspend fun execute(): Any
-    suspend fun getDocument(): Document {
+    abstract suspend fun execute(): Any?
+    suspend fun getDocument(): Document? {
         if (this.document != null) return this.document
 
         val urlString = url.toString()
@@ -50,11 +50,13 @@ internal abstract class AudibleHandler private constructor(
         } catch (e: ClientRequestException) {
             val message = e.localizedMessage.split("Text: ").firstOrNull() ?: ""
             val statusCode = e.response.status
-            if (statusCode == HttpStatusCode.NotFound) {
-                throw APINotFound("$message, $url")
-            } else {
-                throw ApiException("$message, $url", statusCode.value)
-            }
+            log.warn("""
+                Audible crawler error
+                Status: $statusCode
+                Message: $message
+            """.trimIndent())
+
+            return null
         }
         return Jsoup.parse(body, this.url.toString())
     }

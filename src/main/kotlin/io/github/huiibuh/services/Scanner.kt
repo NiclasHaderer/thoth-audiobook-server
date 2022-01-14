@@ -4,6 +4,7 @@ import io.github.huiibuh.db.removeAllUnusedFromDb
 import io.github.huiibuh.db.tables.KeyValueSettings
 import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.tables.Track
+import io.github.huiibuh.extensions.classLogger
 import io.github.huiibuh.extensions.findOne
 import io.github.huiibuh.file.analyzer.AudioFileAnalysisResult
 import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapper
@@ -13,7 +14,6 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -26,7 +26,7 @@ import kotlin.io.path.getLastModifiedTime
 
 object Scanner : KoinComponent {
     private val isScanning = AtomicBoolean(false)
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val logger = classLogger()
     private val settings by inject<Settings>()
     private val fileAnalyzer by inject<AudioFileAnalyzerWrapper>()
 

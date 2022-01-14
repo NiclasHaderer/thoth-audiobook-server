@@ -11,6 +11,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import kotlin.jvm.Throws
 
 object TAuthors : UUIDTable("Authors") {
     val name = varchar("name", 255).uniqueIndex()
@@ -30,6 +31,7 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
             }
         }
 
+        @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val author = Author.findById(uuid)?.toModel() ?: throw APINotFound("Could not find author")
             val books = Book.find { TBooks.author eq uuid }.orderBy(TBooks.year to order).map { it.toModel() }

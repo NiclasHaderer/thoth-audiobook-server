@@ -42,6 +42,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
             Book.all().limit(limit, offset * limit).orderBy(TBooks.title to order).map { it.toModel() }
         }
 
+        @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val book = Book.findById(uuid)?.toModel() ?: throw APINotFound("Could not find album")
             val tracks = Track.forBook(uuid)

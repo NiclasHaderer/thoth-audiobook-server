@@ -1,14 +1,14 @@
 package io.github.huiibuh.db.migration
 
+import io.github.huiibuh.extensions.classLogger
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.reflections.Reflections
-import org.slf4j.LoggerFactory
 import kotlin.reflect.full.createInstance
 
 class DatabaseMigrator(val db: Database, val packageName: String) {
-    private val log = LoggerFactory.getLogger(this::class.java)
+    private val log = classLogger()
     private val classNameMatcher = "(\\d+)_.*".toRegex()
 
     private val classes: List<Migration> by lazy {
