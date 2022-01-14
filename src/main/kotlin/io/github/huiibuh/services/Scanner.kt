@@ -44,8 +44,10 @@ object Scanner : KoinComponent {
         logger.info("Starting import of tracks")
         val initializedStartAt = System.currentTimeMillis()
 
+        val file = Paths.get(settings.audioFileLocation)
+
         // Import tracks
-        importTracks()
+        scanFolderForTracks(file)
 
         // Remove tracks which where not found and the scanIndex could therefore not be updated
         Track.removeUntouched()
@@ -75,18 +77,20 @@ object Scanner : KoinComponent {
         addOrUpdate(path, attrs, trackInfo)
     }
 
-    private fun importTracks() {
+    fun scanFolderForTracks(basePath: Path) {
         val scanner = AudioFileScanner(
             fileAnalyzer,
             removeSubtree = { path ->
-                transaction { Track.find { TTracks.path like "${path.absolute()}%" }.forEach { it.delete() } }
+                transaction {
+                    Track.find { TTracks.path like "${path.absolute()}%" }
+                            .forEach { it.delete() }
+                }
             },
             shouldUpdateFile = Scanner::shouldUpdate,
             addOrUpdate = Scanner::addOrUpdate
         )
 
-        val file = Paths.get(settings.audioFileLocation)
-        Files.walkFileTree(file, scanner)
+        Files.walkFileTree(basePath, scanner)
     }
 
     private fun shouldUpdate(path: Path): Boolean {
