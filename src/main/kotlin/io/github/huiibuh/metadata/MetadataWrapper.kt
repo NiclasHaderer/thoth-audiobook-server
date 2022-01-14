@@ -1,10 +1,12 @@
 package io.github.huiibuh.metadata
 
+import io.github.huiibuh.api.exceptions.APIBadRequest
+import io.ktor.features.*
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
 class MetadataWrapper constructor(
     private val providerList: List<MetadataProvider>,
-) : MetadataProvider {
+) : MetadataProviderWrapper {
     override var uniqueName = "MetadataWrapper"
 
     private val providerMap by lazy { providerList.associateBy { it.uniqueName } }
@@ -20,9 +22,11 @@ class MetadataWrapper constructor(
         return providerList.flatMap { it.search(keywords, title, author, narrator, language, pageSize) }
     }
 
-    override suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata? {
-        val provider = providerMap[authorID.provider] ?: return null
+    @Throws(NotFoundException::class, APIBadRequest::class)
+    override suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata {
+        val provider = getProvider(authorID)
         return provider.getAuthorByID(authorID)
+            ?: throw NotFoundException("Could not find author with id ${authorID.itemID}")
     }
 
     override suspend fun getAuthorByName(authorName: String): AuthorMetadata? {
@@ -32,9 +36,11 @@ class MetadataWrapper constructor(
         return FuzzySearch.extractOne(authorName, authors) { it?.name }.referent
     }
 
-    override suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata? {
-        val provider = providerMap[bookID.provider] ?: return null
+    @Throws(NotFoundException::class, APIBadRequest::class)
+    override suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata {
+        val provider = getProvider(bookID)
         return provider.getBookByID(bookID)
+            ?: throw NotFoundException("Could not find book with id ${bookID.itemID}")
     }
 
     override suspend fun getBookByName(bookName: String): BookMetadata? {
@@ -44,9 +50,11 @@ class MetadataWrapper constructor(
         return FuzzySearch.extractOne(bookName, books) { it?.title }.referent
     }
 
-    override suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata? {
-        val provider = providerMap[seriesID.provider] ?: return null
+    @Throws(NotFoundException::class, APIBadRequest::class)
+    override suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata {
+        val provider = getProvider(seriesID)
         return provider.getSeriesByID(seriesID)
+            ?: throw NotFoundException("Could not find book with id ${seriesID.itemID}")
     }
 
     override suspend fun getSeriesByName(seriesName: String): SeriesMetadata? {
@@ -55,4 +63,8 @@ class MetadataWrapper constructor(
 
         return FuzzySearch.extractOne(seriesName, series) { it?.name }.referent
     }
+
+    @kotlin.jvm.Throws(APIBadRequest::class)
+    private fun getProvider(providerID: ProviderWithIDMetadata) =
+        providerMap[providerID.provider] ?: throw APIBadRequest("Provider with id ${providerID.provider} was not found")
 }

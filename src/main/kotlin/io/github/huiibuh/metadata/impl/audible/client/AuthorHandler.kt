@@ -1,6 +1,5 @@
 package io.github.huiibuh.metadata.impl.audible.client
 
-import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.metadata.AuthorMetadata
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.ktor.client.*
@@ -32,10 +31,9 @@ internal class AuthorHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): AuthorMetadata {
-        val document = getDocument()
-        document.getElementById("product-list-a11y-skiplink-target")
-            ?: throw APINotFound("Author could not be found")
+    override suspend fun execute(): AuthorMetadata? {
+        val document = getDocument() ?: return null
+        document.getElementById("product-list-a11y-skiplink-target") ?: return null
         val link = url.toString()
         return object : AuthorMetadata {
             override val link = link

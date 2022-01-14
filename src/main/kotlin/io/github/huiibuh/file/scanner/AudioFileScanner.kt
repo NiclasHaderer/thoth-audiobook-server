@@ -1,12 +1,12 @@
 package io.github.huiibuh.file.scanner
 
+import io.github.huiibuh.extensions.classLogger
 import io.github.huiibuh.file.analyzer.AudioFileAnalysisResult
 import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapper
 import io.github.huiibuh.settings.Settings
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.FileSystems
 import java.nio.file.FileVisitResult
@@ -26,7 +26,7 @@ class AudioFileScanner(
     private val addOrUpdate: (file: Path, attrs: BasicFileAttributes, result: AudioFileAnalysisResult) -> Unit,
 ) : FileVisitor<Path>, KoinComponent {
     private val settings: Settings by inject()
-    private val log = LoggerFactory.getLogger(this::class.java)
+    private val log = classLogger()
 
     override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes?): FileVisitResult {
         val ignoreFile =

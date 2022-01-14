@@ -27,8 +27,8 @@ internal class BookHandler : AudibleHandler {
 
     constructor(document: Document, url: Url) : super(document, url)
 
-    override suspend fun execute(): BookMetadata {
-        val document = getDocument()
+    override suspend fun execute(): BookMetadata? {
+        val document = getDocument() ?: return null
         val link = url.toString()
         return object : BookMetadata {
             override val link = link

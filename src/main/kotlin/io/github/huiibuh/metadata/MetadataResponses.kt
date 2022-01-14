@@ -57,7 +57,7 @@ interface SeriesMetadata {
     val name: String?
     val description: String?
     val amount: Int?
-    val books: List<SearchResultMetadata>
+    val books: List<SearchResultMetadata>?
 }
 
 interface SearchSeriesMetadata {

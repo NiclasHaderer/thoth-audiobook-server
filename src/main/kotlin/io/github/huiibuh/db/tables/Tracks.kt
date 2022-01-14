@@ -11,6 +11,7 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import kotlin.jvm.Throws
 
 
 object TTracks : UUIDTable("Tracks") {
@@ -33,6 +34,7 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
             }
         }
 
+        @Throws(APINotFound::class)
         fun getById(uuid: UUID) = transaction {
             Track.findById(uuid)?.toModel() ?: throw APINotFound("Requested track was not found")
         }

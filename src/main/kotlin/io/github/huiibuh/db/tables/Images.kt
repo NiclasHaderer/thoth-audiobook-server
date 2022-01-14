@@ -9,6 +9,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import kotlin.jvm.Throws
 
 object TImages : UUIDTable("Images") {
     val image = blob("image")
@@ -29,6 +30,7 @@ class Image(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ImageModel> {
             }
         }
 
+        @Throws(APINotFound::class)
         fun getById(uuid: UUID) = transaction {
             findById(uuid)?.toModel() ?: throw APINotFound("Could not find image")
         }

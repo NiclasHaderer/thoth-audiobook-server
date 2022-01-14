@@ -10,8 +10,10 @@ import io.github.huiibuh.db.tables.TAuthors
 import io.github.huiibuh.db.tables.TBooks
 import io.github.huiibuh.db.tables.TImages
 import io.github.huiibuh.db.tables.TSeries
+import io.github.huiibuh.extensions.classLogger
 import io.github.huiibuh.extensions.findOne
 import io.github.huiibuh.metadata.MetadataProvider
+import io.github.huiibuh.metadata.MetadataProviderWrapper
 import io.github.huiibuh.models.ProviderIDModel
 import io.github.huiibuh.utils.imageFromString
 import kotlinx.coroutines.runBlocking
@@ -20,11 +22,10 @@ import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.slf4j.LoggerFactory
 
 object GetOrCreate : KoinComponent {
-    private val log = LoggerFactory.getLogger(this::class.java)
-    private val metadataProvider by inject<MetadataProvider>()
+    private val log = classLogger()
+    private val metadataProvider by inject<MetadataProviderWrapper>()
 
     fun author(
         name: String,

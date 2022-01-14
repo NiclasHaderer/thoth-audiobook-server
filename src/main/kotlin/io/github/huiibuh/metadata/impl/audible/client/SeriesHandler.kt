@@ -1,6 +1,5 @@
 package io.github.huiibuh.metadata.impl.audible.client
 
-import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SearchResultMetadata
 import io.github.huiibuh.metadata.SeriesMetadata
@@ -29,11 +28,11 @@ internal class SeriesHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): SeriesMetadata {
-        val document = getDocument()
+    override suspend fun execute(): SeriesMetadata? {
+        val document = getDocument() ?: return null
         // Audible does not return 404 if a series is not valid, so...
         document.getElementById("product-list-a11y-skiplink-target")
-            ?: throw APINotFound("Series could not be found")
+            ?: return null
         val booksInSeries = getSeriesBooks(document)
         val link = url.toString()
         return object : SeriesMetadata {
@@ -64,7 +63,8 @@ internal class SeriesHandler : AudibleHandler {
         return imageElement.text().filter { it.isDigit() }.toIntOrNull()
     }
 
-    private suspend fun getSeriesBooks(document: Document): List<SearchResultMetadata> {
+    private suspend fun getSeriesBooks(document: Document): List<SearchResultMetadata>? {
+        // Document is provided, so there can be no exception fetching it
         return SearchHandler.fromDocument(document, this.url).execute()
     }
 }
