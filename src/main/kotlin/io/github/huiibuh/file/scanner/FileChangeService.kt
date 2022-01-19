@@ -14,7 +14,7 @@ import kotlin.io.path.absolute
 import kotlin.io.path.name
 
 
-class UpdateService() : KoinComponent {
+class FileChangeService() : KoinComponent {
     val settings by inject<Settings>()
     private val watcher =
         DirectoryWatcher.builder().path(Path.of(settings.audioFileLocation)).listener { event: DirectoryChangeEvent ->

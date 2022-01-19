@@ -11,6 +11,7 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -39,19 +40,19 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
         }
 
         fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {
-            Book.all().limit(limit, offset * limit).orderBy(TBooks.title to order).map { it.toModel() }
+            Book.all().limit(limit, offset * limit).orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
         }
 
         @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val book = Book.findById(uuid)?.toModel() ?: throw APINotFound("Could not find album")
             val tracks = Track.forBook(uuid)
-            val index = Book.all().orderBy(TBooks.title to order).indexOfFirst { it.id.value == uuid }
+            val index = Book.all().orderBy(TBooks.title.lowerCase() to order).indexOfFirst { it.id.value == uuid }
             BookModelWithTracks.fromModel(book, tracks, index)
         }
 
         fun forSeries(seriesId: UUID, order: SortOrder = SortOrder.ASC) = transaction {
-            Book.find { TBooks.series eq seriesId }.orderBy(TBooks.title to order).map { it.toModel() }
+            Book.find { TBooks.series eq seriesId }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
         }
     }
 

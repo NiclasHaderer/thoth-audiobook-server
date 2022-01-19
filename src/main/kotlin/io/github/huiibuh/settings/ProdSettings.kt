@@ -24,6 +24,6 @@ object ProdSettings : Settings {
     }
 
     override val database: DatabaseConnection by lazy {
-        SqLite
+        ProdDatabaseConnection
     }
 }
