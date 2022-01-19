@@ -11,6 +11,7 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 import kotlin.jvm.Throws
@@ -33,7 +34,7 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
         }
 
         fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {
-            Series.all().limit(limit, offset).orderBy(TSeries.title to order).map {
+            Series.all().limit(limit, offset).orderBy(TSeries.title.lowerCase() to order).map {
                 it.toModel()
             }
         }
@@ -42,7 +43,7 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val series = Series.findById(uuid)?.toModel() ?: throw APINotFound("Could not find series")
             val books = Book.forSeries(uuid).sortedWith(compareBy(BookModel::year, BookModel::seriesIndex))
-            val index = Series.all().orderBy(TSeries.title to order).indexOfFirst { it.id.value === uuid }
+            val index = Series.all().orderBy(TSeries.title.lowerCase() to order).indexOfFirst { it.id.value === uuid }
             SeriesModelWithBooks.fromModel(series, books, index)
         }
     }

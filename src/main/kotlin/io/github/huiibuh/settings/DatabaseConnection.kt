@@ -25,3 +25,22 @@ internal object SqLite : DatabaseConnection {
     override val autoCommit = false
     override val transactionIsolation = "TRANSACTION_SERIALIZABLE"
 }
+
+internal object ProdDatabaseConnection : DatabaseConnection {
+    override val driverClassName: String by lazy {
+        System.getenv("DB_DRIVER_CLASS_NAME")
+    }
+    val sqlitePath: String by lazy {
+        System.getenv("SQLITE_PATH")
+    }
+    override val jdbcUrl: String by lazy {
+        System.getenv("DB_JDBC_URL")
+    }
+    override val maximumPoolSize = 1
+    override val autoCommit: Boolean by lazy {
+        System.getenv("DB_AUTO_COMMIT").toBooleanStrict()
+    }
+    override val transactionIsolation: String by lazy {
+        System.getenv("DB_TRANSACTION_VALIDATION")
+    }
+}

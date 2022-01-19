@@ -2,6 +2,7 @@ package io.github.huiibuh.db.tables
 
 import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.ToModel
+import io.github.huiibuh.db.update.interceptor.TimeUpdatable
 import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.models.AuthorModelWithBooks
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -9,19 +10,22 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
 import java.util.*
-import kotlin.jvm.Throws
 
 object TAuthors : UUIDTable("Authors") {
     val name = varchar("name", 255).uniqueIndex()
     val biography = text("biography").nullable()
+    val updateTime = datetime("updateTime").default(LocalDateTime.now())
     val providerID = reference("providerID", TProviderID).nullable()
     val image = reference("image", TImages).nullable()
 }
 
 
-class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
+class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel>, TimeUpdatable {
     companion object : UUIDEntityClass<Author>(TAuthors) {
         fun removeUnused() = transaction {
             all().forEach {
@@ -34,13 +38,13 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
         @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val author = Author.findById(uuid)?.toModel() ?: throw APINotFound("Could not find author")
-            val books = Book.find { TBooks.author eq uuid }.orderBy(TBooks.year to order).map { it.toModel() }
-            val index = Author.all().orderBy(TAuthors.name to order).indexOfFirst { it.id.value == uuid }
+            val books = Book.find { TBooks.author eq uuid }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
+            val index = Author.all().orderBy(TAuthors.name.lowerCase() to order).indexOfFirst { it.id.value == uuid }
             AuthorModelWithBooks.fromModel(author, books, index)
         }
 
         fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {
-            Author.all().limit(limit, offset * limit).orderBy(TAuthors.name to order).map { it.toModel() }
+            Author.all().limit(limit, offset * limit).orderBy(TAuthors.name.lowerCase() to order).map { it.toModel() }
         }
     }
 
@@ -48,6 +52,7 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
 
     var name by TAuthors.name
     var biography by TAuthors.biography
+    override var updateTime by TAuthors.updateTime
     var providerID by ProviderID optionalReferencedOn TAuthors.providerID
     var image by Image optionalReferencedOn TAuthors.image
 

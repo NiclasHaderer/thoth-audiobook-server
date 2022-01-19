@@ -8,8 +8,10 @@ import io.github.huiibuh.api.metadata.registerMetadataRouting
 import io.github.huiibuh.api.search.registerSearchRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
 import io.github.huiibuh.db.DatabaseFactory
+import io.github.huiibuh.db.tables.TAuthors
+import io.github.huiibuh.db.update.interceptor.withUpdateTime
 import io.github.huiibuh.di.configureKoin
-import io.github.huiibuh.file.scanner.UpdateService
+import io.github.huiibuh.file.scanner.FileChangeService
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.configureHTTP
 import io.github.huiibuh.plugins.configureMonitoring
@@ -36,9 +38,11 @@ fun main() {
         launch {
             DatabaseFactory.connect()
             DatabaseFactory.migrate()
+            withUpdateTime(TAuthors)
             Scanner.rescan()
-            UpdateService().watch()
+            FileChangeService().watch()
         }
+
         webServer()
     }.start(wait = false)
 }
