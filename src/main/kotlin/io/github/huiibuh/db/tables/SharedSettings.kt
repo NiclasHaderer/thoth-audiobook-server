@@ -14,7 +14,7 @@ object TKeyValueSettings : UUIDTable("KeyValueSettings") {
 }
 
 
-class KeyValueSettings(
+class KeyValueSettings private constructor(
     private val id: UUID,
     private var _scanIndex: Long,
 ) : ToModel<KeyValueSettingsModel> {

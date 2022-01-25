@@ -8,9 +8,13 @@ import java.nio.file.attribute.BasicFileAttributes
 abstract class AudioFileAnalyzer(
     protected val settings: Settings,
 ) {
-    abstract suspend fun analyze(path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger): AudioFileAnalysisResult?
+    abstract suspend fun analyze(
+        path: Path,
+        attrs: BasicFileAttributes,
+        tags: ReadonlyFileTagger
+    ): AudioFileAnalysisResult?
 }
 
-interface AudioFileAnalyzerWrapper{
+interface AudioFileAnalyzerWrapper {
     suspend fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult?
 }

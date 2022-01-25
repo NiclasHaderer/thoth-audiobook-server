@@ -1,15 +1,10 @@
-package io.github.huiibuh.metadata.impl.audible.client
+package io.github.huiibuh.metadata.audible.client
 
-import io.github.huiibuh.metadata.AuthorMetadata
-import io.github.huiibuh.metadata.BookMetadata
 import io.github.huiibuh.metadata.MetadataLanguage
 import io.github.huiibuh.metadata.MetadataProvider
 import io.github.huiibuh.metadata.MetadataSearchCount
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
-import io.github.huiibuh.metadata.SearchResultMetadata
-import io.github.huiibuh.metadata.SeriesMetadata
-import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchAmount
-import io.github.huiibuh.metadata.impl.audible.models.AudibleSearchLanguage
+import io.github.huiibuh.metadata.audible.models.*
 import io.ktor.client.*
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
@@ -32,27 +27,28 @@ open class AudibleClient(
         narrator: String?,
         language: MetadataLanguage?,
         pageSize: MetadataSearchCount?,
-    ): List<SearchResultMetadata> {
-        val handler = SearchHandler.fromURL(this.client, this.searchHost,
-                                            keywords = keywords,
-                                            title = title,
-                                            author = author,
-                                            narrator = narrator,
-                                            language = if (language != null) AudibleSearchLanguage.from(language) else null,
-                                            pageSize = if (pageSize != null) AudibleSearchAmount.from(pageSize) else AudibleSearchAmount.Twenty
+    ): List<AudibleSearchBookImpl> {
+        val handler = SearchHandler.fromURL(
+            this.client, this.searchHost,
+            keywords = keywords,
+            title = title,
+            author = author,
+            narrator = narrator,
+            language = if (language != null) AudibleSearchLanguage.from(language) else null,
+            pageSize = if (pageSize != null) AudibleSearchAmount.from(pageSize) else AudibleSearchAmount.Twenty
         )
         return handler.execute() ?: listOf()
     }
 
-    override suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata? {
+    override suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AudibleAuthorImpl? {
         val handler = AuthorHandler.fromURL(this.client, this.authorHost, authorID.itemID, this.authorImageSize)
         return handler.execute()
     }
 
-    override suspend fun getAuthorByName(authorName: String): AuthorMetadata? {
+    override suspend fun getAuthorByName(authorName: String): AudibleAuthorImpl? {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, author = authorName)
         val searchResult = handler.execute() ?: return null
-        val authorResult = searchResult.filter { it.author != null && it.author?.id?.itemID != "search" }
+        val authorResult = searchResult.filter { it.author != null && it.author.id.itemID != "search" }
         if (authorResult.isEmpty()) return null
 
         val author = FuzzySearch.extractOne(authorName, authorResult) { it.author!!.name }
@@ -64,8 +60,8 @@ open class AudibleClient(
         })
     }
 
-    override suspend fun getBookByName(bookName: String): BookMetadata? {
-        val handler = SearchHandler.fromURL(this.client, this.searchHost, title = bookName)
+    override suspend fun getBookByName(bookName: String, authorName: String?): AudibleBookImpl? {
+        val handler = SearchHandler.fromURL(this.client, this.searchHost, title = bookName, author = authorName)
         val searchResult = handler.execute() ?: return null
         val bookResult = searchResult.filter { it.title != null && it.id.itemID != "search" }
         if (bookResult.isEmpty()) return null
@@ -79,20 +75,20 @@ open class AudibleClient(
         })
     }
 
-    override suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata? {
+    override suspend fun getBookByID(bookID: ProviderWithIDMetadata): AudibleBookImpl? {
         val handler = BookHandler.fromUrl(this.client, this.searchHost, bookID.itemID)
         return handler.execute()
     }
 
-    override suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata? {
+    override suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): AudibleSeriesImpl? {
         val handler = SeriesHandler.fromURL(this.client, this.searchHost, seriesID.itemID)
         return handler.execute()
     }
 
-    override suspend fun getSeriesByName(seriesName: String): SeriesMetadata? {
-        val handler = SearchHandler.fromURL(this.client, this.searchHost, keywords = seriesName)
+    override suspend fun getSeriesByName(seriesName: String, authorName: String?): AudibleSeriesImpl? {
+        val handler = SearchHandler.fromURL(this.client, this.searchHost, keywords = seriesName, author = authorName)
         val searchResult = handler.execute() ?: return null
-        val seriesResult = searchResult.filter { it.series != null && it.series?.id?.itemID != "search" }
+        val seriesResult = searchResult.filter { it.series != null && it.series.id.itemID != "search" }
         if (seriesResult.isEmpty()) return null
 
         val series = FuzzySearch.extractOne(seriesName, seriesResult) { it.series!!.name }

@@ -1,4 +1,4 @@
-package io.github.huiibuh.metadata.impl.audible.client
+package io.github.huiibuh.metadata.audible.client
 
 import io.github.huiibuh.extensions.classLogger
 import io.ktor.client.*
@@ -50,11 +50,13 @@ internal abstract class AudibleHandler private constructor(
         } catch (e: ClientRequestException) {
             val message = e.localizedMessage.split("Text: ").firstOrNull() ?: ""
             val statusCode = e.response.status
-            log.warn("""
+            log.warn(
+                """
                 Audible crawler error
                 Status: $statusCode
                 Message: $message
-            """.trimIndent())
+            """.trimIndent()
+            )
 
             return null
         }

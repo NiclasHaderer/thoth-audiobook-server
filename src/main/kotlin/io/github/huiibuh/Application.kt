@@ -9,18 +9,15 @@ import io.github.huiibuh.api.search.registerSearchRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
 import io.github.huiibuh.db.DatabaseFactory
 import io.github.huiibuh.db.tables.TAuthors
+import io.github.huiibuh.db.tables.TBooks
+import io.github.huiibuh.db.tables.TSeries
+import io.github.huiibuh.db.tables.TTracks
 import io.github.huiibuh.db.update.interceptor.withUpdateTime
 import io.github.huiibuh.di.configureKoin
+import io.github.huiibuh.file.scanner.CompleteScan
 import io.github.huiibuh.file.scanner.FileChangeService
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
-import io.github.huiibuh.plugins.configureHTTP
-import io.github.huiibuh.plugins.configureMonitoring
-import io.github.huiibuh.plugins.configureOpenAPI
-import io.github.huiibuh.plugins.configurePartialContent
-import io.github.huiibuh.plugins.configureRouting
-import io.github.huiibuh.plugins.configureSerialization
-import io.github.huiibuh.plugins.configureSockets
-import io.github.huiibuh.services.Scanner
+import io.github.huiibuh.plugins.*
 import io.github.huiibuh.settings.getPort
 import io.github.huiibuh.ws.registerUpdateRoutes
 import io.ktor.application.*
@@ -38,8 +35,8 @@ fun main() {
         launch {
             DatabaseFactory.connect()
             DatabaseFactory.migrate()
-            withUpdateTime(TAuthors)
-            Scanner.rescan()
+            withUpdateTime(TAuthors, TBooks, TSeries, TTracks)
+            CompleteScan().start()
             FileChangeService().watch()
         }
 

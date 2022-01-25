@@ -21,10 +21,12 @@ fun Route.withNotifications(path: String, table: Table, type: NotificationType) 
         if (type.changeType.contains(it.changeType)) {
             if (it.entityClass.table == table) {
                 runBlocking {
-                    sockets.emit(ChangeEvent(
-                        type = it.changeType,
-                        id = it.entityId.value.toString(),
-                    ))
+                    sockets.emit(
+                        ChangeEvent(
+                            type = it.changeType,
+                            id = it.entityId.value.toString(),
+                        )
+                    )
                 }
             }
         }

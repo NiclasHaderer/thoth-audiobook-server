@@ -10,12 +10,7 @@ import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.api.exceptions.withNotFoundHandling
 import io.github.huiibuh.extensions.inject
-import io.github.huiibuh.metadata.AuthorMetadata
-import io.github.huiibuh.metadata.BookMetadata
-import io.github.huiibuh.metadata.MetadataProvider
-import io.github.huiibuh.metadata.MetadataProviderWrapper
-import io.github.huiibuh.metadata.SearchResultMetadata
-import io.github.huiibuh.metadata.SeriesMetadata
+import io.github.huiibuh.metadata.*
 
 fun NormalOpenAPIRoute.registerMetadataRouting(path: String = "metadata") {
     tag(ApiTags.Metadata) {
@@ -29,15 +24,19 @@ fun NormalOpenAPIRoute.registerMetadataRouting(path: String = "metadata") {
 internal fun NormalOpenAPIRoute.routing() {
     val searchService: MetadataProviderWrapper by inject()
 
-    route("search").get<MetadataSearch, List<SearchResultMetadata>>(
+    route("search").get<MetadataSearch, List<SearchBookMetadata>>(
         info("Search for audiobooks")
     ) { params ->
-        respond(searchService.search(params.keywords,
-                                     params.title,
-                                     params.author,
-                                     params.narrator,
-                                     params.language,
-                                     params.pageSize))
+        respond(
+            searchService.search(
+                params.keywords,
+                params.title,
+                params.author,
+                params.narrator,
+                params.language,
+                params.pageSize
+            )
+        )
     }
     withNotFoundHandling {
         route("author").get<AuthorID, AuthorMetadata> { id ->

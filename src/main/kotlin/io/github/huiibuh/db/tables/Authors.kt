@@ -3,6 +3,7 @@ package io.github.huiibuh.db.tables
 import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.ToModel
 import io.github.huiibuh.db.update.interceptor.TimeUpdatable
+import io.github.huiibuh.extensions.findOne
 import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.models.AuthorModelWithBooks
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -38,13 +39,18 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel>, TimeUpd
         @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val author = Author.findById(uuid)?.toModel() ?: throw APINotFound("Could not find author")
-            val books = Book.find { TBooks.author eq uuid }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
+            val books =
+                Book.find { TBooks.author eq uuid }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
             val index = Author.all().orderBy(TAuthors.name.lowerCase() to order).indexOfFirst { it.id.value == uuid }
             AuthorModelWithBooks.fromModel(author, books, index)
         }
 
         fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {
             Author.all().limit(limit, offset * limit).orderBy(TAuthors.name.lowerCase() to order).map { it.toModel() }
+        }
+
+        fun getByName(authorName: String): Author? = transaction {
+            Author.findOne { TAuthors.name eq authorName }
         }
     }
 

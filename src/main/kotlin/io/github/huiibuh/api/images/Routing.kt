@@ -1,5 +1,6 @@
 package io.github.huiibuh.api.images
 
+import com.papsign.ktor.openapigen.route.info
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
@@ -22,7 +23,9 @@ fun NormalOpenAPIRoute.registerImageRouting(route: String = "image") {
 }
 
 internal fun NormalOpenAPIRoute.imageRouting() {
-    get<ImageId, RawImageFile> {
+    get<ImageId, RawImageFile>(
+        info("View image")
+    ) {
         val image = Image.getById(it.id)
         respond(
             RawImageFile(ByteArrayInputStream(image.image))

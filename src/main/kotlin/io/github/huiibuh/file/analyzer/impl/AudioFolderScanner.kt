@@ -1,10 +1,6 @@
 package io.github.huiibuh.file.analyzer.impl
 
-import io.github.huiibuh.extensions.countParents
-import io.github.huiibuh.extensions.grandGrandParentName
-import io.github.huiibuh.extensions.grandParentName
-import io.github.huiibuh.extensions.parentName
-import io.github.huiibuh.extensions.replacePart
+import io.github.huiibuh.extensions.*
 import io.github.huiibuh.file.analyzer.AudioFileAnalysisResult
 import io.github.huiibuh.file.analyzer.AudioFileAnalysisResultImpl
 import io.github.huiibuh.file.analyzer.AudioFileAnalyzer
@@ -14,7 +10,11 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
 class AudioFolderScanner(settings: Settings) : AudioFileAnalyzer(settings) {
-    override suspend fun analyze(path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger): AudioFileAnalysisResult? {
+    override suspend fun analyze(
+        path: Path,
+        attrs: BasicFileAttributes,
+        tags: ReadonlyFileTagger
+    ): AudioFileAnalysisResult? {
         val cleanPath = path.replacePart(settings.audioFileLocation)
         val parentCount = cleanPath.countParents()
         if (parentCount != 2 && parentCount != 3) return null

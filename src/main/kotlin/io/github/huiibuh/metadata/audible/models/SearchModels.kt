@@ -1,42 +1,37 @@
-package io.github.huiibuh.metadata.impl.audible.models
+package io.github.huiibuh.metadata.audible.models
 
-import io.github.huiibuh.metadata.MetadataLanguage
-import io.github.huiibuh.metadata.MetadataSearchCount
-import io.github.huiibuh.metadata.ProviderWithIDMetadata
-import io.github.huiibuh.metadata.SearchAuthorMetadata
-import io.github.huiibuh.metadata.SearchResultMetadata
-import io.github.huiibuh.metadata.SearchSeriesMetadata
+import io.github.huiibuh.metadata.*
 import io.github.huiibuh.serializers.DateSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 
 @Serializable
 class AudibleSearchAuthorImpl(
-    override val id: ProviderWithIDMetadata,
+    override val id: AudibleProviderWithIDMetadata,
     override val name: String?,
     override val link: String,
 ) : SearchAuthorMetadata
 
 @Serializable
 class AudibleSearchSeriesImpl(
-    override val id: ProviderWithIDMetadata,
+    override val id: AudibleProviderWithIDMetadata,
     override val name: String,
     override val index: Float?,
     override val link: String,
 ) : SearchSeriesMetadata
 
 @Serializable
-class AudibleSearchResultImpl(
-    override val id: ProviderWithIDMetadata,
+class AudibleSearchBookImpl(
+    override val id: AudibleProviderWithIDMetadata,
     override val title: String?,
     override val link: String?,
     override val author: AudibleSearchAuthorImpl?,
-    override val narrator: AudibleSearchAuthorImpl?,
+    override val narrator: String?,
     override val series: AudibleSearchSeriesImpl?,
     override val image: String?,
     override val language: String?,
     @Serializable(DateSerializer::class) override val releaseDate: Date?,
-) : SearchResultMetadata
+) : SearchBookMetadata
 
 @Serializable
 enum class AudibleSearchLanguage(val language: Long) {

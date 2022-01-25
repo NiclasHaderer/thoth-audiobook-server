@@ -1,7 +1,9 @@
 package io.github.huiibuh.models
 
+import io.github.huiibuh.serializers.LocalDateSerializer
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
+import java.time.LocalDateTime
 import java.util.*
 
 interface ISeriesModel {
@@ -11,7 +13,8 @@ interface ISeriesModel {
     val providerID: ProviderIDModel?
     val description: String?
     val author: NamedId
-    val images: List<@Serializable(UUIDSerializer::class) UUID>
+    val images: List<UUID>
+    val updateTime: LocalDateTime
 }
 
 @Serializable
@@ -22,7 +25,8 @@ data class SeriesModel(
     override val providerID: ProviderIDModel?,
     override val description: String?,
     override val author: NamedId,
-    override val images: List<@Serializable(UUIDSerializer::class) UUID>,
+    override val images: List<@Serializable(with = UUIDSerializer::class) UUID>,
+    @Serializable(LocalDateSerializer::class) override val updateTime: LocalDateTime,
 ) : ISeriesModel
 
 @Serializable
@@ -44,7 +48,9 @@ data class SeriesModelWithBooks(
     val books: List<BookModel>,
     override val author: NamedId,
     override val images: List<@Serializable(UUIDSerializer::class) UUID>,
-) : ISeriesModel {
+    @Serializable(LocalDateSerializer::class) override val updateTime: LocalDateTime,
+
+    ) : ISeriesModel {
     companion object {
         fun fromModel(series: SeriesModel, books: List<BookModel>, position: Int): SeriesModelWithBooks {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
@@ -68,7 +74,8 @@ data class SeriesModelWithBooks(
                 description = series.description,
                 books = books,
                 author = series.author,
-                images = series.images
+                images = series.images,
+                updateTime = series.updateTime
             )
         }
     }

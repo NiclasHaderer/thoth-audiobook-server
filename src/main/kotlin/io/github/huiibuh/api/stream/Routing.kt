@@ -27,7 +27,7 @@ fun NormalOpenAPIRoute.registerStreamingRouting(route: String = "audio") {
 
 fun NormalOpenAPIRoute.streamingRouting() {
     get<AudioId, RawAudioFile>(
-        info("Stream a audio file")
+        info("Stream audio file")
     ) { fileId ->
         val track = Track.getById(fileId.id)
         val file = File(track.path)

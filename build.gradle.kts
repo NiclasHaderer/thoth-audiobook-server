@@ -8,6 +8,7 @@ val hikariVersion: String by project
 val reflectVersion: String by project
 val sqliteVersion: String by project
 val koinVersion: String by project
+val jacksonVersion: String by project
 
 plugins {
     application

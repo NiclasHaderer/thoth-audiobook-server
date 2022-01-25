@@ -5,7 +5,7 @@ import com.papsign.ktor.openapigen.route.path.normal.post
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
-import io.github.huiibuh.services.Scanner
+import io.github.huiibuh.file.scanner.CompleteScan
 import io.ktor.application.*
 import io.ktor.response.*
 
@@ -20,6 +20,6 @@ fun NormalOpenAPIRoute.registerRescan(path: String = "rescan") {
 internal fun NormalOpenAPIRoute.routing() {
     post<Unit, Unit, Unit> { _, _ ->
         pipeline.call.respond(Unit)
-        Scanner.rescan()
+        CompleteScan().start()
     }
 }

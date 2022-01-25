@@ -1,13 +1,7 @@
 package db.migrations
 
 import io.github.huiibuh.db.migration.Migration
-import io.github.huiibuh.db.tables.TAuthors
-import io.github.huiibuh.db.tables.TBooks
-import io.github.huiibuh.db.tables.TImages
-import io.github.huiibuh.db.tables.TProviderID
-import io.github.huiibuh.db.tables.TSeries
-import io.github.huiibuh.db.tables.TKeyValueSettings
-import io.github.huiibuh.db.tables.TTracks
+import io.github.huiibuh.db.tables.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction

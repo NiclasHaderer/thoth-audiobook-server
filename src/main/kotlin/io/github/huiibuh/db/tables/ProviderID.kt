@@ -11,7 +11,6 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
-import kotlin.jvm.Throws
 
 
 object TProviderID : UUIDTable("ProviderID") {

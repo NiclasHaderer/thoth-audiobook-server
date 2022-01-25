@@ -2,6 +2,8 @@ package io.github.huiibuh.db.tables
 
 import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.ToModel
+import io.github.huiibuh.db.update.interceptor.TimeUpdatable
+import io.github.huiibuh.extensions.findOne
 import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.models.NamedId
 import io.github.huiibuh.models.SeriesModel
@@ -11,19 +13,21 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
 import java.util.*
-import kotlin.jvm.Throws
 
 object TSeries : UUIDTable("Series") {
     val title = varchar("title", 250).uniqueIndex()
+    val author = reference("author", TAuthors)
+    val updateTime = datetime("updateTime").default(LocalDateTime.now())
     val providerID = reference("providerID", TProviderID).nullable()
     val description = text("description").nullable()
-    val author = reference("author", TAuthors)
 }
 
-class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
+class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel>, TimeUpdatable {
     companion object : UUIDEntityClass<Series>(TSeries) {
         fun removeUnused() = transaction {
             all().forEach {
@@ -46,9 +50,14 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
             val index = Series.all().orderBy(TSeries.title.lowerCase() to order).indexOfFirst { it.id.value === uuid }
             SeriesModelWithBooks.fromModel(series, books, index)
         }
+
+        fun getByName(seriesTitle: String): Series? = transaction {
+            Series.findOne { TSeries.title eq seriesTitle }
+        }
     }
 
     var title by TSeries.title
+    override var updateTime by TSeries.updateTime
     var providerID by ProviderID optionalReferencedOn TSeries.providerID
     var description by TSeries.description
     var author by Author referencedOn TSeries.author
@@ -61,6 +70,7 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
             providerID = providerID?.toModel(),
             amount = books.count(),
             description = description,
+            updateTime = updateTime,
             author = NamedId(
                 name = author.name,
                 id = author.id.value

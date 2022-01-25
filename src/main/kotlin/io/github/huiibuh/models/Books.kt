@@ -1,7 +1,9 @@
 package io.github.huiibuh.models
 
+import io.github.huiibuh.serializers.LocalDateSerializer
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
+import java.time.LocalDateTime
 import java.util.*
 
 interface IBookModel {
@@ -16,6 +18,7 @@ interface IBookModel {
     val series: TitledId?
     val seriesIndex: Float?
     val cover: UUID?
+    val updateTime: LocalDateTime
 }
 
 @Serializable
@@ -31,6 +34,7 @@ data class BookModel(
     override val series: TitledId?,
     override val seriesIndex: Float?,
     @Serializable(UUIDSerializer::class) override val cover: UUID?,
+    @Serializable(LocalDateSerializer::class) override val updateTime: LocalDateTime,
 ) : IBookModel
 
 @Serializable
@@ -48,6 +52,7 @@ data class BookModelWithTracks(
     @Serializable(UUIDSerializer::class) override val cover: UUID?,
     val position: Int,
     val tracks: List<TrackModel>,
+    @Serializable(LocalDateSerializer::class) override val updateTime: LocalDateTime,
 ) : IBookModel {
     companion object {
         fun fromModel(book: BookModel, tracks: List<TrackModel>, position: Int): BookModelWithTracks {
@@ -70,6 +75,7 @@ data class BookModelWithTracks(
                 author = book.author,
                 narrator = book.narrator,
                 series = book.series,
+                updateTime = book.updateTime,
                 seriesIndex = book.seriesIndex,
                 cover = book.cover
             )

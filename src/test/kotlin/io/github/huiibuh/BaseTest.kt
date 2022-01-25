@@ -1,8 +1,8 @@
 package io.github.huiibuh
 
+import io.ktor.server.testing.*
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
-import io.ktor.server.testing.*
 
 open class BaseTest {
     protected lateinit var testApp: TestApplicationEngine

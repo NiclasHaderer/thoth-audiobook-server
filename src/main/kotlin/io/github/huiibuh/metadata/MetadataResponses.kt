@@ -45,6 +45,7 @@ interface BookMetadata {
     val description: String?
     val id: ProviderWithIDMetadata
     val title: String?
+    val narrator: String?
     val link: String?
     val author: SearchAuthorMetadata?
     val series: SearchSeriesMetadata?
@@ -57,7 +58,7 @@ interface SeriesMetadata {
     val name: String?
     val description: String?
     val amount: Int?
-    val books: List<SearchResultMetadata>?
+    val books: List<SearchBookMetadata>?
 }
 
 interface SearchSeriesMetadata {
@@ -67,12 +68,12 @@ interface SearchSeriesMetadata {
     val link: String
 }
 
-interface SearchResultMetadata {
+interface SearchBookMetadata {
     val id: ProviderWithIDMetadata
     val title: String?
     val link: String?
     val author: SearchAuthorMetadata?
-    val narrator: SearchAuthorMetadata?
+    val narrator: String?
     val series: SearchSeriesMetadata?
     val image: String?
     val language: String?
