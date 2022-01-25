@@ -2,6 +2,8 @@ package io.github.huiibuh.db.tables
 
 import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.ToModel
+import io.github.huiibuh.db.update.interceptor.TimeUpdatable
+import io.github.huiibuh.extensions.findOne
 import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.models.BookModelWithTracks
 import io.github.huiibuh.models.NamedId
@@ -11,17 +13,21 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
 import java.util.*
 
 
 object TBooks : UUIDTable("Books") {
     val title = varchar("title", 255)
+    val author = reference("author", TAuthors)
     val year = integer("year").nullable()
+    val updateTime = datetime("updateTime").default(LocalDateTime.now())
     val language = varchar("language", 255).nullable()
     val description = text("description").nullable()
-    val author = reference("author", TAuthors)
     val providerID = reference("providerID", TProviderID).nullable()
     val narrator = varchar("name", 255).nullable()
     val series = reference("series", TSeries).nullable()
@@ -29,7 +35,7 @@ object TBooks : UUIDTable("Books") {
     val cover = reference("cover", TImages).nullable()
 }
 
-class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
+class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel>, TimeUpdatable {
     companion object : UUIDEntityClass<Book>(TBooks) {
         fun removeUnused() = transaction {
             all().forEach {
@@ -41,6 +47,10 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
 
         fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {
             Book.all().limit(limit, offset * limit).orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
+        }
+
+        fun getByName(bookTitle: String, author: Author) = transaction {
+            Book.findOne { TBooks.title eq bookTitle and (TBooks.author eq author.id.value) }
         }
 
         @Throws(APINotFound::class)
@@ -62,6 +72,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
     var year by TBooks.year
     var language by TBooks.language
     var description by TBooks.description
+    override var updateTime by TBooks.updateTime
     var providerID by ProviderID optionalReferencedOn TBooks.providerID
     var author by Author referencedOn TBooks.author
     var narrator by TBooks.narrator
@@ -76,6 +87,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
         language = language,
         description = description,
         providerID = providerID?.toModel(),
+        updateTime = updateTime,
         author = NamedId(
             name = author.name,
             id = author.id.value

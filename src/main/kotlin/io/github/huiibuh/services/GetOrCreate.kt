@@ -1,18 +1,9 @@
 package io.github.huiibuh.services
 
 import io.github.huiibuh.api.exceptions.ApiException
-import io.github.huiibuh.db.tables.Author
-import io.github.huiibuh.db.tables.Book
-import io.github.huiibuh.db.tables.Image
-import io.github.huiibuh.db.tables.ProviderID
-import io.github.huiibuh.db.tables.Series
-import io.github.huiibuh.db.tables.TAuthors
-import io.github.huiibuh.db.tables.TBooks
-import io.github.huiibuh.db.tables.TImages
-import io.github.huiibuh.db.tables.TSeries
+import io.github.huiibuh.db.tables.*
 import io.github.huiibuh.extensions.classLogger
 import io.github.huiibuh.extensions.findOne
-import io.github.huiibuh.metadata.MetadataProvider
 import io.github.huiibuh.metadata.MetadataProviderWrapper
 import io.github.huiibuh.models.ProviderIDModel
 import io.github.huiibuh.utils.imageFromString

@@ -1,7 +1,7 @@
-package io.github.huiibuh.metadata.impl.audible.client
+package io.github.huiibuh.metadata.audible.client
 
-import io.github.huiibuh.metadata.AuthorMetadata
-import io.github.huiibuh.metadata.ProviderWithIDMetadata
+import io.github.huiibuh.metadata.audible.models.AudibleAuthorImpl
+import io.github.huiibuh.metadata.audible.models.AudibleProviderWithIDMetadata
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -31,20 +31,17 @@ internal class AuthorHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): AuthorMetadata? {
+    override suspend fun execute(): AudibleAuthorImpl? {
         val document = getDocument() ?: return null
         document.getElementById("product-list-a11y-skiplink-target") ?: return null
         val link = url.toString()
-        return object : AuthorMetadata {
-            override val link = link
-            override val id = object : ProviderWithIDMetadata {
-                override val provider = AUDIBLE_PROVIDER_NAME
-                override val itemID = idFromURL(link)
-            }
-            override val name = getAuthorName(document)
-            override val image = getAuthorImage(document)
-            override val biography = getAuthorBiography(document)
-        }
+        return AudibleAuthorImpl(
+            link = link,
+            id = AudibleProviderWithIDMetadata(idFromURL(link)),
+            name = getAuthorName(document),
+            image = getAuthorImage(document),
+            biography = getAuthorBiography(document),
+        )
     }
 
     private fun getAuthorName(element: Element): String? {

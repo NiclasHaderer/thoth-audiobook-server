@@ -1,10 +1,6 @@
 package io.github.huiibuh.db
 
-import io.github.huiibuh.db.tables.Author
-import io.github.huiibuh.db.tables.Book
-import io.github.huiibuh.db.tables.Image
-import io.github.huiibuh.db.tables.ProviderID
-import io.github.huiibuh.db.tables.Series
+import io.github.huiibuh.db.tables.*
 
 interface ToModel<T> {
     fun toModel(): T

@@ -2,14 +2,15 @@ package io.github.huiibuh.db.tables
 
 import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.ToModel
+import io.github.huiibuh.extensions.uriToFile
 import io.github.huiibuh.models.ImageModel
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
-import kotlin.jvm.Throws
 
 object TImages : UUIDTable("Images") {
     val image = blob("image")
@@ -27,6 +28,17 @@ class Image(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ImageModel> {
                 ) {
                     it.delete()
                 }
+            }
+        }
+
+        suspend fun create(string: String): Image {
+            val imageBytes = string.uriToFile()
+            return create(imageBytes)
+        }
+
+        fun create(imageBytes: ByteArray) = transaction {
+            Image.new {
+                image = ExposedBlob(imageBytes)
             }
         }
 

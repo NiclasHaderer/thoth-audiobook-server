@@ -1,8 +1,8 @@
-package io.github.huiibuh.metadata.impl.audible.client
+package io.github.huiibuh.metadata.audible.client
 
-import io.github.huiibuh.metadata.ProviderWithIDMetadata
-import io.github.huiibuh.metadata.SearchResultMetadata
-import io.github.huiibuh.metadata.SeriesMetadata
+import io.github.huiibuh.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl
+import io.github.huiibuh.metadata.audible.models.AudibleSeriesImpl
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -28,24 +28,20 @@ internal class SeriesHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): SeriesMetadata? {
+    override suspend fun execute(): AudibleSeriesImpl? {
         val document = getDocument() ?: return null
         // Audible does not return 404 if a series is not valid, so...
         document.getElementById("product-list-a11y-skiplink-target")
             ?: return null
-        val booksInSeries = getSeriesBooks(document)
         val link = url.toString()
-        return object : SeriesMetadata {
-            override val link = link
-            override val id = object : ProviderWithIDMetadata {
-                override val provider = AUDIBLE_PROVIDER_NAME
-                override val itemID = idFromURL(link)
-            }
-            override val name = getSeriesName(document)
-            override val description = getSeriesDescription(document)
-            override val amount = getBookCount(document)
-            override val books = booksInSeries
-        }
+        return AudibleSeriesImpl(
+            link = link,
+            id = AudibleProviderWithIDMetadata(idFromURL(link)),
+            name = getSeriesName(document),
+            description = getSeriesDescription(document),
+            amount = getBookCount(document),
+            books = getSeriesBooks(document),
+        )
     }
 
     private fun getSeriesName(element: Element): String? {
@@ -63,7 +59,7 @@ internal class SeriesHandler : AudibleHandler {
         return imageElement.text().filter { it.isDigit() }.toIntOrNull()
     }
 
-    private suspend fun getSeriesBooks(document: Document): List<SearchResultMetadata>? {
+    private suspend fun getSeriesBooks(document: Document): List<AudibleSearchBookImpl>? {
         // Document is provided, so there can be no exception fetching it
         return SearchHandler.fromDocument(document, this.url).execute()
     }

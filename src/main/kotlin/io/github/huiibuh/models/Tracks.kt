@@ -1,7 +1,9 @@
 package io.github.huiibuh.models
 
+import io.github.huiibuh.serializers.LocalDateSerializer
 import io.github.huiibuh.serializers.UUIDSerializer
 import kotlinx.serialization.Serializable
+import java.time.LocalDateTime
 import java.util.*
 
 @Serializable
@@ -13,4 +15,5 @@ data class TrackModel(
     val accessTime: Long,
     val book: TitledId,
     val path: String,
+    @Serializable(LocalDateSerializer::class) val updateTime: LocalDateTime,
 )

@@ -9,9 +9,13 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
 class AudioTagScanner(settings: Settings) : AudioFileAnalyzer(settings) {
-    override suspend fun analyze(path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger): AudioFileAnalysisResult? {
+    override suspend fun analyze(
+        path: Path,
+        attrs: BasicFileAttributes,
+        tags: ReadonlyFileTagger
+    ): AudioFileAnalysisResult? {
         if (tags.author == null || tags.book == null) return null
-        return  AudioFileAnalysisResultImpl(
+        return AudioFileAnalysisResultImpl(
             title = tags.title,
             author = tags.author!!,
             book = tags.book!!,

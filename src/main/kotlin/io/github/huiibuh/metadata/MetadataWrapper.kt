@@ -18,7 +18,7 @@ class MetadataWrapper constructor(
         narrator: String?,
         language: MetadataLanguage?,
         pageSize: MetadataSearchCount?,
-    ): List<SearchResultMetadata> {
+    ): List<SearchBookMetadata> {
         return providerList.flatMap { it.search(keywords, title, author, narrator, language, pageSize) }
     }
 
@@ -43,8 +43,8 @@ class MetadataWrapper constructor(
             ?: throw NotFoundException("Could not find book with id ${bookID.itemID}")
     }
 
-    override suspend fun getBookByName(bookName: String): BookMetadata? {
-        val books = providerList.map { it.getBookByName(bookName) }.filter { it?.title != null }
+    override suspend fun getBookByName(bookName: String, authorName: String?): BookMetadata? {
+        val books = providerList.map { it.getBookByName(bookName, authorName) }.filter { it?.title != null }
         if (books.isEmpty()) return null
 
         return FuzzySearch.extractOne(bookName, books) { it?.title }.referent
@@ -57,8 +57,8 @@ class MetadataWrapper constructor(
             ?: throw NotFoundException("Could not find book with id ${seriesID.itemID}")
     }
 
-    override suspend fun getSeriesByName(seriesName: String): SeriesMetadata? {
-        val series = providerList.map { it.getSeriesByName(seriesName) }.filter { it?.name != null }
+    override suspend fun getSeriesByName(seriesName: String, authorName: String?): SeriesMetadata? {
+        val series = providerList.map { it.getSeriesByName(seriesName, authorName) }.filter { it?.name != null }
         if (series.isEmpty()) return null
 
         return FuzzySearch.extractOne(seriesName, series) { it?.name }.referent

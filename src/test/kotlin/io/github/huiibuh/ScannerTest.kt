@@ -1,4 +1,3 @@
 package io.github.huiibuh
 
-class ScannerTest : BaseTest() {
-}
+class ScannerTest : BaseTest()

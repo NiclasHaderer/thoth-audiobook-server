@@ -1,7 +1,6 @@
 package io.github.huiibuh.file.scanner
 
-import io.github.huiibuh.db.removeAllUnusedFromDb
-import io.github.huiibuh.services.Scanner
+import io.github.huiibuh.file.persister.FileAnalyzingScheduler
 import io.github.huiibuh.settings.Settings
 import io.methvin.watcher.DirectoryChangeEvent
 import io.methvin.watcher.DirectoryWatcher
@@ -10,12 +9,12 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException
 import java.nio.file.Path
-import kotlin.io.path.absolute
 import kotlin.io.path.name
 
 
-class FileChangeService() : KoinComponent {
+class FileChangeService : KoinComponent {
     val settings by inject<Settings>()
+    val analyzer by inject<FileAnalyzingScheduler>()
     private val watcher =
         DirectoryWatcher.builder().path(Path.of(settings.audioFileLocation)).listener { event: DirectoryChangeEvent ->
             val path = event.path() // Ignore if it is a directory or not an audio file
@@ -26,19 +25,16 @@ class FileChangeService() : KoinComponent {
                 val ignoreFile = settings.ignoreFile
                 val fileName = path.name
                 if (fileName == ignoreFile) {
-                    Scanner.scanFolderForTracks(path.parent)
-                    if (eventType == DirectoryChangeEvent.EventType.CREATE) {
-                        removeAllUnusedFromDb()
-                    }
+                    analyzer.queue(FileAnalyzingScheduler.Type.SCAN_FOLDER, path)
                 }
 
                 return@listener
             }
 
             if (eventType == DirectoryChangeEvent.EventType.DELETE) {
-                Scanner.fileDeleted(path.absolute().normalize())
+                analyzer.queue(FileAnalyzingScheduler.Type.REMOVE_FILE, path)
             } else if (eventType == DirectoryChangeEvent.EventType.CREATE) {
-                Scanner.fileCreated(path.absolute().normalize())
+                analyzer.queue(FileAnalyzingScheduler.Type.ADD_FILE, path)
             }
 
         }.fileHasher(FileHasher.LAST_MODIFIED_TIME).build()

@@ -7,4 +7,4 @@ import kotlinx.serialization.Serializable
 class ProviderIDModel(
     override val provider: String,
     override val itemID: String,
-): ProviderWithIDMetadata
+) : ProviderWithIDMetadata

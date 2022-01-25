@@ -5,16 +5,9 @@ import io.github.huiibuh.api.audiobooks.books.PatchBook
 import io.github.huiibuh.api.audiobooks.series.PatchSeries
 import io.github.huiibuh.metadata.AuthorMetadata
 import io.github.huiibuh.metadata.BookMetadata
-import io.github.huiibuh.metadata.SearchResultMetadata
+import io.github.huiibuh.metadata.SearchBookMetadata
 import io.github.huiibuh.metadata.SeriesMetadata
-import io.github.huiibuh.models.AuthorModel
-import io.github.huiibuh.models.AuthorModelWithBooks
-import io.github.huiibuh.models.BookModel
-import io.github.huiibuh.models.BookModelWithTracks
-import io.github.huiibuh.models.SearchModel
-import io.github.huiibuh.models.SeriesModel
-import io.github.huiibuh.models.SeriesModelWithBooks
-import io.github.huiibuh.models.TrackModel
+import io.github.huiibuh.models.*
 import io.github.huiibuh.ws.ChangeEvent
 import me.ntrrgc.tsGenerator.TypeScriptGenerator
 import java.io.File
@@ -26,30 +19,34 @@ import java.util.*
 import kotlin.reflect.KClass
 
 fun main() {
-    var audiobookDefinitions = generate(setOf(
-        AuthorModel::class,
-        AuthorModelWithBooks::class,
-        BookModel::class,
-        BookModelWithTracks::class,
-        SearchModel::class,
-        SearchModel::class,
-        SeriesModel::class,
-        PatchAuthor::class,
-        PatchSeries::class,
-        PatchBook::class,
-        SeriesModelWithBooks::class,
-        TrackModel::class,
-        ChangeEvent::class
-    ))
+    var audiobookDefinitions = generate(
+        setOf(
+            AuthorModel::class,
+            AuthorModelWithBooks::class,
+            BookModel::class,
+            BookModelWithTracks::class,
+            SearchModel::class,
+            SearchModel::class,
+            SeriesModel::class,
+            PatchAuthor::class,
+            PatchSeries::class,
+            PatchBook::class,
+            SeriesModelWithBooks::class,
+            TrackModel::class,
+            ChangeEvent::class
+        )
+    )
 
     audiobookDefinitions = audiobookDefinitions.replace("interface", "export interface")
 
-    var audibleDefinitions = generate(setOf(
-        AuthorMetadata::class,
-        BookMetadata::class,
-        SearchResultMetadata::class,
-        SeriesMetadata::class
-    ))
+    var audibleDefinitions = generate(
+        setOf(
+            AuthorMetadata::class,
+            BookMetadata::class,
+            SearchBookMetadata::class,
+            SeriesMetadata::class
+        )
+    )
     audibleDefinitions = audibleDefinitions.replace("interface", "export interface")
 
     if (!Files.exists(Path.of("generators/typescript"))) {

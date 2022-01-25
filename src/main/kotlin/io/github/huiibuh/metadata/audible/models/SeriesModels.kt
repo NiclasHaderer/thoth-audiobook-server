@@ -1,15 +1,14 @@
-package io.github.huiibuh.metadata.impl.audible.models
+package io.github.huiibuh.metadata.audible.models
 
-import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.SeriesMetadata
 import kotlinx.serialization.Serializable
 
 @Serializable
 class AudibleSeriesImpl(
-    override val id: ProviderWithIDMetadata,
+    override val id: AudibleProviderWithIDMetadata,
     override val link: String,
     override val name: String?,
     override val description: String?,
     override val amount: Int?,
-    override val books: List<AudibleSearchResultImpl>,
+    override val books: List<AudibleSearchBookImpl>?,
 ) : SeriesMetadata

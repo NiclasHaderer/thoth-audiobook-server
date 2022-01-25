@@ -19,8 +19,8 @@ class DatabaseMigrator(val db: Database, val packageName: String) {
 
     private val sortedMigrations: List<Migration> by lazy {
         classes
-                .filter { migration -> migration::class.java.simpleName.contains(classNameMatcher) }
-                .sortedBy { migration -> migration::class.java.simpleName }
+            .filter { migration -> migration::class.java.simpleName.contains(classNameMatcher) }
+            .sortedBy { migration -> migration::class.java.simpleName }
     }
 
     fun runMigrations() {
