@@ -1,18 +1,14 @@
 package io.github.huiibuh.metadata.audible.models
 
 import io.github.huiibuh.metadata.*
-import io.github.huiibuh.serializers.DateSerializer
-import kotlinx.serialization.Serializable
 import java.util.*
 
-@Serializable
 class AudibleSearchAuthorImpl(
     override val id: AudibleProviderWithIDMetadata,
     override val name: String?,
     override val link: String,
 ) : SearchAuthorMetadata
 
-@Serializable
 class AudibleSearchSeriesImpl(
     override val id: AudibleProviderWithIDMetadata,
     override val name: String,
@@ -20,7 +16,6 @@ class AudibleSearchSeriesImpl(
     override val link: String,
 ) : SearchSeriesMetadata
 
-@Serializable
 class AudibleSearchBookImpl(
     override val id: AudibleProviderWithIDMetadata,
     override val title: String?,
@@ -30,10 +25,9 @@ class AudibleSearchBookImpl(
     override val series: AudibleSearchSeriesImpl?,
     override val image: String?,
     override val language: String?,
-    @Serializable(DateSerializer::class) override val releaseDate: Date?,
+    override val releaseDate: Date?,
 ) : SearchBookMetadata
 
-@Serializable
 enum class AudibleSearchLanguage(val language: Long) {
     Spanish(16290345031),
     English(16290310031),
@@ -65,7 +59,6 @@ enum class AudibleSearchLanguage(val language: Long) {
     }
 }
 
-@Serializable
 enum class AudibleSearchAmount(val size: Int) {
     Twenty(20),
     Thirty(30),

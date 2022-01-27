@@ -1,9 +1,7 @@
 package io.github.huiibuh.metadata
 
-import kotlinx.serialization.Serializable
 import java.util.*
 
-@Serializable
 enum class MetadataLanguage {
     Spanish,
     English,
@@ -17,7 +15,6 @@ enum class MetadataLanguage {
     Russian,
 }
 
-@Serializable
 enum class MetadataSearchCount {
     Small,
     Medium,

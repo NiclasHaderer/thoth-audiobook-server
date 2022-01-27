@@ -80,7 +80,7 @@ internal class BookHandler : AudibleHandler {
         return AudibleSearchSeriesImpl(
             link = link,
             name = seriesNameElement.text(),
-            index = seriesIndex.toFloat(),
+            index = seriesIndex.toFloatOrNull(),
             id = AudibleProviderWithIDMetadata(idFromURL(link))
         )
 
