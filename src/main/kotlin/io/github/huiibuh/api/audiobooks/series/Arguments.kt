@@ -13,6 +13,6 @@ internal data class SeriesId(
 
 data class PatchSeries(
     val title: String,
-    val id: ProviderIDModel?,
+    val providerID: ProviderIDModel?,
     val description: String?,
 )

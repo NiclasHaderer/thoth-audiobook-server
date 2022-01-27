@@ -49,8 +49,10 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel>, TimeUpd
             Author.all().limit(limit, offset * limit).orderBy(TAuthors.name.lowerCase() to order).map { it.toModel() }
         }
 
+        fun totalCount() = transaction { Author.all().count() }
+
         fun getByName(authorName: String): Author? = transaction {
-            Author.findOne { TAuthors.name eq authorName }
+            Author.findOne { TAuthors.name like authorName }
         }
     }
 

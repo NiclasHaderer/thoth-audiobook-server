@@ -1,8 +1,5 @@
 package io.github.huiibuh.models
 
-import io.github.huiibuh.serializers.LocalDateSerializer
-import io.github.huiibuh.serializers.UUIDSerializer
-import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 import java.util.*
 
@@ -21,9 +18,8 @@ interface IBookModel {
     val updateTime: LocalDateTime
 }
 
-@Serializable
 data class BookModel(
-    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val id: UUID,
     override val title: String,
     override val year: Int?,
     override val language: String?,
@@ -33,13 +29,12 @@ data class BookModel(
     override val narrator: String?,
     override val series: TitledId?,
     override val seriesIndex: Float?,
-    @Serializable(UUIDSerializer::class) override val cover: UUID?,
-    @Serializable(LocalDateSerializer::class) override val updateTime: LocalDateTime,
+    override val cover: UUID?,
+    override val updateTime: LocalDateTime,
 ) : IBookModel
 
-@Serializable
 data class BookModelWithTracks(
-    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val id: UUID,
     override val title: String,
     override val year: Int?,
     override val language: String?,
@@ -49,10 +44,10 @@ data class BookModelWithTracks(
     override val narrator: String?,
     override val series: TitledId?,
     override val seriesIndex: Float?,
-    @Serializable(UUIDSerializer::class) override val cover: UUID?,
+    override val cover: UUID?,
     val position: Int,
     val tracks: List<TrackModel>,
-    @Serializable(LocalDateSerializer::class) override val updateTime: LocalDateTime,
+    override val updateTime: LocalDateTime,
 ) : IBookModel {
     companion object {
         fun fromModel(book: BookModel, tracks: List<TrackModel>, position: Int): BookModelWithTracks {

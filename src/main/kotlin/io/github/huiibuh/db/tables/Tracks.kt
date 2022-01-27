@@ -46,7 +46,7 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel>, TimeUpdat
         }
 
         fun getByPath(path: Path) = getByPath(path.absolutePathString())
-        fun getByPath(path: String) = transaction { Track.findOne { TTracks.path eq path } }
+        fun getByPath(path: String) = transaction { Track.findOne { TTracks.path like path } }
 
         fun forBook(bookID: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             rawForBook(bookID, order).map { it.toModel() }

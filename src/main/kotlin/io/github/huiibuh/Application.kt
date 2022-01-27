@@ -1,12 +1,14 @@
 package io.github.huiibuh
 
 import com.papsign.ktor.openapigen.route.apiRouting
+import com.papsign.ktor.openapigen.route.route
 import io.github.huiibuh.api.audiobooks.registerAudiobookRouting
 import io.github.huiibuh.api.exceptions.withDefaultErrorHandlers
 import io.github.huiibuh.api.images.registerImageRouting
 import io.github.huiibuh.api.metadata.registerMetadataRouting
 import io.github.huiibuh.api.search.registerSearchRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
+import io.github.huiibuh.api.withBasePath
 import io.github.huiibuh.db.DatabaseFactory
 import io.github.huiibuh.db.tables.TAuthors
 import io.github.huiibuh.db.tables.TBooks
@@ -21,11 +23,9 @@ import io.github.huiibuh.plugins.*
 import io.github.huiibuh.settings.getPort
 import io.github.huiibuh.ws.registerUpdateRoutes
 import io.ktor.application.*
-import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.launch
-
 
 fun main() {
     disableJAudioTaggerLogs()
@@ -53,16 +53,22 @@ fun Application.webServer() {
     configureSockets()
     configureMonitoring()
     configureSerialization()
-    routing {
-        registerUpdateRoutes()
-    }
-    apiRouting {
-        withDefaultErrorHandlers {
-            registerMetadataRouting()
-            registerAudiobookRouting()
-            registerSearchRouting()
-            registerStreamingRouting()
-            registerImageRouting()
-        }
-    }
+    withBasePath("api",
+        routeCallback = {
+            registerUpdateRoutes()
+        },
+        openApiCallback = {
+            apiRouting {
+                route("api") {
+                    withDefaultErrorHandlers {
+                        registerMetadataRouting()
+                        registerAudiobookRouting()
+                        registerSearchRouting()
+                        registerStreamingRouting()
+                        registerImageRouting()
+                    }
+                }
+            }
+        })
+
 }

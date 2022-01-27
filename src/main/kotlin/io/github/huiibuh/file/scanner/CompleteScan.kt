@@ -55,7 +55,7 @@ class CompleteScan(private var basePath: Path? = null) : KoinComponent {
 
 
     private fun shouldUpdate(path: Path): Boolean {
-        val dbTrack = transaction { Track.findOne { TTracks.path eq path.absolutePathString() } }
+        val dbTrack = transaction { Track.findOne { TTracks.path like path.absolutePathString() } }
         // If the track has already been imported and the access time has not changed skip
         if (dbTrack != null && !dbTrack.hasBeenUpdated(path.getLastModifiedTime().toMillis())) {
             // Mark as touched, so the tracks don't get removed

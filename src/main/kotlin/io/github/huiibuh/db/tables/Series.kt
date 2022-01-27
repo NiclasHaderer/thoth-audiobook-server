@@ -43,6 +43,8 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel>, TimeUpd
             }
         }
 
+        fun totalCount() = transaction { Series.all().count() }
+
         @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val series = Series.findById(uuid)?.toModel() ?: throw APINotFound("Could not find series")
@@ -52,7 +54,7 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel>, TimeUpd
         }
 
         fun getByName(seriesTitle: String): Series? = transaction {
-            Series.findOne { TSeries.title eq seriesTitle }
+            Series.findOne { TSeries.title like seriesTitle }
         }
     }
 

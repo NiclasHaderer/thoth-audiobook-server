@@ -5,6 +5,5 @@ import io.ktor.locations.*
 
 @OptIn(KtorExperimentalLocationsAPI::class)
 fun Application.configureRouting() {
-    install(Locations) {
-    }
+    install(Locations)
 }
