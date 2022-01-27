@@ -1,8 +1,5 @@
 package io.github.huiibuh.models
 
-import io.github.huiibuh.serializers.LocalDateSerializer
-import io.github.huiibuh.serializers.UUIDSerializer
-import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 import java.util.*
 
@@ -17,27 +14,24 @@ interface ISeriesModel {
     val updateTime: LocalDateTime
 }
 
-@Serializable
 data class SeriesModel(
-    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val id: UUID,
     override val title: String,
     override val amount: Long,
     override val providerID: ProviderIDModel?,
     override val description: String?,
     override val author: NamedId,
-    override val images: List<@Serializable(with = UUIDSerializer::class) UUID>,
-    @Serializable(LocalDateSerializer::class) override val updateTime: LocalDateTime,
+    override val images: List<UUID>,
+    override val updateTime: LocalDateTime,
 ) : ISeriesModel
 
-@Serializable
 data class YearRange(
     val start: Int,
     val end: Int,
 )
 
-@Serializable
 data class SeriesModelWithBooks(
-    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val id: UUID,
     override val title: String,
     override val amount: Long,
     val narrators: List<String>,
@@ -47,8 +41,8 @@ data class SeriesModelWithBooks(
     override val description: String?,
     val books: List<BookModel>,
     override val author: NamedId,
-    override val images: List<@Serializable(UUIDSerializer::class) UUID>,
-    @Serializable(LocalDateSerializer::class) override val updateTime: LocalDateTime,
+    override val images: List<UUID>,
+    override val updateTime: LocalDateTime,
 
     ) : ISeriesModel {
     companion object {

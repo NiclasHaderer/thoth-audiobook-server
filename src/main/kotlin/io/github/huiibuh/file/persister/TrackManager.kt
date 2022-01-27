@@ -3,7 +3,7 @@ package io.github.huiibuh.file.persister
 import io.github.huiibuh.db.tables.*
 import io.github.huiibuh.extensions.classLogger
 import io.github.huiibuh.file.analyzer.AudioFileAnalysisResult
-import io.github.huiibuh.metadata.MetadataProviderWrapper
+import io.github.huiibuh.metadata.MetadataProvider
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -16,7 +16,7 @@ private interface TrackManager {
 }
 
 internal class TrackManagerImpl : TrackManager, KoinComponent {
-    private val metadataProvider by inject<MetadataProviderWrapper>()
+    private val metadataProvider by inject<MetadataProvider>()
     private val log = classLogger()
 
     override suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path) {
@@ -105,16 +105,18 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         val dbSeries = if (scan.series != null) getOrCreateSeries(scan) else null
         var dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
 
-        val response = metadataProvider.getBookByName(scan.book) ?: return Book.new {
-            title = scan.book
-            author = dbAuthor
-            year = scan.year
-            language = scan.language
-            description = scan.description
-            narrator = scan.narrator
-            series = dbSeries
-            seriesIndex = scan.seriesIndex
-            cover = dbImage
+        val response = metadataProvider.getBookByName(scan.book) ?: return transaction {
+            Book.new {
+                title = scan.book
+                author = dbAuthor
+                year = scan.year
+                language = scan.language
+                description = scan.description
+                narrator = scan.narrator
+                series = dbSeries
+                seriesIndex = scan.seriesIndex
+                cover = dbImage
+            }
         }
 
         if (dbImage == null && response.image != null) {

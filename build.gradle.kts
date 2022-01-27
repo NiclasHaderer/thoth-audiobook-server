@@ -9,6 +9,7 @@ val reflectVersion: String by project
 val sqliteVersion: String by project
 val koinVersion: String by project
 val jacksonVersion: String by project
+val caffeineVersion: String by project
 
 plugins {
     application
@@ -73,6 +74,8 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     // Audible scraping
     implementation("org.jsoup:jsoup:$jsoupVersion")
+    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
+    // Search
     implementation("me.xdrop:fuzzywuzzy:1.3.1")
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")

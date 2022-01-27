@@ -22,7 +22,7 @@ fun NormalOpenAPIRoute.registerMetadataRouting(path: String = "metadata") {
 
 
 internal fun NormalOpenAPIRoute.routing() {
-    val searchService: MetadataProviderWrapper by inject()
+    val searchService: MetadataProvider by inject()
 
     route("search").get<MetadataSearch, List<SearchBookMetadata>>(
         info("Search for audiobooks")
@@ -40,15 +40,19 @@ internal fun NormalOpenAPIRoute.routing() {
     }
     withNotFoundHandling {
         route("author").get<AuthorID, AuthorMetadata> { id ->
-            val author = searchService.getAuthorByID(id)
+            val author =
+                searchService.getAuthorByID(id)
+                    ?: throw APINotFound("Author with id ${id.itemID} and provider ${id.provider}was not found")
             respond(author)
         }
         route("book").get<BookID, BookMetadata> { id ->
             val book = searchService.getBookByID(id)
+                ?: throw APINotFound("Book with id ${id.itemID} and provider ${id.provider}was not found")
             respond(book)
         }
         route("series").get<SeriesID, SeriesMetadata> { id ->
             val series = searchService.getSeriesByID(id)
+                ?: throw APINotFound("Series with id ${id.itemID} and provider ${id.provider}was not found")
             respond(series)
         }
         route("series/search/").get<SeriesName, SeriesMetadata> { name ->

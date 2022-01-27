@@ -1,8 +1,7 @@
 package io.github.huiibuh.file.tagger
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.huiibuh.models.ProviderIDModel
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -31,6 +30,8 @@ interface ReadonlyFileTagger {
 
 
 open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger {
+    protected val mapper = ObjectMapper()
+
     constructor(path: Path) : this(path.toFile())
     constructor(file: File) : this(AudioFileIO.read(file))
     constructor(path: String) : this(File(path))
@@ -44,7 +45,8 @@ open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFi
     override val providerId: ProviderIDModel?
         get() {
             return try {
-                Json.decodeFromString(audioFile.tag.getFirst(FieldKey.AMAZON_ID))
+                val id = audioFile.tag.getFirst(FieldKey.AMAZON_ID)
+                mapper.readValue(id, ProviderIDModel::class.java)
             } catch (e: Exception) {
                 null
             }

@@ -1,8 +1,5 @@
 package io.github.huiibuh.api.exceptions
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class APIError(
     val error: String,
 )

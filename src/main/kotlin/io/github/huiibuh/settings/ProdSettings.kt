@@ -12,6 +12,10 @@ object ProdSettings : Settings {
         System.getenv("AUDIO_FILE_LOCATION")
     }
 
+    override val analyzerThreads: Int by lazy {
+        System.getenv("ANALYZER_THREADS").toInt()
+    }
+
     override val webUiPort: Int by lazy {
         getPort()
     }

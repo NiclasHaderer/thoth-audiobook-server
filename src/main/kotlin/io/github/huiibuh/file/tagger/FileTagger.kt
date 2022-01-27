@@ -6,8 +6,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -45,7 +43,7 @@ open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger
     override var providerId: ProviderIDModel?
         get() = super.providerId
         set(value) {
-            val valueStr = Json.encodeToString(value)
+            val valueStr = mapper.writeValueAsString(value)
             setOrDelete(FieldKey.AMAZON_ID, valueStr)
         }
 

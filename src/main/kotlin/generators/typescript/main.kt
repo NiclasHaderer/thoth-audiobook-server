@@ -33,7 +33,8 @@ fun main() {
             PatchBook::class,
             SeriesModelWithBooks::class,
             TrackModel::class,
-            ChangeEvent::class
+            ChangeEvent::class,
+            PaginatedResponse::class
         )
     )
 
@@ -49,14 +50,14 @@ fun main() {
     )
     audibleDefinitions = audibleDefinitions.replace("interface", "export interface")
 
-    if (!Files.exists(Path.of("generators/typescript"))) {
-        Files.createDirectories(Path.of("generators/typescript"))
+    if (!Files.exists(Path.of("gen/typescript"))) {
+        Files.createDirectories(Path.of("gen/typescript"))
     }
 
-    File("generators/typescript/audiobook.ts").printWriter().use { out ->
+    File("gen/typescript/audiobook.ts").printWriter().use { out ->
         out.println(audiobookDefinitions)
     }
-    File("generators/typescript/audible.ts").printWriter().use { out ->
+    File("gen/typescript/audible.ts").printWriter().use { out ->
         out.println(audibleDefinitions)
     }
 
@@ -69,6 +70,6 @@ fun generate(classes: Iterable<KClass<*>>) = TypeScriptGenerator(
         LocalDateTime::class to "number",
         LocalDate::class to "number",
         Date::class to "number",
-        UUID::class to "string"
+        UUID::class to "string",
     )
 ).definitionsText

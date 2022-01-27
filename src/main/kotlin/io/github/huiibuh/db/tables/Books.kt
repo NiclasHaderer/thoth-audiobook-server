@@ -49,21 +49,24 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel>, TimeUpdatab
             Book.all().limit(limit, offset * limit).orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
         }
 
+        fun totalCount() = transaction { Book.all().count() }
+
         fun getByName(bookTitle: String, author: Author) = transaction {
-            Book.findOne { TBooks.title eq bookTitle and (TBooks.author eq author.id.value) }
+            Book.findOne { TBooks.title like bookTitle and (TBooks.author eq author.id.value) }
         }
 
         @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val book = Book.findById(uuid)?.toModel() ?: throw APINotFound("Could not find album")
             val tracks = Track.forBook(uuid)
-            val index = Book.all().orderBy(TBooks.title.lowerCase() to order).indexOfFirst { it.id.value == uuid }
-            BookModelWithTracks.fromModel(book, tracks, index)
+            val sortPosition = Book.all().orderBy(TBooks.title.lowerCase() to order).toList().count()
+            BookModelWithTracks.fromModel(book, tracks, sortPosition)
         }
 
         fun forSeries(seriesId: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             Book.find { TBooks.series eq seriesId }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
         }
+
     }
 
     private val coverID by TBooks.cover

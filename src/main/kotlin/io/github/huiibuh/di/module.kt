@@ -6,7 +6,7 @@ import io.github.huiibuh.file.analyzer.impl.AudioFolderScanner
 import io.github.huiibuh.file.analyzer.impl.AudioTagScanner
 import io.github.huiibuh.file.persister.FileAnalyzingScheduler
 import io.github.huiibuh.file.persister.FileAnalyzingSchedulerImpl
-import io.github.huiibuh.metadata.MetadataProviderWrapper
+import io.github.huiibuh.metadata.MetadataProvider
 import io.github.huiibuh.metadata.MetadataWrapper
 import io.github.huiibuh.metadata.audible.client.AudibleClient
 import io.github.huiibuh.settings.DevSettings
@@ -19,7 +19,7 @@ val DI_MODULE = module {
     single {
         if (isProduction()) ProdSettings else DevSettings
     }
-    single<MetadataProviderWrapper> {
+    single<MetadataProvider> {
         val settings: Settings = get()
         MetadataWrapper(
             listOf(

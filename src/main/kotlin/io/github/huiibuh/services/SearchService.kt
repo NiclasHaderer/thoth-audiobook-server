@@ -6,11 +6,9 @@ import io.github.huiibuh.db.tables.Series
 import io.github.huiibuh.extensions.fuzzy
 import io.github.huiibuh.extensions.saveTo
 import io.github.huiibuh.models.SearchModel
-import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
-@Serializable
 object SearchService {
     fun everywhere(query: String, limit: Int = 5): SearchModel {
         return SearchModel(

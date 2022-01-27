@@ -12,6 +12,7 @@ import io.github.huiibuh.api.audiobooks.QueryLimiter
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.models.AuthorModelWithBooks
+import io.github.huiibuh.models.PaginatedResponse
 import java.util.*
 
 
@@ -24,10 +25,11 @@ fun NormalOpenAPIRoute.registerAuthorRouting(path: String = "authors") {
 }
 
 internal fun NormalOpenAPIRoute.routing() {
-    get<QueryLimiter, List<AuthorModel>> {
-        respond(
-            Author.getMultiple(it.limit, it.offset)
-        )
+    get<QueryLimiter, PaginatedResponse<AuthorModel>> {
+        val books = Author.getMultiple(it.limit, it.offset)
+        val seriesCount = Author.totalCount()
+        val response = PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
+        respond(response)
     }
     route("sorting").get<QueryLimiter, List<UUID>> { query ->
         respond(

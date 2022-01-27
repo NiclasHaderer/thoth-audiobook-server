@@ -1,7 +1,5 @@
 package io.github.huiibuh.models
 
-import io.github.huiibuh.serializers.UUIDSerializer
-import kotlinx.serialization.Serializable
 import java.util.*
 
 interface IAuthorModel {
@@ -12,21 +10,20 @@ interface IAuthorModel {
     val image: UUID?
 }
 
-@Serializable
 data class AuthorModel(
-    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val id: UUID,
     override val name: String,
     override val biography: String?,
     override val providerID: ProviderIDModel?,
-    @Serializable(UUIDSerializer::class) override val image: UUID?,
+    override val image: UUID?,
 ) : IAuthorModel
 
 data class AuthorModelWithBooks(
-    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val id: UUID,
     override val name: String,
     override val biography: String?,
     override val providerID: ProviderIDModel?,
-    @Serializable(UUIDSerializer::class) override val image: UUID?,
+    override val image: UUID?,
     val position: Int,
     val books: List<BookModel>,
 ) : IAuthorModel {
