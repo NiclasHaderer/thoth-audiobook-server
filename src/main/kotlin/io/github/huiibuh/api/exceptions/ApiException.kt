@@ -1,11 +1,31 @@
 package io.github.huiibuh.api.exceptions
 
-data class APIError(
-    val error: String,
-)
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonProperty
 
-open class ApiException(message: String, val status: Int) : Exception(message) {
-    fun toModel() = APIError(this.message!!)
+
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    creatorVisibility = JsonAutoDetect.Visibility.NONE
+)
+open class ApiException(
+    message: String,
+    status: Int
+) : Exception(message) {
+
+    @JsonProperty
+    val error: String
+
+    @JsonProperty
+    val status: Int
+
+    init {
+        this.error = message
+        this.status = status
+    }
 }
 
 class APINotFound(override val message: String) : ApiException(message, 404)
