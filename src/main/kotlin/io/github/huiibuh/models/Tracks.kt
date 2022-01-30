@@ -3,7 +3,7 @@ package io.github.huiibuh.models
 import java.time.LocalDateTime
 import java.util.*
 
-data class TrackModel(
+class TrackModel(
     val id: UUID,
     val title: String,
     val trackNr: Int?,

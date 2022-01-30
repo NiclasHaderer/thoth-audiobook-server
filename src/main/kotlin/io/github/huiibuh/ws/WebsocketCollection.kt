@@ -7,7 +7,7 @@ import org.jetbrains.exposed.dao.EntityChangeType
 import java.util.*
 
 
-data class ChangeEvent(
+class ChangeEvent(
     val type: EntityChangeType,
     val id: String,
 )

@@ -8,7 +8,7 @@ import java.util.*
 
 
 @Path("{id}")
-internal data class ImageId(
+internal class ImageId(
     @PathParam("The id of the image you want to get") val id: UUID,
 )
 
@@ -18,4 +18,4 @@ private const val jpgJPEG = "image/jpeg"
 private const val webp = "image/webp"
 
 @BinaryResponse([png, jpgJPEG, webp])
-internal data class RawImageFile(val image: InputStream)
+internal class RawImageFile(val image: InputStream)

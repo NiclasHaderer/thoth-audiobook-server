@@ -4,6 +4,7 @@ import io.github.huiibuh.extensions.classLogger
 import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapper
 import io.github.huiibuh.file.scanner.CompleteScan
 import io.github.huiibuh.settings.Settings
+import io.github.huiibuh.utils.Scheduler
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import org.koin.core.component.KoinComponent
@@ -28,6 +29,7 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
     private val log = classLogger()
     private val analyzer by inject<AudioFileAnalyzerWrapper>()
     private val settings by inject<Settings>()
+    private val scanScheduler = Scheduler(1)
     private val trackManager = TrackManagerImpl()
     private val fileQueue = Channel<Path>(settings.analyzerThreads)
     private val removeItem = Channel<Path>(settings.analyzerThreads)
@@ -57,10 +59,13 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
     }
 
     private suspend fun extractAndSaveMetadata(path: Path) {
-        val attrs = withContext(Dispatchers.IO) { Files.readAttributes(path, BasicFileAttributes::class.java) }
-        val result = analyzer.analyze(path, attrs)
-            ?: return log.warn("Skipped ${path.absolute()} because it contains not enough information")
-        trackManager.insertScanResult(result, path)
+        scanScheduler.queue {
+            val attrs = withContext(Dispatchers.IO) { Files.readAttributes(path, BasicFileAttributes::class.java) }
+            val result = analyzer.analyze(path, attrs)
+                ?: return@queue log.warn("Skipped ${path.absolute()} because it contains not enough information")
+            trackManager.insertScanResult(result, path)
+        }
+
     }
 
     private fun removePath(path: Path) = trackManager.removePath(path)

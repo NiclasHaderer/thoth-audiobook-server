@@ -8,7 +8,7 @@ import java.util.*
 
 
 @Path("{id}")
-data class AudioId(
+class AudioId(
     @PathParam("The id of the file you want to stream") val id: UUID,
 )
 
@@ -25,4 +25,4 @@ const val wma = "audio/wma"
 const val dsf = "audio/dsf"
 
 @BinaryResponse([mp3, flac, ogg, vobis, m4a, m4p, m4b, aiff, wav, wma, dsf])
-data class RawAudioFile(val stream: InputStream)
+class RawAudioFile(val stream: InputStream)

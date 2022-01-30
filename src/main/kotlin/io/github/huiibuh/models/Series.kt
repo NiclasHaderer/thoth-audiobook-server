@@ -14,7 +14,7 @@ interface ISeriesModel {
     val updateTime: LocalDateTime
 }
 
-data class SeriesModel(
+class SeriesModel(
     override val id: UUID,
     override val title: String,
     override val amount: Long,
@@ -25,12 +25,12 @@ data class SeriesModel(
     override val updateTime: LocalDateTime,
 ) : ISeriesModel
 
-data class YearRange(
+class YearRange(
     val start: Int,
     val end: Int,
 )
 
-data class SeriesModelWithBooks(
+class SeriesModelWithBooks(
     override val id: UUID,
     override val title: String,
     override val amount: Long,

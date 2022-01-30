@@ -10,7 +10,7 @@ interface IAuthorModel {
     val image: UUID?
 }
 
-data class AuthorModel(
+class AuthorModel(
     override val id: UUID,
     override val name: String,
     override val biography: String?,
@@ -18,7 +18,7 @@ data class AuthorModel(
     override val image: UUID?,
 ) : IAuthorModel
 
-data class AuthorModelWithBooks(
+class AuthorModelWithBooks(
     override val id: UUID,
     override val name: String,
     override val biography: String?,

@@ -18,7 +18,7 @@ interface IBookModel {
     val updateTime: LocalDateTime
 }
 
-data class BookModel(
+class BookModel(
     override val id: UUID,
     override val title: String,
     override val year: Int?,
@@ -33,7 +33,7 @@ data class BookModel(
     override val updateTime: LocalDateTime,
 ) : IBookModel
 
-data class BookModelWithTracks(
+class BookModelWithTracks(
     override val id: UUID,
     override val title: String,
     override val year: Int?,
