@@ -7,7 +7,7 @@ import io.github.huiibuh.metadata.MetadataLanguage
 import io.github.huiibuh.metadata.MetadataSearchCount
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 
-internal data class MetadataSearch(
+internal class MetadataSearch(
     @QueryParam("A general keyword which describes the search term") val keywords: String?,
     @QueryParam("The title of the audiobook") val title: String?,
     @QueryParam("The author of the audiobook") val author: String?,
@@ -17,34 +17,34 @@ internal data class MetadataSearch(
 )
 
 @Path("{id}")
-internal data class AuthorID(
+internal class AuthorID(
     @PathParam("The id of the author. Can be retrieved by using the search") override val itemID: String,
     @QueryParam("The id of search provider the id is associated to") override val provider: String,
 ) : ProviderWithIDMetadata
 
 @Path("{id}")
-internal data class SeriesID(
+internal class SeriesID(
     @PathParam("The id of the series. Can be retrieved by using the search") override val itemID: String,
     @QueryParam("The id of search provider the id is associated to") override val provider: String,
 ) : ProviderWithIDMetadata
 
 @Path("{asin}")
-internal data class BookID(
+internal class BookID(
     @PathParam("The asin of the series. Can be retrieved by using the search") override val itemID: String,
     @QueryParam("The id of search provider the id is associated to") override val provider: String,
 ) : ProviderWithIDMetadata
 
 @Path("{name}")
-internal data class SeriesName(
+internal class SeriesName(
     @PathParam("The name of the series you want to look for") val name: String,
 )
 
 @Path("{name}")
-internal data class BookName(
+internal class BookName(
     @PathParam("The name of the book you want to look for") val name: String,
 )
 
 @Path("{name}")
-internal data class AuthorName(
+internal class AuthorName(
     @PathParam("The name of the author you want to look for") val name: String,
 )

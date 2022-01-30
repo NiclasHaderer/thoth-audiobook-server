@@ -6,12 +6,12 @@ import io.github.huiibuh.models.ProviderIDModel
 import java.util.*
 
 @Path("{uuid}")
-internal data class BookId(
+internal class BookId(
     @PathParam("The id of the book you want to get") val uuid: UUID,
 )
 
 
-internal data class PatchBook(
+internal class PatchBook(
     val title: String,
     val language: String?,
     val description: String?,

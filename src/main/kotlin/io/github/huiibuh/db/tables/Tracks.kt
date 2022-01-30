@@ -2,7 +2,6 @@ package io.github.huiibuh.db.tables
 
 import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.ToModel
-import io.github.huiibuh.db.update.interceptor.TimeUpdatable
 import io.github.huiibuh.extensions.findOne
 import io.github.huiibuh.models.TitledId
 import io.github.huiibuh.models.TrackModel
@@ -31,7 +30,7 @@ object TTracks : UUIDTable("Tracks") {
 }
 
 
-class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel>, TimeUpdatable {
+class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
     companion object : UUIDEntityClass<Track>(TTracks) {
         fun removeUntouched() = transaction {
             val kvSettings = KeyValueSettings.get()
@@ -73,7 +72,7 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel>, TimeUpdat
 
     var title by TTracks.title
     var trackNr by TTracks.trackNr
-    override var updateTime by TTracks.updateTime
+    var updateTime by TTracks.updateTime
     var duration by TTracks.duration
     var accessTime by TTracks.accessTime
     var path by TTracks.path

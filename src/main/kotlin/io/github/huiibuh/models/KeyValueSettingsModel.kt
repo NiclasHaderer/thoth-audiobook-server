@@ -1,5 +1,5 @@
 package io.github.huiibuh.models
 
-data class KeyValueSettingsModel(
+class KeyValueSettingsModel(
     var scanIndex: Long,
 )

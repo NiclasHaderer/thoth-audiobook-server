@@ -2,7 +2,6 @@ package io.github.huiibuh.db.tables
 
 import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.ToModel
-import io.github.huiibuh.db.update.interceptor.TimeUpdatable
 import io.github.huiibuh.extensions.findOne
 import io.github.huiibuh.models.BookModel
 import io.github.huiibuh.models.BookModelWithTracks
@@ -35,7 +34,7 @@ object TBooks : UUIDTable("Books") {
     val cover = reference("cover", TImages).nullable()
 }
 
-class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel>, TimeUpdatable {
+class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
     companion object : UUIDEntityClass<Book>(TBooks) {
         fun removeUnused() = transaction {
             all().forEach {
@@ -75,7 +74,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel>, TimeUpdatab
     var year by TBooks.year
     var language by TBooks.language
     var description by TBooks.description
-    override var updateTime by TBooks.updateTime
+    var updateTime by TBooks.updateTime
     var providerID by ProviderID optionalReferencedOn TBooks.providerID
     var author by Author referencedOn TBooks.author
     var narrator by TBooks.narrator
