@@ -24,7 +24,7 @@ application {
     mainClass.set("io.github.huiibuh.ApplicationKt")
 }
 
-
+// For kotlin annotations
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn"
