@@ -14,7 +14,13 @@ class DatabaseMigrator(val db: Database, val packageName: String) {
     private val classes: List<Migration> by lazy {
         val reflections = Reflections(this.packageName)
         val classes = reflections.getSubTypesOf(Migration::class.java)
-        classes.map { it.kotlin }.map { it.createInstance() }
+        try {
+            classes.map { it.kotlin }.map { it.createInstance() }
+        } catch (_: ClassCastException) {
+            // Caused hot reloading, so migrations should not be necessary, because the migration has already run
+            listOf(null)
+            listOf()
+        }
     }
 
     private val sortedMigrations: List<Migration> by lazy {

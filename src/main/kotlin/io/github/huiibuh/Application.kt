@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 
 fun main() {
     disableJAudioTaggerLogs()
-    embeddedServer(Netty, port = getPort(), host = "0.0.0.0") {
+    embeddedServer(Netty, port = getPort(), watchPaths = listOf("classes"), host = "0.0.0.0") {
         // Has to be done in here for some strange scoping reasons
         configureKoin()
         launch {
