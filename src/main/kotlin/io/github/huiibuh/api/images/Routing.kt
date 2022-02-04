@@ -7,9 +7,11 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
+import io.github.huiibuh.api.audiobooks.QueryLimiter
 import io.github.huiibuh.api.exceptions.withNotFoundHandling
 import io.github.huiibuh.db.tables.Image
 import java.io.ByteArrayInputStream
+import java.util.*
 
 
 fun NormalOpenAPIRoute.registerImageRouting(route: String = "image") {
@@ -30,6 +32,12 @@ internal fun NormalOpenAPIRoute.imageRouting() {
         respond(
             RawImageFile(ByteArrayInputStream(image.image))
         )
+    }
+    get<QueryLimiter, List<UUID>>(
+        info("List images")
+    ) {
+        val images = Image.getMultiple(it.limit, it.offset)
+        respond(images)
     }
 }
 

@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -30,6 +31,13 @@ class Image(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ImageModel> {
                 }
             }
         }
+
+        fun getMultiple(limit: Int, offset: Long) = transaction {
+            TImages.slice(TImages.id).selectAll().limit(limit, offset * limit).map {
+                it[TImages.id]
+            }.map { it.value }
+        }
+
 
         suspend fun create(string: String): Image {
             val imageBytes = string.uriToFile()
