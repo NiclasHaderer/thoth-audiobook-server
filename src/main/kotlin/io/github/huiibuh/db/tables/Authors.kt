@@ -37,9 +37,8 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
 
         @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
-            val author = Author.findById(uuid)?.toModel() ?: throw APINotFound("Could not find author")
-            val books =
-                Book.find { TBooks.author eq uuid }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
+            val author = Author.findById(uuid)?.toModel() ?: return@transaction null
+            val books = Book.fromAuthor(uuid, order)
             val index = Author.all().orderBy(TAuthors.name.lowerCase() to order).indexOfFirst { it.id.value == uuid }
             AuthorModelWithBooks.fromModel(author, books, index)
         }
