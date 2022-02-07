@@ -48,6 +48,10 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
             Book.all().limit(limit, offset * limit).orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
         }
 
+        fun fromAuthor(authorID: UUID, order: SortOrder = SortOrder.ASC) = transaction {
+            find { TBooks.author eq authorID }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
+        }
+
         fun totalCount() = transaction { Book.all().count() }
 
         fun getByName(bookTitle: String, author: Author) = transaction {
