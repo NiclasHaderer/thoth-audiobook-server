@@ -22,4 +22,3 @@ fun <T> String.fuzzy(query: String, value: T): FuzzyResult<T> {
 fun <T> SizedIterable<T>.fuzzy(query: String, getValues: (T) -> List<String>): List<T> = this.mapNotNull { item ->
     getValues(item).map { it.fuzzy(query, item) }.maxByOrNull { it.match }
 }.filter { it.matches }.sortedByDescending { it.match }.map { it.value }
-

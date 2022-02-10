@@ -105,7 +105,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         val dbSeries = if (scan.series != null) getOrCreateSeries(scan) else null
         var dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
 
-        val response = metadataProvider.getBookByName(scan.book) ?: return transaction {
+        val response = metadataProvider.getBookByName(scan.book).firstOrNull() ?: return transaction {
             Book.new {
                 title = scan.book
                 author = dbAuthor
@@ -161,7 +161,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
 
     private suspend fun createSeries(scan: AudioFileAnalysisResult): Series {
         val dbAuthor = getOrCreateAuthor(scan)
-        val response = metadataProvider.getSeriesByName(scan.series!!) ?: return transaction {
+        val response = metadataProvider.getSeriesByName(scan.series!!).firstOrNull() ?: return transaction {
             Series.new {
                 title = scan.series!!
                 author = dbAuthor
@@ -199,7 +199,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
     }
 
     private suspend fun createAuthor(scan: AudioFileAnalysisResult): Author {
-        val response = metadataProvider.getAuthorByName(scan.author) ?: return transaction {
+        val response = metadataProvider.getAuthorByName(scan.author).firstOrNull() ?: return transaction {
             Author.new {
                 name = scan.author
             }

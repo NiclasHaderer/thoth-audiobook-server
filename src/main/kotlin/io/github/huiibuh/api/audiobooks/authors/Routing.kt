@@ -9,6 +9,7 @@ import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.api.audiobooks.QueryLimiter
+import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.db.tables.Author
 import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.models.AuthorModelWithBooks
@@ -32,13 +33,11 @@ internal fun NormalOpenAPIRoute.routing() {
         respond(response)
     }
     route("sorting").get<QueryLimiter, List<UUID>> { query ->
-        respond(
-            Author.getMultiple(query.limit, query.offset).map { it.id }
-        )
+        respond(Author.getMultiple(query.limit, query.offset).map { it.id })
     }
     get<AuthorId, AuthorModelWithBooks> {
         respond(
-            Author.getById(it.uuid)
+            Author.getById(it.uuid) ?: throw APINotFound("Author was not found")
         )
     }
 
