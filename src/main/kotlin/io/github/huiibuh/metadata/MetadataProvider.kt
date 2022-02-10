@@ -15,13 +15,13 @@ interface MetadataProvider {
 
     suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata?
 
-    suspend fun getAuthorByName(authorName: String): AuthorMetadata?
+    suspend fun getAuthorByName(authorName: String): List<AuthorMetadata>
 
     suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata?
 
-    suspend fun getBookByName(bookName: String, authorName: String? = null): BookMetadata?
+    suspend fun getBookByName(bookName: String, authorName: String? = null): List<BookMetadata>
 
     suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata?
 
-    suspend fun getSeriesByName(seriesName: String, authorName: String? = null): SeriesMetadata?
+    suspend fun getSeriesByName(seriesName: String, authorName: String? = null): List<SeriesMetadata>
 }

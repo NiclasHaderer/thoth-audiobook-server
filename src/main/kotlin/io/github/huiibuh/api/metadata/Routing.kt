@@ -55,19 +55,16 @@ internal fun NormalOpenAPIRoute.routing() {
                 ?: throw APINotFound("Series with id ${id.itemID} and provider ${id.provider}was not found")
             respond(series)
         }
-        route("series/search/").get<SeriesName, SeriesMetadata> { name ->
-            val author = searchService.getSeriesByName(name.name)
-                ?: throw APINotFound("Series with name ${name.name} was not found")
+        route("series/search/").get<SeriesName, List<SeriesMetadata>> { params ->
+            val author = searchService.getSeriesByName(params.name, params.authorName)
             respond(author)
         }
-        route("book/title").get<BookName, BookMetadata> { name ->
-            val author = searchService.getBookByName(name.name)
-                ?: throw APINotFound("Book with name ${name.name} was not found")
+        route("book/title").get<BookName, List<BookMetadata>> { params ->
+            val author = searchService.getBookByName(params.name, params.authorName)
             respond(author)
         }
-        route("author/name").get<AuthorName, AuthorMetadata> { name ->
-            val author = searchService.getAuthorByName(name.name)
-                ?: throw APINotFound("Author with name ${name.name} was not found")
+        route("author/name").get<AuthorName, List<AuthorMetadata>> { params ->
+            val author = searchService.getAuthorByName(params.name)
             respond(author)
         }
     }

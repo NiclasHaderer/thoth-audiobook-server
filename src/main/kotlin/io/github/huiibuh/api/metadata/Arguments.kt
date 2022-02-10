@@ -37,11 +37,13 @@ internal class BookID(
 @Path("{name}")
 internal class SeriesName(
     @PathParam("The name of the series you want to look for") val name: String,
+    @QueryParam("The author who wrote the series") val authorName: String?,
 )
 
 @Path("{name}")
 internal class BookName(
     @PathParam("The name of the book you want to look for") val name: String,
+    @QueryParam("The author who wrote the series") val authorName: String?,
 )
 
 @Path("{name}")

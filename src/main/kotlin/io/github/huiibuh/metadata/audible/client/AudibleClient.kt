@@ -15,6 +15,7 @@ open class AudibleClient(
     private val authorHost: String = "audible.de",
     private val authorImageSize: Int = 500,
     private val searchScore: Int = 80,
+    private val byNameSearchAmount: Int = 5
 ) : MetadataProvider {
 
     override val uniqueName = AUDIBLE_PROVIDER_NAME
@@ -45,34 +46,37 @@ open class AudibleClient(
         return handler.execute()
     }
 
-    override suspend fun getAuthorByName(authorName: String): AudibleAuthorImpl? {
+    override suspend fun getAuthorByName(authorName: String): List<AudibleAuthorImpl> {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, author = authorName)
-        val searchResult = handler.execute() ?: return null
+        val searchResult = handler.execute() ?: return listOf()
         val authorResult = searchResult.filter { it.author != null && it.author.id.itemID != "search" }
-        if (authorResult.isEmpty()) return null
 
-        val author = FuzzySearch.extractOne(authorName, authorResult) { it.author!!.name }
-        if (author.score < searchScore) return null
-
-        return getAuthorByID(object : ProviderWithIDMetadata {
-            override val provider = uniqueName
-            override val itemID = author.referent.author!!.id.itemID
-        })
+        return FuzzySearch
+            .extractSorted(authorName, authorResult) { it.author!!.name }
+            .filter { it.score > searchScore }
+            .take(byNameSearchAmount)
+            .mapNotNull {
+                getAuthorByID(object : ProviderWithIDMetadata {
+                    override val provider = uniqueName
+                    override val itemID = it.referent.author!!.id.itemID
+                })
+            }
     }
 
-    override suspend fun getBookByName(bookName: String, authorName: String?): AudibleBookImpl? {
+    override suspend fun getBookByName(bookName: String, authorName: String?): List<AudibleBookImpl> {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, title = bookName, author = authorName)
-        val searchResult = handler.execute() ?: return null
+        val searchResult = handler.execute() ?: return listOf()
         val bookResult = searchResult.filter { it.title != null && it.id.itemID != "search" }
-        if (bookResult.isEmpty()) return null
 
-        val book = FuzzySearch.extractOne(bookName, bookResult) { it.title }
-        if (book.score < searchScore) return null
-
-        return getBookByID(object : ProviderWithIDMetadata {
-            override val provider = uniqueName
-            override val itemID = book.referent.id.itemID
-        })
+        return FuzzySearch.extractSorted(bookName, bookResult) { it.title }
+            .filter { it.score > searchScore }
+            .take(byNameSearchAmount)
+            .mapNotNull {
+                getBookByID(object : ProviderWithIDMetadata {
+                    override val provider = uniqueName
+                    override val itemID = it.referent.id.itemID
+                })
+            }
     }
 
     override suspend fun getBookByID(bookID: ProviderWithIDMetadata): AudibleBookImpl? {
@@ -85,19 +89,20 @@ open class AudibleClient(
         return handler.execute()
     }
 
-    override suspend fun getSeriesByName(seriesName: String, authorName: String?): AudibleSeriesImpl? {
+    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<AudibleSeriesImpl> {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, keywords = seriesName, author = authorName)
-        val searchResult = handler.execute() ?: return null
+        val searchResult = handler.execute() ?: return listOf()
         val seriesResult = searchResult.filter { it.series != null && it.series.id.itemID != "search" }
-        if (seriesResult.isEmpty()) return null
 
-        val series = FuzzySearch.extractOne(seriesName, seriesResult) { it.series!!.name }
-        if (series.score < searchScore) return null
-
-        return getSeriesByID(object : ProviderWithIDMetadata {
-            override val provider = uniqueName
-            override val itemID = series.referent.series!!.id.itemID
-        })
+        return FuzzySearch.extractSorted(seriesName, seriesResult) { it.series!!.name }
+            .filter { it.score > searchScore }
+            .take(byNameSearchAmount)
+            .mapNotNull {
+                getSeriesByID(object : ProviderWithIDMetadata {
+                    override val provider = uniqueName
+                    override val itemID = it.referent.series!!.id.itemID
+                })
+            }
     }
 
     fun close() {
