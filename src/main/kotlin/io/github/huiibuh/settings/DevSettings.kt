@@ -22,10 +22,10 @@ object DevSettings : Settings {
     }
 
     override val audibleSearchHost: String by lazy {
-        System.getenv("AUDIBLE_SEARCH_HOST") ?: "audible.de"
+        System.getenv("AUDIBLE_SEARCH_HOST") ?: "audible.com"
     }
     override val audibleAuthorHost: String by lazy {
-        System.getenv("AUDIBLE_AUTHOR_HOST") ?: "audible.de"
+        System.getenv("AUDIBLE_AUTHOR_HOST") ?: "audible.com"
     }
 
     override val database: DatabaseConnection by lazy {

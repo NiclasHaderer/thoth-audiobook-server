@@ -6,6 +6,9 @@ import io.github.huiibuh.metadata.MetadataSearchCount
 import io.github.huiibuh.metadata.ProviderWithIDMetadata
 import io.github.huiibuh.metadata.audible.models.*
 import io.ktor.client.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
 const val AUDIBLE_PROVIDER_NAME = "metadata"
@@ -46,39 +49,6 @@ open class AudibleClient(
         return handler.execute()
     }
 
-    override suspend fun getAuthorByName(authorName: String): List<AudibleAuthorImpl> {
-        val handler = SearchHandler.fromURL(this.client, this.searchHost, author = authorName)
-        val searchResult = handler.execute() ?: return listOf()
-        val authorResult = searchResult.filter { it.author != null && it.author.id.itemID != "search" }
-
-        return FuzzySearch
-            .extractSorted(authorName, authorResult) { it.author!!.name }
-            .filter { it.score > searchScore }
-            .take(byNameSearchAmount)
-            .mapNotNull {
-                getAuthorByID(object : ProviderWithIDMetadata {
-                    override val provider = uniqueName
-                    override val itemID = it.referent.author!!.id.itemID
-                })
-            }
-    }
-
-    override suspend fun getBookByName(bookName: String, authorName: String?): List<AudibleBookImpl> {
-        val handler = SearchHandler.fromURL(this.client, this.searchHost, title = bookName, author = authorName)
-        val searchResult = handler.execute() ?: return listOf()
-        val bookResult = searchResult.filter { it.title != null && it.id.itemID != "search" }
-
-        return FuzzySearch.extractSorted(bookName, bookResult) { it.title }
-            .filter { it.score > searchScore }
-            .take(byNameSearchAmount)
-            .mapNotNull {
-                getBookByID(object : ProviderWithIDMetadata {
-                    override val provider = uniqueName
-                    override val itemID = it.referent.id.itemID
-                })
-            }
-    }
-
     override suspend fun getBookByID(bookID: ProviderWithIDMetadata): AudibleBookImpl? {
         val handler = BookHandler.fromUrl(this.client, this.searchHost, bookID.itemID)
         return handler.execute()
@@ -89,20 +59,66 @@ open class AudibleClient(
         return handler.execute()
     }
 
+
+    override suspend fun getAuthorByName(authorName: String): List<AudibleAuthorImpl> {
+        val handler = SearchHandler.fromURL(this.client, this.searchHost, author = authorName)
+        val searchResult = handler.execute() ?: return listOf()
+        val authorResult = searchResult.filter { it.author != null && it.author.id.itemID != "search" }
+
+        return coroutineScope {
+            FuzzySearch
+                .extractSorted(authorName, authorResult) { it.author!!.name }
+                .filter { it.score > searchScore }
+                .take(byNameSearchAmount)
+                .map {
+                    async {
+                        getAuthorByID(object : ProviderWithIDMetadata {
+                            override val provider = uniqueName
+                            override val itemID = it.referent.author!!.id.itemID
+                        })
+                    }
+                }.awaitAll().filterNotNull()
+        }
+    }
+
+    override suspend fun getBookByName(bookName: String, authorName: String?): List<AudibleBookImpl> {
+        val handler = SearchHandler.fromURL(this.client, this.searchHost, title = bookName, author = authorName)
+        val searchResult = handler.execute() ?: return listOf()
+        val bookResult = searchResult.filter { it.title != null && it.id.itemID != "search" }
+
+        return coroutineScope {
+            FuzzySearch.extractSorted(bookName, bookResult) { it.title }
+                .filter { it.score > searchScore }
+                .take(byNameSearchAmount)
+                .map {
+                    async {
+                        getBookByID(object : ProviderWithIDMetadata {
+                            override val provider = uniqueName
+                            override val itemID = it.referent.id.itemID
+                        })
+                    }
+                }.awaitAll().filterNotNull()
+        }
+    }
+
     override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<AudibleSeriesImpl> {
         val handler = SearchHandler.fromURL(this.client, this.searchHost, keywords = seriesName, author = authorName)
         val searchResult = handler.execute() ?: return listOf()
         val seriesResult = searchResult.filter { it.series != null && it.series.id.itemID != "search" }
 
-        return FuzzySearch.extractSorted(seriesName, seriesResult) { it.series!!.name }
-            .filter { it.score > searchScore }
-            .take(byNameSearchAmount)
-            .mapNotNull {
-                getSeriesByID(object : ProviderWithIDMetadata {
-                    override val provider = uniqueName
-                    override val itemID = it.referent.series!!.id.itemID
-                })
-            }
+        return coroutineScope {
+            FuzzySearch.extractSorted(seriesName, seriesResult) { it.series!!.name }
+                .filter { it.score > searchScore }
+                .take(byNameSearchAmount)
+                .map {
+                    async {
+                        getSeriesByID(object : ProviderWithIDMetadata {
+                            override val provider = uniqueName
+                            override val itemID = it.referent.series!!.id.itemID
+                        })
+                    }
+                }.awaitAll().filterNotNull()
+        }
     }
 
     fun close() {
