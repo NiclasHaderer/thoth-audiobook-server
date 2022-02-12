@@ -4,6 +4,9 @@ import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.huiibuh.api.exceptions.APIBadRequest
 import io.ktor.features.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import java.util.*
 
@@ -35,7 +38,20 @@ class MetadataWrapper constructor(
         val cacheKey = getKey(keywords, title, author, narrator, language, pageSize)
 
         return getOrSetCache(searchCache, cacheKey) {
-            providerList.flatMap { it.search(keywords, title, author, narrator, language, pageSize) }
+            providerList.map {
+                coroutineScope {
+                    async {
+                        it.search(
+                            keywords,
+                            title,
+                            author,
+                            narrator,
+                            language,
+                            pageSize
+                        )
+                    }
+                }
+            }.awaitAll().flatten()
         }
     }
 
@@ -50,17 +66,6 @@ class MetadataWrapper constructor(
         }.orElse(null)
     }
 
-    override suspend fun getAuthorByName(authorName: String): List<AuthorMetadata> {
-        val cacheKey = getKey(authorName)
-
-        return getOrSetCache(authorNameCache, cacheKey) {
-            val authors = providerList.flatMap { it.getAuthorByName(authorName) }.filter { it.name != null }
-
-            FuzzySearch.extractSorted(authorName, authors) { it.name }
-                .take(byNameSearchAmount)
-                .map { it.referent }
-        }
-    }
 
     override suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata? {
         val cacheKey = getKey(bookID.itemID, bookID.provider)
@@ -69,16 +74,6 @@ class MetadataWrapper constructor(
             val value = provider.getBookByID(bookID)
             Optional.ofNullable(value)
         }.orElse(null)
-    }
-
-    override suspend fun getBookByName(bookName: String, authorName: String?): List<BookMetadata> {
-        val cacheKey = getKey(bookName, authorName)
-        return getOrSetCache(bookNameCache, cacheKey) {
-            val books = providerList.flatMap { it.getBookByName(bookName, authorName) }.filter { it.title != null }
-            FuzzySearch.extractSorted(bookName, books) { it.title }
-                .take(byNameSearchAmount)
-                .map { it.referent }
-        }
     }
 
     override suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata? {
@@ -90,16 +85,45 @@ class MetadataWrapper constructor(
         }.orElse(null)
     }
 
-    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<SeriesMetadata> {
-        val cacheKey = getKey(seriesName, authorName)
-        return getOrSetCache(seriesNameCache, cacheKey) {
-            val series = providerList.flatMap { it.getSeriesByName(seriesName, authorName) }.filter { it.name != null }
-            FuzzySearch.extractSorted(seriesName, series) { it.name }
+    override suspend fun getAuthorByName(authorName: String): List<AuthorMetadata> {
+        val cacheKey = getKey(authorName)
+
+        return getOrSetCache(authorNameCache, cacheKey) {
+            val authors = coroutineScope {
+                providerList.map { async { it.getAuthorByName(authorName) } }
+                    .awaitAll().flatten().filter { it.name != null }
+            }
+            FuzzySearch.extractSorted(authorName, authors) { it.name }
                 .take(byNameSearchAmount)
                 .map { it.referent }
         }
     }
 
+    override suspend fun getBookByName(bookName: String, authorName: String?): List<BookMetadata> {
+        val cacheKey = getKey(bookName, authorName)
+        return getOrSetCache(bookNameCache, cacheKey) {
+            val books = coroutineScope {
+                providerList.map { async { it.getBookByName(bookName, authorName) } }
+                    .awaitAll().flatten().filter { it.title != null }
+            }
+            FuzzySearch.extractSorted(bookName, books) { it.title }
+                .take(byNameSearchAmount)
+                .map { it.referent }
+        }
+    }
+
+    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<SeriesMetadata> {
+        val cacheKey = getKey(seriesName, authorName)
+        return getOrSetCache(seriesNameCache, cacheKey) {
+            val series = coroutineScope {
+                providerList.map { async { it.getSeriesByName(seriesName, authorName) } }
+                    .awaitAll().flatten().filter { it.name != null }
+            }
+            FuzzySearch.extractSorted(seriesName, series) { it.name }
+                .take(byNameSearchAmount)
+                .map { it.referent }
+        }
+    }
 
     private suspend fun <K, V> getOrSetCache(cache: Cache<K, V>, key: K, getCache: suspend () -> V): V {
         var value = cache.getIfPresent(key)
