@@ -1,7 +1,6 @@
 package io.github.huiibuh.plugins
 
 import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import io.github.huiibuh.serializers.jackson.CustomLocalDateTimeDesSerializer
 import io.github.huiibuh.serializers.jackson.CustomLocalDateTimeSerializer
