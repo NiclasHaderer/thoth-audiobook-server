@@ -42,7 +42,7 @@ fun Application.webServer() {
     configureOpenAPI()
     configureRouting()
     configurePartialContent()
-    configureHTTP()
+    configureCORS()
     configureSockets()
     configureMonitoring()
     configureSerialization()

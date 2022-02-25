@@ -2,7 +2,7 @@ package io.github.huiibuh.api.audiobooks.books
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.put
+import com.papsign.ktor.openapigen.route.path.normal.patch
 import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
@@ -42,5 +42,5 @@ internal fun NormalOpenAPIRoute.routing() {
         )
     }
 
-    put(body = OpenAPIPipelineResponseContext<BookModel>::patchBook)
+    patch(body = OpenAPIPipelineResponseContext<BookModel>::patchBook)
 }

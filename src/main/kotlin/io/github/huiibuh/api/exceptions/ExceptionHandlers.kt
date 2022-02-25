@@ -48,24 +48,28 @@ fun NormalOpenAPIRoute.withNotImplementedRequestHandling(routeCallback: NormalOp
 }
 
 
-fun NormalOpenAPIRoute.withAllErrorHandlers(routeCallback: NormalOpenAPIRoute.() -> Unit) {
-    withNotFoundHandling {
-        withBadRequestHandling {
-            withUnauthorizedRequestHandling {
-                withForbiddenRequestHandling {
-                    withNotImplementedRequestHandling(routeCallback)
-                }
-            }
-        }
+fun NormalOpenAPIRoute.withInternalError(routeCallback: NormalOpenAPIRoute.() -> Unit) {
+
+    val format = fun(ex: Exception) = APIInternalError(ex.message ?: "", ex.stackTrace)
+
+    throws(HttpStatusCode.InternalServerError,
+        format(Exception("There was in internal error")),
+        { ex: Exception -> format(ex) }) {
+        this.routeCallback()
     }
 }
 
+
 fun NormalOpenAPIRoute.withDefaultErrorHandlers(routeCallback: NormalOpenAPIRoute.() -> Unit) {
-    withOpenAPIExceptions {
-        withNotFoundHandling {
-            withBadRequestHandling {
-                withUnauthorizedRequestHandling {
-                    withForbiddenRequestHandling(routeCallback)
+    withInternalError {
+        withOpenAPIExceptions {
+            withNotFoundHandling {
+                withBadRequestHandling {
+                    withUnauthorizedRequestHandling {
+                        withNotImplementedRequestHandling {
+                            withForbiddenRequestHandling(routeCallback)
+                        }
+                    }
                 }
             }
         }
