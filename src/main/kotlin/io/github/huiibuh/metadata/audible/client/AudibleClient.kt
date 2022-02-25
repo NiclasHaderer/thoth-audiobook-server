@@ -11,7 +11,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
-const val AUDIBLE_PROVIDER_NAME = "metadata"
+const val AUDIBLE_PROVIDER_NAME = "audible"
 
 open class AudibleClient(
     private val searchHost: String = "audible.de",

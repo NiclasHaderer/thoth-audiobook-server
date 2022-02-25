@@ -38,7 +38,8 @@ internal class BookHandler : AudibleHandler {
             image = extractImageUrl(document),
             author = extractAuthorInfo(document),
             series = extractSeriesInfo(document),
-            narrator = extractNarrator(document)
+            narrator = extractNarrator(document),
+            year = null
         )
     }
 

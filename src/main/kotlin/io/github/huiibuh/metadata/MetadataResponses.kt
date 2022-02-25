@@ -47,6 +47,7 @@ interface BookMetadata {
     val author: SearchAuthorMetadata?
     val series: SearchSeriesMetadata?
     val image: String?
+    val year: Int?
 }
 
 interface SeriesMetadata {
