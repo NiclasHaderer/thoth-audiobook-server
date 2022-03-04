@@ -77,7 +77,10 @@ open class AudibleClient(
                             override val itemID = it.referent.author!!.id.itemID
                         })
                     }
-                }.awaitAll().filterNotNull()
+                }
+                .awaitAll()
+                .distinctBy { it?.id?.itemID }
+                .filterNotNull()
         }
     }
 
@@ -97,7 +100,10 @@ open class AudibleClient(
                             override val itemID = it.referent.id.itemID
                         })
                     }
-                }.awaitAll().filterNotNull()
+                }
+                .awaitAll()
+                .distinctBy { it?.id?.itemID }
+                .filterNotNull()
         }
     }
 
@@ -117,7 +123,10 @@ open class AudibleClient(
                             override val itemID = it.referent.series!!.id.itemID
                         })
                     }
-                }.awaitAll().filterNotNull()
+                }
+                .awaitAll()
+                .distinctBy { it?.id?.itemID }
+                .filterNotNull()
         }
     }
 

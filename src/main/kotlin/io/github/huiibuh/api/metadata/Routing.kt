@@ -59,11 +59,11 @@ internal fun NormalOpenAPIRoute.routing() {
             val author = searchService.getSeriesByName(params.name, params.authorName)
             respond(author)
         }
-        route("book/title").get<BookName, List<BookMetadata>> { params ->
+        route("book/search").get<BookName, List<BookMetadata>> { params ->
             val author = searchService.getBookByName(params.name, params.authorName)
             respond(author)
         }
-        route("author/name").get<AuthorName, List<AuthorMetadata>> { params ->
+        route("author/search").get<AuthorName, List<AuthorMetadata>> { params ->
             val author = searchService.getAuthorByName(params.name)
             respond(author)
         }

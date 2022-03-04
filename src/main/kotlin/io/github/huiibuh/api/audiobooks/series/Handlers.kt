@@ -8,5 +8,5 @@ internal suspend fun OpenAPIPipelineResponseContext<SeriesModel>.patchSeries(
     seriesId: SeriesId,
     patchSeries: PatchSeries,
 ) {
-    throw APINotImplemented("Series cannot get patched currently")
+    throw APINotImplemented("Series modification is not yet supported")
 }

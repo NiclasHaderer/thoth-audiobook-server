@@ -34,13 +34,15 @@ internal class SeriesHandler : AudibleHandler {
         document.getElementById("product-list-a11y-skiplink-target")
             ?: return null
         val link = url.toString()
+        val seriesBooks = getSeriesBooks(document)
         return AudibleSeriesImpl(
             link = link,
             id = AudibleProviderWithIDMetadata(idFromURL(link)),
             name = getSeriesName(document),
             description = getSeriesDescription(document),
             amount = getBookCount(document),
-            books = getSeriesBooks(document),
+            books = seriesBooks,
+            author = seriesBooks?.first()?.author?.name
         )
     }
 
