@@ -9,4 +9,5 @@ class AudibleSeriesImpl(
     override val description: String?,
     override val amount: Int?,
     override val books: List<AudibleSearchBookImpl>?,
+    override val author: String?,
 ) : SeriesMetadata

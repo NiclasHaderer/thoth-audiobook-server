@@ -13,6 +13,6 @@ internal class AuthorId(
 internal class PatchAuthor(
     val name: String,
     val biography: String?,
-    val providerID: ProviderIDModel,
+    val providerID: ProviderIDModel?,
     val image: String?,
 )

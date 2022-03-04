@@ -5,5 +5,5 @@ import io.github.huiibuh.api.exceptions.APINotImplemented
 import io.github.huiibuh.models.BookModel
 
 internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: BookId, patchBook: PatchBook) {
-    throw APINotImplemented("Books cannot get patched currently")
+    throw APINotImplemented("Book modification is not yet supported")
 }
