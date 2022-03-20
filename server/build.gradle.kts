@@ -14,11 +14,8 @@ val caffeineVersion: String by project
 plugins {
     application
     kotlin("jvm") version "1.5.31"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.5.31"
 }
 
-group = "io.github.huiibuh"
-version = "0.0.1"
 application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
     mainClass.set("io.github.huiibuh.ApplicationKt")
@@ -37,6 +34,9 @@ repositories {
 }
 
 dependencies {
+    // Other projects
+    implementation(project(":database"))
+
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
