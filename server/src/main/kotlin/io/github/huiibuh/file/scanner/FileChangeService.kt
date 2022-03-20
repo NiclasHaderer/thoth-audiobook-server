@@ -13,8 +13,9 @@ import kotlin.io.path.name
 
 
 class FileChangeService : KoinComponent {
-    val settings by inject<Settings>()
-    val analyzer by inject<FileAnalyzingScheduler>()
+    private val settings by inject<Settings>()
+    private val analyzer by inject<FileAnalyzingScheduler>()
+
     private val watcher =
         DirectoryWatcher.builder().path(Path.of(settings.audioFileLocation)).listener { event: DirectoryChangeEvent ->
             val path = event.path() // Ignore if it is a directory or not an audio file

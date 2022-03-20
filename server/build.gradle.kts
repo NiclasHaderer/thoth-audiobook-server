@@ -1,7 +1,7 @@
+val fuzzyWuzzyVersion: String by project
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
-val jsoupVersion: String by project
 val exposedVersion: String by project
 val h2Version: String by project
 val hikariVersion: String by project
@@ -9,7 +9,6 @@ val reflectVersion: String by project
 val sqliteVersion: String by project
 val koinVersion: String by project
 val jacksonVersion: String by project
-val caffeineVersion: String by project
 
 plugins {
     application
@@ -36,6 +35,7 @@ repositories {
 dependencies {
     // Other projects
     implementation(project(":database"))
+    implementation(project(":metadata"))
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -72,11 +72,8 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    // Audible scraping
-    implementation("org.jsoup:jsoup:$jsoupVersion")
-    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
     // Search
-    implementation("me.xdrop:fuzzywuzzy:1.3.1")
+    implementation("me.xdrop:fuzzywuzzy:$fuzzyWuzzyVersion")
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     // Tests

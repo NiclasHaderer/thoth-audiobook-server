@@ -1,13 +1,10 @@
 package io.github.huiibuh.metadata.audible.client
 
-import io.github.huiibuh.metadata.audible.models.AudibleAuthorImpl
-import io.github.huiibuh.metadata.audible.models.AudibleProviderWithIDMetadata
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
-@Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
 internal class AuthorHandler : AudibleHandler {
     private val imageSize: Int
 
@@ -31,13 +28,13 @@ internal class AuthorHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): AudibleAuthorImpl? {
+    override suspend fun execute(): io.github.huiibuh.metadata.audible.models.AudibleAuthorImpl? {
         val document = getDocument() ?: return null
         document.getElementById("product-list-a11y-skiplink-target") ?: return null
         val link = url.toString()
-        return AudibleAuthorImpl(
+        return io.github.huiibuh.metadata.audible.models.AudibleAuthorImpl(
             link = link,
-            id = AudibleProviderWithIDMetadata(idFromURL(link)),
+            id = io.github.huiibuh.metadata.audible.models.AudibleProviderWithIDMetadata(idFromURL(link)),
             name = getAuthorName(document),
             image = getAuthorImage(document),
             biography = getAuthorBiography(document),

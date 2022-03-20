@@ -1,13 +1,21 @@
 package generators.typescript
 
-import io.github.huiibuh.api.audiobooks.authors.PatchAuthor
-import io.github.huiibuh.api.audiobooks.books.PatchBook
-import io.github.huiibuh.api.audiobooks.series.PatchSeries
 import io.github.huiibuh.metadata.AuthorMetadata
 import io.github.huiibuh.metadata.BookMetadata
 import io.github.huiibuh.metadata.SearchBookMetadata
 import io.github.huiibuh.metadata.SeriesMetadata
-import io.github.huiibuh.models.*
+import io.github.huiibuh.api.audiobooks.authors.PatchAuthor
+import io.github.huiibuh.api.audiobooks.books.PatchBook
+import io.github.huiibuh.api.audiobooks.series.PatchSeries
+import io.github.huiibuh.models.AuthorModel
+import io.github.huiibuh.models.AuthorModelWithBooks
+import io.github.huiibuh.models.BookModel
+import io.github.huiibuh.models.BookModelWithTracks
+import io.github.huiibuh.models.PaginatedResponse
+import io.github.huiibuh.models.SearchModel
+import io.github.huiibuh.models.SeriesModel
+import io.github.huiibuh.models.SeriesModelWithBooks
+import io.github.huiibuh.models.TrackModel
 import io.github.huiibuh.ws.ChangeEvent
 import me.ntrrgc.tsGenerator.TypeScriptGenerator
 import java.io.File
@@ -25,7 +33,6 @@ fun main() {
             AuthorModelWithBooks::class,
             BookModel::class,
             BookModelWithTracks::class,
-            SearchModel::class,
             SearchModel::class,
             SeriesModel::class,
             PatchAuthor::class,

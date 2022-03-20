@@ -1,6 +1,5 @@
 package io.github.huiibuh.metadata.audible.client
 
-import io.github.huiibuh.metadata.audible.models.*
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -9,7 +8,6 @@ import org.jsoup.select.Elements
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
 internal class SearchHandler : AudibleHandler {
 
     constructor(client: HttpClient, url: Url) : super(client, url)
@@ -24,8 +22,8 @@ internal class SearchHandler : AudibleHandler {
             title: String? = null,
             author: String? = null,
             narrator: String? = null,
-            language: AudibleSearchLanguage? = null,
-            pageSize: AudibleSearchAmount? = null,
+            language: io.github.huiibuh.metadata.audible.models.AudibleSearchLanguage? = null,
+            pageSize: io.github.huiibuh.metadata.audible.models.AudibleSearchAmount? = null,
         ): SearchHandler {
             val queryParams = ParametersBuilder()
             queryParams.append("ipRedirectOverride", "true")
@@ -63,7 +61,7 @@ internal class SearchHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): List<AudibleSearchBookImpl>? {
+    override suspend fun execute(): List<io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl>? {
         val document = this.getDocument() ?: return null
         val searchResultItems = getSearchItems(document)
         return extractSearchInfo(searchResultItems)
@@ -73,10 +71,10 @@ internal class SearchHandler : AudibleHandler {
         return document.select(".productListItem")
     }
 
-    private fun extractSearchInfo(elementList: Elements): List<AudibleSearchBookImpl> {
+    private fun extractSearchInfo(elementList: Elements): List<io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl> {
         return elementList.map {
             val link = extractLink(it)
-            AudibleSearchBookImpl(
+            io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl(
                 author = extractAuthorInfo(it),
                 title = extractTitle(it),
                 link = link,
@@ -85,7 +83,7 @@ internal class SearchHandler : AudibleHandler {
                 language = extractLanguage(it),
                 narrator = extractNarrator(it),
                 releaseDate = extractReleaseDate(it),
-                id = AudibleProviderWithIDMetadata(idFromURL(link))
+                id = io.github.huiibuh.metadata.audible.models.AudibleProviderWithIDMetadata(idFromURL(link))
             )
         }
     }
@@ -117,13 +115,13 @@ internal class SearchHandler : AudibleHandler {
 
     }
 
-    private fun extractAuthorInfo(element: Element): AudibleSearchAuthorImpl? {
+    private fun extractAuthorInfo(element: Element): io.github.huiibuh.metadata.audible.models.AudibleSearchAuthorImpl? {
         val authorLink = element.selectFirst(".authorLabel a") ?: return null
         val link = authorLink.absUrl("href")
-        return AudibleSearchAuthorImpl(
+        return io.github.huiibuh.metadata.audible.models.AudibleSearchAuthorImpl(
             link = link,
             name = authorLink.text(),
-            id = AudibleProviderWithIDMetadata(idFromURL(link)),
+            id = io.github.huiibuh.metadata.audible.models.AudibleProviderWithIDMetadata(idFromURL(link)),
         )
     }
 
@@ -137,7 +135,7 @@ internal class SearchHandler : AudibleHandler {
         return titleLink.absUrl("href")
     }
 
-    private fun extractSeriesInfo(element: Element): AudibleSearchSeriesImpl? {
+    private fun extractSeriesInfo(element: Element): io.github.huiibuh.metadata.audible.models.AudibleSearchSeriesImpl? {
         val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return null
         val seriesNameElement = seriesElement.selectFirst("a") ?: return null
 
@@ -146,11 +144,11 @@ internal class SearchHandler : AudibleHandler {
         seriesIndex = seriesIndex.filter { it.isDigit() }
         val link = seriesNameElement.absUrl("href")
 
-        return AudibleSearchSeriesImpl(
+        return io.github.huiibuh.metadata.audible.models.AudibleSearchSeriesImpl(
             link = link,
             name = seriesNameElement.text(),
             index = seriesIndex.toFloatOrNull(),
-            id = AudibleProviderWithIDMetadata(idFromURL(link))
+            id = io.github.huiibuh.metadata.audible.models.AudibleProviderWithIDMetadata(idFromURL(link))
         )
 
     }
