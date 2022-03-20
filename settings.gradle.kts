@@ -1,1 +1,2 @@
-rootProject.name = "audiobook-server"
+rootProject.name = "thoth-audiobook-server"
+include("server")
