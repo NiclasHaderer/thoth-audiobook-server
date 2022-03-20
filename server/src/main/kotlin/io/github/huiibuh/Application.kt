@@ -14,7 +14,13 @@ import io.github.huiibuh.di.configureKoin
 import io.github.huiibuh.file.scanner.CompleteScan
 import io.github.huiibuh.file.scanner.FileChangeService
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
-import io.github.huiibuh.plugins.*
+import io.github.huiibuh.plugins.configureCORS
+import io.github.huiibuh.plugins.configureMonitoring
+import io.github.huiibuh.plugins.configureOpenAPI
+import io.github.huiibuh.plugins.configurePartialContent
+import io.github.huiibuh.plugins.configureRouting
+import io.github.huiibuh.plugins.configureSerialization
+import io.github.huiibuh.plugins.configureSockets
 import io.github.huiibuh.settings.getPort
 import io.ktor.application.*
 import io.ktor.server.engine.*
@@ -47,21 +53,21 @@ fun Application.webServer() {
     configureMonitoring()
     configureSerialization()
     withBasePath("api",
-        routeCallback = {
-//            registerUpdateRoutes()
-        },
-        openApiCallback = {
-            apiRouting {
-                route("api") {
-                    withDefaultErrorHandlers {
-                        registerMetadataRouting()
-                        registerAudiobookRouting()
-                        registerSearchRouting()
-                        registerStreamingRouting()
-                        registerImageRouting()
-                    }
-                }
-            }
-        })
+                 routeCallback = {
+                     //            registerUpdateRoutes()
+                 },
+                 openApiCallback = {
+                     apiRouting {
+                         route("api") {
+                             withDefaultErrorHandlers {
+                                 registerMetadataRouting()
+                                 registerAudiobookRouting()
+                                 registerSearchRouting()
+                                 registerStreamingRouting()
+                                 registerImageRouting()
+                             }
+                         }
+                     }
+                 })
 
 }
