@@ -1,6 +1,10 @@
 package io.github.huiibuh.metadata.audible.models
 
-import io.github.huiibuh.metadata.*
+import io.github.huiibuh.metadata.MetadataLanguage
+import io.github.huiibuh.metadata.MetadataSearchCount
+import io.github.huiibuh.metadata.SearchAuthorMetadata
+import io.github.huiibuh.metadata.SearchBookMetadata
+import io.github.huiibuh.metadata.SearchSeriesMetadata
 import java.util.*
 
 class AudibleSearchAuthorImpl(

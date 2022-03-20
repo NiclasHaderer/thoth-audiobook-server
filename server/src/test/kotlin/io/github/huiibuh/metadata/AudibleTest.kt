@@ -1,8 +1,5 @@
-package io.github.huiibuh
+package io.github.huiibuh.metadata
 
-import io.github.huiibuh.metadata.audible.models.AudibleAuthorImpl
-import io.github.huiibuh.metadata.audible.models.AudibleBookImpl
-import io.github.huiibuh.metadata.audible.models.AudibleSeriesImpl
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -19,7 +16,8 @@ class AudibleTest : BaseTest() {
 
             handleRequest(HttpMethod.Get, "/audible/author/B000AP9A6K").apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                val author = Json.decodeFromString<AudibleAuthorImpl>(response.content!!)
+                val author =
+                    Json.decodeFromString<io.github.huiibuh.metadata.audible.models.AudibleAuthorImpl>(response.content!!)
                 assertEquals("J. K. Rowling", author.name)
             }
 
@@ -38,7 +36,8 @@ class AudibleTest : BaseTest() {
 
             handleRequest(HttpMethod.Get, "/audible/series/B0182T3MCI").apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                val series = Json.decodeFromString<AudibleSeriesImpl>(response.content!!)
+                val series =
+                    Json.decodeFromString<io.github.huiibuh.metadata.audible.models.AudibleSeriesImpl>(response.content!!)
                 assertEquals("Harry Potter", series.name)
             }
 
@@ -57,7 +56,8 @@ class AudibleTest : BaseTest() {
 
             handleRequest(HttpMethod.Get, "/audible/book/B017V5EJM6").apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                val series = Json.decodeFromString<AudibleBookImpl>(response.content!!)
+                val series =
+                    Json.decodeFromString<io.github.huiibuh.metadata.audible.models.AudibleBookImpl>(response.content!!)
                 assertEquals("Harry Potter and the Philosopher's Stone", series.title)
             }
 

@@ -1,6 +1,5 @@
 package io.github.huiibuh.metadata.audible.client
 
-import io.github.huiibuh.extensions.classLogger
 import io.ktor.client.*
 import io.ktor.client.features.*
 import io.ktor.client.request.*
@@ -8,14 +7,14 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.slf4j.LoggerFactory
 
-@Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
 internal abstract class AudibleHandler private constructor(
     private val client: HttpClient?,
     protected val url: Url,
     private val document: Document? = null,
 ) {
-    private val log = classLogger()
+    private val log = LoggerFactory.getLogger(this::class.java)
 
     constructor(client: HttpClient, url: Url) : this(client, url, null)
     constructor(document: Document, url: Url) : this(null, url, document)

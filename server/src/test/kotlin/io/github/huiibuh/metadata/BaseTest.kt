@@ -1,5 +1,6 @@
-package io.github.huiibuh
+package io.github.huiibuh.metadata
 
+import io.github.huiibuh.webServer
 import io.ktor.server.testing.*
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest

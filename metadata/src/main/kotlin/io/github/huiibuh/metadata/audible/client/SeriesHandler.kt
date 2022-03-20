@@ -1,14 +1,10 @@
 package io.github.huiibuh.metadata.audible.client
 
-import io.github.huiibuh.metadata.audible.models.AudibleProviderWithIDMetadata
-import io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl
-import io.github.huiibuh.metadata.audible.models.AudibleSeriesImpl
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
-@Suppress("EXPERIMENTAL_API_USAGE_FUTURE_ERROR")
 internal class SeriesHandler : AudibleHandler {
 
     constructor(client: HttpClient, url: Url) : super(client, url)
@@ -28,16 +24,16 @@ internal class SeriesHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): AudibleSeriesImpl? {
+    override suspend fun execute(): io.github.huiibuh.metadata.audible.models.AudibleSeriesImpl? {
         val document = getDocument() ?: return null
         // Audible does not return 404 if a series is not valid, so...
         document.getElementById("product-list-a11y-skiplink-target")
             ?: return null
         val link = url.toString()
         val seriesBooks = getSeriesBooks(document)
-        return AudibleSeriesImpl(
+        return io.github.huiibuh.metadata.audible.models.AudibleSeriesImpl(
             link = link,
-            id = AudibleProviderWithIDMetadata(idFromURL(link)),
+            id = io.github.huiibuh.metadata.audible.models.AudibleProviderWithIDMetadata(idFromURL(link)),
             name = getSeriesName(document),
             description = getSeriesDescription(document),
             amount = getBookCount(document),
@@ -61,7 +57,7 @@ internal class SeriesHandler : AudibleHandler {
         return imageElement.text().filter { it.isDigit() }.toIntOrNull()
     }
 
-    private suspend fun getSeriesBooks(document: Document): List<AudibleSearchBookImpl>? {
+    private suspend fun getSeriesBooks(document: Document): List<io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl>? {
         // Document is provided, so there can be no exception fetching it
         return SearchHandler.fromDocument(document, this.url).execute()
     }
