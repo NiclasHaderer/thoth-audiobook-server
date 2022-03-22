@@ -88,11 +88,11 @@ class MetadataWrapper constructor(
         return getOrSetCache(authorNameCache, cacheKey) {
             val authors = coroutineScope {
                 providerList.map { async { it.getAuthorByName(authorName) } }
-                        .awaitAll().flatten().filter { it.name != null }
+                    .awaitAll().flatten().filter { it.name != null }
             }
             FuzzySearch.extractSorted(authorName, authors) { it.name }
-                    .take(byNameSearchAmount)
-                    .map { it.referent }
+                .take(byNameSearchAmount)
+                .map { it.referent }
         }
     }
 
@@ -101,11 +101,11 @@ class MetadataWrapper constructor(
         return getOrSetCache(bookNameCache, cacheKey) {
             val books = coroutineScope {
                 providerList.map { async { it.getBookByName(bookName, authorName) } }
-                        .awaitAll().flatten().filter { it.title != null }
+                    .awaitAll().flatten().filter { it.title != null }
             }
             FuzzySearch.extractSorted(bookName, books) { it.title }
-                    .take(byNameSearchAmount)
-                    .map { it.referent }
+                .take(byNameSearchAmount)
+                .map { it.referent }
         }
     }
 
@@ -114,11 +114,11 @@ class MetadataWrapper constructor(
         return getOrSetCache(seriesNameCache, cacheKey) {
             val series = coroutineScope {
                 providerList.map { async { it.getSeriesByName(seriesName, authorName) } }
-                        .awaitAll().flatten().filter { it.name != null }
+                    .awaitAll().flatten().filter { it.name != null }
             }
             FuzzySearch.extractSorted(seriesName, series) { it.name }
-                    .take(byNameSearchAmount)
-                    .map { it.referent }
+                .take(byNameSearchAmount)
+                .map { it.referent }
         }
     }
 

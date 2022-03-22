@@ -29,8 +29,9 @@ import kotlinx.coroutines.launch
 
 fun main() {
     disableJAudioTaggerLogs()
-    embeddedServer(Netty, port = getPort(), watchPaths = listOf("classes"), host = "0.0.0.0") {
-        // Has to be done in here for some strange scoping reasons
+    embeddedServer(
+        Netty, port = getPort(), watchPaths = listOf("classes"), host = "0.0.0.0"
+    ) { // Has to be done in here for some strange scoping reasons
         configureKoin()
         launch {
             DatabaseFactory.connect()
@@ -43,7 +44,6 @@ fun main() {
     }.start(wait = false)
 }
 
-
 fun Application.webServer() {
     configureOpenAPI()
     configureRouting()
@@ -52,22 +52,18 @@ fun Application.webServer() {
     configureSockets()
     configureMonitoring()
     configureSerialization()
-    withBasePath("api",
-                 routeCallback = {
-                     //            registerUpdateRoutes()
-                 },
-                 openApiCallback = {
-                     apiRouting {
-                         route("api") {
-                             withDefaultErrorHandlers {
-                                 registerMetadataRouting()
-                                 registerAudiobookRouting()
-                                 registerSearchRouting()
-                                 registerStreamingRouting()
-                                 registerImageRouting()
-                             }
-                         }
-                     }
-                 })
-
+    withBasePath("api", routeCallback = { // registerUpdateRoutes()
+    }, openApiCallback = {
+        apiRouting {
+            route("api") {
+                withDefaultErrorHandlers {
+                    registerMetadataRouting()
+                    registerAudiobookRouting()
+                    registerSearchRouting()
+                    registerStreamingRouting()
+                    registerImageRouting()
+                }
+            }
+        }
+    })
 }

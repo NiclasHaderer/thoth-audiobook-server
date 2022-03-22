@@ -12,7 +12,6 @@ object DevSettings : Settings {
         System.getenv("AUDIO_FILE_LOCATION") ?: "test-resources"
     }
 
-
     override val analyzerThreads: Int by lazy {
         System.getenv("ANALYZER_THREADS")?.toIntOrNull() ?: 10
     }

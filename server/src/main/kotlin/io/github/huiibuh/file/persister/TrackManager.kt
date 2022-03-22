@@ -1,6 +1,13 @@
 package io.github.huiibuh.file.persister
 
-import io.github.huiibuh.db.tables.*
+import io.github.huiibuh.db.tables.Author
+import io.github.huiibuh.db.tables.Book
+import io.github.huiibuh.db.tables.Image
+import io.github.huiibuh.db.tables.KeyValueSettings
+import io.github.huiibuh.db.tables.ProviderID
+import io.github.huiibuh.db.tables.Series
+import io.github.huiibuh.db.tables.TTracks
+import io.github.huiibuh.db.tables.Track
 import io.github.huiibuh.extensions.classLogger
 import io.github.huiibuh.file.analyzer.AudioFileAnalysisResult
 import io.github.huiibuh.metadata.MetadataProvider

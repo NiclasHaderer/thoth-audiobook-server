@@ -38,7 +38,8 @@ open class AudibleClient(
             author = author,
             narrator = narrator,
             language = if (language != null) io.github.huiibuh.metadata.audible.models.AudibleSearchLanguage.from(
-                language) else null,
+                language
+            ) else null,
             pageSize = if (pageSize != null) io.github.huiibuh.metadata.audible.models.AudibleSearchAmount.from(pageSize) else io.github.huiibuh.metadata.audible.models.AudibleSearchAmount.Twenty
         )
         return handler.execute() ?: listOf()
@@ -67,20 +68,20 @@ open class AudibleClient(
 
         return coroutineScope {
             FuzzySearch
-                    .extractSorted(authorName, authorResult) { it.author!!.name }
-                    .filter { it.score > searchScore }
-                    .take(byNameSearchAmount)
-                    .map {
-                        async {
-                            getAuthorByID(object : ProviderWithIDMetadata {
-                                override val provider = uniqueName
-                                override val itemID = it.referent.author!!.id.itemID
-                            })
-                        }
+                .extractSorted(authorName, authorResult) { it.author!!.name }
+                .filter { it.score > searchScore }
+                .take(byNameSearchAmount)
+                .map {
+                    async {
+                        getAuthorByID(object : ProviderWithIDMetadata {
+                            override val provider = uniqueName
+                            override val itemID = it.referent.author!!.id.itemID
+                        })
                     }
-                    .awaitAll()
-                    .distinctBy { it?.id?.itemID }
-                    .filterNotNull()
+                }
+                .awaitAll()
+                .distinctBy { it?.id?.itemID }
+                .filterNotNull()
         }
     }
 
@@ -94,19 +95,19 @@ open class AudibleClient(
 
         return coroutineScope {
             FuzzySearch.extractSorted(bookName, bookResult) { it.title }
-                    .filter { it.score > searchScore }
-                    .take(byNameSearchAmount)
-                    .map {
-                        async {
-                            getBookByID(object : ProviderWithIDMetadata {
-                                override val provider = uniqueName
-                                override val itemID = it.referent.id.itemID
-                            })
-                        }
+                .filter { it.score > searchScore }
+                .take(byNameSearchAmount)
+                .map {
+                    async {
+                        getBookByID(object : ProviderWithIDMetadata {
+                            override val provider = uniqueName
+                            override val itemID = it.referent.id.itemID
+                        })
                     }
-                    .awaitAll()
-                    .distinctBy { it?.id?.itemID }
-                    .filterNotNull()
+                }
+                .awaitAll()
+                .distinctBy { it?.id?.itemID }
+                .filterNotNull()
         }
     }
 
@@ -120,19 +121,19 @@ open class AudibleClient(
 
         return coroutineScope {
             FuzzySearch.extractSorted(seriesName, seriesResult) { it.series!!.name }
-                    .filter { it.score > searchScore }
-                    .take(byNameSearchAmount)
-                    .map {
-                        async {
-                            getSeriesByID(object : ProviderWithIDMetadata {
-                                override val provider = uniqueName
-                                override val itemID = it.referent.series!!.id.itemID
-                            })
-                        }
+                .filter { it.score > searchScore }
+                .take(byNameSearchAmount)
+                .map {
+                    async {
+                        getSeriesByID(object : ProviderWithIDMetadata {
+                            override val provider = uniqueName
+                            override val itemID = it.referent.series!!.id.itemID
+                        })
                     }
-                    .awaitAll()
-                    .distinctBy { it?.id?.itemID }
-                    .filterNotNull()
+                }
+                .awaitAll()
+                .distinctBy { it?.id?.itemID }
+                .filterNotNull()
         }
     }
 

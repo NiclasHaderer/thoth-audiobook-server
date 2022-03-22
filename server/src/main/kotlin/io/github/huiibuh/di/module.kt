@@ -34,5 +34,4 @@ val DI_MODULE = module {
         FileAnalyzingSchedulerImpl()
     }
 
-
 }

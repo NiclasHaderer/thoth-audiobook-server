@@ -11,7 +11,7 @@ repositories {
     mavenCentral()
 }
 
-dependencies{
+dependencies {
     // Audible scraping
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")

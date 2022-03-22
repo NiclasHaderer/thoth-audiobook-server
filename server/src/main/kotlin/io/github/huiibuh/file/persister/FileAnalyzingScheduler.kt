@@ -5,8 +5,12 @@ import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapper
 import io.github.huiibuh.file.scanner.CompleteScan
 import io.github.huiibuh.settings.Settings
 import io.github.huiibuh.utils.Scheduler
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Files
@@ -22,7 +26,6 @@ interface FileAnalyzingScheduler {
         REMOVE_FILE, ADD_FILE, SCAN_FOLDER
     }
 }
-
 
 @OptIn(DelicateCoroutinesApi::class)
 class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
@@ -69,7 +72,6 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
     }
 
     private fun removePath(path: Path) = trackManager.removePath(path)
-
 
     /**
      * @param path The path you want to queue for a scan

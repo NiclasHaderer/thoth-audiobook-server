@@ -1,12 +1,12 @@
 package generators.typescript
 
+import io.github.huiibuh.api.audiobooks.authors.PatchAuthor
+import io.github.huiibuh.api.audiobooks.books.PatchBook
+import io.github.huiibuh.api.audiobooks.series.PatchSeries
 import io.github.huiibuh.metadata.AuthorMetadata
 import io.github.huiibuh.metadata.BookMetadata
 import io.github.huiibuh.metadata.SearchBookMetadata
 import io.github.huiibuh.metadata.SeriesMetadata
-import io.github.huiibuh.api.audiobooks.authors.PatchAuthor
-import io.github.huiibuh.api.audiobooks.books.PatchBook
-import io.github.huiibuh.api.audiobooks.series.PatchSeries
 import io.github.huiibuh.models.AuthorModel
 import io.github.huiibuh.models.AuthorModelWithBooks
 import io.github.huiibuh.models.BookModel
