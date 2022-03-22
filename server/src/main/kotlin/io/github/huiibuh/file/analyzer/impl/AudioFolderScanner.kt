@@ -1,6 +1,10 @@
 package io.github.huiibuh.file.analyzer.impl
 
-import io.github.huiibuh.extensions.*
+import io.github.huiibuh.extensions.countParents
+import io.github.huiibuh.extensions.grandGrandParentName
+import io.github.huiibuh.extensions.grandParentName
+import io.github.huiibuh.extensions.parentName
+import io.github.huiibuh.extensions.replacePart
 import io.github.huiibuh.file.analyzer.AudioFileAnalysisResult
 import io.github.huiibuh.file.analyzer.AudioFileAnalysisResultImpl
 import io.github.huiibuh.file.analyzer.AudioFileAnalyzer

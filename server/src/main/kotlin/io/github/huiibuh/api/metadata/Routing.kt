@@ -10,7 +10,11 @@ import io.github.huiibuh.api.ApiTags
 import io.github.huiibuh.api.exceptions.APINotFound
 import io.github.huiibuh.api.exceptions.withNotFoundHandling
 import io.github.huiibuh.extensions.inject
-import io.github.huiibuh.metadata.*
+import io.github.huiibuh.metadata.AuthorMetadata
+import io.github.huiibuh.metadata.BookMetadata
+import io.github.huiibuh.metadata.MetadataProvider
+import io.github.huiibuh.metadata.SearchBookMetadata
+import io.github.huiibuh.metadata.SeriesMetadata
 
 fun NormalOpenAPIRoute.registerMetadataRouting(path: String = "metadata") {
     tag(ApiTags.Metadata) {
