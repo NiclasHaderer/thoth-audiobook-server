@@ -1,5 +1,3 @@
-package generators.typescript
-
 import io.github.huiibuh.api.audiobooks.authors.PatchAuthor
 import io.github.huiibuh.api.audiobooks.books.PatchBook
 import io.github.huiibuh.api.audiobooks.series.PatchSeries

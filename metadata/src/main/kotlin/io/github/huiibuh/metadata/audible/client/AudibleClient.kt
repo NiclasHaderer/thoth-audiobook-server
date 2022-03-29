@@ -16,8 +16,6 @@ open class AudibleClient(
     private val searchHost: String = "audible.de",
     private val authorHost: String = "audible.de",
     private val authorImageSize: Int = 500,
-    private val searchScore: Int = 80,
-    private val byNameSearchAmount: Int = 5,
 ) : MetadataProvider {
 
     override val uniqueName = AUDIBLE_PROVIDER_NAME
@@ -69,8 +67,6 @@ open class AudibleClient(
         return coroutineScope {
             FuzzySearch
                 .extractSorted(authorName, authorResult) { it.author!!.name }
-                .filter { it.score > searchScore }
-                .take(byNameSearchAmount)
                 .map {
                     async {
                         getAuthorByID(object : ProviderWithIDMetadata {
@@ -95,8 +91,6 @@ open class AudibleClient(
 
         return coroutineScope {
             FuzzySearch.extractSorted(bookName, bookResult) { it.title }
-                .filter { it.score > searchScore }
-                .take(byNameSearchAmount)
                 .map {
                     async {
                         getBookByID(object : ProviderWithIDMetadata {
@@ -121,8 +115,6 @@ open class AudibleClient(
 
         return coroutineScope {
             FuzzySearch.extractSorted(seriesName, seriesResult) { it.series!!.name }
-                .filter { it.score > searchScore }
-                .take(byNameSearchAmount)
                 .map {
                     async {
                         getSeriesByID(object : ProviderWithIDMetadata {

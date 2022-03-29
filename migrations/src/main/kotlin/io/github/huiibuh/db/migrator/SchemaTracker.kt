@@ -1,4 +1,4 @@
-package io.github.huiibuh.db.migration
+package io.github.huiibuh.db.migrator
 
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

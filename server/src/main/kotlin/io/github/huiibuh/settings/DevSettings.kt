@@ -21,13 +21,13 @@ object DevSettings : Settings {
     }
 
     override val audibleSearchHost: String by lazy {
-        System.getenv("AUDIBLE_SEARCH_HOST") ?: "audible.com"
+        System.getenv("AUDIBLE_SEARCH_HOST") ?: "audible.de"
     }
     override val audibleAuthorHost: String by lazy {
         System.getenv("AUDIBLE_AUTHOR_HOST") ?: "audible.com"
     }
 
     override val database: DatabaseConnection by lazy {
-        SqLite
+        H2Database
     }
 }

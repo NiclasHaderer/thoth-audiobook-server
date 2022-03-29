@@ -1,4 +1,5 @@
 val fuzzyWuzzyVersion: String by project
+val fileWatcherVersion: String by project
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
@@ -6,9 +7,11 @@ val exposedVersion: String by project
 val h2Version: String by project
 val hikariVersion: String by project
 val reflectVersion: String by project
+val openApiVersion: String by project
 val sqliteVersion: String by project
 val koinVersion: String by project
 val jacksonVersion: String by project
+val tsGeneratorVersion: String by project
 
 plugins {
     application
@@ -36,6 +39,7 @@ dependencies {
     // Other projects
     implementation(project(":database"))
     implementation(project(":metadata"))
+    implementation(project(":migrations"))
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -46,20 +50,18 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     // Pined, because of exposed compatability
-    implementation("com.h2database:h2:1.4.199")
+    implementation("com.h2database:h2:$h2Version")
     // Dependency Injection
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     // Migration
     implementation("org.reflections:reflections:$reflectVersion")
     // OpenAPI
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:0.3-beta.2")
-    // Typescript code generation
-    implementation("com.github.ntrrgc:ts-generator:1.1.1")
+    implementation("com.github.papsign:Ktor-OpenAPI-Generator:$openApiVersion")
     // Audio file processing
     implementation("org.bitbucket.ijabz:jaudiotagger:v3.0.1")
     // Folder watching
-    implementation("io.methvin:directory-watcher:0.15.0")
+    implementation("io.methvin:directory-watcher:$fileWatcherVersion")
     // Ktor
     implementation("io.ktor:ktor-jackson:$ktorVersion")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -79,5 +81,4 @@ dependencies {
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
     testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
-
 }

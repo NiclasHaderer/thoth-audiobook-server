@@ -11,7 +11,7 @@ internal class BookId(
 )
 
 
-internal class PatchBook(
+class PatchBook(
     val title: String,
     val language: String?,
     val description: String?,
