@@ -12,7 +12,7 @@ interface DatabaseConnection {
 internal object H2Database : DatabaseConnection {
     override val driverClassName = "org.h2.Driver"
     override val jdbcUrl = "jdbc:h2:mem:regular"
-    override val maximumPoolSize = 3
+    override val maximumPoolSize = 100
     override val autoCommit = false
     override val transactionIsolation = "TRANSACTION_REPEATABLE_READ"
 }

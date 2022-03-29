@@ -4,8 +4,8 @@ import io.github.huiibuh.metadata.BookMetadata
 
 
 class AudibleBookImpl(
-    override val description: String?,
     override val id: AudibleProviderWithIDMetadata,
+    override val description: String?,
     override val title: String?,
     override val link: String?,
     override val author: AudibleSearchAuthorImpl?,

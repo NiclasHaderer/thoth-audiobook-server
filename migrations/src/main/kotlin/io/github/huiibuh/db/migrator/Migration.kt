@@ -1,4 +1,4 @@
-package io.github.huiibuh.db.migration
+package io.github.huiibuh.db.migrator
 
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils

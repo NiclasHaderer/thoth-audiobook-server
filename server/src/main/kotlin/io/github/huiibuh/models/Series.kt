@@ -39,14 +39,14 @@ class SeriesModelWithBooks(
     val position: Int,
     override val providerID: ProviderIDModel?,
     override val description: String?,
-    val books: List<BookModel>,
+    val books: List<IBookModel>,
     override val author: NamedId,
     override val images: List<UUID>,
     override val updateTime: LocalDateTime,
 
     ) : ISeriesModel {
     companion object {
-        fun fromModel(series: SeriesModel, books: List<BookModel>, position: Int): SeriesModelWithBooks {
+        fun fromModel(series: ISeriesModel, books: List<IBookModel>, position: Int): SeriesModelWithBooks {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
             val years = books.mapNotNull { it.year }
             val startYear = years.minOrNull()

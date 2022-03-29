@@ -25,10 +25,10 @@ class AuthorModelWithBooks(
     override val providerID: ProviderIDModel?,
     override val image: UUID?,
     val position: Int,
-    val books: List<BookModel>,
+    val books: List<IBookModel>,
 ) : IAuthorModel {
     companion object {
-        fun fromModel(author: AuthorModel, books: List<BookModel>, position: Int) = AuthorModelWithBooks(
+        fun fromModel(author: IAuthorModel, books: List<IBookModel>, position: Int) = AuthorModelWithBooks(
             id = author.id,
             name = author.name,
             biography = author.biography,

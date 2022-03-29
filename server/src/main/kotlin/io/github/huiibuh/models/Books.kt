@@ -50,7 +50,7 @@ class BookModelWithTracks(
     override val updateTime: LocalDateTime,
 ) : IBookModel {
     companion object {
-        fun fromModel(book: BookModel, tracks: List<TrackModel>, position: Int): BookModelWithTracks {
+        fun fromModel(book: IBookModel, tracks: List<TrackModel>, position: Int): BookModelWithTracks {
 
             val sortedTracks = if (tracks.any { it.trackNr == null }) {
                 tracks.sortedBy { it.path }

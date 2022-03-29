@@ -10,7 +10,7 @@ internal class AuthorId(
     @PathParam("The id of the author you want to get") val uuid: UUID,
 )
 
-internal class PatchAuthor(
+class PatchAuthor(
     val name: String,
     val biography: String?,
     val providerID: ProviderIDModel?,

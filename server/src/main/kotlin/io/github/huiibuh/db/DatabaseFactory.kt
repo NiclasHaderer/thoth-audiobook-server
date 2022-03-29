@@ -3,7 +3,7 @@ package io.github.huiibuh.db
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.github.huiibuh.db.migration.DatabaseMigrator
+import io.github.huiibuh.db.migrator.DatabaseMigrator
 import io.github.huiibuh.extensions.classLogger
 import io.github.huiibuh.settings.Settings
 import org.jetbrains.exposed.sql.Database
@@ -13,12 +13,15 @@ import org.koin.core.component.inject
 
 
 object DatabaseFactory : KoinComponent {
-    private val settings by inject<Settings>()
-    private var dbInstance: Database? = null
     private val log = classLogger()
-    private val dbConfig = DatabaseConfig.invoke {
-        useNestedTransactions = true
+    private val settings by inject<Settings>()
+    private val dbInstance by lazy {
+        log.info("Initialising database")
+        Database.connect(dataSource, databaseConfig = DatabaseConfig.invoke {
+            useNestedTransactions = true
+        })
     }
+
     private val dataSource by lazy {
         val dbConfig = settings.database
         val config = HikariConfig().apply {
@@ -31,18 +34,11 @@ object DatabaseFactory : KoinComponent {
         HikariDataSource(config)
     }
 
-    fun connect() {
-        log.info("Initialising database")
-        dbInstance = Database.connect(dataSource, databaseConfig = dbConfig)
-    }
+    fun connect() = dbInstance.run { }
 
     fun migrate() {
         log.info("Migrating database")
-        if (dbInstance == null) {
-            throw Exception("Please connect to the database before running the migrations")
-        }
-
-        DatabaseMigrator(dbInstance!!, "db.migrations").runMigrations()
+        DatabaseMigrator(dbInstance, "io.github.huiibuh.db.migrations").runMigrations()
         log.info("Migrations done")
     }
 

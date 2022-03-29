@@ -1,5 +1,6 @@
 package io.github.huiibuh.metadata.audible.client
 
+import io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl
 import io.ktor.client.*
 import io.ktor.http.*
 import org.jsoup.nodes.Document
@@ -61,7 +62,7 @@ internal class SearchHandler : AudibleHandler {
         }
     }
 
-    override suspend fun execute(): List<io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl>? {
+    override suspend fun execute(): List<AudibleSearchBookImpl>? {
         val document = this.getDocument() ?: return null
         val searchResultItems = getSearchItems(document)
         return extractSearchInfo(searchResultItems)
@@ -71,10 +72,10 @@ internal class SearchHandler : AudibleHandler {
         return document.select(".productListItem")
     }
 
-    private fun extractSearchInfo(elementList: Elements): List<io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl> {
+    private fun extractSearchInfo(elementList: Elements): List<AudibleSearchBookImpl> {
         return elementList.map {
             val link = extractLink(it)
-            io.github.huiibuh.metadata.audible.models.AudibleSearchBookImpl(
+            AudibleSearchBookImpl(
                 author = extractAuthorInfo(it),
                 title = extractTitle(it),
                 link = link,
