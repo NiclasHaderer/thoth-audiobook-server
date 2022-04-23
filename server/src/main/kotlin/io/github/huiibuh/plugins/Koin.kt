@@ -12,7 +12,6 @@ import io.github.huiibuh.metadata.audible.client.AudibleClient
 import io.github.huiibuh.settings.DevSettings
 import io.github.huiibuh.settings.ProdSettings
 import io.github.huiibuh.settings.Settings
-import io.github.huiibuh.settings.isProduction
 import io.ktor.application.*
 import org.koin.dsl.module
 import org.koin.core.module.Module as KoinModule
@@ -21,12 +20,12 @@ import org.koin.logger.slf4jLogger
 
 fun Application.configureProdKoin() {
     install(Koin) {
-        module {
-            single<Settings> {
-                if (isProduction()) ProdSettings else DevSettings
+        modules(
+            module {
+                single<Settings> { ProdSettings }
+                koinCommon()
             }
-            koinCommon()
-        }
+        )
         slf4jLogger()
     }
 }
@@ -34,10 +33,12 @@ fun Application.configureProdKoin() {
 
 fun Application.configureDevKoin() {
     install(Koin) {
-        module {
-            single<Settings> { DevSettings }
-            koinCommon()
-        }
+        modules(
+            module {
+                single<Settings> { DevSettings }
+                koinCommon()
+            }
+        )
         slf4jLogger()
     }
 }
