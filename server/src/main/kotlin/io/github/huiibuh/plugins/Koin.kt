@@ -1,4 +1,4 @@
-package io.github.huiibuh.di
+package io.github.huiibuh.plugins
 
 import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapper
 import io.github.huiibuh.file.analyzer.AudioFileAnalyzerWrapperImpl
@@ -13,12 +13,37 @@ import io.github.huiibuh.settings.DevSettings
 import io.github.huiibuh.settings.ProdSettings
 import io.github.huiibuh.settings.Settings
 import io.github.huiibuh.settings.isProduction
+import io.ktor.application.*
 import org.koin.dsl.module
+import org.koin.core.module.Module as KoinModule
+import org.koin.ktor.ext.Koin
+import org.koin.logger.slf4jLogger
 
-val DI_MODULE = module {
-    single {
-        if (isProduction()) ProdSettings else DevSettings
+fun Application.configureProdKoin() {
+    install(Koin) {
+        module {
+            single<Settings> {
+                if (isProduction()) ProdSettings else DevSettings
+            }
+            koinCommon()
+        }
+        slf4jLogger()
     }
+}
+
+
+fun Application.configureDevKoin() {
+    install(Koin) {
+        module {
+            single<Settings> { DevSettings }
+            koinCommon()
+        }
+        slf4jLogger()
+    }
+}
+
+
+private fun KoinModule.koinCommon() {
     single<MetadataProvider> {
         val settings: Settings = get()
         MetadataWrapper(
@@ -33,5 +58,4 @@ val DI_MODULE = module {
     single<FileAnalyzingScheduler> {
         FileAnalyzingSchedulerImpl()
     }
-
 }
