@@ -4,9 +4,7 @@ object DevSettings : Settings {
     override val ignoreFile: String by lazy {
         System.getenv("IGNORE_FILE") ?: ".audignore"
     }
-    override val production: Boolean by lazy {
-        isProduction()
-    }
+    override val production = false
 
     override val audioFileLocation: String by lazy {
         System.getenv("AUDIO_FILE_LOCATION") ?: "test-resources"

@@ -10,11 +10,13 @@ import io.github.huiibuh.api.search.registerSearchRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
 import io.github.huiibuh.api.withBasePath
 import io.github.huiibuh.db.DatabaseFactory
+import io.github.huiibuh.extensions.shutdown
 import io.github.huiibuh.plugins.configureProdKoin
 import io.github.huiibuh.file.scanner.CompleteScan
 import io.github.huiibuh.file.scanner.FileChangeService
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
 import io.github.huiibuh.plugins.configureCORS
+import io.github.huiibuh.plugins.configureDevKoin
 import io.github.huiibuh.plugins.configureMonitoring
 import io.github.huiibuh.plugins.configureOpenAPI
 import io.github.huiibuh.plugins.configurePartialContent
@@ -22,6 +24,7 @@ import io.github.huiibuh.plugins.configureRouting
 import io.github.huiibuh.plugins.configureSerialization
 import io.github.huiibuh.plugins.configureSockets
 import io.github.huiibuh.settings.getPort
+import io.github.huiibuh.settings.isProduction
 import io.ktor.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -32,20 +35,24 @@ fun main() {
     embeddedServer(
         Netty, port = getPort(), watchPaths = listOf("classes"), host = "0.0.0.0"
     ) { // Has to be done in here for some strange scoping reasons
-        configureProdKoin()
-        launch {
-            connectToDB()
+        try {
+            if (isProduction()) configureProdKoin() else configureDevKoin()
+            DatabaseFactory.connect()
+            DatabaseFactory.migrate()
+            webServer()
+        } catch (e: Exception) {
+            log.error("Could not start server", e)
+            this.shutdown()
         }
-        webServer()
+
+        launch {
+            CompleteScan().start()
+            FileChangeService().watch()
+        }
+
     }.start(wait = false)
 }
 
-fun connectToDB() {
-    DatabaseFactory.connect()
-    DatabaseFactory.migrate()
-    CompleteScan().start()
-    FileChangeService().watch()
-}
 
 fun Application.webServer() {
     configureOpenAPI()
