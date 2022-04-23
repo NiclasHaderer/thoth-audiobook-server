@@ -10,7 +10,7 @@ import io.github.huiibuh.api.search.registerSearchRouting
 import io.github.huiibuh.api.stream.registerStreamingRouting
 import io.github.huiibuh.api.withBasePath
 import io.github.huiibuh.db.DatabaseFactory
-import io.github.huiibuh.di.configureKoin
+import io.github.huiibuh.plugins.configureProdKoin
 import io.github.huiibuh.file.scanner.CompleteScan
 import io.github.huiibuh.file.scanner.FileChangeService
 import io.github.huiibuh.logging.disableJAudioTaggerLogs
@@ -32,16 +32,19 @@ fun main() {
     embeddedServer(
         Netty, port = getPort(), watchPaths = listOf("classes"), host = "0.0.0.0"
     ) { // Has to be done in here for some strange scoping reasons
-        configureKoin()
+        configureProdKoin()
         launch {
-            DatabaseFactory.connect()
-            DatabaseFactory.migrate()
-            CompleteScan().start()
-            FileChangeService().watch()
+            connectToDB()
         }
-
         webServer()
     }.start(wait = false)
+}
+
+fun connectToDB() {
+    DatabaseFactory.connect()
+    DatabaseFactory.migrate()
+    CompleteScan().start()
+    FileChangeService().watch()
 }
 
 fun Application.webServer() {

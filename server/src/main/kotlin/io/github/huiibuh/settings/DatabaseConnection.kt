@@ -17,15 +17,6 @@ internal object H2Database : DatabaseConnection {
     override val transactionIsolation = "TRANSACTION_REPEATABLE_READ"
 }
 
-internal object SqLite : DatabaseConnection {
-    private const val sqlitePath = "audiobook.db"
-    override val driverClassName = "org.sqlite.JDBC"
-    override val jdbcUrl = "jdbc:sqlite:${this.sqlitePath}"
-    override val maximumPoolSize = 1
-    override val autoCommit = false
-    override val transactionIsolation = "TRANSACTION_SERIALIZABLE"
-}
-
 internal object ProdDatabaseConnection : DatabaseConnection {
     override val driverClassName: String by lazy {
         System.getenv("DB_DRIVER_CLASS_NAME")
