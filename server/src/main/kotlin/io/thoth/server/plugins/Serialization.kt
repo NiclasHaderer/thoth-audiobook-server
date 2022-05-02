@@ -1,0 +1,23 @@
+package io.thoth.server.plugins
+
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.module.SimpleModule
+import io.ktor.application.*
+import io.ktor.features.*
+import io.ktor.jackson.*
+import io.thoth.server.serializers.jackson.CustomLocalDateTimeDesSerializer
+import io.thoth.server.serializers.jackson.CustomLocalDateTimeSerializer
+import java.time.LocalDateTime
+
+
+fun Application.configureSerialization() {
+    install(ContentNegotiation) {
+        jackson {
+            val module = SimpleModule()
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            module.addSerializer(LocalDateTime::class.java, CustomLocalDateTimeSerializer())
+            module.addDeserializer(LocalDateTime::class.java, CustomLocalDateTimeDesSerializer())
+            registerModule(module)
+        }
+    }
+}

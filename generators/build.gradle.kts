@@ -10,9 +10,10 @@ repositories {
     mavenCentral()
 }
 
-dependencies{
-    implementation(project(":server"))
+dependencies {
     implementation(project(":metadata"))
+    implementation(project(":models"))
+    implementation(project(":server"))
     // Typescript code generation
     implementation("com.github.ntrrgc:ts-generator:$tsGeneratorVersion")
 }
