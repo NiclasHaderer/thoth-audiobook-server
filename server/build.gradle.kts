@@ -20,7 +20,7 @@ plugins {
 
 application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
-    mainClass.set("io.github.huiibuh.ApplicationKt")
+    mainClass.set("io.thoth.ApplicationKt")
 }
 
 // For kotlin annotations
@@ -38,9 +38,11 @@ repositories {
 
 dependencies {
     // Other projects
+    implementation(project(":authentication"))
+    implementation(project(":common"))
     implementation(project(":database"))
     implementation(project(":metadata"))
-    implementation(project(":migrations"))
+    implementation(project(":models"))
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
