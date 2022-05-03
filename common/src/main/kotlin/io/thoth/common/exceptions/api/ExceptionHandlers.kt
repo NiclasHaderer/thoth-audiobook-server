@@ -1,4 +1,4 @@
-package io.thoth.models.exceptions
+package io.thoth.common.exceptions
 
 import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
 import com.papsign.ktor.openapigen.route.throws

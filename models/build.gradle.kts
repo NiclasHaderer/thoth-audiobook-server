@@ -13,8 +13,4 @@ repositories {
 
 dependencies {
     implementation(project(":metadata"))
-
-    implementation("io.ktor:ktor-jackson:$ktorVersion")
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:$openApiVersion")
-
 }

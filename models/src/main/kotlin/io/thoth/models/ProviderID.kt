@@ -1,4 +1,4 @@
-package io.thoth.models.datastructures
+package io.thoth.models
 
 import io.thoth.metadata.ProviderWithIDMetadata
 

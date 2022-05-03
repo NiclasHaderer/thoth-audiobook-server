@@ -8,9 +8,9 @@ import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
 import io.thoth.database.tables.Series
-import io.thoth.models.datastructures.PaginatedResponse
-import io.thoth.models.datastructures.SeriesModel
-import io.thoth.models.datastructures.SeriesModelWithBooks
+import io.thoth.models.PaginatedResponse
+import io.thoth.models.SeriesModel
+import io.thoth.models.SeriesModelWithBooks
 import io.thoth.server.api.ApiTags
 import io.thoth.server.api.audiobooks.QueryLimiter
 import java.util.*

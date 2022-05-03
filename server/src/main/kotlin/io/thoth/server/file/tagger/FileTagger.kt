@@ -1,7 +1,7 @@
 package io.thoth.server.file.tagger
 
 import io.thoth.database.tables.Track
-import io.thoth.models.datastructures.ProviderIDModel
+import io.thoth.models.ProviderIDModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch

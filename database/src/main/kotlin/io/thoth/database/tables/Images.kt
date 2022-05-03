@@ -1,9 +1,9 @@
 package io.thoth.database.tables
 
+import io.thoth.common.exceptions.APINotFound
 import io.thoth.common.extensions.uriToFile
 import io.thoth.database.ToModel
-import io.thoth.models.datastructures.ImageModel
-import io.thoth.models.exceptions.APINotFound
+import io.thoth.models.ImageModel
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

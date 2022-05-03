@@ -1,9 +1,9 @@
 package io.thoth.database.tables
 
+import io.thoth.common.exceptions.APINotFound
 import io.thoth.database.ToModel
 import io.thoth.metadata.ProviderWithIDMetadata
-import io.thoth.models.datastructures.ProviderIDModel
-import io.thoth.models.exceptions.APINotFound
+import io.thoth.models.ProviderIDModel
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

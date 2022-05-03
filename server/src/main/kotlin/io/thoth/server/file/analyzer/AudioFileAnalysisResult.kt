@@ -1,6 +1,6 @@
 package io.thoth.server.file.analyzer
 
-import io.thoth.models.datastructures.ProviderIDModel
+import io.thoth.models.ProviderIDModel
 
 class AudioFileAnalysisResultImpl(
     override val title: String,

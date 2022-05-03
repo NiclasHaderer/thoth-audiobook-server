@@ -1,4 +1,4 @@
-package io.thoth.models.exceptions
+package io.thoth.common.exceptions
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonProperty

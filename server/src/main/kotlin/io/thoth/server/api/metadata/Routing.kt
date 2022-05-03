@@ -6,14 +6,14 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
+import io.thoth.common.exceptions.APINotFound
+import io.thoth.common.exceptions.withNotFoundHandling
 import io.thoth.common.extensions.inject
 import io.thoth.metadata.AuthorMetadata
 import io.thoth.metadata.BookMetadata
 import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.SearchBookMetadata
 import io.thoth.metadata.SeriesMetadata
-import io.thoth.models.exceptions.APINotFound
-import io.thoth.models.exceptions.withNotFoundHandling
 import io.thoth.server.api.ApiTags
 
 fun NormalOpenAPIRoute.registerMetadataRouting(path: String = "metadata") {
