@@ -1,7 +1,7 @@
 package io.thoth.database.tables
 
 import io.thoth.database.ToModel
-import io.thoth.models.datastructures.KeyValueSettingsModel
+import io.thoth.models.KeyValueSettingsModel
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll

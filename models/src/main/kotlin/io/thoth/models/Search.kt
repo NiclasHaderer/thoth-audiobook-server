@@ -1,4 +1,4 @@
-package io.thoth.models.datastructures
+package io.thoth.models
 
 class SearchModel(
     val books: List<BookModel>,

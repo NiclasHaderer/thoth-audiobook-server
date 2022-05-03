@@ -15,6 +15,7 @@ fun Application.configureSerialization() {
         jackson {
             val module = SimpleModule()
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
             module.addSerializer(LocalDateTime::class.java, CustomLocalDateTimeSerializer())
             module.addDeserializer(LocalDateTime::class.java, CustomLocalDateTimeDesSerializer())
             registerModule(module)

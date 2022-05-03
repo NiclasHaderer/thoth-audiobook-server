@@ -1,12 +1,12 @@
 package io.thoth.database.tables
 
+import io.thoth.common.exceptions.APINotFound
 import io.thoth.common.extensions.findOne
 import io.thoth.database.ToModel
-import io.thoth.models.datastructures.BookModel
-import io.thoth.models.datastructures.BookModelWithTracks
-import io.thoth.models.datastructures.NamedId
-import io.thoth.models.datastructures.TitledId
-import io.thoth.models.exceptions.APINotFound
+import io.thoth.models.BookModel
+import io.thoth.models.BookModelWithTracks
+import io.thoth.models.NamedId
+import io.thoth.models.TitledId
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

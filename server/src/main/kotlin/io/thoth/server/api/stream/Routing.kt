@@ -8,9 +8,9 @@ import com.papsign.ktor.openapigen.route.tag
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
+import io.thoth.common.exceptions.APINotFound
+import io.thoth.common.exceptions.withNotFoundHandling
 import io.thoth.database.tables.Track
-import io.thoth.models.exceptions.APINotFound
-import io.thoth.models.exceptions.withNotFoundHandling
 import io.thoth.server.api.ApiTags
 import java.io.File
 

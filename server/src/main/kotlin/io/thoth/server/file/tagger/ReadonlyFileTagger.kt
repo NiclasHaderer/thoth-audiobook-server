@@ -1,7 +1,7 @@
 package io.thoth.server.file.tagger
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.thoth.models.datastructures.ProviderIDModel
+import io.thoth.models.ProviderIDModel
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey

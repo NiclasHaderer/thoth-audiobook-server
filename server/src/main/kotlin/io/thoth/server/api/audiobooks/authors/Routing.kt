@@ -7,11 +7,11 @@ import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
+import io.thoth.common.exceptions.APINotFound
 import io.thoth.database.tables.Author
-import io.thoth.models.datastructures.AuthorModel
-import io.thoth.models.datastructures.AuthorModelWithBooks
-import io.thoth.models.datastructures.PaginatedResponse
-import io.thoth.models.exceptions.APINotFound
+import io.thoth.models.AuthorModel
+import io.thoth.models.AuthorModelWithBooks
+import io.thoth.models.PaginatedResponse
 import io.thoth.server.api.ApiTags
 import io.thoth.server.api.audiobooks.QueryLimiter
 import java.util.*

@@ -2,7 +2,7 @@ package io.thoth.server.api.audiobooks.series
 
 import com.papsign.ktor.openapigen.annotations.Path
 import com.papsign.ktor.openapigen.annotations.parameters.PathParam
-import io.thoth.models.datastructures.ProviderIDModel
+import io.thoth.models.ProviderIDModel
 import java.util.*
 
 @Path("{uuid}")

@@ -5,10 +5,10 @@ import com.papsign.ktor.openapigen.route.path.normal.get
 import com.papsign.ktor.openapigen.route.response.respond
 import com.papsign.ktor.openapigen.route.route
 import com.papsign.ktor.openapigen.route.tag
-import io.thoth.models.datastructures.SearchModel
-import io.thoth.models.exceptions.APIBadRequest
-import io.thoth.models.exceptions.APINotImplemented
-import io.thoth.models.exceptions.withNotImplementedRequestHandling
+import io.thoth.common.exceptions.APIBadRequest
+import io.thoth.common.exceptions.APINotImplemented
+import io.thoth.common.exceptions.withNotImplementedRequestHandling
+import io.thoth.models.SearchModel
 import io.thoth.server.api.ApiTags
 import io.thoth.server.services.SearchService
 

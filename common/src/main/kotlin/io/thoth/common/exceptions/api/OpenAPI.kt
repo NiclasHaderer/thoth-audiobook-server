@@ -1,4 +1,4 @@
-package io.thoth.models.exceptions
+package io.thoth.common.exceptions
 
 import com.papsign.ktor.openapigen.exceptions.OpenAPIBadContentException
 import com.papsign.ktor.openapigen.exceptions.OpenAPINoParserException
