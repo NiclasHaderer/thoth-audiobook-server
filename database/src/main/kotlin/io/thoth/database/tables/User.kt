@@ -3,6 +3,7 @@ package io.thoth.database.tables
 import io.thoth.common.exceptions.APINotFound
 import io.thoth.common.extensions.findOne
 import io.thoth.database.ToModel
+import io.thoth.models.InternalUserModel
 import io.thoth.models.UserModel
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
@@ -37,7 +38,7 @@ class User(id: EntityID<UUID>) : UUIDEntity(id), ToModel<UserModel> {
     var admin by TUsers.admin
     var edit by TUsers.edit
 
-    override fun toModel() = UserModel(
+    override fun toModel() = InternalUserModel(
         id = id.value,
         username = username,
         admin = admin,
