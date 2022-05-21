@@ -16,25 +16,6 @@ import java.security.interfaces.RSAPublicKey
 import java.util.*
 
 
-class RegisterUser(
-    var username: String,
-    val password: String,
-    var admin: Boolean,
-    var edit: Boolean,
-)
-
-class LoginUser(
-    var username: String,
-    val password: String,
-)
-
-class User(
-    var id: String,
-    var username: String,
-    var admin: Boolean,
-    var edit: Boolean,
-)
-
 fun Route.jwksEndpoint(keyPair: KeyPair) = get {
     val jwk = RSAKey.Builder(keyPair.public as RSAPublicKey)
         .keyUse(KeyUse.SIGNATURE)
@@ -43,6 +24,11 @@ fun Route.jwksEndpoint(keyPair: KeyPair) = get {
 
     call.respondText(jwk.toString(), ContentType.Application.Json)
 }
+
+class LoginUser(
+    var username: String,
+    val password: String,
+)
 
 fun Route.loginEndpoint(config: AuthConfig) = post {
     val user = call.receive<LoginUser>()
@@ -60,6 +46,13 @@ fun Route.loginEndpoint(config: AuthConfig) = post {
     val jwtPair = generateJwtForUser(config.issuer, user.username, config.keyPair)
     call.respond(jwtPair)
 }
+
+class RegisterUser(
+    var username: String,
+    val password: String,
+    var admin: Boolean,
+    var edit: Boolean,
+)
 
 fun Route.registerEndpoint(config: AuthConfig) = post {
     val user = call.receive<RegisterUser>()
