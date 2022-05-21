@@ -25,7 +25,7 @@ class User(id: EntityID<UUID>) : UUIDEntity(id), ToModel<UserModel> {
     companion object : UUIDEntityClass<User>(TUsers) {
         @Throws(APINotFound::class)
         fun getById(uuid: UUID) = transaction {
-            findById(uuid)?.toModel() ?: throw APINotFound("Could not find image")
+            findById(uuid)?.toModel() ?: throw APINotFound("Could not find user")
         }
 
         fun getByName(name: String) = transaction {
