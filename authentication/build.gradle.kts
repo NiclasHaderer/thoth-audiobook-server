@@ -3,7 +3,7 @@ val jwtVersion: String by project
 val exposedVersion: String by project
 
 plugins {
-    kotlin("jvm") version "1.5.31"
+    kotlin("jvm") version "1.6.21"
 }
 
 repositories {

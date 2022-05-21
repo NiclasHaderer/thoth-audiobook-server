@@ -8,9 +8,4 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_16" default="true" project-jdk-name="semeru-16" project-jdk-type="JavaSDK" />
-  <component name="SwUserDefinedSpecifications">
-    <option name="specTypeByUrl">
-      <map />
-    </option>
-  </component>
 </project>
