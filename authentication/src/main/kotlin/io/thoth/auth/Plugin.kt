@@ -17,7 +17,7 @@ class AuthConfig(
 )
 
 
-fun Application.authorization(config: AuthConfig) {
+fun Application.authentication(config: AuthConfig) {
 
     val jwkProvider = JwkProviderBuilder(config.issuer)
         .cached(5, 10, TimeUnit.MINUTES)
@@ -25,8 +25,7 @@ fun Application.authorization(config: AuthConfig) {
         .build()
 
     install(Authentication) {
-        // TODO do not seem to do anything at the moment
-        jwt("user-jwt") {
+        jwt(GuardTypes.User.value) {
             if (config.realm != null) {
                 realm = config.realm
             }
@@ -34,14 +33,15 @@ fun Application.authorization(config: AuthConfig) {
                 acceptLeeway(3)
             }
             validate { jwtCredential ->
-                val principal = credentialsToPrincipal(jwtCredential) ?: return@validate null
-                if (principal.type == JwtType.access) principal else null
+                val principal = jwtToPrincipal(jwtCredential) ?: return@validate null
+                if (principal.type == JwtType.Access) principal else null
             }
-            challenge { defaultScheme, realm ->
+            challenge { _, _ ->
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
             }
         }
-        jwt("edit-user-jwt") {
+
+        jwt(GuardTypes.EditUser.value) {
             if (config.realm != null) {
                 realm = config.realm
             }
@@ -49,14 +49,15 @@ fun Application.authorization(config: AuthConfig) {
                 acceptLeeway(3)
             }
             validate { jwtCredential ->
-                val principal = credentialsToPrincipal(jwtCredential) ?: return@validate null
-                if (principal.type != JwtType.access && principal.edit) principal else null
+                val principal = jwtToPrincipal(jwtCredential) ?: return@validate null
+                if (principal.type != JwtType.Access && principal.edit) principal else null
             }
-            challenge { defaultScheme, realm ->
+            challenge { _, _ ->
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
             }
         }
-        jwt("admin-user-jwt") {
+
+        jwt(GuardTypes.AdminUser.value) {
             if (config.realm != null) {
                 realm = config.realm
             }
@@ -64,10 +65,10 @@ fun Application.authorization(config: AuthConfig) {
                 acceptLeeway(3)
             }
             validate { jwtCredential ->
-                val principal = credentialsToPrincipal(jwtCredential) ?: return@validate null
-                if (principal.type != JwtType.access && principal.edit && principal.admin) principal else null
+                val principal = jwtToPrincipal(jwtCredential) ?: return@validate null
+                if (principal.type != JwtType.Access && principal.edit && principal.admin) principal else null
             }
-            challenge { defaultScheme, realm ->
+            challenge { _, _ ->
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
             }
         }
@@ -75,14 +76,8 @@ fun Application.authorization(config: AuthConfig) {
 
 
     routing {
-
         route("login") {
             loginEndpoint(config)
-        }
-        adminUserAuth {
-            route("register") {
-                registerEndpoint(config)
-            }
         }
         route(".well-known/jwks.json") {
             jwksEndpoint(config.keyPair)

@@ -6,7 +6,7 @@ import io.ktor.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.thoth.auth.AuthConfig
-import io.thoth.auth.authorization
+import io.thoth.auth.authentication
 import io.thoth.common.exceptions.configureStatusPages
 import io.thoth.common.exceptions.withDefaultErrorHandlers
 import io.thoth.common.extensions.shutdown
@@ -39,7 +39,8 @@ fun main() {
     ) {
         if (isProduction()) configureProdKoin() else configureDevKoin()
         val settings by inject<Settings>()
-        authorization(AuthConfig(settings.keyPair, "asdf"))
+
+        authentication(AuthConfig(settings.keyPair, "asdf"))
 
         try {
             // Has to be done in here for some strange scoping reasons

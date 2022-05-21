@@ -3,20 +3,22 @@ package io.thoth.auth
 import io.ktor.auth.*
 import io.ktor.routing.*
 
-fun Routing.userAuth(configuration: Routing.() -> Unit) {
-    authenticate("user-jwt") {
-        this@userAuth.configuration()
-    }
+
+enum class GuardTypes(val value: String) {
+    User("user-jwt"),
+    EditUser("edit-user-jwt"),
+    AdminUser("admin-user-jwt"),
 }
 
-fun Routing.editUserAuth(configuration: Routing.() -> Unit) {
-    authenticate("edit-user-jwt") {
-        this@editUserAuth.configuration()
-    }
+
+fun Route.userAuth(config: Route.() -> Unit) = authenticate(GuardTypes.User.value) {
+    this.config()
 }
 
-fun Routing.adminUserAuth(configuration: Routing.() -> Unit) {
-    authenticate("admin-user-jwt") {
-        this@adminUserAuth.configuration()
-    }
+fun Route.editUserAuth(config: Route.() -> Unit) = authenticate(GuardTypes.EditUser.value) {
+    this.config()
+}
+
+fun Route.adminUserAuth(config: Route.() -> Unit) = authenticate(GuardTypes.AdminUser.value) {
+    this.config()
 }

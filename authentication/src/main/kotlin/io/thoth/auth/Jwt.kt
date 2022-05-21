@@ -17,7 +17,7 @@ fun generateJwtForUser(issuer: String, user: String, keyPair: KeyPair): JwtColle
     val bearerToken = JWT
         .create()
         .withIssuer(issuer)
-        .withClaim("type", "access")
+        .withClaim("type", JwtType.Access.value)
         .withClaim("username", user)
         .withExpiresAt(Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
@@ -25,21 +25,23 @@ fun generateJwtForUser(issuer: String, user: String, keyPair: KeyPair): JwtColle
     val refreshAge = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(60)
     val refreshToken = JWT
         .create()
-        .withClaim("type", "refresh")
         .withIssuer(issuer)
+        .withClaim("type", JwtType.Refresh.value)
+        .withClaim("username", user)
         .withExpiresAt(Date(refreshAge))
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 
     return JwtCollection(bearerToken, refreshToken)
 }
 
-enum class JwtType {
-    access,
-    refresh,
+enum class JwtType(val value: String) {
+    Access("access"),
+    Refresh("refresh"),
 }
 
 class ThothPrincipal(
     val payload: Payload,
+    // TODO check if user id and user name can be inferred from the created jwt
     val username: String,
     val edit: Boolean,
     val admin: Boolean,
@@ -47,7 +49,7 @@ class ThothPrincipal(
     val type: JwtType
 ) : Principal
 
-fun credentialsToPrincipal(credentials: JWTCredential): ThothPrincipal? {
+fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal {
     val username = credentials.payload.getClaim("username").asString()
     val edit = credentials.payload.getClaim("edit").asBoolean()
     val admin = credentials.payload.getClaim("admin").asBoolean()
@@ -60,6 +62,6 @@ fun credentialsToPrincipal(credentials: JWTCredential): ThothPrincipal? {
         edit = edit,
         admin = admin,
         userId = UUID.fromString(id),
-        type = JwtType.access
+        type = JwtType.Access // TODO real type
     )
 }
