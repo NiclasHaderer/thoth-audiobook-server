@@ -6,7 +6,7 @@ import io.ktor.auth.*
 import io.ktor.auth.jwt.*
 import io.ktor.http.*
 import io.ktor.response.*
-import io.ktor.routing.*
+import io.thoth.auth.routes.authRoutes
 import java.security.KeyPair
 import java.util.concurrent.TimeUnit
 
@@ -78,35 +78,6 @@ fun Application.authentication(config: AuthConfig) {
         }
     }
 
-
-    routing {
-        route("login") {
-            loginEndpoint(config)
-        }
-
-        route("register") {
-            registerEndpoint(config)
-        }
-
-        route(".well-known/jwks.json") {
-            jwksEndpoint(config)
-        }
-
-        adminUserAuth {
-            route("user/{userID}") {
-                modifyUser()
-            }
-        }
-
-        userAuth {
-            route("user") {
-                userEndpoint()
-
-                route("password") {
-                    changePassword()
-                }
-            }
-        }
-    }
+    authRoutes(config)
 }
 
