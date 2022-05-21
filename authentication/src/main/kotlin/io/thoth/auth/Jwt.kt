@@ -11,9 +11,23 @@ import java.security.interfaces.RSAPublicKey
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-data class JwtCollection(val bearer: String, val refresh: String)
+internal class JwtPair(val bearer: String, val refresh: String)
 
-fun generateJwtForUser(issuer: String, user: UserModel, config: AuthConfig): JwtCollection {
+enum class JwtType {
+    Access,
+    Refresh,
+}
+
+class ThothPrincipal(
+    val payload: Payload,
+    val username: String,
+    val userId: UUID,
+    val edit: Boolean,
+    val admin: Boolean,
+    val type: JwtType
+) : Principal
+
+internal fun generateJwtForUser(issuer: String, user: UserModel, config: AuthConfig): JwtPair {
     val keyPair = config.keyPair
     val bearerToken = JWT
         .create()
@@ -40,24 +54,10 @@ fun generateJwtForUser(issuer: String, user: UserModel, config: AuthConfig): Jwt
         .withExpiresAt(Date(refreshAge))
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 
-    return JwtCollection(bearerToken, refreshToken)
+    return JwtPair(bearerToken, refreshToken)
 }
 
-enum class JwtType {
-    Access,
-    Refresh,
-}
-
-class ThothPrincipal(
-    val payload: Payload,
-    val username: String,
-    val userId: UUID,
-    val edit: Boolean,
-    val admin: Boolean,
-    val type: JwtType
-) : Principal
-
-fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
+internal fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
     val username = credentials.payload.getClaim("username").asString()
     val edit = credentials.payload.getClaim("edit").asBoolean()
     val admin = credentials.payload.getClaim("admin").asBoolean()

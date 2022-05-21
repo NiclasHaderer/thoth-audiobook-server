@@ -4,7 +4,7 @@ import io.ktor.auth.*
 import io.ktor.routing.*
 
 
-enum class GuardTypes(val value: String) {
+internal enum class GuardTypes(val value: String) {
     User("user-jwt"),
     EditUser("edit-user-jwt"),
     AdminUser("admin-user-jwt"),
