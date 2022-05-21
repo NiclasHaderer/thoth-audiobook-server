@@ -21,6 +21,7 @@ internal fun Application.authRoutes(config: AuthConfig) {
         }
 
         adminUserAuth {
+            // TODO use the location api in order to ensure that the userID is a UUID before it gets parsed anywhere else
             route("user/{userID}") {
                 modifyUser()
             }
@@ -28,7 +29,8 @@ internal fun Application.authRoutes(config: AuthConfig) {
 
         userAuth {
             route("user") {
-                userEndpoint()
+                getUser()
+                changeUsername()
 
                 route("password") {
                     changePassword()

@@ -16,3 +16,7 @@ internal class PasswordChange(
     val currentPassword: String,
     val newPassword: String
 )
+
+internal class UsernameChange(
+    val username: String
+)
