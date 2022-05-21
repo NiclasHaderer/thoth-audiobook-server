@@ -10,8 +10,10 @@ import io.ktor.routing.*
 import java.security.KeyPair
 import java.util.concurrent.TimeUnit
 
+
 class AuthConfig(
     val keyPair: KeyPair,
+    val keyId: String,
     val issuer: String,
     val realm: String? = null
 )
@@ -29,6 +31,7 @@ fun Application.authentication(config: AuthConfig) {
             if (config.realm != null) {
                 realm = config.realm
             }
+
             verifier(jwkProvider, config.issuer) {
                 acceptLeeway(3)
             }
@@ -37,6 +40,7 @@ fun Application.authentication(config: AuthConfig) {
                 if (principal.type == JwtType.Access) principal else null
             }
             challenge { _, _ ->
+                println(jwkProvider.get(config.keyId))
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
             }
         }
@@ -79,12 +83,28 @@ fun Application.authentication(config: AuthConfig) {
         route("login") {
             loginEndpoint(config)
         }
-        route(".well-known/jwks.json") {
-            jwksEndpoint(config.keyPair)
+
+        route("register") {
+            registerEndpoint(config)
         }
+
+        route(".well-known/jwks.json") {
+            jwksEndpoint(config)
+        }
+
+        adminUserAuth {
+            route("user/{userID}") {
+                modifyUser()
+            }
+        }
+
         userAuth {
             route("user") {
                 userEndpoint()
+
+                route("password") {
+                    changePassword()
+                }
             }
         }
     }

@@ -40,7 +40,7 @@ fun main() {
         if (isProduction()) configureProdKoin() else configureDevKoin()
         val settings by inject<Settings>()
 
-        authentication(AuthConfig(settings.keyPair, "asdf"))
+        authentication(AuthConfig(settings.keyPair, "asd", "http://0.0.0.0:${settings.webUiPort}"))
 
         try {
             // Has to be done in here for some strange scoping reasons
