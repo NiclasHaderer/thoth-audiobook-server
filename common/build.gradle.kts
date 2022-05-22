@@ -38,6 +38,4 @@ dependencies {
     implementation("org.reflections:reflections:$reflectVersion")
 
     implementation("io.ktor:ktor-jackson:$ktorVersion")
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:$openApiVersion")
-
 }
