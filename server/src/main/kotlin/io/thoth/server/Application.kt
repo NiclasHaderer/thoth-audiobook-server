@@ -25,11 +25,11 @@ import io.thoth.server.plugins.configureOpenAPI
 import io.thoth.server.plugins.configurePartialContent
 import io.thoth.server.plugins.configureProdKoin
 import io.thoth.server.plugins.configureRouting
-import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
 import io.thoth.server.settings.Settings
 import io.thoth.server.settings.getPort
 import io.thoth.server.settings.isProduction
+import kotlinx.coroutines.launch
 import org.koin.ktor.ext.inject
 
 fun main() {
@@ -43,19 +43,17 @@ fun main() {
         authentication(AuthConfig(settings.keyPair, "asd", "http://0.0.0.0:${settings.webUiPort}"))
 
         try {
-            // Has to be done in here for some strange scoping reasons
             DatabaseFactory.connect()
             DatabaseFactory.migrate()
             webServer()
         } catch (e: Exception) {
             log.error("Could not start server", e)
-            this.shutdown()
+            shutdown()
         }
-        //
-        //        launch {
-        //            CompleteScan().start()
-        //            FileChangeService().watch()
-        //        }
+        launch {
+            //            FileChangeService().watch()
+            //            CompleteScan().start()
+        }
     }.start(wait = false)
 }
 
@@ -68,8 +66,7 @@ fun Application.webServer() {
     configureCORS()
     configureSockets()
     configureMonitoring()
-    configureSerialization()
-    withBasePath("api", routeCallback = { // registerUpdateRoutes()
+    withBasePath("api", routeCallback = {
     }, openApiCallback = {
         apiRouting {
             route("api") {

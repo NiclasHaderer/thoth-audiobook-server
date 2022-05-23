@@ -10,7 +10,7 @@ repositories {
     mavenCentral()
 }
 
-dependencies{
+dependencies {
     implementation(project(":models"))
     implementation(project(":common"))
     implementation(project(":metadata"))

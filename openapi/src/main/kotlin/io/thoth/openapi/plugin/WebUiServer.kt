@@ -1,11 +1,11 @@
 package io.thoth.openapi.plugin
 
-import io.thoth.openapi.SchemaHolder
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import io.thoth.openapi.SchemaHolder
 import java.net.URL
 
 
@@ -86,7 +86,8 @@ private val extensionToContentType = mapOf(
     "css" to ContentType.Text.CSS,
     "js" to ContentType.Text.JavaScript,
     "json" to ContentType.Application.Json,
-    "png" to ContentType.Image.PNG)
+    "png" to ContentType.Image.PNG
+)
 
 internal class WebUiResource(
     private val url: URL,
@@ -96,7 +97,7 @@ internal class WebUiResource(
     private val bytes by lazy {
         if (contentType == ContentType.Text.Html) {
             url.readText().replace("https://petstore.swagger.io/v2/swagger.json", schemaURL)
-                    .toByteArray()
+                .toByteArray()
         } else {
             url.readBytes()
         }
