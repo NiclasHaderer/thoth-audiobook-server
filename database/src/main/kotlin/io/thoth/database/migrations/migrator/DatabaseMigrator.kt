@@ -7,7 +7,10 @@ import org.reflections.Reflections
 import org.slf4j.LoggerFactory
 import kotlin.reflect.full.createInstance
 
-class DatabaseMigrator(private val db: Database, private val packageName: String = "io.thoth.database.migrations.history") {
+class DatabaseMigrator(
+    private val db: Database,
+    private val packageName: String = "io.thoth.database.migrations.history"
+) {
     private val log = LoggerFactory.getLogger(this::class.java)
     private val classNameMatcher = "(\\d+)_.*".toRegex()
 

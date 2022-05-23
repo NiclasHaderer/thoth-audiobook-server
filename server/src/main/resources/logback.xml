@@ -22,6 +22,6 @@
     <!-- DB connector -->
     <logger name="Exposed" level="INFO"/>
     <!-- Reload -->
-<!--    <logger name="ktor.application" level="INFO"/>-->
+    <!--    <logger name="ktor.application" level="INFO"/>-->
 
 </configuration>
