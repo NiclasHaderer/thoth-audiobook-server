@@ -1,15 +1,17 @@
 package io.thoth.openapi.routing
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.util.converters.*
 import io.ktor.util.reflect.*
+import io.thoth.openapi.ErrorResponse
 import io.thoth.openapi.PathParam
 import io.thoth.openapi.QueryParam
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.findAnnotations
 import kotlin.reflect.full.primaryConstructor
-import kotlin.reflect.javaType
+import kotlin.reflect.jvm.javaType
 
 
 @OptIn(ExperimentalStdlibApi::class)
@@ -18,10 +20,12 @@ fun <T : Any> parseParametersIntoClass(
     context: ApplicationCall,
     kClass: KClass<T>,
 ): T {
-    // TODO better errors
     val (queryParams, pathParams) = getQueryAndPathParams(context)
 
-    val constructor = kClass.primaryConstructor ?: throw Error("There has to be a primary constructor")
+    val constructor = kClass.primaryConstructor ?: throw ErrorResponse(
+        HttpStatusCode.InternalServerError,
+        "Class ${kClass.simpleName} has no primary constructor"
+    )
 
     val constructorCallArgs = mutableMapOf<KParameter, Any?>()
 
@@ -34,16 +38,25 @@ fun <T : Any> parseParametersIntoClass(
 
         // Every constructor parameter that is not optional has to be decorated as either a path or query parameter
         if (pathAnnotation == null && queryAnnotation == null && !parameter.isOptional) {
-            throw Error("Parameter ${parameter.name} is not optional, but has not been decorated as a path, or a query param")
+            throw ErrorResponse(
+                HttpStatusCode.InternalServerError,
+                "Parameter ${parameter.name} is not optional, but has not been decorated as a path, or a query param"
+            )
         }
 
         // Missing value for path parameter
         if (pathAnnotation != null && (parameter.name !in pathParams && !parameter.isOptional)) {
-            throw Error("Path parameter ${parameter.name} is not optional, but you did not provide a value")
+            throw ErrorResponse(
+                HttpStatusCode.BadRequest,
+                "${parameter.name} missing in url"
+            )
         }
         // Missing value for query parameter
         else if (queryAnnotation != null && (parameter.name !in queryParams && !parameter.isOptional)) {
-            throw Error("Query parameter ${parameter.name} is not optional, but you did not provide a value")
+            throw ErrorResponse(
+                HttpStatusCode.BadRequest,
+                "${parameter.name} missing as queryParam"
+            )
         }
 
         // Should the value of the constructor query parameter be read from the query params or the path params
@@ -61,7 +74,10 @@ fun <T : Any> parseParametersIntoClass(
             val requestParameterValue = converter.fromValues(parameterSource[parameter.name]!!, parameterTypeInfo)
             constructorCallArgs[parameter] = requestParameterValue
         } catch (e: DataConversionException) {
-            throw Error("Error in conversion of ${parameter.name}: ${e.message}")
+            throw ErrorResponse(
+                HttpStatusCode.BadRequest,
+                "Could not convert type ${parameter.name} to ${parameter.type.javaType.typeName}"
+            )
         }
     }
 

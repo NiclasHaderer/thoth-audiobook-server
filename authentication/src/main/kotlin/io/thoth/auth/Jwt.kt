@@ -3,8 +3,8 @@ package io.thoth.auth
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.Payload
-import io.ktor.auth.*
-import io.ktor.auth.jwt.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.thoth.models.UserModel
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
