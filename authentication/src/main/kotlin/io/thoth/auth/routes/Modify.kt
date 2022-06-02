@@ -1,50 +1,52 @@
 package io.thoth.auth.routes
 
 import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.thoth.auth.ThothPrincipal
+import io.thoth.auth.thothPrincipal
 import io.thoth.database.tables.User
+import io.thoth.models.UserModel
+import io.thoth.openapi.routing.patch
+import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
-import java.util.*
 
 
-internal fun Route.modifyUser() = patch {
-    val postModel = call.receive<RegisterUser>()
-    val userID = try {
-        UUID.fromString(call.request.queryParameters["userID"])
-    } catch (e: Exception) {
-        serverError(HttpStatusCode.BadRequest, "Could not decode user id")
-    }
+internal fun Route.modifyUser() = patch<IdRoute, EditUser, UserModel> { userID, postModel ->
 
-    val userModel = transaction {
-        val user = User.findById(userID) ?: serverError(
+    val principal = thothPrincipal()
+
+    transaction {
+        val user = User.findById(userID.id) ?: serverError(
             HttpStatusCode.BadRequest,
             "Could not find user with id $userID"
         )
+
+        if (user.admin && principal.userId != user.id.value) {
+            serverError(HttpStatusCode.BadRequest, "A admin user cannot be edited")
+        }
+
         user.edit = postModel.edit
         user.admin = postModel.admin
         user.username = postModel.username
+
+        if (postModel.password != null) {
+            val encoder = Argon2PasswordEncoder()
+            val encodedPassword = encoder.encode(postModel.password)
+            user.passwordHash = encodedPassword
+        }
+
         user
     }.toModel().toPublicModel()
-
-    call.respond(userModel)
 }
 
 
-internal fun Route.changePassword() = post {
-    val passwordChange = call.receive<PasswordChange>()
-
+internal fun Route.changePassword() = post<Unit, PasswordChange, Unit> { _, passwordChange ->
     if (passwordChange.currentPassword == passwordChange.newPassword) {
         serverError(HttpStatusCode.BadRequest, "New password is the same as the current one")
     }
-    val principal = call.principal<ThothPrincipal>()!!
 
+    val principal = thothPrincipal()
     transaction {
         val user = User.findById(principal.userId) ?: serverError(
             HttpStatusCode.BadRequest,
@@ -57,6 +59,4 @@ internal fun Route.changePassword() = post {
         }
         user.passwordHash = encoder.encode(passwordChange.newPassword)
     }
-
-    call.respondText("", ContentType.Application.Json)
 }

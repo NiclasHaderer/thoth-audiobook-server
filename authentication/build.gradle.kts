@@ -5,6 +5,7 @@ val exposedVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.6.21"
+    kotlin("plugin.serialization") version "1.6.21"
 }
 
 repositories {
@@ -25,7 +26,7 @@ dependencies {
     // Ktor
     implementation("io.ktor:ktor-server-auth:$ktor2Version")
     implementation("io.ktor:ktor-server-auth-jwt:$ktor2Version")
-    implementation("io.ktor:ktor-jackson:$ktor2Version")
+    implementation("io.ktor:ktor-server-resources:$ktor2Version")
     implementation("io.ktor:ktor-server-content-negotiation:$ktor2Version")
     implementation("io.ktor:ktor-serialization:$ktor2Version")
     implementation("io.ktor:ktor-server-core-jvm:$ktor2Version")
