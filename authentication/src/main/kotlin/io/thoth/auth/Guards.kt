@@ -1,7 +1,7 @@
 package io.thoth.auth
 
-import io.ktor.auth.*
-import io.ktor.routing.*
+import io.ktor.server.auth.*
+import io.ktor.server.routing.*
 
 
 internal enum class GuardTypes(val value: String) {

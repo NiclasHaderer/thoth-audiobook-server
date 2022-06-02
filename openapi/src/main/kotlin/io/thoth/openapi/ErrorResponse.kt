@@ -1,16 +1,17 @@
-package io.thoth.common.exceptions
+package io.thoth.openapi
 
-import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.response.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
+import io.ktor.util.pipeline.*
 
 fun Application.configureStatusPages() {
     install(StatusPages) {
-        exception<ErrorResponse> { cause ->
+        exception<ErrorResponse> { call, cause ->
             call.respond(cause.status, hashMapOf("error" to cause.message))
         }
-        exception<Throwable> { cause ->
+        exception<Throwable> { call, cause ->
             call.respond(
                 HttpStatusCode.InternalServerError,
                 hashMapOf("error" to cause.message, "trace" to cause.stackTrace)
@@ -22,3 +23,7 @@ fun Application.configureStatusPages() {
 
 
 class ErrorResponse(val status: HttpStatusCode, message: String) : Exception(message)
+
+fun PipelineContext<*, *>.serverError(status: HttpStatusCode, message: String): Nothing {
+    throw ErrorResponse(status, message)
+}

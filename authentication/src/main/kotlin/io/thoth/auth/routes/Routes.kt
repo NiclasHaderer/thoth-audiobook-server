@@ -1,7 +1,7 @@
 package io.thoth.auth.routes
 
-import io.ktor.application.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
+import io.ktor.server.routing.*
 import io.thoth.auth.AuthConfig
 import io.thoth.auth.adminUserAuth
 import io.thoth.auth.userAuth

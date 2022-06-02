@@ -1,11 +1,11 @@
 package io.thoth.auth
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.auth.jwt.*
 import io.ktor.http.*
-import io.ktor.response.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.response.*
 import io.thoth.auth.routes.authRoutes
 import java.security.KeyPair
 import java.util.concurrent.TimeUnit
