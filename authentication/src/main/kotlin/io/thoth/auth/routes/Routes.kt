@@ -7,13 +7,16 @@ import io.thoth.auth.adminUserAuth
 import io.thoth.auth.userAuth
 
 internal fun Application.authRoutes(config: AuthConfig) {
+    // TODO add ability to logout everywhere
+    // TODO logout user if password gets changed
+
     routing {
         route("login") {
             loginEndpoint(config)
         }
 
         route("register") {
-            registerEndpoint(config)
+            registerEndpoint()
         }
 
         route(".well-known/jwks.json") {
@@ -21,8 +24,7 @@ internal fun Application.authRoutes(config: AuthConfig) {
         }
 
         adminUserAuth {
-            // TODO use the location api in order to ensure that the userID is a UUID before it gets parsed anywhere else
-            route("user/{userID}") {
+            route("user") {
                 modifyUser()
             }
         }
