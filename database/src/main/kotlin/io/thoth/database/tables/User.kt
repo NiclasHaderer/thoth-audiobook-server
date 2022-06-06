@@ -46,3 +46,18 @@ class User(id: EntityID<UUID>) : UUIDEntity(id), ToModel<UserModel> {
         passwordHash = passwordHash
     )
 }
+
+object TUserTokens : UUIDTable("UserTokens") {
+    val user = reference("user", TUsers)
+    val valid = bool("valid")
+    val token = text("token")
+}
+
+class UserToken(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<UserToken>(TUsers)
+
+    var user by User referencedOn TUserTokens.user
+    var valid by TUserTokens.valid
+    var token by TUserTokens.token
+}
+

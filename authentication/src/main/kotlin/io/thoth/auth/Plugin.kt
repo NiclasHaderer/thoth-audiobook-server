@@ -54,7 +54,7 @@ fun Application.authentication(config: AuthConfig) {
             }
             validate { jwtCredential ->
                 val principal = jwtToPrincipal(jwtCredential) ?: return@validate null
-                if (principal.type != JwtType.Access && principal.edit) principal else null
+                if (principal.type == JwtType.Access && principal.edit) principal else null
             }
             challenge { _, _ ->
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
@@ -70,7 +70,7 @@ fun Application.authentication(config: AuthConfig) {
             }
             validate { jwtCredential ->
                 val principal = jwtToPrincipal(jwtCredential) ?: return@validate null
-                if (principal.type != JwtType.Access && principal.edit && principal.admin) principal else null
+                if (principal.type == JwtType.Access && principal.edit && principal.admin) principal else null
             }
             challenge { _, _ ->
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
