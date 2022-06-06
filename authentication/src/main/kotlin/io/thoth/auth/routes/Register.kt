@@ -1,15 +1,14 @@
 package io.thoth.auth.routes
 
 import io.ktor.http.*
-import io.ktor.server.routing.*
 import io.thoth.database.tables.User
 import io.thoth.models.UserModel
-import io.thoth.openapi.routing.post
+import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
-fun Route.registerEndpoint() = post<Unit, RegisterUser, UserModel> { _, user ->
+internal fun RouteHandler.register(user: RegisterUser): UserModel {
     val dbUser = User.getByName(user.username)
     if (dbUser != null) {
         serverError(HttpStatusCode.BadRequest, "User already exists")
@@ -18,7 +17,7 @@ fun Route.registerEndpoint() = post<Unit, RegisterUser, UserModel> { _, user ->
     val encoder = Argon2PasswordEncoder()
     val encodedPassword = encoder.encode(user.password)
 
-    transaction {
+    return transaction {
         User.new {
             username = user.username
             passwordHash = encodedPassword
@@ -26,5 +25,4 @@ fun Route.registerEndpoint() = post<Unit, RegisterUser, UserModel> { _, user ->
             edit = user.edit
         }.toModel()
     }
-
 }

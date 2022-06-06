@@ -5,37 +5,42 @@ import io.ktor.server.routing.*
 import io.thoth.auth.AuthConfig
 import io.thoth.auth.adminUserAuth
 import io.thoth.auth.userAuth
+import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.routing.get
+import io.thoth.openapi.routing.patch
+import io.thoth.openapi.routing.post
 
 internal fun Application.authRoutes(config: AuthConfig) {
-    // TODO add ability to logout everywhere
-    // TODO logout user if password gets changed
 
     routing {
         route("login") {
-            loginEndpoint(config)
+            post(login(config))
         }
 
         route("register") {
-            registerEndpoint()
+            post(RouteHandler::register)
         }
 
         route(".well-known/jwks.json") {
-            jwksEndpoint(config)
+            get(jwksEndpoint(config))
         }
 
         adminUserAuth {
             route("user") {
-                modifyUser()
+                patch(RouteHandler::modifyUser)
             }
         }
 
         userAuth {
             route("user") {
-                getUser()
-                changeUsername()
+
+                // TODO add ability to logout everywhere
+                get(RouteHandler::getUser)
+                post(RouteHandler::changeUsername)
 
                 route("password") {
-                    changePassword()
+                    // TODO logout user if password gets changed
+                    post(RouteHandler::changePassword)
                 }
             }
         }

@@ -1,22 +1,20 @@
 package io.thoth.auth.routes
 
 import io.ktor.http.*
-import io.ktor.server.routing.*
 import io.thoth.auth.thothPrincipal
 import io.thoth.database.tables.User
 import io.thoth.models.UserModel
-import io.thoth.openapi.routing.patch
-import io.thoth.openapi.routing.post
+import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
 
-internal fun Route.modifyUser() = patch<IdRoute, EditUser, UserModel> { userID, postModel ->
+internal fun RouteHandler.modifyUser(userID: IdRoute, editUser: EditUser): UserModel {
 
     val principal = thothPrincipal()
 
-    transaction {
+    return transaction {
         val user = User.findById(userID.id) ?: serverError(
             HttpStatusCode.BadRequest,
             "Could not find user with id $userID"
@@ -26,13 +24,13 @@ internal fun Route.modifyUser() = patch<IdRoute, EditUser, UserModel> { userID, 
             serverError(HttpStatusCode.BadRequest, "A admin user cannot be edited")
         }
 
-        user.edit = postModel.edit
-        user.admin = postModel.admin
-        user.username = postModel.username
+        user.edit = editUser.edit
+        user.admin = editUser.admin
+        user.username = editUser.username
 
-        if (postModel.password != null) {
+        if (editUser.password != null) {
             val encoder = Argon2PasswordEncoder()
-            val encodedPassword = encoder.encode(postModel.password)
+            val encodedPassword = encoder.encode(editUser.password)
             user.passwordHash = encodedPassword
         }
 
@@ -41,7 +39,7 @@ internal fun Route.modifyUser() = patch<IdRoute, EditUser, UserModel> { userID, 
 }
 
 
-internal fun Route.changePassword() = post<Unit, PasswordChange, Unit> { _, passwordChange ->
+internal fun RouteHandler.changePassword(passwordChange: PasswordChange) {
     if (passwordChange.currentPassword == passwordChange.newPassword) {
         serverError(HttpStatusCode.BadRequest, "New password is the same as the current one")
     }
