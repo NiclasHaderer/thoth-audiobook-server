@@ -1,28 +1,26 @@
 package io.thoth.auth.routes
 
 import io.ktor.http.*
-import io.ktor.server.routing.*
 import io.thoth.auth.thothPrincipal
 import io.thoth.common.exceptions.APINotFound
 import io.thoth.database.tables.User
 import io.thoth.models.UserModel
-import io.thoth.openapi.routing.get
-import io.thoth.openapi.routing.post
+import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
-internal fun Route.getUser() = get<Unit, UserModel> {
+internal fun RouteHandler.getUser(): UserModel {
     val principal = thothPrincipal()
-    transaction {
+    return transaction {
         User.getById(principal.userId).toPublicModel()
     }
 }
 
-internal fun Route.changeUsername() = post<Unit, UsernameChange, UserModel> { _, usernameChange ->
+internal fun RouteHandler.changeUsername(usernameChange: UsernameChange): UserModel {
     val principal = thothPrincipal()
 
-    transaction {
+    return transaction {
         val user = User.findById(principal.userId) ?: throw APINotFound("Could not find user")
         if (user.username === usernameChange.username) {
             serverError(HttpStatusCode.BadRequest, "Old name is the same as the new name")
