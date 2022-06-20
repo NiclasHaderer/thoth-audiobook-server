@@ -1,6 +1,6 @@
 package io.thoth.server.ws
 
-import io.ktor.routing.*
+import io.ktor.server.routing.*
 import io.thoth.database.tables.TAuthors
 import io.thoth.database.tables.TBooks
 import io.thoth.database.tables.TSeries

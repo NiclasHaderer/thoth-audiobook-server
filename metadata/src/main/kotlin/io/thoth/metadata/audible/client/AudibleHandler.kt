@@ -1,7 +1,8 @@
 package io.thoth.metadata.audible.client
 
 import io.ktor.client.*
-import io.ktor.client.features.*
+import io.ktor.client.call.body
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jsoup.Jsoup
@@ -24,7 +25,7 @@ internal abstract class AudibleHandler private constructor(
 
         val urlString = url.toString()
         val response = try {
-            client!!.get<String>(urlString) {
+            client!!.get(urlString) {
                 headers {
                     append(
                         HttpHeaders.UserAgent,
@@ -42,6 +43,7 @@ internal abstract class AudibleHandler private constructor(
                     append("Sec-Fetch-User", "?1")
                 }
             }
+                .body<String>()
         } catch (e: ClientRequestException) {
             val message = e.localizedMessage.split("Text: ").firstOrNull() ?: ""
             val statusCode = e.response.status

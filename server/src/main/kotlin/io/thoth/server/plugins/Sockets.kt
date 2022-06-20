@@ -1,7 +1,7 @@
 package io.thoth.server.plugins
 
-import io.ktor.application.*
-import io.ktor.http.cio.websocket.*
+import io.ktor.server.application.*
+import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import java.time.Duration
 

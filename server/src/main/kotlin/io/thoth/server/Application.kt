@@ -2,12 +2,9 @@ package io.thoth.server
 
 import com.papsign.ktor.openapigen.route.apiRouting
 import com.papsign.ktor.openapigen.route.route
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.thoth.auth.AuthConfig
-import io.thoth.auth.authentication
-import io.thoth.common.exceptions.configureStatusPages
 import io.thoth.common.exceptions.withDefaultErrorHandlers
 import io.thoth.common.extensions.shutdown
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
@@ -40,7 +37,7 @@ fun main() {
         if (isProduction()) configureProdKoin() else configureDevKoin()
         val settings by inject<Settings>()
 
-        authentication(AuthConfig(settings.keyPair, "asd", "http://0.0.0.0:${settings.webUiPort}"))
+        //        authentication(AuthConfig(settings.keyPair, "asd", "http://0.0.0.0:${settings.webUiPort}"))
 
         try {
             DatabaseFactory.connect()
@@ -59,7 +56,7 @@ fun main() {
 
 
 fun Application.webServer() {
-    configureStatusPages()
+    //    configureStatusPages()
     configureOpenAPI()
     configureRouting()
     configurePartialContent()
