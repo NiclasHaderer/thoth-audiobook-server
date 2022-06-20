@@ -1,44 +1,42 @@
 package io.thoth.server.api.stream
 
-import com.papsign.ktor.openapigen.route.info
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.route
-import com.papsign.ktor.openapigen.route.tag
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.thoth.common.exceptions.APINotFound
-import io.thoth.common.exceptions.withNotFoundHandling
+import io.ktor.server.routing.*
 import io.thoth.database.tables.Track
-import io.thoth.server.api.ApiTags
-import java.io.File
+import io.thoth.openapi.responses.FileResponse
+import io.thoth.openapi.responses.fileResponse
+import io.thoth.openapi.routing.get
+import io.thoth.openapi.serverError
+import java.nio.file.Path
+import kotlin.io.path.exists
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.name
 
 
-fun NormalOpenAPIRoute.registerStreamingRouting(route: String = "audio") {
-    tag(ApiTags.Files) {
-        withNotFoundHandling {
-            route(route) {
-                streamingRouting()
-            }
-        }
+fun Route.registerStreamingRouting(route: String = "audio") {
+    route(route) {
+        streamingRouting()
     }
 }
 
-fun NormalOpenAPIRoute.streamingRouting() {
-    get<AudioId, RawAudioFile>(
-        info("Stream audio file")
-    ) { fileId ->
-        val track = Track.getById(fileId.id)
-        val file = File(track.path)
-        if (!file.exists()) {
-            throw APINotFound("Database out of sync. Please start syncing process.")
-        }
-        pipeline.call.response.header(
-            HttpHeaders.ContentDisposition,
-            ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, file.name).toString()
+fun Route.streamingRouting() {
+    get<AudioId, FileResponse> { fileId ->
+        val track = Track.getById(fileId.id) ?: serverError(
+            HttpStatusCode.NotFound,
+            "Database out of sync. Please start syncing process."
         )
-        pipeline.call.respondFile(file)
+        val path = Path.of(track.path)
+        if (!path.exists() && path.isRegularFile()) {
+            serverError(HttpStatusCode.NotFound, "Database out of sync. Please start syncing process.")
+        }
+        call.response.header(
+            HttpHeaders.ContentDisposition,
+            ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, path.name).toString()
+        )
+
+        fileResponse(path)
     }
 }
 

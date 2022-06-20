@@ -1,13 +1,15 @@
 package io.thoth.server.api.audiobooks.authors
 
-import com.papsign.ktor.openapigen.annotations.Path
-import com.papsign.ktor.openapigen.annotations.parameters.PathParam
+import io.ktor.resources.*
+import io.thoth.common.serializion.UUIDSerializer
 import io.thoth.models.ProviderIDModel
+import kotlinx.serialization.Serializable
 import java.util.*
 
-@Path("{uuid}")
+@Serializable
+@Resource("/{id}")
 internal class AuthorId(
-    @PathParam("The id of the author you want to get") val uuid: UUID,
+    @Serializable(UUIDSerializer::class) val uuid: UUID,
 )
 
 class PatchAuthor(

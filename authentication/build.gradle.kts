@@ -1,7 +1,6 @@
-val ktor2Version: String by project
-
 val jwtVersion: String by project
 val exposedVersion: String by project
+val ktorVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.6.21"
@@ -24,21 +23,14 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
 
     // Ktor
-    implementation("io.ktor:ktor-server-auth:$ktor2Version")
-    implementation("io.ktor:ktor-server-auth-jwt:$ktor2Version")
-    implementation("io.ktor:ktor-server-resources:$ktor2Version")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktor2Version")
-    implementation("io.ktor:ktor-server-core-jvm:$ktor2Version")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktor2Version")
-    implementation("io.ktor:ktor-server-status-pages:$ktor2Version")
-    implementation("io.ktor:ktor-server-locations-jvm:$ktor2Version")
-    implementation("io.ktor:ktor-serialization-jackson:$ktor2Version")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktor2Version")
+    implementation("io.ktor:ktor-server-auth:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-resources:$ktorVersion")
 
     // JWT
     implementation("com.auth0:java-jwt:$jwtVersion")
     implementation("com.nimbusds:nimbus-jose-jwt:9.22")
     implementation("org.springframework.security:spring-security-core:5.6.3")
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.2")
 }

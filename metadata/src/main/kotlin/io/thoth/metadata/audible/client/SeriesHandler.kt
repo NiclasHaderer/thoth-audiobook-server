@@ -17,7 +17,7 @@ internal class SeriesHandler : AudibleHandler {
 
     companion object {
         fun fromURL(client: HttpClient, host: String, seriesASIN: String): SeriesHandler {
-            val url = URLBuilder(protocol = URLProtocol.HTTPS, host = host, encodedPath = "/series/$seriesASIN")
+            val url = URLBuilder(protocol = URLProtocol.HTTPS, host = host, pathSegments = listOf("series", seriesASIN))
             url.parameters.append("ipRedirectOverride", "true")
             return SeriesHandler(client, url.build())
         }

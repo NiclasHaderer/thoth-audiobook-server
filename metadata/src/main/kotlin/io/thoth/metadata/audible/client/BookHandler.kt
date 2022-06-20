@@ -12,7 +12,7 @@ import org.jsoup.nodes.Element
 internal class BookHandler : AudibleHandler {
     companion object {
         fun fromUrl(client: HttpClient, host: String, bookASIN: String): BookHandler {
-            val url = URLBuilder(protocol = URLProtocol.HTTPS, host = host, encodedPath = "/pd/$bookASIN")
+            val url = URLBuilder(protocol = URLProtocol.HTTPS, host = host, pathSegments = listOf("pd", bookASIN))
             url.parameters.append("ipRedirectOverride", "true")
             return BookHandler(client, url.build())
         }

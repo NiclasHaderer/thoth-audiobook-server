@@ -1,52 +1,59 @@
 package io.thoth.server.api.metadata
 
-import com.papsign.ktor.openapigen.annotations.Path
-import com.papsign.ktor.openapigen.annotations.parameters.PathParam
-import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
+import io.ktor.resources.*
 import io.thoth.metadata.MetadataLanguage
 import io.thoth.metadata.MetadataSearchCount
 import io.thoth.metadata.ProviderWithIDMetadata
+import kotlinx.serialization.Serializable
 
+@Resource("")
+@Serializable
 internal class MetadataSearch(
-    @QueryParam("A general keyword which describes the search term") val keywords: String?,
-    @QueryParam("The title of the audiobook") val title: String?,
-    @QueryParam("The author of the audiobook") val author: String?,
-    @QueryParam("The narrator of the audiobook") val narrator: String?,
-    @QueryParam("The language of the audiobook") val language: MetadataLanguage?,
-    @QueryParam("How many search results do you want to get") val pageSize: MetadataSearchCount?,
+    val keywords: String?,
+    val title: String?,
+    val author: String?,
+    val narrator: String?,
+    val language: MetadataLanguage?,
+    val pageSize: MetadataSearchCount?,
 )
 
-@Path("{id}")
+@Resource("{id}")
+@Serializable
 internal class AuthorID(
-    @PathParam("The id of the author. Can be retrieved by using the search") override val itemID: String,
-    @QueryParam("The id of search provider the id is associated to") override val provider: String,
+    override val itemID: String,
+    override val provider: String,
 ) : ProviderWithIDMetadata
 
-@Path("{id}")
+@Resource("{id}")
+@Serializable
 internal class SeriesID(
-    @PathParam("The id of the series. Can be retrieved by using the search") override val itemID: String,
-    @QueryParam("The id of search provider the id is associated to") override val provider: String,
+    override val itemID: String,
+    override val provider: String,
 ) : ProviderWithIDMetadata
 
-@Path("{asin}")
+@Resource("{asin}")
+@Serializable
 internal class BookID(
-    @PathParam("The asin of the series. Can be retrieved by using the search") override val itemID: String,
-    @QueryParam("The id of search provider the id is associated to") override val provider: String,
+    override val itemID: String,
+    override val provider: String,
 ) : ProviderWithIDMetadata
 
-@Path("{name}")
+@Resource("{name}")
+@Serializable
 internal class SeriesName(
-    @PathParam("The name of the series you want to look for") val name: String,
-    @QueryParam("The author who wrote the series") val authorName: String?,
+    val name: String,
+    val authorName: String?,
 )
 
-@Path("{name}")
+@Resource("{name}")
+@Serializable
 internal class BookName(
-    @PathParam("The name of the book you want to look for") val name: String,
-    @QueryParam("The author who wrote the series") val authorName: String?,
+    val name: String,
+    val authorName: String?,
 )
 
-@Path("{name}")
+@Resource("{name}")
+@Serializable
 internal class AuthorName(
-    @PathParam("The name of the author you want to look for") val name: String,
+    val name: String,
 )

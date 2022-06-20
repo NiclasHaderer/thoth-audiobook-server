@@ -1,46 +1,37 @@
 package io.thoth.server.api.audiobooks.series
 
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.patch
-import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
-import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.route
-import com.papsign.ktor.openapigen.route.tag
+import io.ktor.http.*
+import io.ktor.server.routing.*
 import io.thoth.database.tables.Series
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.SeriesModel
 import io.thoth.models.SeriesModelWithBooks
-import io.thoth.server.api.ApiTags
+import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.routing.get
+import io.thoth.openapi.routing.patch
+import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
 import java.util.*
 
 
-fun NormalOpenAPIRoute.registerSeriesRouting(path: String = "series") {
+fun Route.registerSeriesRouting(path: String = "series") {
     route(path) {
-        tag(ApiTags.Series) {
-            routing()
-        }
+        routing()
     }
 }
 
-internal fun NormalOpenAPIRoute.routing() {
+internal fun Route.routing() {
     get<QueryLimiter, PaginatedResponse<SeriesModel>> {
         val series = Series.getMultiple(it.limit, it.offset)
         val seriesCount = Series.totalCount()
-        val response = PaginatedResponse(series, total = seriesCount, offset = it.offset, limit = it.limit)
-        respond(response)
+        PaginatedResponse(series, total = seriesCount, offset = it.offset, limit = it.limit)
     }
-    route("sorting").get<QueryLimiter, List<UUID>> { query ->
-        respond(
-            Series.getMultiple(query.limit, query.offset).map { it.id }
-        )
+    get<QueryLimiter, List<UUID>>("sorting") { query ->
+        Series.getMultiple(query.limit, query.offset).map { it.id }
     }
     get<SeriesId, SeriesModelWithBooks> {
-        respond(
-            Series.getById(it.uuid)
-        )
+        Series.getById(it.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
     }
 
-    patch(body = OpenAPIPipelineResponseContext<SeriesModel>::patchSeries)
+    patch(RouteHandler::patchSeries)
 }

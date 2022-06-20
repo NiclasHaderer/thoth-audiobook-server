@@ -1,6 +1,5 @@
 package io.thoth.database.tables
 
-import io.thoth.common.exceptions.APINotFound
 import io.thoth.database.ToModel
 import io.thoth.metadata.ProviderWithIDMetadata
 import io.thoth.models.ProviderIDModel
@@ -26,9 +25,8 @@ class ProviderID(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ProviderIDModel> 
             return provider?.provider === providerIdCopy?.provider && provider?.itemID === providerIdCopy?.itemID
         }
 
-        @Throws(APINotFound::class)
         fun getById(uuid: UUID) = transaction {
-            findById(uuid)?.toModel() ?: throw APINotFound("Could not find provider")
+            findById(uuid)?.toModel()
         }
 
         fun getOrCreate(providerID: ProviderWithIDMetadata?): ProviderID? = transaction {

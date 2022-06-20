@@ -1,10 +1,14 @@
 package io.thoth.server.api.search
 
-import com.papsign.ktor.openapigen.annotations.parameters.QueryParam
+import io.ktor.resources.*
+import kotlinx.serialization.Serializable
 
+
+@Resource("")
+@Serializable()
 internal class SearchQuery(
-    @QueryParam("A general query. Looks in everything") val q: String?,
-    @QueryParam("Search for an author. Can be combined with the other parameters except q.") val author: String?,
-    @QueryParam("Search for a book. Can be combined with the other parameters except q.") val book: String?,
-    @QueryParam("Search for a series. Can be combined with the other parameters except q.") val series: String?,
+    val q: String?,
+    val author: String?,
+    val book: String?,
+    val series: String?,
 )

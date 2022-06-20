@@ -1,24 +1,23 @@
 package io.thoth.server
 
-import com.papsign.ktor.openapigen.route.apiRouting
-import com.papsign.ktor.openapigen.route.route
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.thoth.common.exceptions.withDefaultErrorHandlers
+import io.ktor.server.routing.*
 import io.thoth.common.extensions.shutdown
+import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
 import io.thoth.server.api.images.registerImageRouting
 import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
-import io.thoth.server.api.withBasePath
 import io.thoth.server.db.DatabaseFactory
+import io.thoth.server.file.scanner.CompleteScan
+import io.thoth.server.file.scanner.FileChangeService
 import io.thoth.server.logging.disableJAudioTaggerLogs
 import io.thoth.server.plugins.configureCORS
 import io.thoth.server.plugins.configureDevKoin
 import io.thoth.server.plugins.configureMonitoring
-import io.thoth.server.plugins.configureOpenAPI
 import io.thoth.server.plugins.configurePartialContent
 import io.thoth.server.plugins.configureProdKoin
 import io.thoth.server.plugins.configureRouting
@@ -37,6 +36,7 @@ fun main() {
         if (isProduction()) configureProdKoin() else configureDevKoin()
         val settings by inject<Settings>()
 
+        // TODO
         //        authentication(AuthConfig(settings.keyPair, "asd", "http://0.0.0.0:${settings.webUiPort}"))
 
         try {
@@ -48,34 +48,28 @@ fun main() {
             shutdown()
         }
         launch {
-            //            FileChangeService().watch()
-            //            CompleteScan().start()
+            FileChangeService().watch()
+            CompleteScan().start()
         }
-    }.start(wait = false)
+    }.start(wait = true)
 }
 
 
 fun Application.webServer() {
-    //    configureStatusPages()
-    configureOpenAPI()
+    configureStatusPages()
     configureRouting()
     configurePartialContent()
     configureCORS()
     configureSockets()
     configureMonitoring()
-    withBasePath("api", routeCallback = {
-    }, openApiCallback = {
-        apiRouting {
-            route("api") {
-                withDefaultErrorHandlers {
-                    registerMetadataRouting()
-                    registerAudiobookRouting()
-                    registerSearchRouting()
-                    registerStreamingRouting()
-                    registerImageRouting()
-                }
-            }
+    routing {
+        route("api") {
+            registerMetadataRouting()
+            registerAudiobookRouting()
+            registerSearchRouting()
+            registerStreamingRouting()
+            registerImageRouting()
         }
-    })
+    }
 }
 

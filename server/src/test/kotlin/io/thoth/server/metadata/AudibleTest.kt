@@ -6,8 +6,6 @@ import io.thoth.metadata.audible.models.AudibleAuthorImpl
 import io.thoth.metadata.audible.models.AudibleBookImpl
 import io.thoth.metadata.audible.models.AudibleSeriesImpl
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -19,8 +17,7 @@ class AudibleTest : BaseTest() {
 
             handleRequest(HttpMethod.Get, "/audible/author/B000AP9A6K").apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                val author =
-                    Json.decodeFromString<AudibleAuthorImpl>(response.content!!)
+                val author = mapper.readValue(response.content, AudibleAuthorImpl::class.java)
                 assertEquals("J. K. Rowling", author.name)
             }
 
@@ -39,8 +36,7 @@ class AudibleTest : BaseTest() {
 
             handleRequest(HttpMethod.Get, "/audible/series/B0182T3MCI").apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                val series =
-                    Json.decodeFromString<AudibleSeriesImpl>(response.content!!)
+                val series = mapper.readValue(response.content, AudibleSeriesImpl::class.java)
                 assertEquals("Harry Potter", series.name)
             }
 
@@ -59,8 +55,7 @@ class AudibleTest : BaseTest() {
 
             handleRequest(HttpMethod.Get, "/audible/book/B017V5EJM6").apply {
                 assertEquals(HttpStatusCode.OK, response.status())
-                val series =
-                    Json.decodeFromString<AudibleBookImpl>(response.content!!)
+                val series = mapper.readValue(response.content, AudibleBookImpl::class.java)
                 assertEquals("Harry Potter and the Philosopher's Stone", series.title)
             }
 

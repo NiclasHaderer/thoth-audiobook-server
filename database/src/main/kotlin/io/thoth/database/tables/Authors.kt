@@ -1,6 +1,5 @@
 package io.thoth.database.tables
 
-import io.thoth.common.exceptions.APINotFound
 import io.thoth.common.extensions.findOne
 import io.thoth.database.ToModel
 import io.thoth.models.AuthorModel
@@ -35,7 +34,6 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
             }
         }
 
-        @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val author = Author.findById(uuid)?.toModel() ?: return@transaction null
             val books = Book.fromAuthor(uuid, order)
