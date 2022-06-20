@@ -1,46 +1,39 @@
 package io.thoth.server.api.audiobooks.books
 
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.patch
-import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
-import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.route
-import com.papsign.ktor.openapigen.route.tag
+import io.ktor.http.*
+import io.ktor.server.routing.*
 import io.thoth.database.tables.Book
 import io.thoth.models.BookModel
 import io.thoth.models.BookModelWithTracks
 import io.thoth.models.PaginatedResponse
-import io.thoth.server.api.ApiTags
+import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.routing.get
+import io.thoth.openapi.routing.patch
+import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
 import java.util.*
 
 
-fun NormalOpenAPIRoute.registerBookRouting(path: String = "books") {
+fun Route.registerBookRouting(path: String = "books") {
     route(path) {
-        tag(ApiTags.Books) {
-            routing()
-        }
+        routing()
     }
 }
 
-internal fun NormalOpenAPIRoute.routing() {
+internal fun Route.routing() {
     get<QueryLimiter, PaginatedResponse<BookModel>> {
         val books = Book.getMultiple(it.limit, it.offset)
         val seriesCount = Book.totalCount()
-        val response = PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
-        respond(response)
-    }
-    route("sorting").get<QueryLimiter, List<UUID>> { query ->
-        respond(
-            Book.getMultiple(query.limit, query.offset).map { it.id }
-        )
-    }
-    get<BookId, BookModelWithTracks> {
-        respond(
-            Book.getById(it.uuid)
-        )
+        PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
     }
 
-    patch(body = OpenAPIPipelineResponseContext<BookModel>::patchBook)
+    get<QueryLimiter, List<UUID>>("sorting") { query ->
+        Book.getMultiple(query.limit, query.offset).map { it.id }
+    }
+
+    get<BookId, BookModelWithTracks> {
+        Book.getById(it.id) ?: serverError(HttpStatusCode.NotFound, "Could not find book")
+    }
+
+    patch(RouteHandler::patchBook)
 }

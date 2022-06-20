@@ -1,6 +1,5 @@
 package io.thoth.database.tables
 
-import io.thoth.common.exceptions.APINotFound
 import io.thoth.common.extensions.findOne
 import io.thoth.database.ToModel
 import io.thoth.models.BookModel
@@ -58,11 +57,10 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
             Book.findOne { TBooks.title like bookTitle and (TBooks.author eq author.id.value) }
         }
 
-        @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
-            val book = Book.findById(uuid)?.toModel() ?: throw APINotFound("Could not find album")
+            val book = Book.findById(uuid)?.toModel() ?: return@transaction null
             val tracks = Track.forBook(uuid)
-            val sortPosition = Book.all().orderBy(TBooks.title.lowerCase() to order).toList().count()
+            val sortPosition = Book.all().orderBy(TBooks.title.lowerCase() to order).count()
             BookModelWithTracks.fromModel(book, tracks, sortPosition)
         }
 

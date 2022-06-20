@@ -45,12 +45,12 @@ class BookModelWithTracks(
     override val series: TitledId?,
     override val seriesIndex: Float?,
     override val cover: UUID?,
-    val position: Int,
+    val position: Long,
     val tracks: List<TrackModel>,
     override val updateTime: LocalDateTime,
 ) : IBookModel {
     companion object {
-        fun fromModel(book: IBookModel, tracks: List<TrackModel>, position: Int): BookModelWithTracks {
+        fun fromModel(book: IBookModel, tracks: List<TrackModel>, position: Long): BookModelWithTracks {
 
             val sortedTracks = if (tracks.any { it.trackNr == null }) {
                 tracks.sortedBy { it.path }

@@ -1,4 +1,4 @@
-package io.thoth.server.serializers
+package io.thoth.common.serializion
 
 
 import kotlinx.serialization.KSerializer

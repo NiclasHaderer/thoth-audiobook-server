@@ -16,6 +16,7 @@ val tsGeneratorVersion: String by project
 plugins {
     application
     kotlin("jvm") version "1.6.21"
+    kotlin("plugin.serialization") version "1.6.21"
 }
 
 application {
@@ -38,8 +39,9 @@ repositories {
 
 dependencies {
     // Other projects
-//    implementation(project(":authentication"))
+    implementation(project(":authentication"))
     implementation(project(":common"))
+    implementation(project(":openapi"))
     implementation(project(":database"))
     implementation(project(":metadata"))
     implementation(project(":models"))
@@ -49,6 +51,9 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
     // Database drivers
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
@@ -59,33 +64,32 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     // Migration
     implementation("org.reflections:reflections:$reflectVersion")
-    // OpenAPI
-    implementation("com.github.papsign:Ktor-OpenAPI-Generator:$openApiVersion")
     // Audio file processing
     implementation("org.bitbucket.ijabz:jaudiotagger:v3.0.1")
     // Folder watching
     implementation("io.methvin:directory-watcher:$fileWatcherVersion")
-    // Ktor
     // Search
     implementation("me.xdrop:fuzzywuzzy:$fuzzyWuzzyVersion")
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("io.ktor:ktor-server-cors:2.0.2")
-    implementation("io.ktor:ktor-server-partial-content:2.0.2")
-    implementation("io.ktor:ktor-server-call-logging:2.0.2")
-    implementation("io.ktor:ktor-server-content-negotiation:2.0.2")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.2")
-    implementation("io.ktor:ktor-server-core-jvm:2.0.2")
-    implementation("io.ktor:ktor-server-auth-jvm:2.0.2")
-    implementation("io.ktor:ktor-server-sessions-jvm:2.0.2")
-    implementation("io.ktor:ktor-server-host-common-jvm:2.0.2")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.2")
-    implementation("io.ktor:ktor-server-websockets-jvm:2.0.2")
-    implementation("io.ktor:ktor-server-locations-jvm:2.0.2")
-    implementation("io.ktor:ktor-server-netty-jvm:2.0.2")
-    implementation("io.ktor:ktor-client-core-jvm:2.0.2")
-    implementation("io.ktor:ktor-client-cio-jvm:2.0.2")
+    // Ktor
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
+    implementation("io.ktor:ktor-server-partial-content:$ktorVersion")
+    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-sessions-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-host-common-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-resources:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-locations-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-    testImplementation("io.ktor:ktor-server-tests-jvm:2.0.2")
+    testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
 }

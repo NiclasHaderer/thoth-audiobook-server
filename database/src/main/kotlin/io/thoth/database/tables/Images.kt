@@ -1,6 +1,5 @@
 package io.thoth.database.tables
 
-import io.thoth.common.exceptions.APINotFound
 import io.thoth.common.extensions.uriToFile
 import io.thoth.database.ToModel
 import io.thoth.models.ImageModel
@@ -50,9 +49,8 @@ class Image(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ImageModel> {
             }
         }
 
-        @Throws(APINotFound::class)
         fun getById(uuid: UUID) = transaction {
-            findById(uuid)?.toModel() ?: throw APINotFound("Could not find image")
+            findById(uuid)?.toModel()
         }
     }
 

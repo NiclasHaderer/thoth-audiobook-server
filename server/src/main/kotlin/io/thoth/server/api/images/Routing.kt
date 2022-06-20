@@ -1,43 +1,29 @@
 package io.thoth.server.api.images
 
-import com.papsign.ktor.openapigen.route.info
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.route
-import com.papsign.ktor.openapigen.route.tag
-import io.thoth.common.exceptions.withNotFoundHandling
+import io.ktor.http.*
+import io.ktor.server.routing.*
 import io.thoth.database.tables.Image
-import io.thoth.server.api.ApiTags
+import io.thoth.openapi.responses.BinaryResponse
+import io.thoth.openapi.responses.binaryResponse
+import io.thoth.openapi.routing.get
+import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
-import java.io.ByteArrayInputStream
 import java.util.*
 
 
-fun NormalOpenAPIRoute.registerImageRouting(route: String = "image") {
-    tag(ApiTags.Files) {
-        withNotFoundHandling {
-            route(route) {
-                imageRouting()
-            }
-        }
+fun Route.registerImageRouting(route: String = "image") {
+    route(route) {
+        imageRouting()
     }
 }
 
-internal fun NormalOpenAPIRoute.imageRouting() {
-    get<ImageId, RawImageFile>(
-        info("View image")
-    ) {
-        val image = Image.getById(it.id)
-        respond(
-            RawImageFile(ByteArrayInputStream(image.image))
-        )
+internal fun Route.imageRouting() {
+    get<ImageId, BinaryResponse> { image ->
+        val imageResponse = Image.getById(image.id) ?: serverError(HttpStatusCode.NotFound, "Could not find image")
+        binaryResponse(imageResponse.image)
     }
-    get<QueryLimiter, List<UUID>>(
-        info("List images")
-    ) {
-        val images = Image.getMultiple(it.limit, it.offset)
-        respond(images)
+    get<QueryLimiter, List<UUID>> {
+        Image.getMultiple(it.limit, it.offset)
     }
 }
 

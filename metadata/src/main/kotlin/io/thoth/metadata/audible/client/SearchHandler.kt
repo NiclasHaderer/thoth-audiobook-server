@@ -54,9 +54,9 @@ internal class SearchHandler : AudibleHandler {
 
             val url = URLBuilder(
                 protocol = URLProtocol.HTTPS,
-                parameters = queryParams,
+                parameters = queryParams.build(),
                 host = host,
-                encodedPath = "/search"
+                pathSegments = listOf("search")
             )
 
             return SearchHandler(client, url.build())

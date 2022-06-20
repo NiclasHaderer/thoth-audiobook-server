@@ -1,12 +1,12 @@
 package io.thoth.server.api.audiobooks.series
 
-import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
-import io.thoth.common.exceptions.APINotImplemented
-import io.thoth.models.SeriesModel
+import io.ktor.http.*
+import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.serverError
 
-internal suspend fun OpenAPIPipelineResponseContext<SeriesModel>.patchSeries(
+internal suspend fun RouteHandler.patchSeries(
     seriesId: SeriesId,
     patchSeries: PatchSeries,
 ) {
-    throw APINotImplemented("Series modification is not yet supported")
+    serverError(HttpStatusCode.NotImplemented, "Series modification is not yet supported")
 }

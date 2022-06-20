@@ -1,13 +1,15 @@
 package io.thoth.server.api.audiobooks.series
 
-import com.papsign.ktor.openapigen.annotations.Path
-import com.papsign.ktor.openapigen.annotations.parameters.PathParam
+import io.ktor.resources.*
+import io.thoth.common.serializion.UUIDSerializer
 import io.thoth.models.ProviderIDModel
+import kotlinx.serialization.Serializable
 import java.util.*
 
-@Path("{uuid}")
+@Serializable
+@Resource("/{id}")
 internal class SeriesId(
-    @PathParam("The id of the series you want to get") val uuid: UUID,
+    @Serializable(UUIDSerializer::class) val id: UUID,
 )
 
 

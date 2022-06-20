@@ -20,7 +20,11 @@ internal class AuthorHandler : AudibleHandler {
 
     companion object {
         fun fromURL(client: HttpClient, host: String, authorASIN: String, imageSize: Int = 500): AuthorHandler {
-            val url = URLBuilder(protocol = URLProtocol.HTTPS, host = host, encodedPath = "/author/$authorASIN")
+            val url = URLBuilder(
+                protocol = URLProtocol.HTTPS, host = host, pathSegments = listOf(
+                    "author", authorASIN
+                )
+            )
             url.parameters.append("ipRedirectOverride", "true")
             return AuthorHandler(client, url.build(), imageSize)
         }

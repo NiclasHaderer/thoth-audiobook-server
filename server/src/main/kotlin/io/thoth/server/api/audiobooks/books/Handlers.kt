@@ -1,9 +1,10 @@
 package io.thoth.server.api.audiobooks.books
 
-import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
-import io.thoth.common.exceptions.APINotImplemented
+import io.ktor.http.*
 import io.thoth.models.BookModel
+import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.serverError
 
-internal suspend fun OpenAPIPipelineResponseContext<BookModel>.patchBook(id: BookId, patchBook: PatchBook) {
-    throw APINotImplemented("Book modification is not yet supported")
+internal suspend fun RouteHandler.patchBook(id: BookId, patchBook: PatchBook): BookModel {
+    serverError(HttpStatusCode.NotImplemented, "Book modification is not yet supported")
 }

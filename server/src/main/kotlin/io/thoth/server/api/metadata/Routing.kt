@@ -1,75 +1,66 @@
 package io.thoth.server.api.metadata
 
-import com.papsign.ktor.openapigen.route.info
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.route
-import com.papsign.ktor.openapigen.route.tag
-import io.thoth.common.exceptions.APINotFound
-import io.thoth.common.exceptions.withNotFoundHandling
-import io.thoth.common.extensions.inject
+import io.ktor.http.*
+import io.ktor.server.routing.*
 import io.thoth.metadata.AuthorMetadata
 import io.thoth.metadata.BookMetadata
 import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.SearchBookMetadata
 import io.thoth.metadata.SeriesMetadata
-import io.thoth.server.api.ApiTags
+import io.thoth.openapi.routing.get
+import io.thoth.openapi.serverError
+import org.koin.ktor.ext.inject
 
-fun NormalOpenAPIRoute.registerMetadataRouting(path: String = "metadata") {
-    tag(ApiTags.Metadata) {
-        route(path) {
-            routing()
-        }
+fun Route.registerMetadataRouting(path: String = "metadata") {
+    route(path) {
+        routing()
     }
 }
 
 
-internal fun NormalOpenAPIRoute.routing() {
-    val searchService: MetadataProvider by inject()
+internal fun Route.routing() {
+    val searchService by inject<MetadataProvider>()
 
-    route("search").get<MetadataSearch, List<SearchBookMetadata>>(
-        info("Search for audiobooks")
-    ) { params ->
-        respond(
-            searchService.search(
-                params.keywords,
-                params.title,
-                params.author,
-                params.narrator,
-                params.language,
-                params.pageSize
-            )
+    get<MetadataSearch, List<SearchBookMetadata>>("search") { params ->
+        searchService.search(
+            params.keywords, params.title, params.author, params.narrator, params.language, params.pageSize
         )
     }
-    withNotFoundHandling {
-        route("author").get<AuthorID, AuthorMetadata> { id ->
-            val author =
-                searchService.getAuthorByID(id)
-                    ?: throw APINotFound("Author with id ${id.itemID} and provider ${id.provider}was not found")
-            respond(author)
+
+    route("author") {
+        get<AuthorID, AuthorMetadata> { id ->
+            searchService.getAuthorByID(id) ?: serverError(
+                HttpStatusCode.NotFound, "Author with id ${id.itemID} and provider ${id.provider}was not found"
+            )
         }
-        route("book").get<BookID, BookMetadata> { id ->
-            val book = searchService.getBookByID(id)
-                ?: throw APINotFound("Book with id ${id.itemID} and provider ${id.provider}was not found")
-            respond(book)
-        }
-        route("series").get<SeriesID, SeriesMetadata> { id ->
-            val series = searchService.getSeriesByID(id)
-                ?: throw APINotFound("Series with id ${id.itemID} and provider ${id.provider}was not found")
-            respond(series)
-        }
-        route("series/search/").get<SeriesName, List<SeriesMetadata>> { params ->
-            val author = searchService.getSeriesByName(params.name, params.authorName)
-            respond(author)
-        }
-        route("book/search").get<BookName, List<BookMetadata>> { params ->
-            val author = searchService.getBookByName(params.name, params.authorName)
-            respond(author)
-        }
-        route("author/search").get<AuthorName, List<AuthorMetadata>> { params ->
-            val author = searchService.getAuthorByName(params.name)
-            respond(author)
+
+        get<AuthorName, List<AuthorMetadata>>("author") { params ->
+            searchService.getAuthorByName(params.name)
         }
     }
+
+    route("book") {
+        get<BookID, BookMetadata> { id ->
+            searchService.getBookByID(id) ?: serverError(
+                HttpStatusCode.NotFound, "Book with id ${id.itemID} and provider ${id.provider}was not found"
+            )
+        }
+
+        get<BookName, List<BookMetadata>>("search") { params ->
+            searchService.getBookByName(params.name, params.authorName)
+        }
+    }
+
+    route("series") {
+        get<SeriesID, SeriesMetadata> { id ->
+            searchService.getSeriesByID(id) ?: serverError(
+                HttpStatusCode.NotFound, "Series with id ${id.itemID} and provider ${id.provider}was not found"
+            )
+        }
+        get<SeriesName, List<SeriesMetadata>>("search") { params ->
+            searchService.getSeriesByName(params.name, params.authorName)
+        }
+    }
+
+
 }

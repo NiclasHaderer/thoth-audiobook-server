@@ -1,6 +1,5 @@
 package io.thoth.database.tables
 
-import io.thoth.common.exceptions.APINotFound
 import io.thoth.common.extensions.findOne
 import io.thoth.database.ToModel
 import io.thoth.models.InternalUserModel
@@ -23,9 +22,8 @@ object TUsers : UUIDTable("Users") {
 
 class User(id: EntityID<UUID>) : UUIDEntity(id), ToModel<UserModel> {
     companion object : UUIDEntityClass<User>(TUsers) {
-        @Throws(APINotFound::class)
         fun getById(uuid: UUID) = transaction {
-            findById(uuid)?.toModel() ?: throw APINotFound("Could not find user")
+            findById(uuid)?.toModel()
         }
 
         fun getByName(name: String) = transaction {

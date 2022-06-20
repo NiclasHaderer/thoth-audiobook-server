@@ -1,45 +1,38 @@
 package io.thoth.server.api.audiobooks.authors
 
-import com.papsign.ktor.openapigen.route.path.normal.NormalOpenAPIRoute
-import com.papsign.ktor.openapigen.route.path.normal.get
-import com.papsign.ktor.openapigen.route.path.normal.patch
-import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
-import com.papsign.ktor.openapigen.route.response.respond
-import com.papsign.ktor.openapigen.route.route
-import com.papsign.ktor.openapigen.route.tag
-import io.thoth.common.exceptions.APINotFound
+import io.ktor.http.*
+import io.ktor.server.routing.*
 import io.thoth.database.tables.Author
 import io.thoth.models.AuthorModel
 import io.thoth.models.AuthorModelWithBooks
 import io.thoth.models.PaginatedResponse
-import io.thoth.server.api.ApiTags
+import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.routing.get
+import io.thoth.openapi.routing.patch
+import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
 import java.util.*
 
 
-fun NormalOpenAPIRoute.registerAuthorRouting(path: String = "authors") {
+fun Route.registerAuthorRouting(path: String = "authors") {
     route(path) {
-        tag(ApiTags.Authors) {
-            routing()
-        }
+        routing()
     }
 }
 
-internal fun NormalOpenAPIRoute.routing() {
+internal fun Route.routing() {
     get<QueryLimiter, PaginatedResponse<AuthorModel>> {
         val books = Author.getMultiple(it.limit, it.offset)
         val seriesCount = Author.totalCount()
-        val response = PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
-        respond(response)
+        PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
     }
-    route("sorting").get<QueryLimiter, List<UUID>> { query ->
-        respond(Author.getMultiple(query.limit, query.offset).map { it.id })
-    }
-    get<AuthorId, AuthorModelWithBooks> {
-        respond(
-            Author.getById(it.uuid) ?: throw APINotFound("Author was not found")
-        )
+    get<QueryLimiter, List<UUID>>("sorting") { query ->
+        Author.getMultiple(query.limit, query.offset).map { it.id }
     }
 
-    patch(body = OpenAPIPipelineResponseContext<AuthorModel>::patchAuthor)
+    get<AuthorId, AuthorModelWithBooks> {
+        Author.getById(it.uuid) ?: serverError(HttpStatusCode.NotFound, "Author was not found")
+    }
+
+    patch(RouteHandler::patchAuthor)
 }

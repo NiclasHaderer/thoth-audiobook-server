@@ -14,7 +14,7 @@ import io.thoth.server.settings.DevSettings
 import io.thoth.server.settings.ProdSettings
 import io.thoth.server.settings.Settings
 import org.koin.dsl.module
-import org.koin.ktor.ext.Koin
+import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import org.koin.core.module.Module as KoinModule
 

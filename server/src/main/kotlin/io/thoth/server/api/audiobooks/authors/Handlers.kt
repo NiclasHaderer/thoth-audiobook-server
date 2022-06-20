@@ -1,10 +1,11 @@
 package io.thoth.server.api.audiobooks.authors
 
-import com.papsign.ktor.openapigen.route.response.OpenAPIPipelineResponseContext
-import io.thoth.common.exceptions.APINotImplemented
+import io.ktor.http.*
 import io.thoth.models.AuthorModel
+import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.serverError
 
 
-internal suspend fun OpenAPIPipelineResponseContext<AuthorModel>.patchAuthor(id: AuthorId, patchAuthor: PatchAuthor) {
-    throw APINotImplemented("Author modification is not yet supported")
+internal suspend fun RouteHandler.patchAuthor(id: AuthorId, patchAuthor: PatchAuthor): AuthorModel {
+    serverError(HttpStatusCode.NotImplemented, "Author modification is not yet supported")
 }

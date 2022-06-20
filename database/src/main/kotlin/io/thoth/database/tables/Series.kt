@@ -1,6 +1,5 @@
 package io.thoth.database.tables
 
-import io.thoth.common.exceptions.APINotFound
 import io.thoth.common.extensions.findOne
 import io.thoth.database.ToModel
 import io.thoth.models.BookModel
@@ -44,9 +43,8 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
 
         fun totalCount() = transaction { Series.all().count() }
 
-        @Throws(APINotFound::class)
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
-            val series = Series.findById(uuid)?.toModel() ?: throw APINotFound("Could not find series")
+            val series = Series.findById(uuid)?.toModel() ?: return@transaction null
             val books = Book.forSeries(uuid).sortedWith(compareBy(BookModel::year, BookModel::seriesIndex))
             val index = Series.all().orderBy(TSeries.title.lowerCase() to order).indexOfFirst { it.id.value === uuid }
             SeriesModelWithBooks.fromModel(series, books, index)

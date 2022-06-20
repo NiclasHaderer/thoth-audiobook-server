@@ -1,6 +1,5 @@
 package io.thoth.database.tables
 
-import io.thoth.common.exceptions.APINotFound
 import io.thoth.common.extensions.findOne
 import io.thoth.database.ToModel
 import io.thoth.models.TitledId
@@ -39,9 +38,8 @@ class Track(id: EntityID<UUID>) : UUIDEntity(id), ToModel<TrackModel> {
             }
         }
 
-        @Throws(APINotFound::class)
         fun getById(uuid: UUID) = transaction {
-            Track.findById(uuid)?.toModel() ?: throw APINotFound("Requested track was not found")
+            Track.findById(uuid)?.toModel()
         }
 
         fun getByPath(path: Path) = getByPath(path.absolutePathString())

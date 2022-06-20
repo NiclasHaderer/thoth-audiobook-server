@@ -16,6 +16,6 @@ dependencies {
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
     implementation("me.xdrop:fuzzywuzzy:$fuzzyWuzzyVersion")
-    implementation("io.ktor:ktor-client-core-jvm:2.0.2")
-    implementation("io.ktor:ktor-client-cio-jvm:2.0.2")
+    implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
 }
