@@ -20,11 +20,6 @@ dependencies {
     // Search
     implementation("me.xdrop:fuzzywuzzy:$fuzzyWuzzyVersion")
     // Ktor
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("io.ktor:ktor-serialization:$ktorVersion")
 
     // Dependency Injection
     implementation("io.insert-koin:koin-ktor:$koinVersion")
@@ -39,5 +34,10 @@ dependencies {
 
     implementation("org.reflections:reflections:$reflectVersion")
 
-    implementation("io.ktor:ktor-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-server-core-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-netty-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.2")
+    implementation("io.ktor:ktor-client-core-jvm:2.0.2")
+    implementation("io.ktor:ktor-client-cio-jvm:2.0.2")
 }

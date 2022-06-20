@@ -38,7 +38,7 @@ repositories {
 
 dependencies {
     // Other projects
-    implementation(project(":authentication"))
+//    implementation(project(":authentication"))
     implementation(project(":common"))
     implementation(project(":database"))
     implementation(project(":metadata"))
@@ -66,22 +66,26 @@ dependencies {
     // Folder watching
     implementation("io.methvin:directory-watcher:$fileWatcherVersion")
     // Ktor
-    implementation("io.ktor:ktor-jackson:$ktorVersion")
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-auth:$ktorVersion")
-    implementation("io.ktor:ktor-server-sessions:$ktorVersion")
-    implementation("io.ktor:ktor-server-host-common:$ktorVersion")
-    implementation("io.ktor:ktor-serialization:$ktorVersion")
-    implementation("io.ktor:ktor-websockets:$ktorVersion")
-    implementation("io.ktor:ktor-locations:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
     // Search
     implementation("me.xdrop:fuzzywuzzy:$fuzzyWuzzyVersion")
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("io.ktor:ktor-server-cors:2.0.2")
+    implementation("io.ktor:ktor-server-partial-content:2.0.2")
+    implementation("io.ktor:ktor-server-call-logging:2.0.2")
+    implementation("io.ktor:ktor-server-content-negotiation:2.0.2")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-core-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-auth-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-sessions-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-host-common-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-websockets-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-locations-jvm:2.0.2")
+    implementation("io.ktor:ktor-server-netty-jvm:2.0.2")
+    implementation("io.ktor:ktor-client-core-jvm:2.0.2")
+    implementation("io.ktor:ktor-client-cio-jvm:2.0.2")
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-    testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-tests-jvm:2.0.2")
 }

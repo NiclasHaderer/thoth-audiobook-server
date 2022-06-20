@@ -2,9 +2,10 @@ package io.thoth.server.plugins
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
-import io.ktor.application.*
-import io.ktor.features.*
-import io.ktor.jackson.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.shared.serialization.jackson.*
 import io.thoth.server.serializers.jackson.CustomLocalDateTimeDesSerializer
 import io.thoth.server.serializers.jackson.CustomLocalDateTimeSerializer
 import java.time.LocalDateTime

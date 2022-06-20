@@ -1,6 +1,6 @@
 package io.thoth.server.plugins
 
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.metadata.audible.client.AudibleClient

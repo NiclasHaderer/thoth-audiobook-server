@@ -1,8 +1,9 @@
 package io.thoth.server.plugins
 
-import io.ktor.application.*
-import io.ktor.features.*
 import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.plugins.cors.CORS
 
 fun Application.configureCORS() {
     install(CORS) {

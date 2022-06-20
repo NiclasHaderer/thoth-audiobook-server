@@ -1,6 +1,6 @@
 package io.thoth.common.extensions
 
-import io.ktor.routing.*
+import io.ktor.server.routing.*
 
 val Route.fullPath: String
     get() {

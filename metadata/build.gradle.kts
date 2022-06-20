@@ -15,7 +15,7 @@ dependencies {
     // Audible scraping
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("me.xdrop:fuzzywuzzy:$fuzzyWuzzyVersion")
+    implementation("io.ktor:ktor-client-core-jvm:2.0.2")
+    implementation("io.ktor:ktor-client-cio-jvm:2.0.2")
 }
