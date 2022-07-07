@@ -12,19 +12,18 @@ class WebUiConfig internal constructor() {
     var webUiVersion = "4.4.1-1"
     private var _openAPIUiPath = "/docs"
     var webUiPath
-        get() = normalizeURL(_openAPIUiPath)
+        get() = _openAPIUiPath
         set(value) {
             this._openAPIUiPath = value
         }
 
     private var _openAPISchemaPath = "/docs/openapi"
     var schemaPath
-        get() = normalizeURL(_openAPISchemaPath + if (schemaType == OpenAPISchemaType.YAML) ".yaml" else ".json")
+        get() = (_openAPISchemaPath + if (schemaType == OpenAPISchemaType.YAML) ".yaml" else ".json")
+            .trimEnd('/')
         set(value) {
             this._openAPISchemaPath = value
         }
-
-    fun normalizeURL(url: String) = "/${url.trim('/')}/"
 }
 
 val OpenAPIWebUI = createApplicationPlugin("OpenAPIWebUI", createConfiguration = { WebUiConfig() }) {

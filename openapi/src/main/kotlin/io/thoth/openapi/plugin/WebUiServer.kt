@@ -15,6 +15,8 @@ internal class WebUiServer(private val config: WebUiConfig) {
 
 
     suspend fun interceptCall(call: ApplicationCall) {
+        redirectToRightURL(call)
+
         if (isSchemaRequest(call)) {
             respondWithSchema(call)
         } else if (isStaticRequest(call)) {
@@ -38,10 +40,20 @@ internal class WebUiServer(private val config: WebUiConfig) {
     }
 
     private fun isSchemaRequest(call: ApplicationCall): Boolean {
-        val callPath = config.normalizeURL(call.request.path())
+        val callPath = call.request.path()
         val schemaPath = config.schemaPath
         return callPath == schemaPath
     }
+
+
+    private suspend fun redirectToRightURL(call: ApplicationCall): Unit {
+        val callPath = call.request.path()
+        val isDocs = callPath.trimEnd('/') == config.webUiPath.trimEnd('/')
+        if (isDocs && callPath.last() != '/') {
+            call.respondRedirect("$callPath/")
+        }
+    }
+
 
     private suspend fun respondWithStatic(call: ApplicationCall) {
         val fileName = getStaticFileName(call)
@@ -52,17 +64,15 @@ internal class WebUiServer(private val config: WebUiConfig) {
     }
 
     private fun isStaticRequest(call: ApplicationCall): Boolean {
+        val callPath = call.request.path()
+        if (config.webUiPath !in callPath) return false
+
         val webUiVersion = config.webUiVersion
         return when (val fileName = getStaticFileName(call)) {
             in notFound -> false
             else -> {
-                var newFileName = fileName
-                if (fileName == "") {
-                    newFileName = "index.html"
-                }
-
                 val resource =
-                    this::class.java.getResource("/META-INF/resources/webjars/swagger-ui/$webUiVersion/$newFileName")
+                    this::class.java.getResource("/META-INF/resources/webjars/swagger-ui/$webUiVersion/$fileName")
                 if (resource == null) {
                     notFound.add(fileName)
                     false
@@ -75,8 +85,14 @@ internal class WebUiServer(private val config: WebUiConfig) {
     }
 
     private fun getStaticFileName(call: ApplicationCall): String {
-        val callPath = config.normalizeURL(call.request.path())
-        return callPath.removePrefix(config.webUiPath).trimEnd('/')
+        val callPath = call.request.path()
+        val fileName = callPath.removePrefix(config.webUiPath).trimEnd('/')
+
+        return if (fileName == "") {
+            return "index.html"
+        } else {
+            fileName
+        }.trimStart('/')
     }
 }
 
