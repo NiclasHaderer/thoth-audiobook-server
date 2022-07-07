@@ -22,6 +22,7 @@ import io.thoth.server.plugins.configureOpenApi
 import io.thoth.server.plugins.configurePartialContent
 import io.thoth.server.plugins.configureProdKoin
 import io.thoth.server.plugins.configureRouting
+import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
 import io.thoth.server.settings.Settings
 import io.thoth.server.settings.getPort
@@ -50,11 +51,12 @@ fun main() {
         }
         launch {
             FileChangeService().watch()
+        }
+        launch {
             CompleteScan().start()
         }
     }.start(wait = true)
 }
-
 
 fun Application.webServer() {
     configureStatusPages()
@@ -64,6 +66,8 @@ fun Application.webServer() {
     configureCORS()
     configureSockets()
     configureMonitoring()
+    configureSerialization()
+
     routing {
         route("api") {
             registerMetadataRouting()

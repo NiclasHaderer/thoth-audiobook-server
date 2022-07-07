@@ -13,7 +13,7 @@ import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
 import io.thoth.openapi.serverError
-import io.ktor.server.resources.handle as rHandle
+import io.ktor.server.resources.handle as resourceHandle
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
 
@@ -66,7 +66,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     } else {
         resource<PARAMS> {
             builtRoute = method(method) {
-                rHandle<PARAMS> { params -> wrapInnerRequest(callback, params) }
+                resourceHandle<PARAMS> { params -> wrapInnerRequest(callback, params) }
             }
         }
     }
