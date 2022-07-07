@@ -18,6 +18,7 @@ import io.thoth.server.logging.disableJAudioTaggerLogs
 import io.thoth.server.plugins.configureCORS
 import io.thoth.server.plugins.configureDevKoin
 import io.thoth.server.plugins.configureMonitoring
+import io.thoth.server.plugins.configureOpenApi
 import io.thoth.server.plugins.configurePartialContent
 import io.thoth.server.plugins.configureProdKoin
 import io.thoth.server.plugins.configureRouting
@@ -58,6 +59,7 @@ fun main() {
 fun Application.webServer() {
     configureStatusPages()
     configureRouting()
+    configureOpenApi()
     configurePartialContent()
     configureCORS()
     configureSockets()

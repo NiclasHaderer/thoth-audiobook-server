@@ -13,9 +13,9 @@ import io.thoth.models.SearchModel
 import io.thoth.models.SeriesModel
 import io.thoth.models.SeriesModelWithBooks
 import io.thoth.models.TrackModel
-import io.thoth.server.api.audiobooks.authors.PatchAuthor
-import io.thoth.server.api.audiobooks.books.PatchBook
-import io.thoth.server.api.audiobooks.series.PatchSeries
+//import io.thoth.server.api.audiobooks.authors.PatchAuthor
+//import io.thoth.server.api.audiobooks.books.PatchBook
+//import io.thoth.server.api.audiobooks.series.PatchSeries
 import me.ntrrgc.tsGenerator.TypeScriptGenerator
 import java.io.File
 import java.nio.file.Files
@@ -35,9 +35,9 @@ fun main() {
             BookModelWithTracks::class,
             SearchModel::class,
             SeriesModel::class,
-            PatchAuthor::class,
-            PatchSeries::class,
-            PatchBook::class,
+//            PatchAuthor::class,
+//            PatchSeries::class,
+//            PatchBook::class,
             SeriesModelWithBooks::class,
             TrackModel::class,
             ChangeEvent::class,
