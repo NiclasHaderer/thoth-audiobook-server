@@ -34,7 +34,7 @@ internal class UsernameChange(
 )
 
 @Serializable
-@Resource("/{id}")
+@Resource("{id}")
 internal class IdRoute(
     @Serializable(UUIDSerializer::class) val id: UUID
 )
