@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 import java.util.*
 
 @Serializable
-@Resource("/{id}")
+@Resource("{id}")
 internal class BookId(
     @Serializable(UUIDSerializer::class) val id: UUID,
 )
