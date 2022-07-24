@@ -7,6 +7,13 @@ plugins {
     kotlin("plugin.serialization") version "1.6.21"
 }
 
+// For kotlin annotations
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -27,6 +34,5 @@ dependencies {
     implementation("io.swagger.core.v3:swagger-models:$openApiVersion")
     implementation("io.swagger.core.v3:swagger-core:$openApiVersion")
     implementation("org.webjars:swagger-ui:4.4.1-1")
-    implementation("cc.vileda:kotlin-openapi3-dsl:1.2.0")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
 }

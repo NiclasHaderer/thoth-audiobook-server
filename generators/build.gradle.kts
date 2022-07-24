@@ -7,17 +7,17 @@ plugins {
 }
 
 repositories {
-    maven("https://jitpack.io")
+//    maven("https://jitpack.io")
     mavenCentral()
 }
 
 dependencies {
-    implementation(project(":metadata"))
-    implementation(project(":models"))
-    implementation(project(":server"))
+//    implementation(project(":metadata"))
+//    implementation(project(":models"))
+//    implementation(project(":server"))
     // Typescript code generation
-    implementation("com.github.ntrrgc:ts-generator:$tsGeneratorVersion")
-    implementation("cc.vileda:kotlin-openapi3-dsl:1.2.0")
-    implementation("org.json:json:20220320")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+//    implementation("com.github.ntrrgc:ts-generator:$tsGeneratorVersion")
+//    implementation("cc.vileda:kotlin-openapi3-dsl:1.2.0")
+//    implementation("org.json:json:20220320")
+//    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 }
