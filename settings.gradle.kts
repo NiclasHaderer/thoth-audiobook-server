@@ -1,2 +1,9 @@
 rootProject.name = "thoth-audiobook-server"
-include("authentication", "server", "database", "metadata", "openapi", "migrations", "generators", "models", "common")
+include("authentication")
+include("common")
+include("database")
+include("generators")
+include("metadata")
+include("models")
+include("openapi")
+include("server")

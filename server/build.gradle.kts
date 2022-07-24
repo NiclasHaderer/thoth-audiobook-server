@@ -10,24 +10,29 @@ val reflectVersion: String by project
 val openApiVersion: String by project
 val sqliteVersion: String by project
 val koinVersion: String by project
-val jacksonVersion: String by project
 val tsGeneratorVersion: String by project
 
 plugins {
-    application
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.21"
+    application
+    id("com.github.johnrengelman.shadow") version "7.1.2"
+}
+
+// Shadow task depends on Jar task, so these configs are reflected for Shadow as well
+tasks.jar {
+    manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt"
 }
 
 application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
-    mainClass.set("io.thoth.ApplicationKt")
+    mainClass.set("io.thoth.server.ApplicationKt")
 }
 
 // For kotlin annotations
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-        freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn"
+        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
         freeCompilerArgs = freeCompilerArgs + "-Xcontext-receivers"
     }
 }
@@ -41,10 +46,10 @@ dependencies {
     // Other projects
     implementation(project(":authentication"))
     implementation(project(":common"))
+    implementation(project(":models"))
     implementation(project(":openapi"))
     implementation(project(":database"))
     implementation(project(":metadata"))
-    implementation(project(":models"))
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
