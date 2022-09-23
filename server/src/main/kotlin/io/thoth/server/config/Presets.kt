@@ -1,13 +1,50 @@
-package io.thoth.server.settings
+package io.thoth.server.config
 
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.KeyFactory
 import java.security.KeyPair
+import java.security.KeyPairGenerator
 import java.security.spec.X509EncodedKeySpec
 
 
-object ProdSettings : Settings {
+object DevThothConfig : ThothConfig {
+    override val ignoreFile: String by lazy {
+        System.getenv("IGNORE_FILE") ?: ".audignore"
+    }
+    override val production = false
+
+    override val audioFileLocation: String by lazy {
+        System.getenv("AUDIO_FILE_LOCATION") ?: "test-resources"
+    }
+
+    override val analyzerThreads: Int by lazy {
+        System.getenv("ANALYZER_THREADS")?.toIntOrNull() ?: 10
+    }
+
+    override val webUiPort: Int by lazy {
+        getPort()
+    }
+
+    override val audibleSearchHost: String by lazy {
+        System.getenv("AUDIBLE_SEARCH_HOST") ?: "audible.de"
+    }
+    override val audibleAuthorHost: String by lazy {
+        System.getenv("AUDIBLE_AUTHOR_HOST") ?: "audible.com"
+    }
+
+    override val database: DatabaseConnection by lazy {
+        H2Database
+    }
+    override val keyPair: KeyPair by lazy {
+        val kpg = KeyPairGenerator.getInstance("RSA")
+        kpg.initialize(2048)
+        kpg.generateKeyPair()
+    }
+}
+
+
+object ProdThothConfig : ThothConfig {
     override val ignoreFile: String by lazy {
         System.getenv("IGNORE_FILE") ?: ".audignore"
     }

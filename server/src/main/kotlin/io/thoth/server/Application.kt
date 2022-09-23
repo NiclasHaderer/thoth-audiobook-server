@@ -24,9 +24,9 @@ import io.thoth.server.plugins.configureProdKoin
 import io.thoth.server.plugins.configureRouting
 import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
-import io.thoth.server.settings.Settings
-import io.thoth.server.settings.getPort
-import io.thoth.server.settings.isProduction
+import io.thoth.server.config.ThothConfig
+import io.thoth.server.config.getPort
+import io.thoth.server.config.isProduction
 import kotlinx.coroutines.launch
 import org.koin.ktor.ext.inject
 
@@ -36,7 +36,7 @@ fun main() {
         Netty, port = getPort(), watchPaths = listOf("classes"), host = "0.0.0.0"
     ) {
         if (isProduction()) configureProdKoin() else configureDevKoin()
-        val settings by inject<Settings>()
+        val thothConfig by inject<ThothConfig>()
 
         // TODO
         //        authentication(AuthConfig(settings.keyPair, "asd", "http://0.0.0.0:${settings.webUiPort}"))

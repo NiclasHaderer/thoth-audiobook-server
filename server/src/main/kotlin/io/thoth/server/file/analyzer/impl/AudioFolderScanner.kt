@@ -9,17 +9,17 @@ import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.tagger.ReadonlyFileTagger
-import io.thoth.server.settings.Settings
+import io.thoth.server.config.ThothConfig
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
-class AudioFolderScanner(settings: Settings) : AudioFileAnalyzer(settings) {
+class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
     override suspend fun analyze(
         path: Path,
         attrs: BasicFileAttributes,
         tags: ReadonlyFileTagger
     ): AudioFileAnalysisResult? {
-        val cleanPath = path.replacePart(settings.audioFileLocation)
+        val cleanPath = path.replacePart(thothConfig.audioFileLocation)
         val parentCount = cleanPath.countParents()
         if (parentCount != 2 && parentCount != 3) return null
 
