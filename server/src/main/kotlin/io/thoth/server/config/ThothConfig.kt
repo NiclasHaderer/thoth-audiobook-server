@@ -1,8 +1,8 @@
-package io.thoth.server.settings
+package io.thoth.server.config
 
 import java.security.KeyPair
 
-interface Settings {
+interface ThothConfig {
     val ignoreFile: String
     val production: Boolean
     val audioFileLocation: String
@@ -12,4 +12,12 @@ interface Settings {
     val audibleAuthorHost: String
     val database: DatabaseConnection
     val keyPair: KeyPair
+}
+
+interface DatabaseConnection {
+    val driverClassName: String
+    val jdbcUrl: String
+    val maximumPoolSize: Int
+    val autoCommit: Boolean
+    val transactionIsolation: String
 }

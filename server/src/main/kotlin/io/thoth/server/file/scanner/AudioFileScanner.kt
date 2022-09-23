@@ -1,7 +1,7 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.common.extensions.classLogger
-import io.thoth.server.settings.Settings
+import io.thoth.server.config.ThothConfig
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException
@@ -21,12 +21,12 @@ class AudioFileScanner(
     private val shouldUpdateFile: (Path) -> Boolean,
     private val addOrUpdate: (file: Path, attrs: BasicFileAttributes) -> Unit,
 ) : FileVisitor<Path>, KoinComponent {
-    private val settings: Settings by inject()
+    private val thothConfig: ThothConfig by inject()
     private val log = classLogger()
 
     override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes?): FileVisitResult {
         val ignoreFile =
-            Paths.get("${dir.absolutePathString()}${FileSystems.getDefault().separator}${settings.ignoreFile}")
+            Paths.get("${dir.absolutePathString()}${FileSystems.getDefault().separator}${thothConfig.ignoreFile}")
         return if (!Files.exists(ignoreFile)) {
             FileVisitResult.CONTINUE
         } else {

@@ -4,7 +4,7 @@ import io.methvin.watcher.DirectoryChangeEvent
 import io.methvin.watcher.DirectoryWatcher
 import io.methvin.watcher.hashing.FileHasher
 import io.thoth.server.file.persister.FileAnalyzingScheduler
-import io.thoth.server.settings.Settings
+import io.thoth.server.config.ThothConfig
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException
@@ -13,17 +13,17 @@ import kotlin.io.path.name
 
 
 class FileChangeService : KoinComponent {
-    private val settings by inject<Settings>()
+    private val thothConfig by inject<ThothConfig>()
     private val analyzer by inject<FileAnalyzingScheduler>()
 
     private val watcher =
-        DirectoryWatcher.builder().path(Path.of(settings.audioFileLocation)).listener { event: DirectoryChangeEvent ->
+        DirectoryWatcher.builder().path(Path.of(thothConfig.audioFileLocation)).listener { event: DirectoryChangeEvent ->
             val path = event.path() // Ignore if it is a directory or not an audio file
             val eventType = event.eventType()
 
             if (event.isDirectory || !path.hasAudioExtension()) {
 
-                val ignoreFile = settings.ignoreFile
+                val ignoreFile = thothConfig.ignoreFile
                 val fileName = path.name
                 if (fileName == ignoreFile) {
                     analyzer.queue(FileAnalyzingScheduler.Type.SCAN_FOLDER, path)

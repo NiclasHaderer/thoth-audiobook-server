@@ -3,7 +3,7 @@ package io.thoth.server.file.persister
 import io.thoth.common.extensions.classLogger
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.scanner.CompleteScan
-import io.thoth.server.settings.Settings
+import io.thoth.server.config.ThothConfig
 import io.thoth.server.utils.Scheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -31,11 +31,11 @@ interface FileAnalyzingScheduler {
 class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
     private val log = classLogger()
     private val analyzer by inject<AudioFileAnalyzerWrapper>()
-    private val settings by inject<Settings>()
+    private val thothConfig by inject<ThothConfig>()
     private val scanScheduler = Scheduler(1)
     private val trackManager = TrackManagerImpl()
-    private val fileQueue = Channel<Path>(settings.analyzerThreads)
-    private val removeItem = Channel<Path>(settings.analyzerThreads)
+    private val fileQueue = Channel<Path>(thothConfig.analyzerThreads)
+    private val removeItem = Channel<Path>(thothConfig.analyzerThreads)
     private val scope = CoroutineScope(Dispatchers.IO)
 
     init {

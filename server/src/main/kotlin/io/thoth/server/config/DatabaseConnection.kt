@@ -1,12 +1,5 @@
-package io.thoth.server.settings
+package io.thoth.server.config
 
-interface DatabaseConnection {
-    val driverClassName: String
-    val jdbcUrl: String
-    val maximumPoolSize: Int
-    val autoCommit: Boolean
-    val transactionIsolation: String
-}
 
 
 internal object H2Database : DatabaseConnection {

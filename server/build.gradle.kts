@@ -57,6 +57,13 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
 
+    // Config
+    implementation("com.sksamuel.hoplite:hoplite-core:2.6.2")
+    implementation("com.sksamuel.hoplite:hoplite-json:2.6.2")
+    implementation("com.sksamuel.hoplite:hoplite-yaml:2.6.2")
+    implementation("com.sksamuel.hoplite:hoplite-toml:2.6.2")
+    implementation("com.sksamuel.hoplite:hoplite-hocon:2.6.2")
+
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
     // Database drivers

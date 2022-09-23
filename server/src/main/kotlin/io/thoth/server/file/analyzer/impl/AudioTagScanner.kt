@@ -4,11 +4,11 @@ import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.tagger.ReadonlyFileTagger
-import io.thoth.server.settings.Settings
+import io.thoth.server.config.ThothConfig
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
-class AudioTagScanner(settings: Settings) : AudioFileAnalyzer(settings) {
+class AudioTagScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
     override suspend fun analyze(
         path: Path,
         attrs: BasicFileAttributes,

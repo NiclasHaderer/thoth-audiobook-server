@@ -10,9 +10,9 @@ import io.thoth.server.file.analyzer.impl.AudioFolderScanner
 import io.thoth.server.file.analyzer.impl.AudioTagScanner
 import io.thoth.server.file.persister.FileAnalyzingScheduler
 import io.thoth.server.file.persister.FileAnalyzingSchedulerImpl
-import io.thoth.server.settings.DevSettings
-import io.thoth.server.settings.ProdSettings
-import io.thoth.server.settings.Settings
+import io.thoth.server.config.DevThothConfig
+import io.thoth.server.config.ProdThothConfig
+import io.thoth.server.config.ThothConfig
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -22,7 +22,7 @@ fun Application.configureProdKoin() {
     install(Koin) {
         modules(
             module {
-                single<Settings> { ProdSettings }
+                single<ThothConfig> { ProdThothConfig }
                 koinCommon()
             }
         )
@@ -35,7 +35,7 @@ fun Application.configureDevKoin() {
     install(Koin) {
         modules(
             module {
-                single<Settings> { DevSettings }
+                single<ThothConfig> { DevThothConfig }
                 koinCommon()
             }
         )
@@ -46,10 +46,10 @@ fun Application.configureDevKoin() {
 
 private fun KoinModule.koinCommon() {
     single<MetadataProvider> {
-        val settings: Settings = get()
+        val config: ThothConfig = get()
         MetadataWrapper(
             listOf(
-                AudibleClient(settings.audibleSearchHost, settings.audibleAuthorHost)
+                AudibleClient(config.audibleSearchHost, config.audibleAuthorHost)
             )
         )
     }

@@ -1,4 +1,4 @@
-package io.thoth.server.settings
+package io.thoth.server.config
 
 fun isProduction(): Boolean {
     return System.getenv("PRODUCTION")?.toBooleanStrictOrNull() ?: false

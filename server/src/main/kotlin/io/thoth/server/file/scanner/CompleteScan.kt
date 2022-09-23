@@ -5,7 +5,7 @@ import io.thoth.common.extensions.findOne
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
 import io.thoth.server.file.persister.FileAnalyzingScheduler
-import io.thoth.server.settings.Settings
+import io.thoth.server.config.ThothConfig
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -20,12 +20,12 @@ val scanIsOngoing = AtomicBoolean()
 
 class CompleteScan(private var basePath: Path? = null) : KoinComponent {
     private val log = classLogger()
-    private val settings by inject<Settings>()
+    private val thothConfig by inject<ThothConfig>()
     private val fileAnalyzeScheduler by inject<FileAnalyzingScheduler>()
 
     init {
         if (basePath == null) {
-            basePath = Paths.get(settings.audioFileLocation)
+            basePath = Paths.get(thothConfig.audioFileLocation)
         }
     }
 
