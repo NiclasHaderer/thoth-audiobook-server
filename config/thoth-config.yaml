@@ -1,0 +1,17 @@
+---
+ignoreFile: ".thothignore"
+production: true
+audioFileLocation: []
+analyzerThreads: 1
+webUiPort: 8080
+audibleSearchHost: https://www.audible.com
+audibleAuthorHost: https://www.audible.com
+database:
+  driverClassName: "org.h2.Driver"
+  jdbcUrl: "jdbc:h2:mem:regular"
+  maximumPoolSize: 100
+  autoCommit: false
+  transactionIsolation: "TRANSACTION_REPEATABLE_READ"
+keyPair:
+  publicKeyLocation: "config/private.pem"
+  privateKeyLocation: "config/public.pem"
