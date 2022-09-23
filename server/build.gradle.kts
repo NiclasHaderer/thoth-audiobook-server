@@ -34,8 +34,13 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
         freeCompilerArgs = freeCompilerArgs + "-Xcontext-receivers"
+        jvmTarget = "11"
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
     }
 }
+
+
 
 repositories {
     maven("https://jitpack.io")
