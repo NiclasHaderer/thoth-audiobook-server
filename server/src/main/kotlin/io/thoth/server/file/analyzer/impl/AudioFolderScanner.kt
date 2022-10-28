@@ -5,11 +5,11 @@ import io.thoth.common.extensions.grandGrandParentName
 import io.thoth.common.extensions.grandParentName
 import io.thoth.common.extensions.parentName
 import io.thoth.common.extensions.replacePart
+import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.tagger.ReadonlyFileTagger
-import io.thoth.server.config.ThothConfig
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
@@ -19,7 +19,7 @@ class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConf
         attrs: BasicFileAttributes,
         tags: ReadonlyFileTagger
     ): AudioFileAnalysisResult? {
-        val cleanPath = path.replacePart(thothConfig.audioFileLocation)
+        val cleanPath = path.replacePart("") // TODO thothConfig.audioFileLocation
         val parentCount = cleanPath.countParents()
         if (parentCount != 2 && parentCount != 3) return null
 

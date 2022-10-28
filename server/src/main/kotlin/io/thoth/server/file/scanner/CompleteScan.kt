@@ -25,7 +25,7 @@ class CompleteScan(private var basePath: Path? = null) : KoinComponent {
 
     init {
         if (basePath == null) {
-            basePath = Paths.get(thothConfig.audioFileLocation)
+            basePath = Paths.get("") // TODO thothConfig.audioFileLocation
         }
     }
 

@@ -1,11 +1,12 @@
 ---
 ignoreFile: ".thothignore"
 production: true
-audioFileLocation: []
+audioFileLocation:
+  - test-resources
 analyzerThreads: 1
 webUiPort: 8080
-audibleSearchHost: https://www.audible.com
-audibleAuthorHost: https://www.audible.com
+audibleSearchHost: www.audible.com
+audibleAuthorHost: www.audible.com
 database:
   driverClassName: "org.h2.Driver"
   jdbcUrl: "jdbc:h2:mem:regular"

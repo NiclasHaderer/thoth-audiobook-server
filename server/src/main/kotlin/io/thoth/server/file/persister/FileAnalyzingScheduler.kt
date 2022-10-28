@@ -1,9 +1,9 @@
 package io.thoth.server.file.persister
 
 import io.thoth.common.extensions.classLogger
+import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.scanner.CompleteScan
-import io.thoth.server.config.ThothConfig
 import io.thoth.server.utils.Scheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -88,6 +88,7 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
                         fileQueue.send(path)
                     }
                 }
+
                 FileAnalyzingScheduler.Type.REMOVE_FILE -> removeItem.send(path)
                 FileAnalyzingScheduler.Type.SCAN_FOLDER -> CompleteScan(path).start()
             }
