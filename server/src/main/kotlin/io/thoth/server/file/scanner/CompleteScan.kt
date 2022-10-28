@@ -4,8 +4,8 @@ import io.thoth.common.extensions.classLogger
 import io.thoth.common.extensions.findOne
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
-import io.thoth.server.file.persister.FileAnalyzingScheduler
 import io.thoth.server.config.ThothConfig
+import io.thoth.server.file.persister.FileAnalyzingScheduler
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -18,15 +18,15 @@ import kotlin.io.path.getLastModifiedTime
 
 val scanIsOngoing = AtomicBoolean()
 
-class CompleteScan(private var basePath: Path? = null) : KoinComponent {
+class CompleteScan(private var basePath: List<Path> = listOf()) : KoinComponent {
     private val log = classLogger()
     private val thothConfig by inject<ThothConfig>()
     private val fileAnalyzeScheduler by inject<FileAnalyzingScheduler>()
 
+    constructor(basePath: Path) : this(listOf(basePath))
+
     init {
-        if (basePath == null) {
-            basePath = Paths.get("") // TODO thothConfig.audioFileLocation
-        }
+        basePath += thothConfig.audioFileLocation.map { Paths.get(it) }
     }
 
     fun start() {
@@ -49,8 +49,9 @@ class CompleteScan(private var basePath: Path? = null) : KoinComponent {
                 fileAnalyzeScheduler.queue(FileAnalyzingScheduler.Type.ADD_FILE, path)
             }
         )
-
-        Files.walkFileTree(basePath!!, scanner)
+        basePath.forEach {
+            Files.walkFileTree(it, scanner)
+        }
     }
 
 
