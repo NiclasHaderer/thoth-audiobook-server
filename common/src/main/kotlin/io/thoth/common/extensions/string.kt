@@ -22,3 +22,11 @@ internal fun decodeDataURL(dataUrl: String): ByteArray {
 }
 
 suspend fun String.uriToFile(): ByteArray = imageFromString(this)
+
+
+fun String.removeAll(values: List<String>) : String {
+    var result = this
+    values.forEach { result = result.replace(it, "") }
+    return result
+}
+
