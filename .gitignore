@@ -75,3 +75,4 @@ gen/
 *.db-journal
 *.jar
 bin
+config/*.pem

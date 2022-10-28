@@ -17,7 +17,7 @@ class FileChangeService : KoinComponent {
     private val analyzer by inject<FileAnalyzingScheduler>()
 
     private val watcher =
-        DirectoryWatcher.builder().path(Path.of(thothConfig.audioFileLocation)).listener { event: DirectoryChangeEvent ->
+        DirectoryWatcher.builder().path(Path.of("")).listener { event: DirectoryChangeEvent -> // TODO thothConfig.audioFileLocation
             val path = event.path() // Ignore if it is a directory or not an audio file
             val eventType = event.eventType()
 

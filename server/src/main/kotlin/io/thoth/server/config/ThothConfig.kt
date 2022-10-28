@@ -8,7 +8,7 @@ interface KeyPairLocation {
 interface ThothConfig {
     val ignoreFile: String
     val production: Boolean
-    val audioFileLocation: String
+    val audioFileLocation: List<String>
     val analyzerThreads: Int
     val webUiPort: Int
     val audibleSearchHost: String
@@ -28,7 +28,7 @@ interface DatabaseConnection {
 data class ThothConfigImpl(
     override val ignoreFile: String,
     override val production: Boolean,
-    override val audioFileLocation: String,
+    override val audioFileLocation: List<String>,
     override val analyzerThreads: Int,
     override val webUiPort: Int,
     override val audibleSearchHost: String,

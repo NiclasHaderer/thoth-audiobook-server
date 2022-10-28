@@ -31,7 +31,7 @@ class Scheduler(parallelism: Int) {
     }
 
     @Suppress("DeferredResultUnused")
-    suspend fun queue(callback: suspend () -> Any) {
+    suspend fun queue(callback: suspend () -> Unit) {
         this.queueAsync(callback)
     }
 }
