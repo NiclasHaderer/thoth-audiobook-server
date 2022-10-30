@@ -7,7 +7,7 @@ object DevThothConfig : ThothConfig {
     }
     override val production = false
 
-    override val audioFileLocation: List<String> by lazy {
+    override val audioFileLocations: List<String> by lazy {
         System.getenv("THOTH_AUDIO_FILE_LOCATION")?.split(",") ?: listOf("test-resources")
     }
 
@@ -15,7 +15,7 @@ object DevThothConfig : ThothConfig {
         System.getenv("THOTH_ANALYZER_THREADS")?.toIntOrNull() ?: 10
     }
 
-    override val webUiPort: Int by lazy {
+    override val port: Int by lazy {
         System.getenv("THOTH_PORT")?.toIntOrNull() ?: 8080
     }
 

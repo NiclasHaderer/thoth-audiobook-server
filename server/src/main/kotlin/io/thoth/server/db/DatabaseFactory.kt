@@ -43,3 +43,11 @@ object DatabaseFactory : KoinComponent {
     }
 
 }
+
+fun connectToDatabase(){
+    DatabaseFactory.connect()
+}
+
+fun migrateDatabase(){
+    DatabaseFactory.migrate()
+}

@@ -5,20 +5,22 @@ import io.methvin.watcher.DirectoryWatcher
 import io.methvin.watcher.hashing.FileHasher
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.persister.FileAnalyzingScheduler
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import java.io.IOException
 import java.nio.file.Path
 import kotlin.io.path.name
 
 
-class FileChangeService : KoinComponent {
-    private val thothConfig by inject<ThothConfig>()
-    private val analyzer by inject<FileAnalyzingScheduler>()
+interface FileWatcher {
+    fun watch()
+}
+
+class FileWatcherImpl(
+    private val thothConfig: ThothConfig,
+    private val analyzer: FileAnalyzingScheduler
+) : FileWatcher {
 
     private val watcher =
         DirectoryWatcher.builder()
-            .paths(thothConfig.audioFileLocation.map { Path.of(it) })
+            .paths(thothConfig.audioFileLocations.map { Path.of(it) })
             .listener { event: DirectoryChangeEvent ->
                 val path = event.path() // Ignore if it is a directory or not an audio file
                 val eventType = event.eventType()
@@ -42,12 +44,7 @@ class FileChangeService : KoinComponent {
 
             }.fileHasher(FileHasher.LAST_MODIFIED_TIME).build()
 
-    @Throws(IOException::class)
-    fun stopWatching() {
-        watcher.close()
-    }
-
-    fun watch() {
+    override fun watch() {
         return watcher.watch()
     }
 }
