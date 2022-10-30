@@ -17,7 +17,7 @@ class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConf
     override suspend fun analyze(
         path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger
     ): AudioFileAnalysisResult? {
-        val cleanPath = path.replaceParts(thothConfig.audioFileLocation)
+        val cleanPath = path.replaceParts(thothConfig.audioFileLocations)
         val parentCount = cleanPath.countParents()
         if (parentCount != 2 && parentCount != 3) return null
 

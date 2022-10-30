@@ -27,7 +27,7 @@ class RecursiveScan(private var basePath: List<Path> = listOf()) : KoinComponent
     constructor(basePath: Path) : this(listOf(basePath))
 
     init {
-        basePath += thothConfig.audioFileLocation.map { Paths.get(it) }
+        basePath += thothConfig.audioFileLocations.map { Paths.get(it) }
     }
 
     fun start() {

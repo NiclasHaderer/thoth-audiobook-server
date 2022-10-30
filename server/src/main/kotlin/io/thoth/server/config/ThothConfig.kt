@@ -3,9 +3,9 @@ package io.thoth.server.config
 interface ThothConfig {
     val ignoreFile: String
     val production: Boolean
-    val audioFileLocation: List<String>
+    val audioFileLocations: List<String>
     val analyzerThreads: Int
-    val webUiPort: Int
+    val port: Int
     val audibleSearchHost: String
     val audibleAuthorHost: String
     val database: DatabaseConnection
@@ -23,9 +23,9 @@ interface DatabaseConnection {
 data class ThothConfigImpl(
     override val ignoreFile: String,
     override val production: Boolean,
-    override val audioFileLocation: List<String>,
+    override val audioFileLocations: List<String>,
     override val analyzerThreads: Int,
-    override val webUiPort: Int,
+    override val port: Int,
     override val audibleSearchHost: String,
     override val audibleAuthorHost: String,
     override val database: DatabaseConnectionImpl,

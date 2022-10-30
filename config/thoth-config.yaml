@@ -1,10 +1,10 @@
 ---
 ignoreFile: ".thothignore"
 production: true
-audioFileLocation:
+audioFileLocations:
   - test-resources
 analyzerThreads: 6
-webUiPort: 8080
+port: 8080
 audibleSearchHost: www.audible.com
 audibleAuthorHost: www.audible.com
 database:
