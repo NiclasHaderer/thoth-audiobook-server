@@ -18,10 +18,12 @@ internal class RegisterUser(
 )
 
 internal class EditUser(
-    var username: String,
+    var username: String?,
     val password: String?,
-    var admin: Boolean,
-    var edit: Boolean,
+    var admin: Boolean?,
+    var edit: Boolean?,
+    val enabled: Boolean?,
+    val changePassword: Boolean?
 )
 
 internal class PasswordChange(

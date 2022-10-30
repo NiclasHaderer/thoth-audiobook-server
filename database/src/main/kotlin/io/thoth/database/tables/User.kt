@@ -15,8 +15,10 @@ import java.util.*
 object TUsers : UUIDTable("Users") {
     val username = char("username", 256).uniqueIndex()
     val passwordHash = char("passwordHash", 512)
-    val admin = bool("admin").default(false)
-    val edit = bool("edit").default(false)
+    val admin = bool("admin")
+    val edit = bool("edit")
+    val changePassword = bool("changePassword")
+    val enabled = bool("enabled").default(true)
 }
 
 
@@ -35,6 +37,8 @@ class User(id: EntityID<UUID>) : UUIDEntity(id), ToModel<UserModel> {
     var passwordHash by TUsers.passwordHash
     var admin by TUsers.admin
     var edit by TUsers.edit
+    var changePassword by TUsers.changePassword
+    var enabled by TUsers.enabled
 
     override fun toModel() = InternalUserModel(
         id = id.value,
@@ -44,18 +48,3 @@ class User(id: EntityID<UUID>) : UUIDEntity(id), ToModel<UserModel> {
         passwordHash = passwordHash
     )
 }
-
-object TUserTokens : UUIDTable("UserTokens") {
-    val user = reference("user", TUsers)
-    val valid = bool("valid")
-    val token = text("token")
-}
-
-class UserToken(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<UserToken>(TUsers)
-
-    var user by User referencedOn TUserTokens.user
-    var valid by TUserTokens.valid
-    var token by TUserTokens.token
-}
-

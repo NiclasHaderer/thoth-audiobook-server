@@ -1,6 +1,8 @@
 val jwtVersion: String by project
 val exposedVersion: String by project
 val ktorVersion: String by project
+val springSecurityVersion: String by project
+
 
 plugins {
     kotlin("jvm") version "1.6.21"
@@ -31,7 +33,7 @@ dependencies {
     // JWT
     implementation("com.auth0:java-jwt:$jwtVersion")
     implementation("com.nimbusds:nimbus-jose-jwt:9.22")
-    implementation("org.springframework.security:spring-security-core:5.6.5")
+    implementation("org.springframework.security:spring-security-core:$springSecurityVersion")
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
     implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
 }

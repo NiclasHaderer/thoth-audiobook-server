@@ -20,13 +20,21 @@ internal fun RouteHandler.modifyUser(userID: IdRoute, editUser: EditUser): UserM
             "Could not find user with id $userID"
         )
 
-        if (user.admin && principal.userId != user.id.value) {
-            serverError(HttpStatusCode.BadRequest, "A admin user cannot be edited")
+        val editUserIsAdmin = principal.admin
+        val editUserIsSelf = principal.userId == user.id.value
+
+        if (!editUserIsAdmin && !editUserIsSelf) {
+            serverError(HttpStatusCode.BadRequest, "You are not allowed to edit this user")
         }
 
-        user.edit = editUser.edit
-        user.admin = editUser.admin
-        user.username = editUser.username
+        user.username = editUser.username ?: user.username
+        user.edit = editUser.edit ?: user.edit
+        user.changePassword = editUser.changePassword ?: user.changePassword
+
+        if (editUserIsAdmin) {
+            user.admin = editUser.admin ?: user.admin
+            user.enabled = editUser.enabled ?: user.enabled
+        }
 
         if (editUser.password != null) {
             val encoder = Argon2PasswordEncoder()
