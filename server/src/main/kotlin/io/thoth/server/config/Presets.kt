@@ -29,11 +29,8 @@ object DevThothConfig : ThothConfig {
     override val database: DatabaseConnection by lazy {
         H2Database
     }
-    override val keyPair: KeyPairLocation by lazy {
-        object : KeyPairLocation {
-            override val publicKeyLocation: String = "config/public.pem"
-            override val privateKeyLocation: String = "config/private.pem"
-        }
+    override val configDirectory: String by lazy {
+        "config"
     }
 }
 

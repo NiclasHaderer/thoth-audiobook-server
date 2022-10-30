@@ -16,12 +16,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.getLastModifiedTime
 
-val scanIsOngoing = AtomicBoolean()
 
-class CompleteScan(private var basePath: List<Path> = listOf()) : KoinComponent {
+class RecursiveScan(private var basePath: List<Path> = listOf()) : KoinComponent {
     private val log = classLogger()
     private val thothConfig by inject<ThothConfig>()
     private val fileAnalyzeScheduler by inject<FileAnalyzingScheduler>()
+    private val scanIsOngoing = AtomicBoolean()
+
 
     constructor(basePath: Path) : this(listOf(basePath))
 

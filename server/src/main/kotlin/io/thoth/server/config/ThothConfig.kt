@@ -1,10 +1,5 @@
 package io.thoth.server.config
 
-interface KeyPairLocation {
-    val publicKeyLocation: String
-    val privateKeyLocation: String
-}
-
 interface ThothConfig {
     val ignoreFile: String
     val production: Boolean
@@ -14,7 +9,7 @@ interface ThothConfig {
     val audibleSearchHost: String
     val audibleAuthorHost: String
     val database: DatabaseConnection
-    val keyPair: KeyPairLocation
+    val configDirectory: String
 }
 
 interface DatabaseConnection {
@@ -34,7 +29,7 @@ data class ThothConfigImpl(
     override val audibleSearchHost: String,
     override val audibleAuthorHost: String,
     override val database: DatabaseConnectionImpl,
-    override val keyPair: KeyPairLocationImpl
+    override val configDirectory: String
 ) : ThothConfig
 
 data class DatabaseConnectionImpl(
@@ -44,7 +39,3 @@ data class DatabaseConnectionImpl(
     override val autoCommit: Boolean,
     override val transactionIsolation: String
 ) : DatabaseConnection
-
-data class KeyPairLocationImpl(
-    override val publicKeyLocation: String, override val privateKeyLocation: String
-) : KeyPairLocation

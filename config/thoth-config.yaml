@@ -3,7 +3,7 @@ ignoreFile: ".thothignore"
 production: true
 audioFileLocation:
   - test-resources
-analyzerThreads: 1
+analyzerThreads: 6
 webUiPort: 8080
 audibleSearchHost: www.audible.com
 audibleAuthorHost: www.audible.com
@@ -13,6 +13,4 @@ database:
   maximumPoolSize: 100
   autoCommit: false
   transactionIsolation: "TRANSACTION_REPEATABLE_READ"
-keyPair:
-  publicKeyLocation: "config/private.pem"
-  privateKeyLocation: "config/public.pem"
+configDirectory: "config"

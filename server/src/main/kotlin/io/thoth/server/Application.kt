@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.routing.*
+import io.thoth.auth.configureAuthentication
 import io.thoth.common.extensions.shutdown
 import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
@@ -11,10 +12,11 @@ import io.thoth.server.api.images.registerImageRouting
 import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
+import io.thoth.server.config.ThothConfig
 import io.thoth.server.config.loadConfig
 import io.thoth.server.db.DatabaseFactory
-import io.thoth.server.file.scanner.CompleteScan
 import io.thoth.server.file.scanner.FileChangeService
+import io.thoth.server.file.scanner.RecursiveScan
 import io.thoth.server.logging.disableJAudioTaggerLogs
 import io.thoth.server.plugins.configureCORS
 import io.thoth.server.plugins.configureKoin
@@ -34,13 +36,10 @@ fun main() {
     ) {
         configureKoin(config)
 
-        // TODO
-        //        authentication(AuthConfig(settings.keyPair, "asd", "http://0.0.0.0:${settings.webUiPort}"))
-
         try {
             DatabaseFactory.connect()
             DatabaseFactory.migrate()
-            webServer()
+            webServer(config)
         } catch (e: Exception) {
             log.error("Could not start server", e)
             shutdown()
@@ -49,15 +48,16 @@ fun main() {
             FileChangeService().watch()
         }
         launch {
-            CompleteScan().start()
+            RecursiveScan().start()
         }
     }.start(wait = true)
 }
 
-fun Application.webServer() {
+fun Application.webServer(config: ThothConfig) {
     configureStatusPages()
     configureRouting()
     configureOpenApi()
+    configureAuthentication(config.configDirectory)
     configurePartialContent()
     configureCORS()
     configureSockets()

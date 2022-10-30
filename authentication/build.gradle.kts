@@ -31,6 +31,7 @@ dependencies {
     // JWT
     implementation("com.auth0:java-jwt:$jwtVersion")
     implementation("com.nimbusds:nimbus-jose-jwt:9.22")
-    implementation("org.springframework.security:spring-security-core:5.6.3")
+    implementation("org.springframework.security:spring-security-core:5.6.5")
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
 }
