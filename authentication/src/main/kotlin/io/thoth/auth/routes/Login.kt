@@ -22,6 +22,8 @@ internal fun login(config: AuthConfig): RouteHandler.(user: LoginUser) -> JwtPai
             serverError(HttpStatusCode.BadRequest, "Could not login user")
         }
 
+
+
         generateJwtForUser(config.issuer, userModel, config)
     }
 }

@@ -12,7 +12,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 
-object DatabaseFactory : KoinComponent {
+private object DatabaseFactory : KoinComponent {
     private val log = classLogger()
     private val thothConfig by inject<ThothConfig>()
     private val dbInstance by lazy {
@@ -34,7 +34,7 @@ object DatabaseFactory : KoinComponent {
         HikariDataSource(config)
     }
 
-    fun connect() = dbInstance.run { }
+    fun connect() = dbInstance.run {  }
 
     fun migrate() {
         log.info("Migrating database")

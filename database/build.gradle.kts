@@ -1,5 +1,6 @@
 val reflectVersion: String by project
 val exposedVersion: String by project
+val springSecurityVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.6.21"
@@ -22,4 +23,5 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
 
     implementation("org.reflections:reflections:$reflectVersion")
+    implementation("org.springframework.security:spring-security-core:$springSecurityVersion")
 }
