@@ -29,7 +29,7 @@ fun Route.streamingRouting() {
         )
         val path = Path.of(track.path)
         if (!path.exists() && path.isRegularFile()) {
-            serverError(HttpStatusCode.NotFound, "Database out of sync. Please start syncing process.")
+            serverError(HttpStatusCode.NotFound, "File does not exist. Database out of sync. Please start syncing process.")
         }
         call.response.header(
             HttpHeaders.ContentDisposition,

@@ -3,10 +3,9 @@ package io.thoth.server.file.persister
 import io.thoth.common.extensions.classLogger
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
-import io.thoth.server.file.scanner.CompleteScan
+import io.thoth.server.file.scanner.RecursiveScan
 import io.thoth.server.utils.Scheduler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -27,12 +26,11 @@ interface FileAnalyzingScheduler {
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
     private val log = classLogger()
     private val analyzer by inject<AudioFileAnalyzerWrapper>()
     private val thothConfig by inject<ThothConfig>()
-    private val scanScheduler = Scheduler(1)
+    private val scanScheduler = Scheduler(thothConfig.analyzerThreads)
     private val trackManager = TrackManagerImpl()
     private val fileQueue = Channel<Path>(thothConfig.analyzerThreads)
     private val removeItem = Channel<Path>(thothConfig.analyzerThreads)
@@ -68,7 +66,6 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
                 ?: return@queue log.warn("Skipped ${path.absolute()} because it contains not enough information")
             trackManager.insertScanResult(result, path)
         }
-
     }
 
     private fun removePath(path: Path) = trackManager.removePath(path)
@@ -82,15 +79,14 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
             when (type) {
                 FileAnalyzingScheduler.Type.ADD_FILE -> {
                     if (path.isDirectory()) {
-                        log.warn("You tried to queue a folder for a metadata scan. This can not be done")
-                        log.warn("The folder ${path.fileName} will therefore be skipped")
+                        log.warn("You tried to queue a folder for a metadata scan. This can not be done The folder ${path.fileName} will therefore be skipped")
                     } else {
                         fileQueue.send(path)
                     }
                 }
 
                 FileAnalyzingScheduler.Type.REMOVE_FILE -> removeItem.send(path)
-                FileAnalyzingScheduler.Type.SCAN_FOLDER -> CompleteScan(path).start()
+                FileAnalyzingScheduler.Type.SCAN_FOLDER -> RecursiveScan(path).start()
             }
         }
     }

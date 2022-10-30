@@ -11,6 +11,7 @@ import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
 import io.thoth.metadata.MetadataProvider
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
+import kotlinx.coroutines.sync.Semaphore
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -24,11 +25,17 @@ private interface TrackManager {
 
 internal class TrackManagerImpl : TrackManager, KoinComponent {
     private val metadataProvider by inject<MetadataProvider>()
+    private val semaphore = Semaphore(1)
     private val log = classLogger()
 
     override suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path) {
-        getOrCreateBook(scan)
-        getOrCreateTrack(scan)
+        this.semaphore.acquire()
+        try {
+            getOrCreateBook(scan)
+            getOrCreateTrack(scan)
+        } finally {
+            this.semaphore.release()
+        }
     }
 
     private suspend fun getOrCreateTrack(scan: AudioFileAnalysisResult): Track {
