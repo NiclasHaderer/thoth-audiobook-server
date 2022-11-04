@@ -1,12 +1,14 @@
-package io.thoth.server.file.analyzer
+package io.thoth.server.file.analyzer.impl
 
 import io.thoth.common.extensions.classLogger
+import io.thoth.server.file.analyzer.AudioFileAnalysisResult
+import io.thoth.server.file.analyzer.AudioFileAnalyzer
+import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.tagger.ReadonlyFileTaggerImpl
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
-class AudioFileAnalyzerWrapperImpl(private val analyzers: List<AudioFileAnalyzer>) :
-    AudioFileAnalyzerWrapper {
+class AudioFileAnalyzerWrapperImpl(private val analyzers: List<AudioFileAnalyzer>) : AudioFileAnalyzerWrapper {
     private val log = classLogger()
 
     override suspend fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult? {
