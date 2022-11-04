@@ -30,6 +30,7 @@ import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
 import kotlinx.coroutines.launch
 
+
 fun main() {
     disableJAudioTaggerLogs()
     val config = loadConfig()

@@ -8,6 +8,7 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
+    <logger name="io.thoth.server.A" level="ERROR"/>
     <!-- OpenAPI -->
     <logger name="io.ktor.server.routing.Route" level="WARN"/>
     <logger name="io.swagger.v3.core.converter" level="WARN"/>

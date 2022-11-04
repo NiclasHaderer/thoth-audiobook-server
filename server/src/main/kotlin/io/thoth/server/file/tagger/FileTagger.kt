@@ -102,7 +102,7 @@ open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger
         AudioFileIO.write(this.audioFile)
     }
 
-    protected fun setOrDelete(key: FieldKey, value: String?) {
+    private fun setOrDelete(key: FieldKey, value: String?) {
         if (value == null || value.isEmpty()) {
             audioFile.tag.deleteField(key)
         } else {
@@ -110,7 +110,7 @@ open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger
         }
     }
 
-    protected fun setOrDelete(key: FieldKey, value: Int?) {
+    private fun setOrDelete(key: FieldKey, value: Int?) {
         setOrDelete(key, value.toString())
     }
 }
