@@ -76,3 +76,4 @@ gen/
 *.jar
 bin
 config/*.pem
+thoth
