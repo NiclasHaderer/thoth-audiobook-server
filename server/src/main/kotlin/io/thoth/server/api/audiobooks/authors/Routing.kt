@@ -31,7 +31,7 @@ internal fun Route.routing() {
     }
 
     get<AuthorId, AuthorModelWithBooks> {
-        Author.getById(it.uuid) ?: serverError(HttpStatusCode.NotFound, "Author was not found")
+        Author.getById(it.id) ?: serverError(HttpStatusCode.NotFound, "Author was not found")
     }
 
     patch(RouteHandler::patchAuthor)

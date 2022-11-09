@@ -9,7 +9,7 @@ import java.util.*
 @Serializable
 @Resource("{id}")
 internal class AuthorId(
-    @Serializable(UUIDSerializer::class) val uuid: UUID,
+    @Serializable(UUIDSerializer::class) val id: UUID,
 )
 
 class PatchAuthor(
