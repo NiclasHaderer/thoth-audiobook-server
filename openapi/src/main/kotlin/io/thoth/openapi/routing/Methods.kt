@@ -8,14 +8,11 @@ import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
-import io.thoth.common.extensions.classLogger
 import io.thoth.common.extensions.fullPath
-import io.thoth.openapi.SchemaHolder
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
 import io.thoth.openapi.serverError
-import kotlin.system.measureTimeMillis
 import io.ktor.server.resources.handle as resourceHandle
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
@@ -59,31 +56,50 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
 ): Route {
     lateinit var builtRoute: Route
 
-    val resource = PARAMS::class.annotations.find { a -> a is Resource } as? Resource
-    val finishedPath = if (resource != null) {
-        "$fullPath/${resource.path}"
+    val res = PARAMS::class.annotations.find { a -> a is Resource } as? Resource
+    val pathWithRes = if (res != null) {
+        "$fullPath/${res.path}"
     } else {
         fullPath
     }
 
+    // TODO
+    // SchemaHolder.addRouteToApi(fullPath, method, BODY::class, PARAMS::class, RESPONSE::class, HttpStatusCode.OK)
 
-    measureTimeMillis {
-        // TODO status code
-        SchemaHolder.addRouteToApi(finishedPath, method, BODY::class, PARAMS::class, RESPONSE::class, HttpStatusCode.OK)
-
-        if (PARAMS::class == Unit::class) {
-            builtRoute = method(method) {
-                handle { wrapInnerRequest(callback, Unit as PARAMS) }
-            }
-        } else {
-            resource<PARAMS> {
-                builtRoute = method(method) {
-                    resourceHandle<PARAMS> { params -> wrapInnerRequest(callback, params) }
+    // TODO this is not working, because the route is queued twice
+    // Redirect different trailing / to the same route
+    if (fullPath.endsWith("/")) {
+        route(pathWithRes.slice(0..pathWithRes.length - 2)) {
+            println(this.fullPath)
+            method(method) {
+                handle {
+                    println("Redirecting to ${pathWithRes}")
+                    call.respondRedirect(pathWithRes, true)
                 }
             }
         }
-    }.also {
-        this.classLogger().trace("Route wrapping for ${method.value} - $finishedPath took ${it}ms")
+    } else {
+        route("$pathWithRes/") {
+            println(this.fullPath)
+            method(method) {
+                handle {
+                    println("Redirecting to ${pathWithRes}")
+                    call.respondRedirect(pathWithRes, true)
+                }
+            }
+        }
+    }
+
+    if (PARAMS::class == Unit::class) {
+        builtRoute = method(method) {
+            handle { wrapInnerRequest(callback, Unit as PARAMS) }
+        }
+    } else {
+        resource<PARAMS> {
+            builtRoute = method(method) {
+                resourceHandle<PARAMS> { params -> wrapInnerRequest(callback, params) }
+            }
+        }
     }
 
     return builtRoute
