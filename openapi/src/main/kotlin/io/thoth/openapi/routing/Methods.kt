@@ -57,34 +57,31 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     lateinit var builtRoute: Route
 
     val res = PARAMS::class.annotations.find { a -> a is Resource } as? Resource
-    val pathWithRes = if (res != null) {
+    val completePathWithRes = if (res != null) {
         "$fullPath/${res.path}"
     } else {
         fullPath
     }
 
+    val endPath = res?.path ?: ""
+
     // TODO
     // SchemaHolder.addRouteToApi(fullPath, method, BODY::class, PARAMS::class, RESPONSE::class, HttpStatusCode.OK)
 
-    // TODO this is not working, because the route is queued twice
     // Redirect different trailing / to the same route
-    if (fullPath.endsWith("/")) {
-        route(pathWithRes.slice(0..pathWithRes.length - 2)) {
-            println(this.fullPath)
+    if (endPath.endsWith("/")) {
+        route(endPath.slice(0..endPath.length - 2)) {
             method(method) {
                 handle {
-                    println("Redirecting to ${pathWithRes}")
-                    call.respondRedirect(pathWithRes, true)
+                    call.respondRedirect("${call.request.uri}/", true)
                 }
             }
         }
     } else {
-        route("$pathWithRes/") {
-            println(this.fullPath)
+        route("$endPath/") {
             method(method) {
                 handle {
-                    println("Redirecting to ${pathWithRes}")
-                    call.respondRedirect(pathWithRes, true)
+                    call.respondRedirect(call.request.uri.slice(0..call.request.uri.length -2), true)
                 }
             }
         }
