@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.*
 import io.swagger.v3.core.converter.ModelConverters
 import io.swagger.v3.core.util.Json
+import io.swagger.v3.core.util.RefUtils
 import io.swagger.v3.core.util.Yaml
+import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
@@ -71,7 +73,7 @@ object SchemaHolder {
         responseStatus: HttpStatusCode
     ) {
         modify {
-            if (paths == null) this.paths = Paths()
+            if (paths == null) paths = Paths()
 
             val pathItem = paths.getOrPut(url) { PathItem() }
 
@@ -86,12 +88,26 @@ object SchemaHolder {
                 HttpMethod.Patch -> pathItem.patch = operation
             }
 
+            if(components == null){
+                components = Components()
+                components.schemas = mutableMapOf()
+            }
+
+            val schemaHolder = components.schemas
+            generateSchema(requestBody)?.also { schemaHolder.putAll(it) }
+
             operation.requestBody(
                 RequestBody().description("TODO").content(
-                    Content().addMediaType("application/json", MediaType().schema(generateSchema(requestBody)))
+                    Content().addMediaType("application/json", MediaType().schema(
+                        Schema<Any>().also {
+                            it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
+                        }
+                    ))
                 )
             )
 
+
+            generateSchema(responseBody)?.also { schemaHolder.putAll(it) }
             operation.responses = ApiResponses().addApiResponse(
                 responseStatus.value.toString(),
                 ApiResponse()
@@ -99,38 +115,40 @@ object SchemaHolder {
                     .content(
                         Content().addMediaType(
                             "application/json",
-                            MediaType().schema(generateSchema(responseBody))
+                            MediaType().schema(Schema<Any>().also {
+                                it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
+                            })
                         )
                     )
             )
         }
     }
 
-    private fun generateSchema(clazz: KClass<*>): Schema<*>? {
+    private fun generateSchema(clazz: KClass<*>): Map<String, Schema<*>>? {
         return getEnumSchema(clazz) ?: when (clazz) {
-            String::class -> StringSchema()
-            Boolean::class -> BooleanSchema()
-            java.lang.Boolean::class -> BooleanSchema()
-            Int::class -> IntegerSchema()
-            Integer::class -> IntegerSchema()
-            List::class -> ArraySchema()
-            Long::class -> IntegerSchema().format("int64")
-            BigDecimal::class -> IntegerSchema().format("")
-            Date::class -> DateSchema()
-            LocalDate::class -> DateSchema()
-            LocalDateTime::class -> DateTimeSchema()
-            else -> ModelConverters.getInstance().read(clazz.java)[clazz.java.simpleName]
+            String::class -> mapOf(clazz.java.simpleName to StringSchema())
+            Boolean::class -> mapOf(clazz.java.simpleName to BooleanSchema())
+            java.lang.Boolean::class -> mapOf(clazz.java.simpleName to BooleanSchema())
+            Int::class -> mapOf(clazz.java.simpleName to IntegerSchema())
+            Integer::class -> mapOf(clazz.java.simpleName to IntegerSchema())
+            List::class -> mapOf(clazz.java.simpleName to ArraySchema())
+            Long::class -> mapOf(clazz.java.simpleName to IntegerSchema().format("int64"))
+            BigDecimal::class -> mapOf(clazz.java.simpleName to IntegerSchema().format(""))
+            Date::class -> mapOf(clazz.java.simpleName to DateSchema())
+            LocalDate::class -> mapOf(clazz.java.simpleName to DateSchema())
+            LocalDateTime::class -> mapOf(clazz.java.simpleName to DateTimeSchema())
+            else -> ModelConverters.getInstance().read(clazz.java)
         }
     }
 
-    private fun getEnumSchema(clazz: KClass<*>): Schema<*>? {
+    private fun getEnumSchema(clazz: KClass<*>): Map<String, Schema<*>>? {
         val values = clazz.java.enumConstants ?: return null
 
         val schema = StringSchema()
         for (enumVal in values) {
             schema.addEnumItem(enumVal.toString())
         }
-        return schema
+        return mapOf(clazz.java.simpleName to schema)
     }
 
     fun modify(configure: OpenAPI.() -> Unit) {

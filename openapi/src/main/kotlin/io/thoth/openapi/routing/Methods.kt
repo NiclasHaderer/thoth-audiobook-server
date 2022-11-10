@@ -9,6 +9,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import io.thoth.common.extensions.fullPath
+import io.thoth.openapi.SchemaHolder
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
@@ -65,8 +66,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
 
     val endPath = res?.path ?: ""
 
-    // TODO
-    // SchemaHolder.addRouteToApi(fullPath, method, BODY::class, PARAMS::class, RESPONSE::class, HttpStatusCode.OK)
+    SchemaHolder.addRouteToApi(fullPath, method, BODY::class, PARAMS::class, RESPONSE::class, HttpStatusCode.OK)
 
     // Redirect different trailing / to the same route
     if (endPath.endsWith("/")) {
