@@ -1,7 +1,10 @@
 package io.thoth.common.extensions
 
+import io.ktor.util.*
+import java.nio.file.LinkOption
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 
 
@@ -30,4 +33,14 @@ fun Path.replaceParts(parts: List<String>): Path{
     var result = this
     parts.forEach { result = result.replacePart(it) }
     return result
+}
+
+private val AUDIO_EXTENSIONS = setOf("mp3", "flac", "ogg", "vobis", "m4a", "m4p", "m4b", "aiff", "wav", "wma", "dsf")
+
+fun Path.isAudioFile(): Boolean {
+    return this.isRegularFile(LinkOption.NOFOLLOW_LINKS) && this.hasAudioExtension()
+}
+
+fun Path.hasAudioExtension(): Boolean {
+    return this.extension.lowercase() in AUDIO_EXTENSIONS
 }

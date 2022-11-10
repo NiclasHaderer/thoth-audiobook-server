@@ -3,6 +3,7 @@ package io.thoth.server.file.scanner
 import io.methvin.watcher.DirectoryChangeEvent
 import io.methvin.watcher.DirectoryWatcher
 import io.methvin.watcher.hashing.FileHasher
+import io.thoth.common.extensions.hasAudioExtension
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.persister.FileAnalyzingScheduler
 import java.nio.file.Path
