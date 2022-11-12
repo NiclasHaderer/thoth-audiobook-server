@@ -1,14 +1,7 @@
 package io.thoth.server.file.persister
 
 import io.thoth.common.extensions.classLogger
-import io.thoth.database.tables.Author
-import io.thoth.database.tables.Book
-import io.thoth.database.tables.Image
-import io.thoth.database.tables.KeyValueSettings
-import io.thoth.database.tables.ProviderID
-import io.thoth.database.tables.Series
-import io.thoth.database.tables.TTracks
-import io.thoth.database.tables.Track
+import io.thoth.database.tables.*
 import io.thoth.metadata.MetadataProvider
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import kotlinx.coroutines.sync.Semaphore
@@ -103,13 +96,13 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
             book.apply {
                 title = scan.book
                 author = dbAuthor
-                year = scan.year
-                language = scan.language
-                description = scan.description
-                narrator = scan.narrator
-                series = dbSeries
-                seriesIndex = scan.seriesIndex
-                cover = dbImage
+                year = scan.year ?: book.year
+                language = scan.language ?: book.language
+                description = scan.description ?: book.description
+                narrator = scan.narrator ?: book.narrator
+                series = dbSeries ?: book.series
+                seriesIndex = scan.seriesIndex ?: book.seriesIndex
+                cover = dbImage ?: book.cover
             }
         }
     }
@@ -119,17 +112,21 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         val dbSeries = if (scan.series != null) getOrCreateSeries(scan) else null
         var dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
 
-        val response = metadataProvider.getBookByName(scan.book).firstOrNull() ?: return transaction {
-            Book.new {
-                title = scan.book
-                author = dbAuthor
-                year = scan.year
-                language = scan.language
-                description = scan.description
-                narrator = scan.narrator
-                series = dbSeries
-                seriesIndex = scan.seriesIndex
-                cover = dbImage
+        val response = metadataProvider.getBookByName(scan.book, scan.author).firstOrNull()
+        if (response == null) {
+            this.log.info("Could not find matching metadata for book ${scan.book}")
+            return transaction {
+                Book.new {
+                    title = scan.book
+                    author = dbAuthor
+                    year = scan.year
+                    language = scan.language
+                    description = scan.description
+                    narrator = scan.narrator
+                    series = dbSeries
+                    seriesIndex = scan.seriesIndex
+                    cover = dbImage
+                }
             }
         }
 
@@ -150,7 +147,10 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
                 cover = dbImage
             }
         }
-        log.info("Create new book ${book.title}")
+        transaction {
+            log.info("Create new book ${book.title}")
+            log.info("Book has image $dbImage, with image ${book.cover}")
+        }
         return book
     }
 
@@ -175,7 +175,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
 
     private suspend fun createSeries(scan: AudioFileAnalysisResult): Series {
         val dbAuthor = getOrCreateAuthor(scan)
-        val response = metadataProvider.getSeriesByName(scan.series!!).firstOrNull() ?: return transaction {
+        val response = metadataProvider.getSeriesByName(scan.series!!, scan.author).firstOrNull() ?: return transaction {
             Series.new {
                 title = scan.series!!
                 author = dbAuthor
