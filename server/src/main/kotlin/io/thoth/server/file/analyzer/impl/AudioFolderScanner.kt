@@ -1,10 +1,6 @@
 package io.thoth.server.file.analyzer.impl
 
-import io.thoth.common.extensions.countParents
-import io.thoth.common.extensions.grandGrandParentName
-import io.thoth.common.extensions.grandParentName
-import io.thoth.common.extensions.parentName
-import io.thoth.common.extensions.replaceParts
+import io.thoth.common.extensions.*
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
@@ -14,7 +10,10 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
 class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
-    private val bookPrefixes = "^((Book|Volume|Vol) ?)?\\d\\d? ?[.\\-: ]+ ?".toRegex()
+    private val bookPrefixes = listOf(
+        "^((Book|Volume|Vol) ?)?\\d\\d? ?[.\\-: ]+ ?".toRegex(),
+        "^\\d\\d - ".toRegex()
+    )
     override suspend fun analyze(
         path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger
     ): AudioFileAnalysisResult? {
@@ -27,7 +26,7 @@ class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConf
 
     private fun getInformation(path: Path, parentCount: Int, tags: ReadonlyFileTagger): AudioFileAnalysisResult {
         val book = path.parentName().also {
-            it.replace(bookPrefixes, "")
+            it.replaceAll(bookPrefixes, "")
         }
         val author = if (parentCount == 2) path.grandParentName() else path.grandGrandParentName()
         val series = if (parentCount == 2) null else path.grandParentName()

@@ -27,6 +27,7 @@ tasks.jar {
 application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
     mainClass.set("io.thoth.server.ApplicationKt")
+    tasks.run.get().workingDir = rootProject.projectDir
 }
 
 // For kotlin annotations
