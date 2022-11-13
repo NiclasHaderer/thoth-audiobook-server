@@ -22,7 +22,13 @@ import io.thoth.server.file.scanner.FileWatcher
 import io.thoth.server.file.scanner.RecursiveScan
 import io.thoth.server.koin.configureKoin
 import io.thoth.server.logging.disableJAudioTaggerLogs
-import io.thoth.server.plugins.*
+import io.thoth.server.plugins.configureCORS
+import io.thoth.server.plugins.configureMonitoring
+import io.thoth.server.plugins.configureOpenApi
+import io.thoth.server.plugins.configurePartialContent
+import io.thoth.server.plugins.configureRouting
+import io.thoth.server.plugins.configureSerialization
+import io.thoth.server.plugins.configureSockets
 import kotlinx.coroutines.launch
 
 

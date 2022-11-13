@@ -29,7 +29,7 @@ class `01_Create_Tables` : Migration() {
 
 }
 
-object TAuthors : UUIDTable("Authors") {
+private object TAuthors : UUIDTable("Authors") {
     val name = varchar("name", 255).uniqueIndex()
     val biography = text("biography").nullable()
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
@@ -37,7 +37,7 @@ object TAuthors : UUIDTable("Authors") {
     val image = reference("image", TImages).nullable()
 }
 
-object TBooks : UUIDTable("Books") {
+private object TBooks : UUIDTable("Books") {
     val title = varchar("title", 255)
     val author = reference("author", TAuthors)
     val year = integer("year").nullable()
@@ -51,20 +51,20 @@ object TBooks : UUIDTable("Books") {
     val cover = reference("cover", TImages).nullable()
 }
 
-object TImages : UUIDTable("Images") {
+private object TImages : UUIDTable("Images") {
     val image = blob("image")
 }
 
-object TKeyValueSettings : UUIDTable("KeyValueSettings") {
+private object TKeyValueSettings : UUIDTable("KeyValueSettings") {
     val scanIndex = long("scanIndex").default(0)
 }
 
-object TProviderID : UUIDTable("ProviderID") {
+private object TProviderID : UUIDTable("ProviderID") {
     val provider = char("provider", 40)
     val itemID = char("bookID", 40)
 }
 
-object TSeries : UUIDTable("Series") {
+private object TSeries : UUIDTable("Series") {
     val title = varchar("title", 250).uniqueIndex()
     val author = reference("author", TAuthors)
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
@@ -72,7 +72,7 @@ object TSeries : UUIDTable("Series") {
     val description = text("description").nullable()
 }
 
-object TTracks : UUIDTable("Tracks") {
+private object TTracks : UUIDTable("Tracks") {
     val title = varchar("title", 255)
     val duration = integer("duration")
     val accessTime = long("accessTime")

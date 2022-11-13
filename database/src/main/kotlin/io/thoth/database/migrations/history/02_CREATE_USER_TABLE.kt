@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
-import java.util.*
 
 
 class `02_Create_User` : Migration() {
@@ -40,7 +39,7 @@ class `02_Create_User` : Migration() {
 
 }
 
-object TUsers : UUIDTable("Users") {
+private object TUsers : UUIDTable("Users") {
     val username = char("username", 256).uniqueIndex()
     val passwordHash = char("passwordHash", 512)
     val admin = bool("admin")
