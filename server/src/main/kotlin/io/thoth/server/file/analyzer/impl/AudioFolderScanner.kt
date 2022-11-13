@@ -12,7 +12,7 @@ import java.nio.file.attribute.BasicFileAttributes
 class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
     private val bookPrefixes = listOf(
         "^((Book|Volume|Vol) ?)?\\d\\d? ?[.\\-: ]+ ?".toRegex(),
-        "^\\d\\d - ".toRegex()
+        "^\\d\\d? - ".toRegex()
     )
     override suspend fun analyze(
         path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger
@@ -25,9 +25,7 @@ class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConf
     }
 
     private fun getInformation(path: Path, parentCount: Int, tags: ReadonlyFileTagger): AudioFileAnalysisResult {
-        val book = path.parentName().also {
-            it.replaceAll(bookPrefixes, "")
-        }
+        val book = path.parentName().replaceAll(bookPrefixes, "")
         val author = if (parentCount == 2) path.grandParentName() else path.grandGrandParentName()
         val series = if (parentCount == 2) null else path.grandParentName()
         return AudioFileAnalysisResultImpl( // Uses the filename as fallback
