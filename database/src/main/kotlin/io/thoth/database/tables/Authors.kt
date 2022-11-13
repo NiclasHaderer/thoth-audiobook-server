@@ -50,6 +50,8 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
         fun getByName(authorName: String): Author? = transaction {
             Author.findOne { TAuthors.name like authorName }
         }
+
+        fun exists(authorName: String): Boolean = Author.findOne { TAuthors.name like authorName } != null
     }
 
     private val imageID by TAuthors.image
