@@ -17,17 +17,12 @@ import io.thoth.server.config.ThothConfig
 import io.thoth.server.config.loadConfig
 import io.thoth.server.db.connectToDatabase
 import io.thoth.server.db.migrateDatabase
+import io.thoth.server.file.persister.withAutomaticMetadata
 import io.thoth.server.file.scanner.FileWatcher
 import io.thoth.server.file.scanner.RecursiveScan
 import io.thoth.server.koin.configureKoin
 import io.thoth.server.logging.disableJAudioTaggerLogs
-import io.thoth.server.plugins.configureCORS
-import io.thoth.server.plugins.configureMonitoring
-import io.thoth.server.plugins.configureOpenApi
-import io.thoth.server.plugins.configurePartialContent
-import io.thoth.server.plugins.configureRouting
-import io.thoth.server.plugins.configureSerialization
-import io.thoth.server.plugins.configureSockets
+import io.thoth.server.plugins.*
 import kotlinx.coroutines.launch
 
 
@@ -42,18 +37,22 @@ fun main() {
         try {
             connectToDatabase().also {
                 migrateDatabase()
+                withAutomaticMetadata()
+            }.also {
+                launch {
+                    get<FileWatcher>().watch()
+                }
+            }.also {
+                launch {
+                    RecursiveScan().start()
+                }
             }
             webServer(config)
         } catch (e: Exception) {
             log.error("Could not start server", e)
             shutdown()
         }
-        launch {
-            get<FileWatcher>().watch()
-        }
-        launch {
-            RecursiveScan().start()
-        }
+
     }.start(wait = true)
 }
 
