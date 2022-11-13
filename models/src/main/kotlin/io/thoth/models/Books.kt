@@ -9,7 +9,6 @@ interface IBookModel {
     val year: Int?
     val language: String?
     val description: String?
-    val providerID: ProviderIDModel?
     val author: NamedId
     val narrator: String?
     val series: TitledId?
@@ -24,7 +23,6 @@ class BookModel(
     override val year: Int?,
     override val language: String?,
     override val description: String?,
-    override val providerID: ProviderIDModel?,
     override val author: NamedId,
     override val narrator: String?,
     override val series: TitledId?,
@@ -39,7 +37,6 @@ class BookModelWithTracks(
     override val year: Int?,
     override val language: String?,
     override val description: String?,
-    override val providerID: ProviderIDModel?,
     override val author: NamedId,
     override val narrator: String?,
     override val series: TitledId?,
@@ -64,7 +61,6 @@ class BookModelWithTracks(
                 year = book.year,
                 language = book.language,
                 description = book.description,
-                providerID = book.providerID,
                 position = position,
                 tracks = sortedTracks,
                 author = book.author,

@@ -21,7 +21,6 @@ object TSeries : UUIDTable("Series") {
     val title = varchar("title", 250).uniqueIndex()
     val author = reference("author", TAuthors)
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
-    val providerID = reference("providerID", TProviderID).nullable()
     val description = text("description").nullable()
 }
 
@@ -57,7 +56,6 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
 
     var title by TSeries.title
     var updateTime by TSeries.updateTime
-    var providerID by ProviderID optionalReferencedOn TSeries.providerID
     var description by TSeries.description
     var author by Author referencedOn TSeries.author
 
@@ -66,7 +64,6 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
         return SeriesModel(
             id = id.value,
             title = title,
-            providerID = providerID?.toModel(),
             amount = books.count(),
             description = description,
             updateTime = updateTime,

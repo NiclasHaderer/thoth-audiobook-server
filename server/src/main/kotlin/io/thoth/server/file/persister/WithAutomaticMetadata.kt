@@ -50,7 +50,6 @@ private suspend fun getMetadataFor(table: Table, id: UUID) {
                 year = bookMetadata.year ?: year
                 description = bookMetadata.description ?: description
                 updateTime = LocalDateTime.now()
-                providerID = ProviderID.getOrCreate(bookMetadata.id)
                 // TODO author = bookMetadata.author
                 narrator = bookMetadata.narrator ?: narrator
                 // TODO series = bookMetadata
@@ -75,7 +74,6 @@ private suspend fun getMetadataFor(table: Table, id: UUID) {
             series.apply {
                 title = seriesMetadata.name ?: title
                 updateTime = LocalDateTime.now()
-                providerID = ProviderID.getOrCreate(seriesMetadata.id)
                 description = seriesMetadata.description ?: description
                 // TODO author =
             }
@@ -97,7 +95,6 @@ private suspend fun getMetadataFor(table: Table, id: UUID) {
                 } else {
                     null
                 } ?: image
-                providerID = ProviderID.getOrCreate(authorMetadata.id)
                 name = authorMetadata.name ?: name
                 updateTime = LocalDateTime.now()
             }

@@ -26,7 +26,6 @@ object TBooks : UUIDTable("Books") {
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
     val language = varchar("language", 255).nullable()
     val description = text("description").nullable()
-    val providerID = reference("providerID", TProviderID).nullable()
     val narrator = varchar("name", 255).nullable()
     val series = reference("series", TSeries).nullable()
     val seriesIndex = float("seriesIndex").nullable()
@@ -77,7 +76,6 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
     var language by TBooks.language
     var description by TBooks.description
     var updateTime by TBooks.updateTime
-    var providerID by ProviderID optionalReferencedOn TBooks.providerID
     var author by Author referencedOn TBooks.author
     var narrator by TBooks.narrator
     var series by Series optionalReferencedOn TBooks.series
@@ -90,7 +88,6 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
         year = year,
         language = language,
         description = description,
-        providerID = providerID?.toModel(),
         updateTime = updateTime,
         author = NamedId(
             name = author.name,
