@@ -2,11 +2,7 @@ package io.thoth.server.api.metadata
 
 import io.ktor.http.*
 import io.ktor.server.routing.*
-import io.thoth.metadata.AuthorMetadata
-import io.thoth.metadata.BookMetadata
-import io.thoth.metadata.MetadataProvider
-import io.thoth.metadata.SearchBookMetadata
-import io.thoth.metadata.SeriesMetadata
+import io.thoth.metadata.*
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
 import org.koin.ktor.ext.inject

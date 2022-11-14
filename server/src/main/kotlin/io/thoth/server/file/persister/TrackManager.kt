@@ -1,9 +1,9 @@
 package io.thoth.server.file.persister
 
-import io.thoth.common.extensions.classLogger
 import io.thoth.database.tables.*
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import kotlinx.coroutines.sync.Semaphore
+import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import java.nio.file.Path
@@ -16,7 +16,7 @@ private interface TrackManager {
 
 internal class TrackManagerImpl : TrackManager, KoinComponent {
     private val semaphore = Semaphore(1)
-    private val log = classLogger()
+    private val log = logger {}
 
     override suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path) {
         this.semaphore.acquire()

@@ -14,6 +14,7 @@ class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConf
         "^((Book|Volume|Vol) ?)?\\d\\d? ?[.\\-: ]+ ?".toRegex(),
         "^\\d\\d? - ".toRegex()
     )
+
     override suspend fun analyze(
         path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger
     ): AudioFileAnalysisResult? {

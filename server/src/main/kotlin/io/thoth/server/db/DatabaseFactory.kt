@@ -3,9 +3,9 @@ package io.thoth.server.db
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.thoth.common.extensions.classLogger
 import io.thoth.database.migrations.migrator.DatabaseMigrator
 import io.thoth.server.config.ThothConfig
+import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.koin.core.component.KoinComponent
@@ -13,10 +13,10 @@ import org.koin.core.component.inject
 
 
 private object DatabaseFactory : KoinComponent {
-    private val log = classLogger()
+    private val log = logger {}
     private val thothConfig by inject<ThothConfig>()
     private val dbInstance by lazy {
-        log.info("Initialising database")
+        log.info { "Initialising database" }
         Database.connect(dataSource, databaseConfig = DatabaseConfig.invoke {
             useNestedTransactions = true
         })
@@ -34,7 +34,7 @@ private object DatabaseFactory : KoinComponent {
         HikariDataSource(config)
     }
 
-    fun connect() = dbInstance.run {  }
+    fun connect() = dbInstance.run { }
 
     fun migrate() {
         log.info("Migrating database")
@@ -44,10 +44,10 @@ private object DatabaseFactory : KoinComponent {
 
 }
 
-fun connectToDatabase(){
+fun connectToDatabase() {
     DatabaseFactory.connect()
 }
 
-fun migrateDatabase(){
+fun migrateDatabase() {
     DatabaseFactory.migrate()
 }

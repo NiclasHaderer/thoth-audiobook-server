@@ -8,9 +8,9 @@ port: 8080
 audibleSearchHost: www.audible.com
 audibleAuthorHost: www.audible.com
 database:
-  driverClassName: "org.h2.Driver"
-  jdbcUrl: "jdbc:h2:mem:regular"
-  maximumPoolSize: 100
+  driverClassName: org.sqlite.JDBC
+  jdbcUrl: "jdbc:sqlite:./thoth.sqlite"
+  maximumPoolSize: 1
   autoCommit: false
   transactionIsolation: "TRANSACTION_REPEATABLE_READ"
 configDirectory: "config"

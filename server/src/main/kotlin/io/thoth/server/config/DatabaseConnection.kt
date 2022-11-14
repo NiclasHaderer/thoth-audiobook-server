@@ -1,7 +1,6 @@
 package io.thoth.server.config
 
 
-
 internal object H2Database : DatabaseConnection {
     override val driverClassName = "org.h2.Driver"
     override val jdbcUrl = "jdbc:h2:file:~/db\\\\.;IFEXISTS=TRUE"

@@ -9,7 +9,7 @@ private fun isProduction(): Boolean {
 }
 
 private fun getConfigPath(): String {
-    val path =  if (isProduction()) {
+    val path = if (isProduction()) {
         System.getenv("THOTH_CONFIG_PATH")
     } else {
         System.getenv("THOTH_CONFIG_PATH") ?: "config"
