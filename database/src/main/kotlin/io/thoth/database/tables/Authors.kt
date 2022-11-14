@@ -2,12 +2,15 @@ package io.thoth.database.tables
 
 import io.thoth.common.extensions.findOne
 import io.thoth.database.ToModel
+import io.thoth.database.tables.meta.MetaAuthor
+import io.thoth.database.tables.meta.TMetaAuthors
 import io.thoth.models.AuthorModel
 import io.thoth.models.AuthorModelWithBooks
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.lowerCase
@@ -19,11 +22,26 @@ object TAuthors : UUIDTable("Authors") {
     val name = varchar("name", 255).uniqueIndex()
     val biography = text("biography").nullable()
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
-    val image = reference("image", TImages).nullable()
+    val image = reference("image", TImages, onDelete = ReferenceOption.CASCADE).nullable()
+    val linkedTo = reference("linkedTo", TMetaAuthors, onDelete = ReferenceOption.CASCADE).nullable()
 }
 
 
 class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
+    var name by TAuthors.name
+    var biography by TAuthors.biography
+    var updateTime by TAuthors.updateTime
+    // TODO remove all joins of images on an author
+    var image by Image optionalReferencedOn TAuthors.image
+    var linkedTo by MetaAuthor optionalReferencedOn TAuthors.linkedTo
+
+    override fun toModel() = AuthorModel(
+        id = id.value,
+        name = name,
+        biography = biography ?: linkedTo?.biography,
+        image = image?.id?.value ?: linkedTo?.imageId?.value
+    )
+
     companion object : UUIDEntityClass<Author>(TAuthors) {
         fun removeUnused() = transaction {
             all().forEach {
@@ -53,17 +71,4 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id), ToModel<AuthorModel> {
         fun exists(authorName: String): Boolean = Author.findOne { TAuthors.name like authorName } != null
     }
 
-    private val imageID by TAuthors.image
-
-    var name by TAuthors.name
-    var biography by TAuthors.biography
-    var updateTime by TAuthors.updateTime
-    var image by Image optionalReferencedOn TAuthors.image
-
-    override fun toModel() = AuthorModel(
-        id = id.value,
-        name = name,
-        biography = biography,
-        image = imageID?.value
-    )
 }

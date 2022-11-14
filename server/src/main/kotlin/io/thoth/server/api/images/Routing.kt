@@ -20,7 +20,7 @@ fun Route.registerImageRouting(route: String = "image") {
 internal fun Route.imageRouting() {
     get<ImageId, BinaryResponse> { image ->
         val imageResponse = Image.getById(image.id) ?: serverError(HttpStatusCode.NotFound, "Could not find image")
-        binaryResponse(imageResponse.image)
+        binaryResponse(imageResponse.blob)
     }
     get<QueryLimiter, List<UUID>> {
         Image.getMultiple(it.limit, it.offset)

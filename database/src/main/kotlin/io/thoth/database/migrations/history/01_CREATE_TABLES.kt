@@ -1,6 +1,7 @@
 package io.thoth.database.migrations.history
 
 import io.thoth.database.migrations.migrator.Migration
+import io.thoth.database.tables.*
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -16,7 +17,6 @@ class `01_Create_Tables` : Migration() {
                 TAuthors,
                 TBooks,
                 TImages,
-                TProviderID,
                 TSeries,
                 TKeyValueSettings,
                 TTracks,
@@ -27,58 +27,4 @@ class `01_Create_Tables` : Migration() {
     override fun rollback(db: Database) { // Nothing to do
     }
 
-}
-
-private object TAuthors : UUIDTable("Authors") {
-    val name = varchar("name", 255).uniqueIndex()
-    val biography = text("biography").nullable()
-    val updateTime = datetime("updateTime").default(LocalDateTime.now())
-    val providerID = reference("providerID", TProviderID).nullable()
-    val image = reference("image", TImages).nullable()
-}
-
-private object TBooks : UUIDTable("Books") {
-    val title = varchar("title", 255)
-    val author = reference("author", TAuthors)
-    val year = integer("year").nullable()
-    val updateTime = datetime("updateTime").default(LocalDateTime.now())
-    val language = varchar("language", 255).nullable()
-    val description = text("description").nullable()
-    val providerID = reference("providerID", TProviderID).nullable()
-    val narrator = varchar("name", 255).nullable()
-    val series = reference("series", TSeries).nullable()
-    val seriesIndex = float("seriesIndex").nullable()
-    val cover = reference("cover", TImages).nullable()
-}
-
-private object TImages : UUIDTable("Images") {
-    val image = blob("image")
-}
-
-private object TKeyValueSettings : UUIDTable("KeyValueSettings") {
-    val scanIndex = long("scanIndex").default(0)
-}
-
-private object TProviderID : UUIDTable("ProviderID") {
-    val provider = char("provider", 40)
-    val itemID = char("bookID", 40)
-}
-
-private object TSeries : UUIDTable("Series") {
-    val title = varchar("title", 250).uniqueIndex()
-    val author = reference("author", TAuthors)
-    val updateTime = datetime("updateTime").default(LocalDateTime.now())
-    val providerID = reference("providerID", TProviderID).nullable()
-    val description = text("description").nullable()
-}
-
-private object TTracks : UUIDTable("Tracks") {
-    val title = varchar("title", 255)
-    val duration = integer("duration")
-    val accessTime = long("accessTime")
-    val updateTime = datetime("updateTime").default(LocalDateTime.now())
-    val path = text("path").uniqueIndex()
-    val book = reference("book", TBooks)
-    val scanIndex = long("scanIndex")
-    val trackNr = integer("trackNr").nullable()
 }

@@ -13,7 +13,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 object TImages : UUIDTable("Images") {
-    val image = blob("image")
+    val blob = blob("image")
 }
 
 
@@ -45,7 +45,7 @@ class Image(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ImageModel> {
 
         fun create(imageBytes: ByteArray) = transaction {
             Image.new {
-                image = ExposedBlob(imageBytes)
+                blob = ExposedBlob(imageBytes)
             }
         }
 
@@ -54,10 +54,10 @@ class Image(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ImageModel> {
         }
     }
 
-    var image by TImages.image
+    var blob by TImages.blob
 
     override fun toModel() = ImageModel(
         id = id.value,
-        image = image.bytes
+        blob = blob.bytes
     )
 }

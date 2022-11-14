@@ -1,4 +1,4 @@
-package io.thoth.metadata.audible.client
+package io.thoth.metadata.audible.client.legacy
 
 import io.ktor.client.*
 import io.thoth.metadata.MetadataLanguage
