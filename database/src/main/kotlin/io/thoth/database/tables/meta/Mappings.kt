@@ -13,7 +13,7 @@ object TMetaAuthorBookMapping : Table("MetaAuthorBookMapping") {
 }
 
 object TMetaGenreAuthorMapping : Table("MetaGenreAuthorMapping") {
-    val genre = reference("genre", TMetaGenres)
+    val genre = reference("genre", TMetaGenres, onDelete = ReferenceOption.CASCADE)
     val author = reference("author", TMetaAuthors, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(
         genre, author
@@ -21,7 +21,7 @@ object TMetaGenreAuthorMapping : Table("MetaGenreAuthorMapping") {
 }
 
 object TMetaGenreBookMapping : Table("MetaGenreBookMapping") {
-    val genre = reference("genre", TMetaGenres)
+    val genre = reference("genre", TMetaGenres, onDelete = ReferenceOption.CASCADE)
     val book = reference("book", TMetaBooks, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(
         genre, book
@@ -30,7 +30,7 @@ object TMetaGenreBookMapping : Table("MetaGenreBookMapping") {
 
 
 object TMetaGenreSeriesMapping : Table("MetaGenreSeriesMapping") {
-    val genre = reference("genre", TMetaGenres)
+    val genre = reference("genre", TMetaGenres, onDelete = ReferenceOption.CASCADE)
     val series = reference("Series", TMetaSeries, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(
         genre, series

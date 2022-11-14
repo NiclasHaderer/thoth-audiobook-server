@@ -7,9 +7,6 @@ import io.ktor.server.routing.*
 import io.thoth.auth.configureAuthentication
 import io.thoth.common.extensions.get
 import io.thoth.common.extensions.shutdown
-import io.thoth.database.tables.meta.MetaBook
-import io.thoth.database.tables.meta.MetaGenre
-import io.thoth.database.tables.meta.TMetaGenreBookMapping
 import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
 import io.thoth.server.api.images.registerImageRouting
@@ -27,8 +24,6 @@ import io.thoth.server.koin.configureKoin
 import io.thoth.server.logging.disableJAudioTaggerLogs
 import io.thoth.server.plugins.*
 import kotlinx.coroutines.launch
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
 
 
 fun main() {
@@ -42,47 +37,7 @@ fun main() {
         try {
             connectToDatabase().also {
                 migrateDatabase()
-            }
-            transaction {
-                val book = MetaBook.new {
-                    title = "eragon"
-                    provider = "audible"
-                    itemID = "eragon-1"
-                }
-
-                val book2 = MetaBook.new {
-                    title = "harry potter"
-                    provider = "audible"
-                    itemID = "potter-1"
-                }
-
-                val genre = MetaGenre.new {
-                    name = "fantasy"
-                }
-
-                val genre2 = MetaGenre.new {
-                    name = "action"
-                }
-
-                TMetaGenreBookMapping.insert {
-                    it[this.genre] = genre.id
-                    it[this.book] = book.id
-                }
-
-                TMetaGenreBookMapping.insert {
-                    it[this.genre] = genre.id
-                    it[this.book] = book2.id
-                }
-
-                TMetaGenreBookMapping.insert {
-                    it[this.genre] = genre2.id
-                    it[this.book] = book2.id
-                }
-
-
-            }
-
-            run {}.also {
+            }.also {
                 withAutomaticMetadata()
             }.also {
                 launch {

@@ -3,7 +3,7 @@ package io.thoth.server.koin
 import io.ktor.server.application.*
 import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.MetadataWrapper
-import io.thoth.metadata.audible.client.AudibleClient
+import io.thoth.metadata.audible.client.legacy.AudibleClient
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapperImpl
