@@ -1,11 +1,11 @@
 package io.thoth.server.file.scanner
 
-import io.thoth.common.extensions.classLogger
 import io.thoth.common.extensions.findOne
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.persister.FileAnalyzingScheduler
+import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -18,7 +18,7 @@ import kotlin.io.path.getLastModifiedTime
 
 
 class RecursiveScan(private var basePath: List<Path> = listOf()) : KoinComponent {
-    private val log = classLogger()
+    private val log = logger {}
     private val thothConfig by inject<ThothConfig>()
     private val fileAnalyzeScheduler by inject<FileAnalyzingScheduler>()
     private val scanIsOngoing = AtomicBoolean()
@@ -42,7 +42,7 @@ class RecursiveScan(private var basePath: List<Path> = listOf()) : KoinComponent
 
 
     private fun scanFolderForTracks() {
-        log.info("Starting complete scan")
+        log.info { "Starting complete scan" }
         val scanner = AudioFileScanner(
             removeSubtree = { fileAnalyzeScheduler.queue(FileAnalyzingScheduler.Type.REMOVE_FILE, it) },
             shouldUpdateFile = this::shouldUpdate,

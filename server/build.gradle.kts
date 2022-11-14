@@ -11,6 +11,7 @@ val openApiVersion: String by project
 val sqliteVersion: String by project
 val koinVersion: String by project
 val tsGeneratorVersion: String by project
+val kotlinLogging: String by project
 
 plugins {
     kotlin("jvm") version "1.6.21"
@@ -90,6 +91,8 @@ dependencies {
     implementation("me.xdrop:fuzzywuzzy:$fuzzyWuzzyVersion")
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
+
     // Ktor
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
     implementation("io.ktor:ktor-server-partial-content:$ktorVersion")

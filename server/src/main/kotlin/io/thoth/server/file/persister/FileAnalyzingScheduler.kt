@@ -1,6 +1,5 @@
 package io.thoth.server.file.persister
 
-import io.thoth.common.extensions.classLogger
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.scanner.RecursiveScan
@@ -10,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mu.KotlinLogging.logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Files
@@ -27,7 +27,7 @@ interface FileAnalyzingScheduler {
 }
 
 class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
-    private val log = classLogger()
+    private val log = logger {}
     private val analyzer by inject<AudioFileAnalyzerWrapper>()
     private val thothConfig by inject<ThothConfig>()
     private val scanScheduler = Scheduler(thothConfig.analyzerThreads)
@@ -63,7 +63,7 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
         scanScheduler.queue {
             val attrs = withContext(Dispatchers.IO) { Files.readAttributes(path, BasicFileAttributes::class.java) }
             val result = analyzer.analyze(path, attrs)
-                ?: return@queue log.warn("Skipped ${path.absolute()} because it contains not enough information")
+                ?: return@queue log.warn { "Skipped ${path.absolute()} because it contains not enough information" }
             trackManager.insertScanResult(result, path)
         }
     }
@@ -79,7 +79,7 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
             when (type) {
                 FileAnalyzingScheduler.Type.ADD_FILE -> {
                     if (path.isDirectory()) {
-                        log.warn("You tried to queue a folder for a metadata scan. This can not be done The folder ${path.fileName} will therefore be skipped")
+                        log.warn { "You tried to queue a folder for a metadata scan. This can not be done The folder ${path.fileName} will therefore be skipped" }
                     } else {
                         fileQueue.send(path)
                     }

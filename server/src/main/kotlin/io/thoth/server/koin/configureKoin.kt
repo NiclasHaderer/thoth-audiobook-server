@@ -30,7 +30,7 @@ fun Application.configureKoin(config: ThothConfig) {
                         )
                     )
                 }
-                single<FileWatcher>{ FileWatcherImpl(get(), get()) }
+                single<FileWatcher> { FileWatcherImpl(get(), get()) }
                 single<AudioFileAnalyzerWrapper> {
                     AudioFileAnalyzerWrapperImpl(listOf(AudioTagScanner(get()), AudioFolderScanner(get())))
                 }

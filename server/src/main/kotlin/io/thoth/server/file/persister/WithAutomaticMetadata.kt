@@ -1,11 +1,11 @@
 package io.thoth.server.file.persister
 
 import io.ktor.server.application.*
-import io.thoth.common.extensions.classLogger
 import io.thoth.common.extensions.get
 import io.thoth.database.tables.*
 import io.thoth.metadata.MetadataProvider
 import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging.logger
 import org.jetbrains.exposed.dao.EntityChangeType
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.Table
@@ -28,22 +28,18 @@ fun Application.withAutomaticMetadata() {
 }
 
 
-// TODO remove
-object A {
-    val log = classLogger()
-}
-
 private suspend fun getMetadataFor(table: Table, id: UUID) {
     val metadata = get<MetadataProvider>()
+    val log = logger {}
 
     when (table) {
         TBooks -> {
             val book = Book.findById(id)!!
             val bookMetadata = metadata.getBookByName(book.title, book.author.name).firstOrNull() ?: run {
-                A.log.warn("Could not find metadata for book: ${book.title}")
+                log.warn { "Could not find metadata for book: ${book.title}" }
                 return
             }
-            A.log.info("Inserting metadata for book: ${book.title}")
+            log.info { "Inserting metadata for book: ${book.title}" }
 
             book.apply {
                 title = bookMetadata.title ?: title
@@ -65,10 +61,10 @@ private suspend fun getMetadataFor(table: Table, id: UUID) {
         TSeries -> {
             val series = Series.findById(id)!!
             val seriesMetadata = metadata.getSeriesByName(series.title, series.author.name).firstOrNull() ?: run {
-                A.log.warn("Could not find metadata for series: ${series.title}")
+                log.warn { "Could not find metadata for series: ${series.title}" }
                 return
             }
-            A.log.info("Inserting metadata for series: ${series.title}")
+            log.info { "Inserting metadata for series: ${series.title}" }
 
 
             series.apply {
@@ -83,11 +79,11 @@ private suspend fun getMetadataFor(table: Table, id: UUID) {
         TAuthors -> {
             val author = Author.findById(id)!!
             val authorMetadata = metadata.getAuthorByName(author.name).firstOrNull() ?: run {
-                A.log.warn("Could not find metadata for author: ${author.name}")
+                log.warn { "Could not find metadata for author: ${author.name}" }
                 return
             }
 
-            A.log.info("Inserting metadata for author: ${author.name}")
+            log.info { "Inserting metadata for author: ${author.name}" }
             author.apply {
                 biography = authorMetadata.biography ?: biography
                 image = if (authorMetadata.image != null) {
