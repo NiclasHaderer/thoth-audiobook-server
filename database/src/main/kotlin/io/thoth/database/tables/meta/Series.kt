@@ -1,5 +1,6 @@
 package io.thoth.database.tables.meta
 
+import io.thoth.database.tables.TImages
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -12,7 +13,7 @@ object TMetaSeries : UUIDTable("MetaSeries") {
     val itemID = varchar("itemID", 255)
     val totalBooks = integer("totalBooks").nullable()
     val primaryWorks = integer("primaryWorks").nullable()
-    val cover = blob("cover").nullable()
+    val cover = reference("cover", TImages).nullable()
     val description = text("description").nullable()
 }
 

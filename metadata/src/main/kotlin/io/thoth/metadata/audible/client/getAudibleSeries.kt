@@ -20,7 +20,8 @@ suspend fun getAudibleSeries(
         description = getSeriesDescription(document),
         amount = getBookCount(document),
         books = seriesBooks,
-        author = seriesBooks.firstOrNull()?.author?.name
+        author = seriesBooks.firstOrNull()?.author?.name,
+        image = null
     ).also {
         it.books?.forEachIndexed { index, book ->
             book.series = AudibleSearchSeriesImpl(

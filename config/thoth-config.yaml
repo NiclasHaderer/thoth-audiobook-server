@@ -6,10 +6,11 @@ audioFileLocations:
 analyzerThreads: 6
 port: 8080
 audibleRegion: us
+configDirectory: "config"
+preferEmbeddedMetadata: true
 database:
   driverClassName: "org.h2.Driver"
   jdbcUrl: "jdbc:h2:mem:regular"
   maximumPoolSize: 100
   autoCommit: false
   transactionIsolation: "TRANSACTION_REPEATABLE_READ"
-configDirectory: "config"

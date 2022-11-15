@@ -10,4 +10,5 @@ data class AudibleSeriesImpl(
     override val amount: Int?,
     override val books: List<AudibleSearchBookImpl>?,
     override val author: String?,
+    override val image: String?,
 ) : SeriesMetadata
