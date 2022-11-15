@@ -5,8 +5,11 @@ import io.thoth.metadata.audible.models.AudibleBookImpl
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
 import io.thoth.metadata.audible.models.AudibleSearchAuthorImpl
 import io.thoth.metadata.audible.models.AudibleSearchSeriesImpl
+import org.json.JSONArray
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 suspend fun getAudibleBook(
     region: AudibleRegions, asin: String
@@ -22,10 +25,23 @@ suspend fun getAudibleBook(
         author = extractAuthorInfo(document),
         series = extractSeriesInfo(document),
         narrator = extractNarrator(document),
-        year = null
+        year = getPublishedDate(document)
     )
 }
 
+
+private fun getPublishedDate(document: Document): LocalDate? {
+    val jsonString = document.select("body script[type='application/ld+json']").firstOrNull()?.data() ?: return null
+    return try {
+        val jsonArray = JSONArray(jsonString)
+        val datePublished = jsonArray.getJSONObject(0)?.get("datePublished") ?: return null
+
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        LocalDate.parse(datePublished.toString(), formatter)
+    } catch (e: Exception) {
+        null
+    }
+}
 
 private fun extractNarrator(document: Document) = document.selectFirst(".narratorLabel a")?.text()
 
