@@ -1,7 +1,6 @@
 package io.thoth.server.file.tagger
 
 import io.thoth.database.tables.Track
-import io.thoth.models.ProviderIDModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -15,7 +14,6 @@ import java.nio.file.Path
 
 
 interface FileTagger : ReadonlyFileTagger {
-    override var providerId: ProviderIDModel?
     override var title: String
     override var description: String?
     override var year: Int?
@@ -39,13 +37,6 @@ open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger
     override var title: String
         get() = super.title
         set(value) = audioFile.tag.setField(FieldKey.TITLE, value)
-
-    override var providerId: ProviderIDModel?
-        get() = super.providerId
-        set(value) {
-            val valueStr = mapper.writeValueAsString(value)
-            setOrDelete(FieldKey.AMAZON_ID, valueStr)
-        }
 
     override var description: String?
         get() = super.description

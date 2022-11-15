@@ -44,7 +44,6 @@ class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConf
             duration = tags.duration,
             path = tags.path,
             lastModified = tags.lastModified,
-            providerId = tags.providerId
         )
     }
 }

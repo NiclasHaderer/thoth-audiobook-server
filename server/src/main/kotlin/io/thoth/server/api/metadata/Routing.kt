@@ -25,7 +25,7 @@ internal fun Route.routing() {
 
     route("author") {
         get<AuthorID, AuthorMetadata> { id ->
-            searchService.getAuthorByID(id) ?: serverError(
+            searchService.getAuthorByID(id.provider, id.itemID) ?: serverError(
                 HttpStatusCode.NotFound, "Author with id ${id.itemID} and provider ${id.provider}was not found"
             )
         }
@@ -37,7 +37,7 @@ internal fun Route.routing() {
 
     route("book") {
         get<BookID, BookMetadata> { id ->
-            searchService.getBookByID(id) ?: serverError(
+            searchService.getBookByID(id.provider, id.itemID) ?: serverError(
                 HttpStatusCode.NotFound, "Book with id ${id.itemID} and provider ${id.provider}was not found"
             )
         }
@@ -49,7 +49,7 @@ internal fun Route.routing() {
 
     route("series") {
         get<SeriesID, SeriesMetadata> { id ->
-            searchService.getSeriesByID(id) ?: serverError(
+            searchService.getSeriesByID(id.provider, id.itemID) ?: serverError(
                 HttpStatusCode.NotFound, "Series with id ${id.itemID} and provider ${id.provider}was not found"
             )
         }

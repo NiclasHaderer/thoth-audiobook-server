@@ -2,11 +2,7 @@ package io.thoth.metadata
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import java.util.*
 
@@ -48,30 +44,30 @@ class MetadataWrapper constructor(
         }
     }
 
-    override suspend fun getAuthorByID(authorID: ProviderWithIDMetadata): AuthorMetadata? {
-        val cacheKey = getKey(authorID.itemID, authorID.provider)
+    override suspend fun getAuthorByID(providerId: String, authorId: String): AuthorMetadata? {
+        val cacheKey = getKey(authorId, providerId)
 
         return getOrSetCache(authorIdCache, cacheKey) {
-            val provider = getProvider(authorID) ?: return@getOrSetCache Optional.ofNullable(null)
-            val value = provider.getAuthorByID(authorID)
+            val provider = getProvider(authorId) ?: return@getOrSetCache Optional.ofNullable(null)
+            val value = provider.getAuthorByID(providerId, authorId)
             Optional.ofNullable(value)
         }.orElse(null)
     }
 
-    override suspend fun getBookByID(bookID: ProviderWithIDMetadata): BookMetadata? {
-        val cacheKey = getKey(bookID.itemID, bookID.provider)
+    override suspend fun getBookByID(providerId: String, bookId: String): BookMetadata? {
+        val cacheKey = getKey(bookId, providerId)
         return getOrSetCache(bookIdCache, cacheKey) {
-            val provider = getProvider(bookID) ?: return@getOrSetCache Optional.ofNullable(null)
-            val value = provider.getBookByID(bookID)
+            val provider = getProvider(bookId) ?: return@getOrSetCache Optional.ofNullable(null)
+            val value = provider.getBookByID(providerId, bookId)
             Optional.ofNullable(value)
         }.orElse(null)
     }
 
-    override suspend fun getSeriesByID(seriesID: ProviderWithIDMetadata): SeriesMetadata? {
-        val cacheKey = getKey(seriesID.itemID, seriesID.provider)
+    override suspend fun getSeriesByID(providerId: String, seriesId: String): SeriesMetadata? {
+        val cacheKey = getKey(seriesId, providerId)
         return getOrSetCache(seriesIdCache, cacheKey) {
-            val provider = getProvider(seriesID) ?: return@getOrSetCache Optional.ofNullable(null)
-            val value = provider.getSeriesByID(seriesID)
+            val provider = getProvider(seriesId) ?: return@getOrSetCache Optional.ofNullable(null)
+            val value = provider.getSeriesByID(providerId, seriesId)
             Optional.ofNullable(value)
         }.orElse(null)
     }
@@ -119,7 +115,7 @@ class MetadataWrapper constructor(
         return keys.joinToString { it.toString() + separator }
     }
 
-    private fun getProvider(providerID: ProviderWithIDMetadata): MetadataProvider? {
-        return providerMap[providerID.provider]
+    private fun getProvider(providerID: String): MetadataProvider? {
+        return providerMap[providerID]
     }
 }
