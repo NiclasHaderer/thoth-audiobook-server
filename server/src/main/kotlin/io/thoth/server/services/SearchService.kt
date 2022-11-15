@@ -6,6 +6,7 @@ import io.thoth.database.tables.Author
 import io.thoth.database.tables.Book
 import io.thoth.database.tables.Series
 import io.thoth.models.SearchModel
+import io.thoth.server.db.access.toModel
 import org.jetbrains.exposed.sql.transactions.transaction
 
 

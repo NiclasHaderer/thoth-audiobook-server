@@ -1,6 +1,7 @@
 package io.thoth.server.file.persister
 
 import io.thoth.database.tables.*
+import io.thoth.server.db.access.findByName
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import kotlinx.coroutines.sync.Semaphore
 import mu.KotlinLogging.logger
@@ -115,7 +116,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
     }
 
     private fun getOrCreateSeries(scan: AudioFileAnalysisResult, dbAuthor: Author): Series {
-        val series = Series.getByName(scan.series!!)
+        val series = Series.findByName(scan.series!!)
         return series?.apply {
             author = dbAuthor
         } ?: run {
