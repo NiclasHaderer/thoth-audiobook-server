@@ -1,7 +1,7 @@
 package io.thoth.server.api.audiobooks.series
 
 import io.ktor.resources.*
-import io.thoth.common.serializion.UUIDSerializer
+import io.thoth.common.serializion.kotlin.UUIDSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 

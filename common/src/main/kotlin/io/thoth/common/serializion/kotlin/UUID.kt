@@ -1,4 +1,4 @@
-package io.thoth.common.serializion
+package io.thoth.common.serializion.kotlin
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

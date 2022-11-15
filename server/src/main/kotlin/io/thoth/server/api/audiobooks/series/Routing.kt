@@ -37,7 +37,7 @@ internal fun Route.routing() {
         transaction { Series.getMultiple(it.limit, it.offset) }.map { it.id }
     }
     get<SeriesId, SeriesModelWithBooks> {
-        Series.getDetailedById(it.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+        transaction { Series.getDetailedById(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
     }
 
     patch(RouteHandler::patchSeries)
