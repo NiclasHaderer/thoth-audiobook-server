@@ -45,13 +45,13 @@ class SeriesModelWithBooks(
     companion object {
         fun fromModel(series: ISeriesModel, books: List<IBookModel>, position: Int): SeriesModelWithBooks {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
-            val years = books.mapNotNull { it.year }
-            val startYear = years.minOrNull()
-            val endYear = years.maxOrNull()
+            val years = books.mapNotNull { it.date }
+            val startDate = years.minOrNull()
+            val endDate = years.maxOrNull()
 
             var yearRange: YearRange? = null
-            if (startYear != null && endYear != null) {
-                yearRange = YearRange(start = startYear, end = endYear)
+            if (startDate != null && endDate != null) {
+                yearRange = YearRange(start = startDate.year, end = endDate.year)
             }
 
             return SeriesModelWithBooks(

@@ -39,7 +39,7 @@ class AudibleBookTest {
                 ),
                 image = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
                 narrator = "Stephen Fry",
-                year = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                date = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             ),
             book,
         )
@@ -68,7 +68,7 @@ class AudibleBookTest {
                 ),
                 image = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
                 narrator = "Stephen Fry",
-                year = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                date = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             ),
             book,
         )

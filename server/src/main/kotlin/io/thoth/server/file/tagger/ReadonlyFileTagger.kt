@@ -6,13 +6,15 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import java.io.File
 import java.nio.file.Path
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.io.path.nameWithoutExtension
 
 
 interface ReadonlyFileTagger {
     val title: String
     val description: String?
-    val year: Int?
+    val date: LocalDate?
     val author: String?
     val book: String?
     val language: String?
@@ -43,11 +45,18 @@ open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFi
     override val description: String?
         get() = audioFile.tag.getFirst(FieldKey.COMMENT).ifEmpty { null }
 
-    override val year: Int?
+    override val date: LocalDate?
         get() {
-            val year = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull()
-            val albumYear = audioFile.tag.getFirst(FieldKey.ALBUM_YEAR).toIntOrNull()
-            return year ?: albumYear
+            return try {
+                val releaseDate: String? = audioFile.tag.getFirst(FieldKey.ORIGINALRELEASEDATE)
+                LocalDate.parse(releaseDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            } catch (e: Exception) {
+                val year = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull()
+                val albumYear = audioFile.tag.getFirst(FieldKey.ALBUM_YEAR).toIntOrNull()
+
+                val finalYear = year ?: albumYear ?: return null
+                return LocalDate.of(finalYear, 1, 1)
+            }
         }
 
     override val author: String?

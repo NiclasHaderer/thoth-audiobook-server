@@ -20,7 +20,7 @@ class AudioTagScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig)
             author = tags.author!!,
             book = tags.book!!,
             description = tags.description,
-            year = tags.year,
+            date = tags.date,
             language = tags.language,
             trackNr = tags.trackNr,
             narrator = tags.narrator,

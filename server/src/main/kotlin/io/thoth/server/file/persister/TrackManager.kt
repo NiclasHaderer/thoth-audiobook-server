@@ -88,7 +88,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         return book.apply {
             title = scan.book
             author = dbAuthor
-            year = scan.year
+            date = scan.date
             language = scan.language
             description = scan.description
             narrator = scan.narrator
@@ -104,7 +104,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         return Book.new {
             title = scan.book
             author = dbAuthor
-            year = scan.year
+            date = scan.date
             language = scan.language
             description = scan.description
             narrator = scan.narrator

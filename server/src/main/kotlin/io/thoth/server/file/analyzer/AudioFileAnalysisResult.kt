@@ -1,5 +1,7 @@
 package io.thoth.server.file.analyzer
 
+import java.time.LocalDate
+
 class AudioFileAnalysisResultImpl(
     override val title: String,
     override val author: String,
@@ -8,7 +10,7 @@ class AudioFileAnalysisResultImpl(
     override val path: String,
     override val lastModified: Long,
     override val description: String? = null,
-    override val year: Int? = null,
+    override val date: LocalDate? = null,
     override val language: String? = null,
     override val trackNr: Int? = null,
     override val narrator: String? = null,
@@ -22,7 +24,7 @@ interface AudioFileAnalysisResult {
     val author: String
     val book: String
     val description: String?
-    val year: Int?
+    val date: LocalDate?
     val language: String?
     val trackNr: Int?
     val narrator: String?
