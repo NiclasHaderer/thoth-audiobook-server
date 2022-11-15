@@ -6,7 +6,6 @@ import io.thoth.metadata.SearchAuthorMetadata
 import io.thoth.metadata.SearchBookMetadata
 import io.thoth.metadata.SearchSeriesMetadata
 import java.time.LocalDate
-import java.util.*
 
 data class AudibleSearchAuthorImpl(
     override val id: AudibleProviderWithIDMetadata,
@@ -16,7 +15,7 @@ data class AudibleSearchAuthorImpl(
 
 data class AudibleSearchSeriesImpl(
     override val id: AudibleProviderWithIDMetadata,
-    override val name: String,
+    override val name: String?,
     override val index: Float?,
     override val link: String,
 ) : SearchSeriesMetadata
@@ -27,7 +26,7 @@ data class AudibleSearchBookImpl(
     override val link: String?,
     override val author: AudibleSearchAuthorImpl?,
     override val narrator: String?,
-    override val series: AudibleSearchSeriesImpl?,
+    override var series: AudibleSearchSeriesImpl?,
     override val image: String?,
     override val language: String?,
     override val releaseDate: LocalDate?,

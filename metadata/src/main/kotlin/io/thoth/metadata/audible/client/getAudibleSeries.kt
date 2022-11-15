@@ -1,6 +1,7 @@
 package io.thoth.metadata.audible.client
 
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.thoth.metadata.audible.models.AudibleSearchSeriesImpl
 import io.thoth.metadata.audible.models.AudibleSeriesImpl
 import org.jsoup.nodes.Element
 
@@ -20,8 +21,18 @@ suspend fun getAudibleSeries(
         amount = getBookCount(document),
         books = seriesBooks,
         author = seriesBooks.firstOrNull()?.author?.name
-    )
+    ).also {
+        it.books?.forEachIndexed { index, book ->
+            book.series = AudibleSearchSeriesImpl(
+                id = it.id,
+                name = it.name,
+                index = index + 1f,
+                link = it.link
+            )
+        }
+    }
 }
+
 
 private fun getSeriesName(element: Element): String? {
     val authorElement = element.selectFirst("h1.bc-heading") ?: return null

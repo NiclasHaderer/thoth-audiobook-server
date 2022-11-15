@@ -2,7 +2,13 @@ package io.thoth.metadata.audible.client
 
 import io.ktor.http.*
 import io.thoth.common.extensions.appendOptional
-import io.thoth.metadata.audible.models.*
+import io.thoth.common.extensions.replaceAll
+import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.thoth.metadata.audible.models.AudibleSearchAmount
+import io.thoth.metadata.audible.models.AudibleSearchAuthorImpl
+import io.thoth.metadata.audible.models.AudibleSearchBookImpl
+import io.thoth.metadata.audible.models.AudibleSearchLanguage
+import io.thoth.metadata.audible.models.AudibleSearchSeriesImpl
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -37,7 +43,7 @@ fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<Au
         val link = extractLink(it)
         AudibleSearchBookImpl(
             author = extractAuthorInfo(it),
-            title = extractTitle(it),
+            title = extractTitle(it, regions),
             link = link,
             series = extractSeriesInfo(it),
             image = extractImageUrl(it),
@@ -63,7 +69,7 @@ private fun extractReleaseDate(element: Element, regions: AudibleRegions): Local
     var date = element.selectFirst(".releaseDateLabel > *")?.text() ?: return null
     date = date.split(" ").last()
     val regionsValue = regions.getValue()
-    val formatter = DateTimeFormatter.ofPattern(regionsValue.datePattern);
+    val formatter = DateTimeFormatter.ofPattern(regionsValue.datePattern)
     return LocalDate.parse(date, formatter)
 }
 
@@ -90,7 +96,8 @@ private fun extractAuthorInfo(element: Element): AudibleSearchAuthorImpl? {
 }
 
 
-private fun extractTitle(element: Element): String? = element.selectFirst("h3 a")?.text()
+private fun extractTitle(element: Element, regions: AudibleRegions): String? =
+    element.selectFirst("h3 a")?.text()?.replaceAll(regions.getValue().titleReplacers, "")
 
 
 private fun extractLink(element: Element): String? = element.selectFirst("h3 a")?.absUrl("href")?.split("?")?.first()
