@@ -33,7 +33,7 @@ private val log = logger {}
 suspend fun getAudiblePage(
     region: AudibleRegions,
     pathSegments: List<String>,
-    parameters: Parameters = Parameters.build {  }
+    parameters: Parameters = Parameters.build { }
 ): Document? {
 
     val url = URLBuilder(

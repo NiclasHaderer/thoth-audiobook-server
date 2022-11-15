@@ -8,7 +8,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class AudibleAuthorTest() {
+class AudibleAuthorTest {
 
     private val client = AudibleClient(AudibleRegions.us)
 

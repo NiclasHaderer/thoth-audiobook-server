@@ -23,9 +23,9 @@ suspend fun getAudibleAuthor(
 }
 
 
-private fun getAuthorName(element: Element)= element.selectFirst("h1.bc-heading")?.text()
+private fun getAuthorName(element: Element) = element.selectFirst("h1.bc-heading")?.text()
 
-private fun getAuthorBiography(element: Element)= element.selectFirst(".bc-expander span.bc-text")?.text()
+private fun getAuthorBiography(element: Element) = element.selectFirst(".bc-expander span.bc-text")?.text()
 
 private fun getAuthorImage(element: Element, imageSize: Int): String? {
     val imageElement = element.selectFirst("img.author-image-outline") ?: return null
