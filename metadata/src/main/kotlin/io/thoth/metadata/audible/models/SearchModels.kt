@@ -5,22 +5,23 @@ import io.thoth.metadata.MetadataSearchCount
 import io.thoth.metadata.SearchAuthorMetadata
 import io.thoth.metadata.SearchBookMetadata
 import io.thoth.metadata.SearchSeriesMetadata
+import java.time.LocalDate
 import java.util.*
 
-class AudibleSearchAuthorImpl(
+data class AudibleSearchAuthorImpl(
     override val id: AudibleProviderWithIDMetadata,
     override val name: String?,
     override val link: String,
 ) : SearchAuthorMetadata
 
-class AudibleSearchSeriesImpl(
+data class AudibleSearchSeriesImpl(
     override val id: AudibleProviderWithIDMetadata,
     override val name: String,
     override val index: Float?,
     override val link: String,
 ) : SearchSeriesMetadata
 
-class AudibleSearchBookImpl(
+data class AudibleSearchBookImpl(
     override val id: AudibleProviderWithIDMetadata,
     override val title: String?,
     override val link: String?,
@@ -29,7 +30,7 @@ class AudibleSearchBookImpl(
     override val series: AudibleSearchSeriesImpl?,
     override val image: String?,
     override val language: String?,
-    override val releaseDate: Date?,
+    override val releaseDate: LocalDate?,
 ) : SearchBookMetadata
 
 enum class AudibleSearchLanguage(val language: Long) {

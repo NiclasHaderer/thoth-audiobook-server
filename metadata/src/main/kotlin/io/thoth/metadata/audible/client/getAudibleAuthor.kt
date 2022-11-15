@@ -14,7 +14,7 @@ suspend fun getAudibleAuthor(
     val document = getAudiblePage(regions, listOf("author", authorAsin)) ?: return null
     document.getElementById("product-list-a11y-skiplink-target") ?: return null
     return AudibleAuthorImpl(
-        link = document.location(),
+        link = document.location().split("?").first(),
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
         name = getAuthorName(document),
         image = getAuthorImage(document, imageSize),

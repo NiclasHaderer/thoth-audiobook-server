@@ -3,7 +3,7 @@ package io.thoth.metadata.audible.models
 import io.thoth.metadata.AuthorMetadata
 
 
-class AudibleAuthorImpl(
+data class AudibleAuthorImpl(
     override val id: AudibleProviderWithIDMetadata,
     override val image: String?,
     override val biography: String?,

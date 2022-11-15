@@ -2,7 +2,7 @@ package io.thoth.metadata.audible.models
 
 import io.thoth.metadata.SeriesMetadata
 
-class AudibleSeriesImpl(
+data class AudibleSeriesImpl(
     override val id: AudibleProviderWithIDMetadata,
     override val link: String,
     override val name: String?,
