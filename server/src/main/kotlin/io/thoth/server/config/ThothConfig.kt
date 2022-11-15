@@ -1,13 +1,14 @@
 package io.thoth.server.config
 
+import io.thoth.metadata.audible.client.AudibleRegions
+
 interface ThothConfig {
     val ignoreFile: String
     val production: Boolean
     val audioFileLocations: List<String>
     val analyzerThreads: Int
     val port: Int
-    val audibleSearchHost: String
-    val audibleAuthorHost: String
+    val audibleRegion: AudibleRegions
     val database: DatabaseConnection
     val configDirectory: String
 }
@@ -26,8 +27,7 @@ data class ThothConfigImpl(
     override val audioFileLocations: List<String>,
     override val analyzerThreads: Int,
     override val port: Int,
-    override val audibleSearchHost: String,
-    override val audibleAuthorHost: String,
+    override val audibleRegion: AudibleRegions,
     override val database: DatabaseConnectionImpl,
     override val configDirectory: String
 ) : ThothConfig

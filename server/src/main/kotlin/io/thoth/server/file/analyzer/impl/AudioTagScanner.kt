@@ -30,7 +30,6 @@ class AudioTagScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig)
             duration = tags.duration,
             path = tags.path,
             lastModified = tags.lastModified,
-            providerId = tags.providerId
         )
     }
 }

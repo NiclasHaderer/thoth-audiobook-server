@@ -2,7 +2,6 @@ package io.thoth.server.api.audiobooks.books
 
 import io.ktor.resources.*
 import io.thoth.common.serializion.UUIDSerializer
-import io.thoth.models.ProviderIDModel
 import kotlinx.serialization.Serializable
 import java.util.*
 
@@ -17,7 +16,6 @@ class PatchBook(
     val title: String,
     val language: String?,
     val description: String?,
-    val providerID: ProviderIDModel?,
     val author: String,
     val narrator: String?,
     val series: String?,

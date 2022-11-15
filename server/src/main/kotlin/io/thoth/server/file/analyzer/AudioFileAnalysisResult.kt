@@ -1,7 +1,5 @@
 package io.thoth.server.file.analyzer
 
-import io.thoth.models.ProviderIDModel
-
 class AudioFileAnalysisResultImpl(
     override val title: String,
     override val author: String,
@@ -17,14 +15,12 @@ class AudioFileAnalysisResultImpl(
     override val series: String? = null,
     override val seriesIndex: Float? = null,
     override val cover: ByteArray? = null,
-    override val providerId: ProviderIDModel? = null,
 ) : AudioFileAnalysisResult
 
 interface AudioFileAnalysisResult {
     val title: String
     val author: String
     val book: String
-    val providerId: ProviderIDModel?
     val description: String?
     val year: Int?
     val language: String?

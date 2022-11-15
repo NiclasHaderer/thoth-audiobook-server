@@ -1,5 +1,7 @@
 package io.thoth.server.config
 
+import io.thoth.metadata.audible.client.AudibleRegions
+
 
 object DevThothConfig : ThothConfig {
     override val ignoreFile: String by lazy {
@@ -19,12 +21,8 @@ object DevThothConfig : ThothConfig {
         System.getenv("THOTH_PORT")?.toIntOrNull() ?: 8080
     }
 
-    override val audibleSearchHost: String by lazy {
-        System.getenv("THOTH_AUDIBLE_SEARCH_HOST") ?: "audible.de"
-    }
-    override val audibleAuthorHost: String by lazy {
-        System.getenv("THOTH_AUDIBLE_AUTHOR_HOST") ?: "audible.com"
-    }
+    override val audibleRegion: AudibleRegions
+        get() = AudibleRegions.us
 
     override val database: DatabaseConnection by lazy {
         H2Database

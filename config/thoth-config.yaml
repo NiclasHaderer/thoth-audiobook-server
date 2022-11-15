@@ -5,8 +5,7 @@ audioFileLocations:
   - test-resources
 analyzerThreads: 6
 port: 8080
-audibleSearchHost: www.audible.com
-audibleAuthorHost: www.audible.com
+audibleRegion: us
 database:
   driverClassName: "org.h2.Driver"
   jdbcUrl: "jdbc:h2:mem:regular"

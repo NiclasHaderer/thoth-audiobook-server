@@ -1,7 +1,6 @@
 package io.thoth.server.file.tagger
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.thoth.models.ProviderIDModel
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -11,7 +10,6 @@ import kotlin.io.path.nameWithoutExtension
 
 
 interface ReadonlyFileTagger {
-    val providerId: ProviderIDModel?
     val title: String
     val description: String?
     val year: Int?
@@ -40,16 +38,6 @@ open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFi
         get() {
             val title = audioFile.tag.getFirst(FieldKey.TITLE).ifEmpty { null }
             return title ?: Path.of(path).nameWithoutExtension
-        }
-
-    override val providerId: ProviderIDModel?
-        get() {
-            return try {
-                val id = audioFile.tag.getFirst(FieldKey.AMAZON_ID)
-                mapper.readValue(id, ProviderIDModel::class.java)
-            } catch (e: Exception) {
-                null
-            }
         }
 
     override val description: String?
