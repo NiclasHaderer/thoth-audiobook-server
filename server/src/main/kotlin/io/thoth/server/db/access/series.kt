@@ -2,6 +2,7 @@ package io.thoth.server.db.access
 
 import io.thoth.common.extensions.findOne
 import io.thoth.common.extensions.get
+import io.thoth.common.extensions.isTrue
 import io.thoth.database.tables.Book
 import io.thoth.database.tables.Series
 import io.thoth.database.tables.TBooks
@@ -48,9 +49,9 @@ fun Series.toModel(): SeriesModel {
     val books = Book.find { TBooks.series eq id.value }
     return SeriesModel(
         id = id.value,
-        title = linkedSeries?.title?.takeIf { preferMeta } ?: title,
+        title = preferMeta.isTrue(linkedSeries?.title).otherwise(title),
         amount = books.count(),
-        description = linkedSeries?.description?.takeIf { preferMeta } ?: description,
+        description = preferMeta.isTrue(linkedSeries?.description).otherwise(description),
         updateTime = updateTime,
         author = NamedId(
             name = author.name,
