@@ -4,7 +4,7 @@ import io.ktor.http.*
 
 
 fun audibleAsinFromLink(link: String?): String {
-    if (link == null) return ""
+    if (link == null) return "invalid"
     return Url(link).encodedPath.split("/").last()
 }
 

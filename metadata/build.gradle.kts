@@ -1,3 +1,4 @@
+val kotlinVersion: String by project
 val ktorVersion: String by project
 val jsoupVersion: String by project
 val caffeineVersion: String by project
@@ -24,4 +25,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
+
+    // Tests
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
 }

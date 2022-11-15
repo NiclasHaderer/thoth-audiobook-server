@@ -14,7 +14,7 @@ suspend fun getAudibleBook(
     val document = getAudiblePage(region, listOf("pd", asin)) ?: return null
 
     return AudibleBookImpl(
-        link = document.location(),
+        link = document.location().split("?").first(),
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
         description = getDescription(document),
         title = extractTitle(document, region),
@@ -31,7 +31,7 @@ private fun extractNarrator(document: Document) = document.selectFirst(".narrato
 
 private fun extractAuthorInfo(document: Document): AudibleSearchAuthorImpl? {
     val authorLink = document.selectFirst(".authorLabel a") ?: return null
-    val link = authorLink.absUrl("href")
+    val link = authorLink.absUrl("href").split("?").first()
     return AudibleSearchAuthorImpl(
         link = link,
         name = authorLink.text(),
@@ -54,7 +54,7 @@ private fun extractSeriesInfo(element: Element): AudibleSearchSeriesImpl? {
 
     var seriesIndex = seriesElement.text().split(",").last().trim()
     seriesIndex = seriesIndex.filter { it.isDigit() }
-    val link = seriesNameElement.absUrl("href")
+    val link = seriesNameElement.absUrl("href").split("?").first()
 
     return AudibleSearchSeriesImpl(
         link = link,

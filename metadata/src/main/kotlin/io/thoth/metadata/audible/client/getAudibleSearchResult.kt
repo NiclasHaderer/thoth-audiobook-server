@@ -6,8 +6,8 @@ import io.thoth.metadata.audible.models.*
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 suspend fun getAudibleSearchResult(
     regions: AudibleRegions,
@@ -23,25 +23,17 @@ suspend fun getAudibleSearchResult(
         appendOptional("title", title)
         appendOptional("author_author", author)
         appendOptional("narrator", narrator)
-        appendOptional("feature_six_browse-bin", language?.language.toString())
-        appendOptional("pageSize", pageSize?.size.toString())
+        appendOptional("feature_six_browse-bin", language?.language?.toString())
+        appendOptional("pageSize", pageSize?.size?.toString())
     }
 
     val document = getAudiblePage(regions, listOf("search"), urlParams) ?: return null
-    return getAudibleSearchResult(document)
+    return getAudibleSearchResult(document, regions)
 }
 
-fun getAudibleSearchResult(document: Document): List<AudibleSearchBookImpl> {
+fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<AudibleSearchBookImpl> {
     val searchResultItems = extractSearchResults(document)
-    return extractSearchInfo(searchResultItems)
-}
-
-
-private fun extractSearchResults(document: Document): Elements = document.select(".productListItem")
-
-
-private fun extractSearchInfo(elementList: Elements): List<AudibleSearchBookImpl> {
-    return elementList.map {
+    return searchResultItems.map {
         val link = extractLink(it)
         AudibleSearchBookImpl(
             author = extractAuthorInfo(it),
@@ -51,11 +43,15 @@ private fun extractSearchInfo(elementList: Elements): List<AudibleSearchBookImpl
             image = extractImageUrl(it),
             language = extractLanguage(it),
             narrator = extractNarrator(it),
-            releaseDate = extractReleaseDate(it),
+            releaseDate = extractReleaseDate(it, regions),
             id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link))
         )
     }
 }
+
+
+private fun extractSearchResults(document: Document): Elements = document.select(".productListItem")
+
 
 private fun extractNarrator(element: Element): String? = element.selectFirst(".narratorLabel a")?.text()
 
@@ -63,26 +59,29 @@ private fun extractLanguage(element: Element): String? =
     element.selectFirst(".languageLabel > *")?.text()?.split(":")?.last()?.trim()
 
 
-private fun extractReleaseDate(element: Element): Date? {
+private fun extractReleaseDate(element: Element, regions: AudibleRegions): LocalDate? {
     var date = element.selectFirst(".releaseDateLabel > *")?.text() ?: return null
     date = date.split(" ").last()
-    val parsedDate = try {
-        val enPattern = SimpleDateFormat("MM-dd-yy")
-        enPattern.parse(date)
-    } catch (e: Exception) {
-        val dePattern = SimpleDateFormat("dd.MM.yyyy")
-        dePattern.parse(date)
-    }
-    return parsedDate
+    val regionsValue = regions.getValue()
+    val formatter = DateTimeFormatter.ofPattern(regionsValue.datePattern);
+    return LocalDate.parse(date, formatter)
 }
 
 
-private fun extractImageUrl(element: Element): String? = element.selectFirst("img")?.attr("data-lazy")
+private fun extractImageUrl(element: Element): String? {
+    val imageElement = element.selectFirst("img") ?: return null
+
+    var imageURL = imageElement.attr("data-lazy")
+    if (imageURL == "") {
+        imageURL = imageElement.attr("src")
+    }
+    return imageURL
+}
 
 
 private fun extractAuthorInfo(element: Element): AudibleSearchAuthorImpl? {
     val authorLink = element.selectFirst(".authorLabel a") ?: return null
-    val link = authorLink.absUrl("href")
+    val link = authorLink.absUrl("href").split("?").first()
     return AudibleSearchAuthorImpl(
         link = link,
         name = authorLink.text(),
@@ -94,7 +93,7 @@ private fun extractAuthorInfo(element: Element): AudibleSearchAuthorImpl? {
 private fun extractTitle(element: Element): String? = element.selectFirst("h3 a")?.text()
 
 
-private fun extractLink(element: Element): String? = element.selectFirst("h3 a")?.absUrl("href")
+private fun extractLink(element: Element): String? = element.selectFirst("h3 a")?.absUrl("href")?.split("?")?.first()
 
 
 private fun extractSeriesInfo(element: Element): AudibleSearchSeriesImpl? {
@@ -104,7 +103,7 @@ private fun extractSeriesInfo(element: Element): AudibleSearchSeriesImpl? {
     var seriesIndex = seriesElement.selectFirst("span")?.text() ?: return null
     seriesIndex = seriesIndex.split(",").last().trim()
     seriesIndex = seriesIndex.filter { it.isDigit() }
-    val link = seriesNameElement.absUrl("href")
+    val link = seriesNameElement.absUrl("href").split("?").first()
 
     return AudibleSearchSeriesImpl(
         link = link,

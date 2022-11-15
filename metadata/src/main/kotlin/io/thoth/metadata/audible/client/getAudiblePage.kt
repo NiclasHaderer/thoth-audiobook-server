@@ -64,5 +64,5 @@ suspend fun getAudiblePage(
         return null
     }
 
-    return Jsoup.parse(response, url.toString())
+    return Jsoup.parse(response, url.build().toString())
 }

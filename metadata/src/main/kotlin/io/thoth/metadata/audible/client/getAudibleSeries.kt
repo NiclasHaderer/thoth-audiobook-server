@@ -11,9 +11,9 @@ suspend fun getAudibleSeries(
     // Audible does not return 404 if a series is not valid, so...
     document.getElementById("product-list-a11y-skiplink-target") ?: return null
 
-    val seriesBooks = getAudibleSearchResult(document)
+    val seriesBooks = getAudibleSearchResult(document, region)
     return AudibleSeriesImpl(
-        link = document.location(),
+        link = document.location().split("?").first(),
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
         name = getSeriesName(document),
         description = getSeriesDescription(document),

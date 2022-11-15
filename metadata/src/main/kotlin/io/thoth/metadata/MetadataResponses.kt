@@ -1,5 +1,6 @@
 package io.thoth.metadata
 
+import java.time.LocalDate
 import java.util.*
 
 enum class MetadataLanguage {
@@ -94,7 +95,7 @@ interface SearchBookMetadata {
     val series: SearchSeriesMetadata?
     val image: String?
     val language: String?
-    val releaseDate: Date?
+    val releaseDate: LocalDate?
 }
 
 open class SearchBookMetadataImpl(
@@ -106,7 +107,7 @@ open class SearchBookMetadataImpl(
     override val series: SearchSeriesMetadata?,
     override val image: String?,
     override val language: String?,
-    override val releaseDate: Date?
+    override val releaseDate: LocalDate?
 ) : SearchBookMetadata
 
 interface SeriesMetadata {
