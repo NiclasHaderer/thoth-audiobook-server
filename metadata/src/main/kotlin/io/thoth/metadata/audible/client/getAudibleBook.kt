@@ -25,7 +25,7 @@ suspend fun getAudibleBook(
         author = extractAuthorInfo(document),
         series = extractSeriesInfo(document),
         narrator = extractNarrator(document),
-        year = getPublishedDate(document)
+        date = getPublishedDate(document)
     )
 }
 

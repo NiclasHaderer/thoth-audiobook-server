@@ -12,6 +12,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -22,7 +23,7 @@ import java.util.*
 object TBooks : UUIDTable("Books") {
     val title = varchar("title", 255)
     val author = reference("author", TAuthors)
-    val year = integer("year").nullable()
+    val date = date("year").nullable()
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
     val language = varchar("language", 255).nullable()
     val description = text("description").nullable()
@@ -72,7 +73,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
     private val coverID by TBooks.cover
 
     var title by TBooks.title
-    var year by TBooks.year
+    var date by TBooks.date
     var language by TBooks.language
     var description by TBooks.description
     var updateTime by TBooks.updateTime
@@ -85,7 +86,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
     override fun toModel() = BookModel(
         id = id.value,
         title = title,
-        year = year,
+        date = date,
         language = language,
         description = description,
         updateTime = updateTime,

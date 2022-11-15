@@ -67,7 +67,7 @@ private suspend fun ingestBookMetadata(id: UUID) {
 
     book.apply {
         title = bookMetadata.title ?: title
-        year = bookMetadata.year ?: year
+        date = bookMetadata.date ?: date
         description = bookMetadata.description ?: description
         updateTime = LocalDateTime.now()
         // TODO author = bookMetadata.author

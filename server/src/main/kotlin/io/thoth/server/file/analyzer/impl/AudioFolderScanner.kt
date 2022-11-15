@@ -35,7 +35,7 @@ class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConf
             book = tags.book ?: book,
             series = tags.series ?: series,
             description = tags.description,
-            year = tags.year,
+            date = tags.date,
             language = tags.language,
             trackNr = tags.trackNr,
             narrator = tags.narrator,

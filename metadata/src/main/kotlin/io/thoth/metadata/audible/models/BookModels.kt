@@ -13,5 +13,5 @@ data class AudibleBookImpl(
     override val series: AudibleSearchSeriesImpl?,
     override val image: String?,
     override val narrator: String?,
-    override val year: LocalDate?,
+    override val date: LocalDate?,
 ) : BookMetadata

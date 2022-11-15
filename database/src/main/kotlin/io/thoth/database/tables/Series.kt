@@ -44,7 +44,7 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id), ToModel<SeriesModel> {
 
         fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
             val series = Series.findById(uuid)?.toModel() ?: return@transaction null
-            val books = Book.forSeries(uuid).sortedWith(compareBy(BookModel::year, BookModel::seriesIndex))
+            val books = Book.forSeries(uuid).sortedWith(compareBy(BookModel::date, BookModel::seriesIndex))
             val index = Series.all().orderBy(TSeries.title.lowerCase() to order).indexOfFirst { it.id.value === uuid }
             SeriesModelWithBooks.fromModel(series, books, index)
         }

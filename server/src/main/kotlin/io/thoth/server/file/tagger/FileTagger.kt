@@ -11,12 +11,14 @@ import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
 import java.io.File
 import java.nio.file.Path
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 interface FileTagger : ReadonlyFileTagger {
     override var title: String
     override var description: String?
-    override var year: Int?
+    override var date: LocalDate?
     override val book: String?
     override var language: String?
     override var author: String?
@@ -42,9 +44,12 @@ open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger
         get() = super.description
         set(value) = setOrDelete(FieldKey.LANGUAGE, value)
 
-    override var year: Int?
-        get() = super.year
-        set(value) = setOrDelete(FieldKey.YEAR, value)
+    override var date: LocalDate?
+        get() = super.date
+        set(value) {
+            setOrDelete(FieldKey.YEAR, value?.format(DateTimeFormatter.ofPattern("yyyy")))
+            setOrDelete(FieldKey.ORIGINALRELEASEDATE, value?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+        }
 
     override var book: String?
         get() = super.book

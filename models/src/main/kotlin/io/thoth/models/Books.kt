@@ -1,12 +1,13 @@
 package io.thoth.models
 
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
 interface IBookModel {
     val id: UUID
     val title: String
-    val year: Int?
+    val date: LocalDate?
     val language: String?
     val description: String?
     val author: NamedId
@@ -20,7 +21,7 @@ interface IBookModel {
 class BookModel(
     override val id: UUID,
     override val title: String,
-    override val year: Int?,
+    override val date: LocalDate?,
     override val language: String?,
     override val description: String?,
     override val author: NamedId,
@@ -34,7 +35,7 @@ class BookModel(
 class BookModelWithTracks(
     override val id: UUID,
     override val title: String,
-    override val year: Int?,
+    override val date: LocalDate?,
     override val language: String?,
     override val description: String?,
     override val author: NamedId,
@@ -58,7 +59,7 @@ class BookModelWithTracks(
             return BookModelWithTracks(
                 id = book.id,
                 title = book.title,
-                year = book.year,
+                date = book.date,
                 language = book.language,
                 description = book.description,
                 position = position,
