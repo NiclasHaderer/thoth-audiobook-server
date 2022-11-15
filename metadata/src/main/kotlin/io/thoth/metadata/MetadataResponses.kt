@@ -70,4 +70,5 @@ interface SeriesMetadata {
     val amount: Int?
     val books: List<SearchBookMetadata>?
     val author: String?
+    val image: String?
 }

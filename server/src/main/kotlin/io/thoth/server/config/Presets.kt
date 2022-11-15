@@ -21,6 +21,9 @@ object DevThothConfig : ThothConfig {
         System.getenv("THOTH_PORT")?.toIntOrNull() ?: 8080
     }
 
+    override val preferEmbeddedMetadata: Boolean
+        get() = true
+
     override val audibleRegion: AudibleRegions
         get() = AudibleRegions.us
 
