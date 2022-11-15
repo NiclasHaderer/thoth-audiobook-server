@@ -12,7 +12,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.test.assertEquals
 
-class AudibleBookTest() {
+class AudibleBookTest {
 
     private val client = AudibleClient(AudibleRegions.us)
 
