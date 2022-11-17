@@ -74,7 +74,7 @@ private suspend fun ingestBookMetadata(id: UUID) {
 
     log.info { "Inserting metadata for book: ${book.title}" }
     val metaImage = if (bookMetadata.image != null) Image.create(bookMetadata.image!!).id else null
-    MetaBook.new {
+    val metaBook = MetaBook.new {
         title = bookMetadata.title ?: title
         provider = bookMetadata.id.provider
         itemID = bookMetadata.id.itemID
@@ -89,6 +89,7 @@ private suspend fun ingestBookMetadata(id: UUID) {
         //  series = bookMetadata.series
         //  genres = bookMetadata.genres
     }
+    book.linkedTo = metaBook
 }
 
 private suspend fun ingestSeriesMetadata(id: UUID) {
@@ -101,7 +102,7 @@ private suspend fun ingestSeriesMetadata(id: UUID) {
     log.info { "Inserting metadata for series: ${series.title}" }
     val metaImage = if (seriesMetadata.image != null) Image.create(seriesMetadata.image!!).id else null
 
-    MetaSeries.new {
+    val metaSeries = MetaSeries.new {
         title = seriesMetadata.name ?: title
         provider = seriesMetadata.id.provider
         itemID = seriesMetadata.id.itemID
@@ -115,4 +116,5 @@ private suspend fun ingestSeriesMetadata(id: UUID) {
         //  genres = seriesMetadata.genres
     }
 
+    series.linkedTo = metaSeries
 }

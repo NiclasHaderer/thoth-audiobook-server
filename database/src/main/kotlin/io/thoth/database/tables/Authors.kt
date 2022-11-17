@@ -21,11 +21,11 @@ object TAuthors : UUIDTable("Authors") {
 
 
 class Author(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Author>(TAuthors)
+
     var name by TAuthors.name
     var biography by TAuthors.biography
     var updateTime by TAuthors.updateTime
     var imageId by TAuthors.image
     var linkedTo by MetaAuthor optionalReferencedOn TAuthors.linkedTo
-
-    companion object : UUIDEntityClass<Author>(TAuthors)
 }

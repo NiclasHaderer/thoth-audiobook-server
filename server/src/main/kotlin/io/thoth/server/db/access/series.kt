@@ -57,6 +57,6 @@ fun Series.toModel(): SeriesModel {
             name = author.name,
             id = author.id.value
         ),
-        images = books.mapNotNull { it.cover?.id?.value }
+        images = books.mapNotNull { it.cover?.value }
     )
 }

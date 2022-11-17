@@ -73,7 +73,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
 
     private fun getOrCreateBook(scan: AudioFileAnalysisResult): Book {
         val author = getOrCreateAuthor(scan)
-        val book = Book.getByName(scan.book, author)
+        val book = Book.findByName(scan.book, author)
         return if (book != null) {
             updateBook(book, scan, author)
         } else {
@@ -95,7 +95,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
             narrator = scan.narrator
             series = dbSeries
             seriesIndex = scan.seriesIndex
-            cover = dbImage
+            cover = dbImage?.id
         }
     }
 
@@ -111,7 +111,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
             narrator = scan.narrator
             series = dbSeries
             seriesIndex = scan.seriesIndex
-            cover = dbImage
+            cover = dbImage?.id
         }
     }
 
