@@ -164,7 +164,8 @@ class AudibleSeriesTest {
                 language = "English",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             )
-        ), author = "J.K. Rowling"
+        ), author = "J.K. Rowling",
+        image = null
     )
 
     @Test
@@ -179,7 +180,7 @@ class AudibleSeriesTest {
 
     @Test
     fun testFindAudibleSeries() = runBlocking {
-        val series = client.getSeriesByName("Harry Potter").firstOrNull()
+        val series = client.getSeriesByName("Harry Potter", "J.K. Rowling").firstOrNull()
 
         assertEquals(
             expectedSeries,
