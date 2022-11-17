@@ -49,9 +49,9 @@ fun Series.toModel(): SeriesModel {
     val books = Book.find { TBooks.series eq id.value }
     return SeriesModel(
         id = id.value,
-        title = preferMeta.isTrue(linkedSeries?.title).otherwise(title),
+        title = preferMeta.isTrue(linkedTo?.title).otherwise(title),
         amount = books.count(),
-        description = preferMeta.isTrue(linkedSeries?.description).otherwise(description),
+        description = preferMeta.isTrue(linkedTo?.description).otherwise(description),
         updateTime = updateTime,
         author = NamedId(
             name = author.name,

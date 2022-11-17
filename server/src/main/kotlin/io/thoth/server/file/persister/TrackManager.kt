@@ -128,7 +128,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         }
     }
 
-    private fun getOrCreateAuthor(scan: AudioFileAnalysisResult) = Author.getByName(scan.author) ?: run {
+    private fun getOrCreateAuthor(scan: AudioFileAnalysisResult) = Author.findByName(scan.author) ?: run {
         log.info("Created author: ${scan.author}")
         Author.new {
             name = scan.author

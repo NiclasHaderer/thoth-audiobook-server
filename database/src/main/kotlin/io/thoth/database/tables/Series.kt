@@ -15,7 +15,7 @@ object TSeries : UUIDTable("Series") {
     val author = reference("author", TAuthors)
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
     val description = text("description").nullable()
-    val linkedSeries = reference("linkedSeries", TMetaSeries).nullable()
+    val linkedTo = reference("linkedTo", TMetaSeries).nullable()
 }
 
 class Series(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -25,5 +25,5 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id) {
     var updateTime by TSeries.updateTime
     var description by TSeries.description
     var author by Author referencedOn TSeries.author
-    var linkedSeries by MetaSeries optionalReferencedOn TSeries.linkedSeries
+    var linkedTo by MetaSeries optionalReferencedOn TSeries.linkedTo
 }
