@@ -11,6 +11,9 @@ import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
 import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
+import io.thoth.server.db.access.getDetailedById
+import io.thoth.server.db.access.getMultiple
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 
@@ -22,17 +25,21 @@ fun Route.registerBookRouting(path: String = "books") {
 
 internal fun Route.routing() {
     get<QueryLimiter, PaginatedResponse<BookModel>> {
-        val books = Book.getMultiple(it.limit, it.offset)
-        val seriesCount = Book.totalCount()
-        PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
+        transaction {
+            val books = Book.getMultiple(it.limit, it.offset)
+            val seriesCount = Book.count()
+            PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
+        }
     }
 
     get<QueryLimiter, List<UUID>>("sorting") { query ->
-        Book.getMultiple(query.limit, query.offset).map { it.id }
+        transaction {
+            Book.getMultiple(query.limit, query.offset).map { it.id }
+        }
     }
 
     get<BookId, BookModelWithTracks> {
-        Book.getById(it.id) ?: serverError(HttpStatusCode.NotFound, "Could not find book")
+        transaction { Book.getDetailedById(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find book")
     }
 
     patch(RouteHandler::patchBook)

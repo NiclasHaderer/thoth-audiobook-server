@@ -19,18 +19,6 @@ object TImages : UUIDTable("Images") {
 
 class Image(id: EntityID<UUID>) : UUIDEntity(id), ToModel<ImageModel> {
     companion object : UUIDEntityClass<Image>(TImages) {
-        fun removeUnused() = transaction {
-            all().forEach {
-                val imageID = it.id.value
-                if (
-                    Author.find { TAuthors.image eq imageID }.empty() &&
-                    Book.find { TBooks.cover eq imageID }.empty()
-                ) {
-                    it.delete()
-                }
-            }
-        }
-
         fun getMultiple(limit: Int, offset: Long) = transaction {
             TImages.slice(TImages.id).selectAll().limit(limit, offset * limit).map {
                 it[TImages.id]

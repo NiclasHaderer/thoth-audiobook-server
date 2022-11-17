@@ -5,6 +5,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.javatime.date
 import java.util.*
 
@@ -16,7 +17,7 @@ object TMetaBooks : UUIDTable("MetaBooks") {
     val language = varchar("language", 255).nullable()
     val description = text("description").nullable()
     val narrator = varchar("name", 255).nullable()
-    val cover = reference("cover", TImages).nullable()
+    val cover = reference("cover", TImages, onDelete = ReferenceOption.CASCADE).nullable()
     val rating = float("rating").nullable()
 }
 

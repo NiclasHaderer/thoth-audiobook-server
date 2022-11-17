@@ -1,21 +1,14 @@
 package io.thoth.database.tables
 
-import io.thoth.common.extensions.findOne
-import io.thoth.database.ToModel
-import io.thoth.models.BookModel
-import io.thoth.models.BookModelWithTracks
-import io.thoth.models.NamedId
-import io.thoth.models.TitledId
+import io.thoth.database.tables.meta.MetaBook
+import io.thoth.database.tables.meta.TMetaBooks
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.javatime.datetime
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.util.*
 
@@ -31,46 +24,11 @@ object TBooks : UUIDTable("Books") {
     val series = reference("series", TSeries).nullable()
     val seriesIndex = float("seriesIndex").nullable()
     val cover = reference("cover", TImages).nullable()
+    val linkedTo = reference("linkedTo", TMetaBooks, onDelete = ReferenceOption.CASCADE).nullable()
 }
 
-class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
-    companion object : UUIDEntityClass<Book>(TBooks) {
-        fun removeUnused() = transaction {
-            all().forEach {
-                if (Track.find { TTracks.book eq it.id.value }.empty()) {
-                    it.delete()
-                }
-            }
-        }
-
-        fun getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC) = transaction {
-            Book.all().limit(limit, offset * limit).orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
-        }
-
-        fun fromAuthor(authorID: UUID, order: SortOrder = SortOrder.ASC) = transaction {
-            find { TBooks.author eq authorID }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
-        }
-
-        fun totalCount() = transaction { Book.all().count() }
-
-        fun getByName(bookTitle: String, author: Author) = transaction {
-            Book.findOne { TBooks.title like bookTitle and (TBooks.author eq author.id.value) }
-        }
-
-        fun getById(uuid: UUID, order: SortOrder = SortOrder.ASC) = transaction {
-            val book = Book.findById(uuid)?.toModel() ?: return@transaction null
-            val tracks = Track.forBook(uuid)
-            val sortPosition = Book.all().orderBy(TBooks.title.lowerCase() to order).count()
-            BookModelWithTracks.fromModel(book, tracks, sortPosition)
-        }
-
-        fun forSeries(seriesId: UUID, order: SortOrder = SortOrder.ASC) = transaction {
-            Book.find { TBooks.series eq seriesId }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
-        }
-
-    }
-
-    private val coverID by TBooks.cover
+class Book(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Book>(TBooks)
 
     var title by TBooks.title
     var date by TBooks.date
@@ -81,25 +39,6 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id), ToModel<BookModel> {
     var narrator by TBooks.narrator
     var series by Series optionalReferencedOn TBooks.series
     var seriesIndex by TBooks.seriesIndex
-    var cover by Image optionalReferencedOn TBooks.cover
-
-    override fun toModel() = BookModel(
-        id = id.value,
-        title = title,
-        date = date,
-        language = language,
-        description = description,
-        updateTime = updateTime,
-        author = NamedId(
-            name = author.name,
-            id = author.id.value
-        ),
-        narrator = narrator,
-        series = if (series != null) TitledId(
-            title = series!!.title,
-            id = series!!.id.value
-        ) else null,
-        seriesIndex = seriesIndex,
-        cover = coverID?.value
-    )
+    var cover by TBooks.cover
+    var linkedTo by MetaBook optionalReferencedOn TBooks.linkedTo
 }

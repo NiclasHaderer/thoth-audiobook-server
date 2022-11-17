@@ -1,14 +1,12 @@
 package io.thoth.database.tables.meta
 
-import io.thoth.database.tables.Image
-import io.thoth.database.tables.TAuthors
 import io.thoth.database.tables.TImages
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.sql.javatime.date
 import java.util.*
 
 object TMetaAuthors : UUIDTable("MetaAuthors") {
@@ -18,9 +16,9 @@ object TMetaAuthors : UUIDTable("MetaAuthors") {
     val biography = text("biography").nullable()
     val imageId = reference("imageId", TImages, onDelete = ReferenceOption.CASCADE).nullable()
     val website = varchar("website", 255).nullable()
-    val born = datetime("born").nullable()
+    val born = date("born").nullable()
     val bornIn = varchar("bornIn", 255).nullable()
-    val died = datetime("died").nullable()
+    val died = date("died").nullable()
 }
 
 class MetaAuthor(id: EntityID<UUID>) : UUIDEntity(id) {
