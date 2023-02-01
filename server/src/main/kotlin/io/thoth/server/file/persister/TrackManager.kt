@@ -1,10 +1,13 @@
 package io.thoth.server.file.persister
 
+import io.thoth.database.access.create
+import io.thoth.database.access.findByName
+import io.thoth.database.access.getByPath
 import io.thoth.database.tables.*
-import io.thoth.server.db.access.findByName
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import kotlinx.coroutines.sync.Semaphore
 import mu.KotlinLogging.logger
+import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import java.nio.file.Path
@@ -86,44 +89,43 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         val dbSeries = if (scan.series != null) getOrCreateSeries(scan, dbAuthor) else null
         val dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
 
+        val dbList = if (dbSeries != null) listOf(dbSeries) else listOf<Series>()
+
         return book.apply {
             title = scan.book
-            author = dbAuthor
-            date = scan.date
+            authors = SizedCollection(dbAuthor)
             language = scan.language
             description = scan.description
             narrator = scan.narrator
-            series = dbSeries
-            seriesIndex = scan.seriesIndex
-            cover = dbImage?.id
+            series = SizedCollection(dbList)
         }
     }
 
     private fun createBook(scan: AudioFileAnalysisResult, dbAuthor: Author): Book {
         val dbSeries = if (scan.series != null) getOrCreateSeries(scan, dbAuthor) else null
         val dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
+        val dbList = if (dbSeries != null) listOf(dbSeries) else listOf<Series>()
+
         return Book.new {
             title = scan.book
-            author = dbAuthor
-            date = scan.date
+            authors = SizedCollection(dbAuthor)
             language = scan.language
             description = scan.description
             narrator = scan.narrator
-            series = dbSeries
-            seriesIndex = scan.seriesIndex
-            cover = dbImage?.id
+            series = SizedCollection(dbList)
+            coverID = dbImage?.id
         }
     }
 
     private fun getOrCreateSeries(scan: AudioFileAnalysisResult, dbAuthor: Author): Series {
         val series = Series.findByName(scan.series!!)
         return series?.apply {
-            author = dbAuthor
+            authors = SizedCollection(dbAuthor)
         } ?: run {
             log.info("Created series: ${scan.series}")
             Series.new {
                 title = scan.series!!
-                author = dbAuthor
+                authors = SizedCollection(dbAuthor)
             }
         }
     }

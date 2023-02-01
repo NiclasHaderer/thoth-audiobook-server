@@ -1,6 +1,8 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.common.extensions.findOne
+import io.thoth.database.access.hasBeenUpdated
+import io.thoth.database.access.markAsTouched
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
 import io.thoth.server.config.ThothConfig

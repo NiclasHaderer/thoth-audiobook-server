@@ -2,6 +2,8 @@ package io.thoth.server.api.images
 
 import io.ktor.http.*
 import io.ktor.server.routing.*
+import io.thoth.database.access.getById
+import io.thoth.database.access.getMultiple
 import io.thoth.database.tables.Image
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.binaryResponse

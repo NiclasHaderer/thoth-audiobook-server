@@ -81,7 +81,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
         route("$endPath/") {
             method(method) {
                 handle {
-                    call.respondRedirect(call.request.uri.slice(0..call.request.uri.length -2), true)
+                    call.respondRedirect(call.request.uri.slice(0..call.request.uri.length - 2), true)
                 }
             }
         }

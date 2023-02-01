@@ -8,7 +8,7 @@ interface ISeriesModel {
     val title: String
     val amount: Long
     val description: String?
-    val author: NamedId
+    val authors: List<NamedId>
     val images: List<UUID>
     val updateTime: LocalDateTime
 }
@@ -18,7 +18,7 @@ class SeriesModel(
     override val title: String,
     override val amount: Long,
     override val description: String?,
-    override val author: NamedId,
+    override val authors: List<NamedId>,
     override val images: List<UUID>,
     override val updateTime: LocalDateTime,
 ) : ISeriesModel
@@ -37,7 +37,7 @@ class SeriesModelWithBooks(
     val position: Int,
     override val description: String?,
     val books: List<IBookModel>,
-    override val author: NamedId,
+    override val authors: List<NamedId>,
     override val images: List<UUID>,
     override val updateTime: LocalDateTime,
 
@@ -63,7 +63,7 @@ class SeriesModelWithBooks(
                 narrators = narrators,
                 description = series.description,
                 books = books,
-                author = series.author,
+                authors = series.authors,
                 images = series.images,
                 updateTime = series.updateTime
             )

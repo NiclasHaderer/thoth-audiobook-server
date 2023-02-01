@@ -2,11 +2,7 @@ package io.thoth.metadata.audible
 
 import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.metadata.audible.client.AudibleRegions
-import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
-import io.thoth.metadata.audible.models.AudibleSearchAuthorImpl
-import io.thoth.metadata.audible.models.AudibleSearchBookImpl
-import io.thoth.metadata.audible.models.AudibleSearchSeriesImpl
-import io.thoth.metadata.audible.models.AudibleSeriesImpl
+import io.thoth.metadata.audible.models.*
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import java.time.LocalDate

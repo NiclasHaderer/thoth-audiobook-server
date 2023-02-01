@@ -1,19 +1,16 @@
-package io.thoth.server.db.access
+package io.thoth.database.access
 
 import io.thoth.common.extensions.findOne
-import io.thoth.common.extensions.get
-import io.thoth.common.extensions.isTrue
 import io.thoth.database.tables.Book
 import io.thoth.database.tables.Series
-import io.thoth.database.tables.TBooks
 import io.thoth.database.tables.TSeries
 import io.thoth.models.BookModel
 import io.thoth.models.NamedId
 import io.thoth.models.SeriesModel
 import io.thoth.models.SeriesModelWithBooks
-import io.thoth.server.config.ThothConfig
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
+import java.time.LocalDateTime
 import java.util.*
 
 fun Series.Companion.getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC): List<SeriesModel> {
@@ -44,19 +41,15 @@ fun Series.Companion.findByName(seriesTitle: String): Series? {
 }
 
 fun Series.toModel(): SeriesModel {
-    val preferMeta = get<ThothConfig>().preferEmbeddedMetadata
 
-    val books = Book.find { TBooks.series eq id.value }
     return SeriesModel(
         id = id.value,
-        title = preferMeta.isTrue(linkedTo?.title).otherwise(title),
+        title = title,
         amount = books.count(),
-        description = preferMeta.isTrue(linkedTo?.description).otherwise(description),
-        updateTime = updateTime,
-        author = NamedId(
-            name = author.name,
-            id = author.id.value
-        ),
-        images = books.mapNotNull { it.cover?.value }
+        description = description,
+        // TODO
+        updateTime = LocalDateTime.now(),
+        authors = authors.map { NamedId(it.name, it.id.value) },
+        images = books.mapNotNull { it.coverID?.value }.distinctBy { it }
     )
 }

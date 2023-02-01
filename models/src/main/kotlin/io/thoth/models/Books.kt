@@ -10,9 +10,9 @@ interface IBookModel {
     val date: LocalDate?
     val language: String?
     val description: String?
-    val author: NamedId
+    val authors: List<NamedId>
     val narrator: String?
-    val series: TitledId?
+    val series: List<TitledId>
     val seriesIndex: Float?
     val cover: UUID?
     val updateTime: LocalDateTime
@@ -24,9 +24,9 @@ class BookModel(
     override val date: LocalDate?,
     override val language: String?,
     override val description: String?,
-    override val author: NamedId,
+    override val authors: List<NamedId>,
     override val narrator: String?,
-    override val series: TitledId?,
+    override val series: List<TitledId>,
     override val seriesIndex: Float?,
     override val cover: UUID?,
     override val updateTime: LocalDateTime,
@@ -38,9 +38,9 @@ class BookModelWithTracks(
     override val date: LocalDate?,
     override val language: String?,
     override val description: String?,
-    override val author: NamedId,
+    override val authors: List<NamedId>,
     override val narrator: String?,
-    override val series: TitledId?,
+    override val series: List<TitledId>,
     override val seriesIndex: Float?,
     override val cover: UUID?,
     val position: Long,
@@ -64,7 +64,7 @@ class BookModelWithTracks(
                 description = book.description,
                 position = position,
                 tracks = sortedTracks,
-                author = book.author,
+                authors = book.authors,
                 narrator = book.narrator,
                 series = book.series,
                 updateTime = book.updateTime,

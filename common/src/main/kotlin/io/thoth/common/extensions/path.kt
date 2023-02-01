@@ -29,7 +29,7 @@ fun Path.parentName() = this.parent.name
 fun Path.grandParentName() = this.parent.parent.name
 fun Path.grandGrandParentName() = this.parent.parent.parent.name
 
-fun Path.replaceParts(parts: List<String>): Path{
+fun Path.replaceParts(parts: List<String>): Path {
     var result = this
     parts.forEach { result = result.replacePart(it) }
     return result
