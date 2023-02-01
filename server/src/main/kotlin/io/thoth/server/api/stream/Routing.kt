@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.thoth.database.access.getById
 import io.thoth.database.tables.Track
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.fileResponse

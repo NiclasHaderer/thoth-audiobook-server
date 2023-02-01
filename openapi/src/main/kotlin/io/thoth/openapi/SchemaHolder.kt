@@ -6,20 +6,8 @@ import io.swagger.v3.core.converter.ModelConverters
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.core.util.RefUtils
 import io.swagger.v3.core.util.Yaml
-import io.swagger.v3.oas.models.Components
-import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.Operation
-import io.swagger.v3.oas.models.PathItem
-import io.swagger.v3.oas.models.Paths
-import io.swagger.v3.oas.models.media.ArraySchema
-import io.swagger.v3.oas.models.media.BooleanSchema
-import io.swagger.v3.oas.models.media.Content
-import io.swagger.v3.oas.models.media.DateSchema
-import io.swagger.v3.oas.models.media.DateTimeSchema
-import io.swagger.v3.oas.models.media.IntegerSchema
-import io.swagger.v3.oas.models.media.MediaType
-import io.swagger.v3.oas.models.media.Schema
-import io.swagger.v3.oas.models.media.StringSchema
+import io.swagger.v3.oas.models.*
+import io.swagger.v3.oas.models.media.*
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
@@ -88,7 +76,7 @@ object SchemaHolder {
                 HttpMethod.Patch -> pathItem.patch = operation
             }
 
-            if(components == null){
+            if (components == null) {
                 components = Components()
                 components.schemas = mutableMapOf()
             }

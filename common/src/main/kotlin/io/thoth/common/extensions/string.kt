@@ -24,7 +24,7 @@ internal fun decodeDataURL(dataUrl: String): ByteArray {
 suspend fun String.uriToFile(): ByteArray = imageFromString(this)
 
 
-fun String.replaceAll(values: List<Regex>, newValue: String) : String {
+fun String.replaceAll(values: List<Regex>, newValue: String): String {
     var result = this
     values.forEach { result = result.replace(it, newValue) }
     return result

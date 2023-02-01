@@ -31,6 +31,7 @@ internal class WebUiServer(private val config: WebUiConfig) {
                     SchemaHolder.json
                 }
             }
+
             OpenAPISchemaType.YAML -> {
                 call.respondText(ContentType.Text.Plain, HttpStatusCode.OK) {
                     SchemaHolder.yaml

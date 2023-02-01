@@ -1,10 +1,6 @@
 package io.thoth.metadata.audible.models
 
-import io.thoth.metadata.MetadataLanguage
-import io.thoth.metadata.MetadataSearchCount
-import io.thoth.metadata.SearchAuthorMetadata
-import io.thoth.metadata.SearchBookMetadata
-import io.thoth.metadata.SearchSeriesMetadata
+import io.thoth.metadata.*
 import java.time.LocalDate
 
 data class AudibleSearchAuthorImpl(

@@ -1,14 +1,11 @@
-package io.thoth.server.db.access
+package io.thoth.database.access
 
 import io.thoth.common.extensions.findOne
-import io.thoth.common.extensions.get
-import io.thoth.common.extensions.isTrue
 import io.thoth.database.tables.Author
 import io.thoth.database.tables.Book
 import io.thoth.database.tables.TAuthors
 import io.thoth.models.AuthorModel
 import io.thoth.models.AuthorModelWithBooks
-import io.thoth.server.config.ThothConfig
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
 import java.util.*
@@ -42,12 +39,10 @@ fun Author.Companion.findByName(authorName: String): Author? {
 }
 
 fun Author.toModel(): AuthorModel {
-    val preferMeta = get<ThothConfig>().preferEmbeddedMetadata
-
     return AuthorModel(
         id = id.value,
-        name = preferMeta.isTrue(linkedTo?.name).otherwise(name),
-        biography = preferMeta.isTrue(linkedTo?.biography).otherwise(biography),
-        image = preferMeta.isTrue(linkedTo?.imageId?.value).otherwise(imageId?.value),
+        name = name,
+        biography = biography,
+        image = imageID?.value,
     )
 }

@@ -17,7 +17,6 @@ import io.thoth.server.config.ThothConfig
 import io.thoth.server.config.loadConfig
 import io.thoth.server.db.connectToDatabase
 import io.thoth.server.db.migrateDatabase
-import io.thoth.server.file.persister.withAutomaticMetadata
 import io.thoth.server.file.scanner.FileWatcher
 import io.thoth.server.file.scanner.RecursiveScan
 import io.thoth.server.koin.configureKoin
@@ -28,36 +27,39 @@ import kotlinx.coroutines.launch
 
 fun main() {
     disableJAudioTaggerLogs()
-    val config = loadConfig()
     embeddedServer(
-        Netty, port = config.port, watchPaths = listOf("classes"), host = "0.0.0.0"
-    ) {
-        configureKoin(config)
-
-        try {
-            connectToDatabase().also {
-                migrateDatabase()
-            }.also {
-                withAutomaticMetadata()
-            }.also {
-                launch {
-                    get<FileWatcher>().watch()
-                }
-            }.also {
-                launch {
-                    RecursiveScan().start()
-                }
-            }
-            webServer(config)
-        } catch (e: Exception) {
-            log.error("Could not start server", e)
-            shutdown()
-        }
-
-    }.start(wait = true)
+        Netty,
+        port = loadConfig().port,
+        watchPaths = listOf("classes"),
+        host = "0.0.0.0",
+        module = Application::applicationModule
+    ).start(wait = true)
 }
 
-fun Application.webServer(config: ThothConfig) {
+fun Application.applicationModule() {
+    val config = loadConfig()
+    configureKoin(config)
+
+    try {
+        connectToDatabase().also {
+            migrateDatabase()
+        }.also {
+            launch {
+                get<FileWatcher>().watch()
+            }
+        }.also {
+            launch {
+                RecursiveScan().start()
+            }
+        }
+        server(config)
+    } catch (e: Exception) {
+        log.error("Could not start server", e)
+        shutdown()
+    }
+}
+
+fun Application.server(config: ThothConfig) {
     configureStatusPages()
     configureRouting()
     configureOpenApi()
@@ -78,4 +80,3 @@ fun Application.webServer(config: ThothConfig) {
         }
     }
 }
-

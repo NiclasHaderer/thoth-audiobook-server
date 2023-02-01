@@ -2,6 +2,8 @@ package io.thoth.server.api.audiobooks.books
 
 import io.ktor.http.*
 import io.ktor.server.routing.*
+import io.thoth.database.access.getDetailedById
+import io.thoth.database.access.getMultiple
 import io.thoth.database.tables.Book
 import io.thoth.models.BookModel
 import io.thoth.models.BookModelWithTracks
@@ -11,8 +13,6 @@ import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
 import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
-import io.thoth.server.db.access.getDetailedById
-import io.thoth.server.db.access.getMultiple
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 

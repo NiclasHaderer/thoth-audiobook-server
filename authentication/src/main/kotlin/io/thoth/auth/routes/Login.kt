@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.thoth.auth.AuthConfig
 import io.thoth.auth.JwtPair
 import io.thoth.auth.generateJwtForUser
+import io.thoth.database.access.getByName
 import io.thoth.database.tables.User
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.serverError

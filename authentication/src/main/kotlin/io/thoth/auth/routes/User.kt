@@ -2,6 +2,9 @@ package io.thoth.auth.routes
 
 import io.ktor.http.*
 import io.thoth.auth.thothPrincipal
+import io.thoth.database.access.getById
+import io.thoth.database.access.getByName
+import io.thoth.database.access.toModel
 import io.thoth.database.tables.User
 import io.thoth.models.UserModel
 import io.thoth.openapi.routing.RouteHandler
