@@ -3,6 +3,7 @@ val koinVersion: String by project
 val fuzzyWuzzyVersion: String by project
 val reflectVersion: String by project
 val exposedVersion: String by project
+val kotlinLogging: String by project
 
 plugins {
     kotlin("jvm") version "1.6.21"
@@ -32,4 +33,6 @@ dependencies {
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     implementation("io.insert-koin:koin-ktor:$koinVersion")
+    // Logging
+    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
 }

@@ -12,6 +12,7 @@ val sqliteVersion: String by project
 val koinVersion: String by project
 val tsGeneratorVersion: String by project
 val kotlinLogging: String by project
+val slf4jVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.6.21"
@@ -92,6 +93,7 @@ dependencies {
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
+    implementation("org.slf4j:jul-to-slf4j:$slf4jVersion")
 
     // Ktor
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
