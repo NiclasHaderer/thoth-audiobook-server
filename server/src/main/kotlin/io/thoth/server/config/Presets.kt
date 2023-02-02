@@ -7,7 +7,9 @@ object DevThothConfig : ThothConfig {
     override val ignoreFile: String by lazy {
         System.getenv("THOTH_IGNORE_FILE") ?: ".thothignore"
     }
-    override val production = false
+    override val production: Boolean by lazy {
+        System.getenv("THOTH_PRODUCTION")?.toBooleanStrictOrNull() ?: false
+    }
 
     override val audioFileLocations: List<String> by lazy {
         System.getenv("THOTH_AUDIO_FILE_LOCATION")?.split(",") ?: listOf("test-resources")
@@ -21,8 +23,13 @@ object DevThothConfig : ThothConfig {
         System.getenv("THOTH_PORT")?.toIntOrNull() ?: 8080
     }
 
-    override val preferEmbeddedMetadata: Boolean
-        get() = true
+    override val domain: String by lazy {
+        System.getenv("THOTH_DOMAIN") ?: "localhost"
+    }
+
+    override val TLS: Boolean by lazy {
+        System.getenv("THOTH_TLS")?.toBooleanStrictOrNull() ?: false
+    }
 
     override val audibleRegion: AudibleRegions
         get() = AudibleRegions.us

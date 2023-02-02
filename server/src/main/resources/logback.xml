@@ -9,12 +9,11 @@
     </root>
 
     <!-- Ktor -->
-    <logger name="io.thoth.server.A" level="ERROR"/>
+    <logger name="io.ktor" level="WARN"/>
+    <!-- Audiotagger -->
     <logger name="org.jaudiotagger.tag" level="WARN"/>
     <!-- OpenAPI -->
-    <logger name="io.ktor.server.routing.Route" level="WARN"/>
-    <logger name="io.swagger.v3.core.converter" level="WARN"/>
-    <logger name="io.swagger.v3.core.jackson.ModelResolver" level="WARN"/>
+    <logger name="io.swagger.v3.core" level="WARN"/>
     <!--  Watchservice  -->
     <logger name="io.methvin.watcher.DirectoryWatcher" level="INFO"/>
     <!-- Webserver -->
@@ -25,7 +24,5 @@
     <logger name="org.reflections" level="WARN"/>
     <!-- DB connector -->
     <logger name="Exposed" level="INFO"/>
-    <!-- Reload -->
-    <!--    <logger name="ktor.application" level="INFO"/>-->
 
 </configuration>

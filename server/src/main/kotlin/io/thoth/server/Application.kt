@@ -1,5 +1,6 @@
 package io.thoth.server
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -64,7 +65,10 @@ fun Application.server(config: ThothConfig) {
     configureStatusPages()
     configureRouting()
     configureOpenApi()
-    configureAuthentication(config.configDirectory)
+    configureAuthentication(config.configDirectory) {
+        domain = "127.0.0.1:${config.port}"
+        protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
+    }
     configurePartialContent()
     configureCORS()
     configureSockets()

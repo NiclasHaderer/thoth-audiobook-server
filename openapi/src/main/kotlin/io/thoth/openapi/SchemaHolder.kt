@@ -11,6 +11,9 @@ import io.swagger.v3.oas.models.media.*
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
+import io.thoth.openapi.responses.BinaryResponse
+import io.thoth.openapi.responses.FileResponse
+import io.thoth.openapi.responses.RedirectResponse
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -58,8 +61,17 @@ object SchemaHolder {
         requestBody: KClass<*>,
         params: KClass<*>,
         responseBody: KClass<*>,
-        responseStatus: HttpStatusCode
+        responseStatus: HttpStatusCode? = null
     ) {
+        val completeResponseStatus: HttpStatusCode = responseStatus ?: if (responseBody == Unit::class) {
+            HttpStatusCode.NoContent
+        } else if (method == HttpMethod.Post) {
+            HttpStatusCode.Created
+        } else {
+            HttpStatusCode.OK
+        }
+
+
         modify {
             if (paths == null) paths = Paths()
 
@@ -85,35 +97,32 @@ object SchemaHolder {
             generateSchema(requestBody)?.also { schemaHolder.putAll(it) }
 
             operation.requestBody(
-                RequestBody().description("TODO").content(
-                    Content().addMediaType("application/json", MediaType().schema(
-                        Schema<Any>().also {
-                            it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
-                        }
-                    ))
-                )
+                RequestBody().description("TODO")
+                    .content(Content().addMediaType("application/json", MediaType().schema(Schema<Any>().also {
+                        it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
+                    })))
             )
 
 
             generateSchema(responseBody)?.also { schemaHolder.putAll(it) }
             operation.responses = ApiResponses().addApiResponse(
-                responseStatus.value.toString(),
-                ApiResponse()
-                    .description("TODO")
-                    .content(
-                        Content().addMediaType(
-                            "application/json",
-                            MediaType().schema(Schema<Any>().also {
-                                it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
-                            })
-                        )
+                completeResponseStatus.value.toString(), ApiResponse().description("TODO").content(
+                    Content().addMediaType(
+                        "application/json", MediaType().schema(Schema<Any>().also {
+                            it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
+                        })
                     )
+                )
             )
         }
     }
 
     private fun generateSchema(clazz: KClass<*>): Map<String, Schema<*>>? {
         return getEnumSchema(clazz) ?: when (clazz) {
+            Unit::class -> mapOf(clazz.java.simpleName to StringSchema().also { it.maxLength = 0 })
+            BinaryResponse::class -> mapOf(clazz.java.simpleName to BinarySchema())
+            RedirectResponse::class -> mapOf(clazz.java.simpleName to StringSchema())
+            FileResponse::class -> mapOf(clazz.java.simpleName to FileSchema())
             String::class -> mapOf(clazz.java.simpleName to StringSchema())
             Boolean::class -> mapOf(clazz.java.simpleName to BooleanSchema())
             java.lang.Boolean::class -> mapOf(clazz.java.simpleName to BooleanSchema())
