@@ -9,6 +9,7 @@ import io.thoth.models.*
 import io.thoth.server.api.audiobooks.authors.PatchAuthor
 import io.thoth.server.api.audiobooks.books.PatchBook
 import io.thoth.server.api.audiobooks.series.PatchSeries
+import io.thoth.server.ws.ChangeEvent
 import me.ntrrgc.tsGenerator.TypeScriptGenerator
 import java.io.File
 import java.nio.file.Files
@@ -16,7 +17,6 @@ import java.nio.file.Path
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import javax.swing.event.ChangeEvent
 import kotlin.reflect.KClass
 
 fun main() {

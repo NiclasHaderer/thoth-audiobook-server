@@ -38,7 +38,7 @@ private object DatabaseFactory : KoinComponent {
 
     fun migrate() {
         log.info("Migrating database")
-        DatabaseMigrator(dbInstance).runMigrations()
+        DatabaseMigrator(dbInstance).updateDatabase()
         log.info("Migrations done")
     }
 
