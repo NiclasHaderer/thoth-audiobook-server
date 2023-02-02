@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 val fuzzyWuzzyVersion: String by project
 val fileWatcherVersion: String by project
 val ktorVersion: String by project
@@ -15,8 +17,8 @@ val kotlinLogging: String by project
 val slf4jVersion: String by project
 
 plugins {
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.serialization") version "1.6.21"
+    kotlin("jvm") version "1.8.0"
+    kotlin("plugin.serialization") version "1.8.0"
     application
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
@@ -33,13 +35,12 @@ application {
 }
 
 // For kotlin annotations
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions {
         freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-        freeCompilerArgs = freeCompilerArgs + "-Xcontext-receivers"
         jvmTarget = "11"
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
+        apiVersion = "1.8"
+        languageVersion = "1.8"
     }
 }
 

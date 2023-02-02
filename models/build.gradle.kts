@@ -1,13 +1,9 @@
-val openApiVersion: String by project
-val ktorVersion: String by project
-
 plugins {
     application
-    kotlin("jvm") version "1.6.21"
+    kotlin("jvm") version "1.8.0"
 }
 
 repositories {
-    maven("https://jitpack.io")
     mavenCentral()
 }
 

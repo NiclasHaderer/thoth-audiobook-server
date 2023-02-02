@@ -6,7 +6,7 @@ val sqliteVersion: String by project
 val logbackVersion: String by project
 
 plugins {
-    kotlin("jvm") version "1.6.21"
+    kotlin("jvm") version "1.8.0"
 }
 
 repositories {
