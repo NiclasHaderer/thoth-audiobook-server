@@ -1,4 +1,4 @@
-package io.thoth.server.utils
+package io.thoth.common.utils
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred

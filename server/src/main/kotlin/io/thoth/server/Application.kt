@@ -19,14 +19,15 @@ import io.thoth.server.db.connectToDatabase
 import io.thoth.server.db.migrateDatabase
 import io.thoth.server.file.scanner.FileWatcher
 import io.thoth.server.file.scanner.RecursiveScan
-import io.thoth.server.koin.configureKoin
-import io.thoth.server.logging.disableJAudioTaggerLogs
 import io.thoth.server.plugins.*
 import kotlinx.coroutines.launch
+import org.slf4j.bridge.SLF4JBridgeHandler
+import java.util.logging.LogManager
 
 
 fun main() {
-    disableJAudioTaggerLogs()
+    LogManager.getLogManager().reset()
+    SLF4JBridgeHandler.install()
     embeddedServer(
         Netty,
         port = loadConfig().port,

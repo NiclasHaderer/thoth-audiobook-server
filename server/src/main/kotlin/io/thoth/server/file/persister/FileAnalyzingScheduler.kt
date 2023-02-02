@@ -1,9 +1,9 @@
 package io.thoth.server.file.persister
 
+import io.thoth.common.utils.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.scanner.RecursiveScan
-import io.thoth.server.utils.Scheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel

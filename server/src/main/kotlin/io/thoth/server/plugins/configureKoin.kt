@@ -1,4 +1,4 @@
-package io.thoth.server.koin
+package io.thoth.server.plugins
 
 import io.ktor.server.application.*
 import io.thoth.metadata.MetadataProvider
