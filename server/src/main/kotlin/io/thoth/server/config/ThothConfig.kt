@@ -5,13 +5,14 @@ import io.thoth.metadata.audible.client.AudibleRegions
 interface ThothConfig {
     val ignoreFile: String
     val production: Boolean
+    val domain: String
+    val TLS: Boolean
     val audioFileLocations: List<String>
     val analyzerThreads: Int
     val port: Int
     val audibleRegion: AudibleRegions
     val database: DatabaseConnection
     val configDirectory: String
-    val preferEmbeddedMetadata: Boolean
 }
 
 interface DatabaseConnection {
@@ -28,10 +29,11 @@ data class ThothConfigImpl(
     override val audioFileLocations: List<String>,
     override val analyzerThreads: Int,
     override val port: Int,
+    override val domain: String,
+    override val TLS: Boolean,
     override val audibleRegion: AudibleRegions,
     override val database: DatabaseConnectionImpl,
     override val configDirectory: String,
-    override val preferEmbeddedMetadata: Boolean
 ) : ThothConfig
 
 data class DatabaseConnectionImpl(

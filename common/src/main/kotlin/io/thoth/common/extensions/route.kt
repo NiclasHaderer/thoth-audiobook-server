@@ -1,5 +1,6 @@
 package io.thoth.common.extensions
 
+import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 
 val Route.fullPath: String
@@ -7,7 +8,9 @@ val Route.fullPath: String
         var fullPath = selector.toString()
         var routeParent = parent
         while (routeParent != null) {
-            fullPath = "${routeParent.selector}/$fullPath"
+            if (routeParent.selector !is AuthenticationRouteSelector) {
+                fullPath = "${routeParent.selector}/$fullPath"
+            }
             routeParent = routeParent.parent
         }
         return fullPath

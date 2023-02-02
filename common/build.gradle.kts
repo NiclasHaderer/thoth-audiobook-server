@@ -33,6 +33,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     implementation("io.insert-koin:koin-ktor:$koinVersion")
+    implementation("io.ktor:ktor-server-auth:$ktorVersion")
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
 }

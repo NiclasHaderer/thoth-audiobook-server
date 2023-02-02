@@ -20,7 +20,8 @@ typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
 
 suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHandler.wrapInnerRequest(
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE,
-    params: PARAMS
+    params: PARAMS,
+    method: HttpMethod
 ) {
     val parsedBody: BODY = if (BODY::class === Unit::class) {
         Unit as BODY
@@ -41,6 +42,18 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
         is RedirectResponse -> return call.respondRedirect(response.url)
     }
 
+    if (call.response.status() == null) {
+        val newStatusCode = if (RESPONSE::class == Unit::class) {
+            HttpStatusCode.NoContent
+        } else if (method == HttpMethod.Post) {
+            HttpStatusCode.Created
+        } else {
+            HttpStatusCode.OK
+        }
+        call.response.status(newStatusCode)
+    }
+
+
     if (RESPONSE::class == Unit::class) {
         call.respond("")
     } else {
@@ -58,15 +71,8 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     lateinit var builtRoute: Route
 
     val res = PARAMS::class.annotations.find { a -> a is Resource } as? Resource
-    val completePathWithRes = if (res != null) {
-        "$fullPath/${res.path}"
-    } else {
-        fullPath
-    }
-
     val endPath = res?.path ?: ""
-
-    SchemaHolder.addRouteToApi(fullPath, method, BODY::class, PARAMS::class, RESPONSE::class, HttpStatusCode.OK)
+    SchemaHolder.addRouteToApi(fullPath, method, BODY::class, PARAMS::class, RESPONSE::class)
 
     // Redirect different trailing / to the same route
     if (endPath.endsWith("/")) {
@@ -89,12 +95,12 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
 
     if (PARAMS::class == Unit::class) {
         builtRoute = method(method) {
-            handle { wrapInnerRequest(callback, Unit as PARAMS) }
+            handle { wrapInnerRequest(callback, Unit as PARAMS, method) }
         }
     } else {
         resource<PARAMS> {
             builtRoute = method(method) {
-                resourceHandle<PARAMS> { params -> wrapInnerRequest(callback, params) }
+                resourceHandle<PARAMS> { params -> wrapInnerRequest(callback, params, method) }
             }
         }
     }

@@ -11,36 +11,37 @@ import io.thoth.openapi.routing.patch
 import io.thoth.openapi.routing.post
 
 internal fun Application.authRoutes(config: AuthConfig) {
-
     routing {
-        route("login") {
-            post(login(config))
-        }
-
-        route("register") {
-            post(RouteHandler::register)
-        }
-
-        route(".well-known/jwks.json") {
-            get(jwksEndpoint(config))
-        }
-
-        adminUserAuth {
-            route("user") {
-                patch(RouteHandler::modifyUser)
+        route(config.basePath) {
+            route("login") {
+                post(login(config))
             }
-        }
 
-        userAuth {
-            route("user") {
+            route("register") {
+                post(RouteHandler::register)
+            }
 
-                // TODO add ability to logout everywhere
-                get(RouteHandler::getUser)
-                post(RouteHandler::changeUsername)
+            route(".well-known/jwks.json") {
+                get(jwksEndpoint(config))
+            }
 
-                route("password") {
-                    // TODO logout user if password gets changed
-                    post(RouteHandler::changePassword)
+            adminUserAuth {
+                route("user") {
+                    patch(RouteHandler::modifyUser)
+                }
+            }
+
+            userAuth {
+                route("user") {
+
+                    // TODO add ability to logout everywhere
+                    get(RouteHandler::getUser)
+                    post(RouteHandler::changeUsername)
+
+                    route("password") {
+                        // TODO logout user if password gets changed
+                        post(RouteHandler::changePassword)
+                    }
                 }
             }
         }
