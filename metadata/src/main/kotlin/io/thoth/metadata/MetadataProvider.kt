@@ -1,5 +1,7 @@
 package io.thoth.metadata
 
+import io.thoth.metadata.responses.*
+
 interface MetadataProvider {
     val uniqueName: String
 
@@ -10,17 +12,17 @@ interface MetadataProvider {
         narrator: String? = null,
         language: MetadataLanguage? = null,
         pageSize: MetadataSearchCount? = null,
-    ): List<SearchBookMetadata>
+    ): List<MetadataSearchBook>
 
-    suspend fun getAuthorByID(providerId: String, authorId: String): AuthorMetadata?
+    suspend fun getAuthorByID(providerId: String, authorId: String): MetadataAuthor?
 
-    suspend fun getAuthorByName(authorName: String): List<AuthorMetadata>
+    suspend fun getAuthorByName(authorName: String): List<MetadataAuthor>
 
-    suspend fun getBookByID(providerId: String, bookId: String): BookMetadata?
+    suspend fun getBookByID(providerId: String, bookId: String): MetadataBook?
 
-    suspend fun getBookByName(bookName: String, authorName: String? = null): List<BookMetadata>
+    suspend fun getBookByName(bookName: String, authorName: String? = null): List<MetadataBook>
 
-    suspend fun getSeriesByID(providerId: String, seriesId: String): SeriesMetadata?
+    suspend fun getSeriesByID(providerId: String, seriesId: String): MetadataSeries?
 
-    suspend fun getSeriesByName(seriesName: String, authorName: String? = null): List<SeriesMetadata>
+    suspend fun getSeriesByName(seriesName: String, authorName: String? = null): List<MetadataSeries>
 }

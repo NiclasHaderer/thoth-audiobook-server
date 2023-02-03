@@ -14,6 +14,10 @@ internal class SeriesId(
 
 class PatchSeries(
     val title: String,
-    val author: String?,
-    val description: String?,
+    val provider: String?,
+    val providerID: String?,
+    val totalBooks: Int?,
+    val primaryWorks: Int?,
+    val cover: UUID?,
+    val description: String?
 )

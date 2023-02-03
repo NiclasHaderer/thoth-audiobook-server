@@ -3,11 +3,7 @@ package io.thoth.database.access
 import io.thoth.database.tables.*
 import io.thoth.models.BookModel
 import io.thoth.models.BookModelWithTracks
-import io.thoth.models.NamedId
-import io.thoth.models.TitledId
 import org.jetbrains.exposed.sql.*
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.*
 
 fun Book.Companion.getById(bookId: UUID): BookModel? {
@@ -15,16 +11,23 @@ fun Book.Companion.getById(bookId: UUID): BookModel? {
 }
 
 fun Book.Companion.getDetailedById(bookId: UUID, order: SortOrder = SortOrder.ASC): BookModelWithTracks? {
-    val book = getById(bookId) ?: return null
+    val book = findById(bookId) ?: return null
     val tracks = Track.forBook(bookId)
-    val sortPosition = Book.all().orderBy(TBooks.title.lowerCase() to order).count()
-    return BookModelWithTracks.fromModel(book, tracks, sortPosition)
+    return BookModelWithTracks.fromModel(
+        book.toModel(),
+        tracks,
+        book.authors.orderBy(TAuthors.name.lowerCase() to order).map { it.toModel() },
+        book.series.orderBy(TSeries.title.lowerCase() to order).map { it.toModel() }
+    )
 }
 
 fun Book.Companion.forSeries(seriesId: UUID, order: SortOrder = SortOrder.ASC): List<BookModel> {
-    return TSeriesBookMapping.select {
-        TSeriesBookMapping.series eq seriesId
-    }.map { it[TSeriesBookMapping.book] }.map { Book(it).toModel() }
+    return TSeriesBookMapping
+        .join(TBooks, JoinType.INNER, TSeriesBookMapping.book, TBooks.id)
+        .join(TSeries, JoinType.INNER, TSeriesBookMapping.series, TSeries.id)
+        .select { TSeriesBookMapping.series eq seriesId }
+        .orderBy(TSeriesBookMapping.seriesIndex to order)
+        .map { Book.wrap(it[TBooks.id], it).toModel() }
 }
 
 fun Book.Companion.findByName(bookTitle: String, author: Author): Book? {
@@ -57,17 +60,15 @@ fun Book.toModel(): BookModel {
     return BookModel(
         id = id.value,
         title = title,
-        // TODO check if this is correct
-        date = LocalDate.now(),
-        language = language,
         description = description,
-        authors = authors.map { NamedId(it.name, it.id.value) },
-        narrator = narrator,
-        series = series.map { TitledId(it.title, it.id.value) },
-        // TODO series index is not stored in an accessible way for the meta book
-        seriesIndex = -1f,
+        providerID = providerID,
+        provider = provider,
+        providerRating = providerRating,
         cover = coverID?.value,
-        // TODO check if this is correct
-        updateTime = LocalDateTime.now(),
+        published = published,
+        narrator = narrator,
+        isbn = isbn,
+        language = language,
+        publisher = publisher,
     )
 }

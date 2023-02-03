@@ -1,9 +1,10 @@
 package io.thoth.metadata.audible.client
 
-import io.thoth.metadata.*
+import io.thoth.metadata.MetadataProvider
+import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.audible.models.AudibleSearchAmount
-import io.thoth.metadata.audible.models.AudibleSearchBookImpl
 import io.thoth.metadata.audible.models.AudibleSearchLanguage
+import io.thoth.metadata.responses.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -24,7 +25,7 @@ class AudibleClient(
         narrator: String?,
         language: MetadataLanguage?,
         pageSize: MetadataSearchCount?,
-    ): List<AudibleSearchBookImpl> {
+    ): List<MetadataSearchBookImpl> {
         return getAudibleSearchResult(
             region,
             keywords = keywords,
@@ -36,11 +37,11 @@ class AudibleClient(
         )?.filter { it.title != null && it.id.itemID != "search" } ?: listOf()
     }
 
-    override suspend fun getAuthorByID(providerId: String, authorId: String): AuthorMetadata? {
+    override suspend fun getAuthorByID(providerId: String, authorId: String): MetadataAuthorImpl? {
         return getAudibleAuthor(region, imageSize, authorId)
     }
 
-    override suspend fun getAuthorByName(authorName: String): List<AuthorMetadata> {
+    override suspend fun getAuthorByName(authorName: String): List<MetadataAuthorImpl> {
         val searchResult = search(author = authorName)
 
         return coroutineScope {
@@ -59,11 +60,11 @@ class AudibleClient(
         }
     }
 
-    override suspend fun getBookByID(providerId: String, bookId: String): BookMetadata? {
+    override suspend fun getBookByID(providerId: String, bookId: String): MetadataBookImpl? {
         return getAudibleBook(region, bookId)
     }
 
-    override suspend fun getBookByName(bookName: String, authorName: String?): List<BookMetadata> {
+    override suspend fun getBookByName(bookName: String, authorName: String?): List<MetadataBookImpl> {
         val searchResult = search(title = bookName, author = authorName)
 
         return coroutineScope {
@@ -79,11 +80,11 @@ class AudibleClient(
         }
     }
 
-    override suspend fun getSeriesByID(providerId: String, seriesId: String): SeriesMetadata? {
+    override suspend fun getSeriesByID(providerId: String, seriesId: String): MetadataSeriesImpl? {
         return getAudibleSeries(region, seriesId)
     }
 
-    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<SeriesMetadata> {
+    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<MetadataSeriesImpl> {
         val seriesResult = search(keywords = seriesName, author = authorName).filter { it.series?.name != null }
 
         return coroutineScope {

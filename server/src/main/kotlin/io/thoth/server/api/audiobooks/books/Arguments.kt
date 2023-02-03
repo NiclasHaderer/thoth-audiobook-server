@@ -3,6 +3,7 @@ package io.thoth.server.api.audiobooks.books
 import io.ktor.resources.*
 import io.thoth.common.serializion.kotlin.UUIDSerializer
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 import java.util.*
 
 @Serializable
@@ -13,13 +14,15 @@ internal class BookId(
 
 
 class PatchBook(
-    val title: String,
+    val title: String?,
+    val provider: String?,
+    val providerID: String?,
+    val providerRating: Float?,
+    val published: LocalDate?,
+    val publisher: String?,
     val language: String?,
     val description: String?,
-    val author: String,
     val narrator: String?,
-    val series: String?,
-    val seriesIndex: Float?,
-    val cover: String?,
-    val year: Int?,
+    val isbn: String?,
+    val cover: UUID?
 )

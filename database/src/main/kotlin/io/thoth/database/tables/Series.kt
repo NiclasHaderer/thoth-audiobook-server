@@ -12,7 +12,7 @@ object TSeries : UUIDTable("Series") {
     val providerID = varchar("providerID", 255).nullable()
     val totalBooks = integer("totalBooks").nullable()
     val primaryWorks = integer("primaryWorks").nullable()
-    val cover = reference("cover", TImages).nullable()
+    val coverID = reference("cover", TImages).nullable()
     val description = text("description").nullable()
 }
 
@@ -24,7 +24,7 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id) {
     var providerID by TSeries.providerID
     var totalBooks by TSeries.totalBooks
     var primaryWorks by TSeries.primaryWorks
-    var cover by TSeries.cover
+    var coverID by TSeries.coverID
     var description by TSeries.description
     var authors by Author via TSeriesAuthorMapping
     var books by Book via TSeriesBookMapping

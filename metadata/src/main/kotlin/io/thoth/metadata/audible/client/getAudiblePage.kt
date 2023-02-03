@@ -5,6 +5,8 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.thoth.metadata.audible.models.AudibleRegions
+import io.thoth.metadata.audible.models.getValue
 import mu.KotlinLogging.logger
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document

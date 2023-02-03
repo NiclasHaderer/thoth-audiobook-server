@@ -1,4 +1,4 @@
-package io.thoth.metadata.audible.client
+package io.thoth.metadata.audible.models
 
 
 enum class AudibleRegions {

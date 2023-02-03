@@ -1,6 +1,6 @@
 package io.thoth.server.config
 
-import io.thoth.metadata.audible.client.AudibleRegions
+import io.thoth.metadata.audible.models.AudibleRegions
 
 
 object DevThothConfig : ThothConfig {
