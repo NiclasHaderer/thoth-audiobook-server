@@ -2,6 +2,7 @@ package io.thoth.metadata
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.thoth.metadata.responses.*
 import kotlinx.coroutines.*
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import java.util.*
@@ -14,13 +15,15 @@ class MetadataWrapper constructor(
     private val separator = "--thṓth--"
 
     private val providerMap by lazy { providerList.associateBy { it.uniqueName } }
-    private val searchCache = Caffeine.newBuilder().maximumSize(1000).build<String, List<SearchBookMetadata>>()
-    private val authorNameCache = Caffeine.newBuilder().maximumSize(1000).build<String, List<AuthorMetadata>>()
-    private val seriesNameCache = Caffeine.newBuilder().maximumSize(1000).build<String, List<SeriesMetadata>>()
-    private val bookNameCache = Caffeine.newBuilder().maximumSize(1000).build<String, List<BookMetadata>>()
-    private val authorIdCache = Caffeine.newBuilder().maximumSize(1000).build<String, Optional<AuthorMetadata>>()
-    private val seriesIdCache = Caffeine.newBuilder().maximumSize(1000).build<String, Optional<SeriesMetadata>>()
-    private val bookIdCache = Caffeine.newBuilder().maximumSize(1000).build<String, Optional<BookMetadata>>()
+    private val searchCache = Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataSearchBook>>()
+    private val authorNameCache =
+        Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataAuthor>>()
+    private val seriesNameCache = Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataSeries>>()
+    private val bookNameCache = Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataBook>>()
+    private val authorIdCache =
+        Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataAuthor>>()
+    private val seriesIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataSeries>>()
+    private val bookIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataBook>>()
 
     override suspend fun search(
         keywords: String?,
@@ -29,7 +32,7 @@ class MetadataWrapper constructor(
         narrator: String?,
         language: MetadataLanguage?,
         pageSize: MetadataSearchCount?,
-    ): List<SearchBookMetadata> {
+    ): List<MetadataSearchBook> {
         val cacheKey = getKey(keywords, title, author, narrator, language, pageSize)
 
         return getOrSetCache(searchCache, cacheKey) {
@@ -44,7 +47,7 @@ class MetadataWrapper constructor(
         }
     }
 
-    override suspend fun getAuthorByID(providerId: String, authorId: String): AuthorMetadata? {
+    override suspend fun getAuthorByID(providerId: String, authorId: String): MetadataAuthor? {
         val cacheKey = getKey(authorId, providerId)
 
         return getOrSetCache(authorIdCache, cacheKey) {
@@ -54,7 +57,7 @@ class MetadataWrapper constructor(
         }.orElse(null)
     }
 
-    override suspend fun getBookByID(providerId: String, bookId: String): BookMetadata? {
+    override suspend fun getBookByID(providerId: String, bookId: String): MetadataBook? {
         val cacheKey = getKey(bookId, providerId)
         return getOrSetCache(bookIdCache, cacheKey) {
             val provider = getProvider(bookId) ?: return@getOrSetCache Optional.ofNullable(null)
@@ -63,7 +66,7 @@ class MetadataWrapper constructor(
         }.orElse(null)
     }
 
-    override suspend fun getSeriesByID(providerId: String, seriesId: String): SeriesMetadata? {
+    override suspend fun getSeriesByID(providerId: String, seriesId: String): MetadataSeries? {
         val cacheKey = getKey(seriesId, providerId)
         return getOrSetCache(seriesIdCache, cacheKey) {
             val provider = getProvider(seriesId) ?: return@getOrSetCache Optional.ofNullable(null)
@@ -72,7 +75,7 @@ class MetadataWrapper constructor(
         }.orElse(null)
     }
 
-    override suspend fun getAuthorByName(authorName: String): List<AuthorMetadata> {
+    override suspend fun getAuthorByName(authorName: String): List<MetadataAuthor> {
         val cacheKey = getKey(authorName)
 
         return getOrSetCache(authorNameCache, cacheKey) {
@@ -82,7 +85,7 @@ class MetadataWrapper constructor(
         }
     }
 
-    override suspend fun getBookByName(bookName: String, authorName: String?): List<BookMetadata> {
+    override suspend fun getBookByName(bookName: String, authorName: String?): List<MetadataBook> {
         val cacheKey = getKey(bookName, authorName)
         return getOrSetCache(bookNameCache, cacheKey) {
             val books = providerList.map { async { it.getBookByName(bookName, authorName) } }.awaitAll().flatten()
@@ -91,7 +94,7 @@ class MetadataWrapper constructor(
         }
     }
 
-    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<SeriesMetadata> {
+    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<MetadataSeries> {
         val cacheKey = getKey(seriesName, authorName)
         return getOrSetCache(seriesNameCache, cacheKey) {
             val series = providerList.map { async { it.getSeriesByName(seriesName, authorName) } }.awaitAll().flatten()

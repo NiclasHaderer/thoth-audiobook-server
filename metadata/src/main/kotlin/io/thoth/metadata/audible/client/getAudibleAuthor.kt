@@ -1,19 +1,19 @@
 package io.thoth.metadata.audible.client
 
-import io.thoth.metadata.AuthorMetadata
-import io.thoth.metadata.audible.models.AudibleAuthorImpl
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.thoth.metadata.audible.models.AudibleRegions
+import io.thoth.metadata.responses.MetadataAuthorImpl
 import org.jsoup.nodes.Element
 
 suspend fun getAudibleAuthor(
     regions: AudibleRegions,
     imageSize: Int,
     authorAsin: String
-): AuthorMetadata? {
+): MetadataAuthorImpl? {
 
     val document = getAudiblePage(regions, listOf("author", authorAsin)) ?: return null
     document.getElementById("product-list-a11y-skiplink-target") ?: return null
-    return AudibleAuthorImpl(
+    return MetadataAuthorImpl(
         link = document.location().split("?").first(),
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
         name = getAuthorName(document),

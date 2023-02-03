@@ -4,6 +4,9 @@ import io.ktor.http.*
 import io.thoth.common.extensions.appendOptional
 import io.thoth.common.extensions.replaceAll
 import io.thoth.metadata.audible.models.*
+import io.thoth.metadata.responses.MetadataSearchAuthorImpl
+import io.thoth.metadata.responses.MetadataSearchBookImpl
+import io.thoth.metadata.responses.MetadataSearchSeriesImpl
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -18,7 +21,7 @@ suspend fun getAudibleSearchResult(
     narrator: String? = null,
     language: AudibleSearchLanguage? = null,
     pageSize: AudibleSearchAmount? = null,
-): List<AudibleSearchBookImpl>? {
+): List<MetadataSearchBookImpl>? {
     val urlParams = Parameters.build {
         appendOptional("keywords", keywords)
         appendOptional("title", title)
@@ -32,16 +35,16 @@ suspend fun getAudibleSearchResult(
     return getAudibleSearchResult(document, regions)
 }
 
-fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<AudibleSearchBookImpl> {
+fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<MetadataSearchBookImpl> {
     val searchResultItems = extractSearchResults(document)
     return searchResultItems.map {
         val link = extractLink(it)
-        AudibleSearchBookImpl(
+        MetadataSearchBookImpl(
             author = extractAuthorInfo(it),
             title = extractTitle(it, regions),
             link = link,
             series = extractSeriesInfo(it),
-            image = extractImageUrl(it),
+            cover = extractImageUrl(it),
             language = extractLanguage(it),
             narrator = extractNarrator(it),
             releaseDate = extractReleaseDate(it, regions),
@@ -80,10 +83,10 @@ private fun extractImageUrl(element: Element): String? {
 }
 
 
-private fun extractAuthorInfo(element: Element): AudibleSearchAuthorImpl? {
+private fun extractAuthorInfo(element: Element): MetadataSearchAuthorImpl? {
     val authorLink = element.selectFirst(".authorLabel a") ?: return null
     val link = authorLink.absUrl("href").split("?").first()
-    return AudibleSearchAuthorImpl(
+    return MetadataSearchAuthorImpl(
         link = link,
         name = authorLink.text(),
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
@@ -98,7 +101,7 @@ private fun extractTitle(element: Element, regions: AudibleRegions): String? =
 private fun extractLink(element: Element): String? = element.selectFirst("h3 a")?.absUrl("href")?.split("?")?.first()
 
 
-private fun extractSeriesInfo(element: Element): AudibleSearchSeriesImpl? {
+private fun extractSeriesInfo(element: Element): MetadataSearchSeriesImpl? {
     val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return null
     val seriesNameElement = seriesElement.selectFirst("a") ?: return null
 
@@ -107,7 +110,7 @@ private fun extractSeriesInfo(element: Element): AudibleSearchSeriesImpl? {
     seriesIndex = seriesIndex.filter { it.isDigit() }
     val link = seriesNameElement.absUrl("href").split("?").first()
 
-    return AudibleSearchSeriesImpl(
+    return MetadataSearchSeriesImpl(
         link = link,
         name = seriesNameElement.text(),
         index = seriesIndex.toFloatOrNull(),

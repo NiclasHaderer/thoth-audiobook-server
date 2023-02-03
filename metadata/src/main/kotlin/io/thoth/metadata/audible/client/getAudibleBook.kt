@@ -1,10 +1,12 @@
 package io.thoth.metadata.audible.client
 
 import io.thoth.common.extensions.replaceAll
-import io.thoth.metadata.audible.models.AudibleBookImpl
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
-import io.thoth.metadata.audible.models.AudibleSearchAuthorImpl
-import io.thoth.metadata.audible.models.AudibleSearchSeriesImpl
+import io.thoth.metadata.audible.models.AudibleRegions
+import io.thoth.metadata.audible.models.getValue
+import io.thoth.metadata.responses.MetadataBookImpl
+import io.thoth.metadata.responses.MetadataSearchAuthorImpl
+import io.thoth.metadata.responses.MetadataSearchSeriesImpl
 import org.json.JSONArray
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -13,10 +15,10 @@ import java.time.format.DateTimeFormatter
 
 suspend fun getAudibleBook(
     region: AudibleRegions, asin: String
-): AudibleBookImpl? {
+): MetadataBookImpl? {
     val document = getAudiblePage(region, listOf("pd", asin)) ?: return null
 
-    return AudibleBookImpl(
+    return MetadataBookImpl(
         link = document.location().split("?").first(),
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
         description = getDescription(document),
@@ -45,10 +47,10 @@ private fun getPublishedDate(document: Document): LocalDate? {
 
 private fun extractNarrator(document: Document) = document.selectFirst(".narratorLabel a")?.text()
 
-private fun extractAuthorInfo(document: Document): AudibleSearchAuthorImpl? {
+private fun extractAuthorInfo(document: Document): MetadataSearchAuthorImpl? {
     val authorLink = document.selectFirst(".authorLabel a") ?: return null
     val link = authorLink.absUrl("href").split("?").first()
-    return AudibleSearchAuthorImpl(
+    return MetadataSearchAuthorImpl(
         link = link,
         name = authorLink.text(),
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link))
@@ -64,7 +66,7 @@ private fun extractTitle(document: Document, region: AudibleRegions): String? {
     return title.replaceAll(region.getValue().titleReplacers, "")
 }
 
-private fun extractSeriesInfo(element: Element): AudibleSearchSeriesImpl? {
+private fun extractSeriesInfo(element: Element): MetadataSearchSeriesImpl? {
     val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return null
     val seriesNameElement = seriesElement.selectFirst("a") ?: return null
 
@@ -72,7 +74,7 @@ private fun extractSeriesInfo(element: Element): AudibleSearchSeriesImpl? {
     seriesIndex = seriesIndex.filter { it.isDigit() }
     val link = seriesNameElement.absUrl("href").split("?").first()
 
-    return AudibleSearchSeriesImpl(
+    return MetadataSearchSeriesImpl(
         link = link,
         name = seriesNameElement.text(),
         index = seriesIndex.toFloatOrNull(),

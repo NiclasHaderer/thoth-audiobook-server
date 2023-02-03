@@ -1,26 +1,27 @@
 package io.thoth.models
 
-import java.time.LocalDateTime
 import java.util.*
 
 interface ISeriesModel {
     val id: UUID
     val title: String
-    val amount: Long
+    val provider: String?
+    val providerID: String?
+    val totalBooks: Int?
+    val primaryWorks: Int?
+    val cover: UUID?
     val description: String?
-    val authors: List<NamedId>
-    val images: List<UUID>
-    val updateTime: LocalDateTime
 }
 
 class SeriesModel(
     override val id: UUID,
     override val title: String,
-    override val amount: Long,
-    override val description: String?,
-    override val authors: List<NamedId>,
-    override val images: List<UUID>,
-    override val updateTime: LocalDateTime,
+    override val provider: String?,
+    override val providerID: String?,
+    override val totalBooks: Int?,
+    override val primaryWorks: Int?,
+    override val cover: UUID?,
+    override val description: String?
 ) : ISeriesModel
 
 class YearRange(
@@ -31,21 +32,23 @@ class YearRange(
 class SeriesModelWithBooks(
     override val id: UUID,
     override val title: String,
-    override val amount: Long,
-    val narrators: List<String>,
-    val yearRange: YearRange?,
-    val position: Int,
+    override val provider: String?,
+    override val providerID: String?,
+    override val totalBooks: Int?,
+    override val primaryWorks: Int?,
+    override val cover: UUID?,
     override val description: String?,
+    val yearRange: YearRange?,
+    val narrators: List<String>,
     val books: List<IBookModel>,
-    override val authors: List<NamedId>,
-    override val images: List<UUID>,
-    override val updateTime: LocalDateTime,
-
-    ) : ISeriesModel {
+    val authors: List<IAuthorModel>,
+) : ISeriesModel {
     companion object {
-        fun fromModel(series: ISeriesModel, books: List<IBookModel>, position: Int): SeriesModelWithBooks {
+        fun fromModel(
+            series: ISeriesModel, books: List<IBookModel>, authors: List<IAuthorModel>
+        ): SeriesModelWithBooks {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
-            val years = books.mapNotNull { it.date }
+            val years = books.mapNotNull { it.published }
             val startDate = years.minOrNull()
             val endDate = years.maxOrNull()
 
@@ -57,15 +60,16 @@ class SeriesModelWithBooks(
             return SeriesModelWithBooks(
                 id = series.id,
                 title = series.title,
-                amount = series.amount,
+                totalBooks = series.totalBooks,
                 yearRange = yearRange,
-                position = position,
                 narrators = narrators,
                 description = series.description,
                 books = books,
-                authors = series.authors,
-                images = series.images,
-                updateTime = series.updateTime
+                authors = authors,
+                primaryWorks = series.primaryWorks,
+                cover = series.cover,
+                provider = series.provider,
+                providerID = series.providerID,
             )
         }
     }

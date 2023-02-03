@@ -1,10 +1,10 @@
 package io.thoth.generators
 
 
-import io.thoth.metadata.AuthorMetadata
-import io.thoth.metadata.BookMetadata
-import io.thoth.metadata.SearchBookMetadata
-import io.thoth.metadata.SeriesMetadata
+import io.thoth.metadata.responses.MetadataAuthor
+import io.thoth.metadata.responses.MetadataBook
+import io.thoth.metadata.responses.MetadataSearchBook
+import io.thoth.metadata.responses.MetadataSeries
 import io.thoth.models.*
 import io.thoth.server.api.audiobooks.authors.PatchAuthor
 import io.thoth.server.api.audiobooks.books.PatchBook
@@ -42,10 +42,10 @@ fun main() {
 
     var audibleDefinitions = generate(
         setOf(
-            AuthorMetadata::class,
-            BookMetadata::class,
-            SearchBookMetadata::class,
-            SeriesMetadata::class
+            MetadataAuthor::class,
+            MetadataBook::class,
+            MetadataSearchBook::class,
+            MetadataSeries::class
         )
     )
     audibleDefinitions = audibleDefinitions.replace("interface", "export interface")

@@ -1,9 +1,9 @@
 package io.thoth.server.api.metadata
 
 import io.ktor.resources.*
-import io.thoth.metadata.MetadataLanguage
-import io.thoth.metadata.MetadataSearchCount
-import io.thoth.metadata.ProviderWithIDMetadata
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataProviderWithID
+import io.thoth.metadata.responses.MetadataSearchCount
 import kotlinx.serialization.Serializable
 
 @Resource("")
@@ -22,21 +22,21 @@ internal class MetadataSearch(
 internal class AuthorID(
     override val itemID: String,
     override val provider: String,
-) : ProviderWithIDMetadata
+) : MetadataProviderWithID
 
 @Resource("{id}")
 @Serializable
 internal class SeriesID(
     override val itemID: String,
     override val provider: String,
-) : ProviderWithIDMetadata
+) : MetadataProviderWithID
 
 @Resource("{asin}")
 @Serializable
 internal class BookID(
     override val itemID: String,
     override val provider: String,
-) : ProviderWithIDMetadata
+) : MetadataProviderWithID
 
 @Resource("{name}")
 @Serializable

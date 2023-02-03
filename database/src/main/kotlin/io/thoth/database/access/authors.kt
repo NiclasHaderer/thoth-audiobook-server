@@ -2,8 +2,9 @@ package io.thoth.database.access
 
 import io.thoth.common.extensions.findOne
 import io.thoth.database.tables.Author
-import io.thoth.database.tables.Book
 import io.thoth.database.tables.TAuthors
+import io.thoth.database.tables.TBooks
+import io.thoth.database.tables.TSeries
 import io.thoth.models.AuthorModel
 import io.thoth.models.AuthorModelWithBooks
 import org.jetbrains.exposed.sql.SortOrder
@@ -15,14 +16,14 @@ fun Author.Companion.getById(authorId: UUID): AuthorModel? {
 }
 
 fun Author.Companion.getDetailedById(authorId: UUID, order: SortOrder = SortOrder.ASC): AuthorModelWithBooks? {
-    val author = getById(authorId) ?: return null
-    val books = Book.fromAuthor(authorId, order)
-    val index = Author.all().orderBy(TAuthors.name.lowerCase() to order).takeWhile {
-        it.id.value != authorId
-    }.count()
+    val author = findById(authorId) ?: return null
 
 
-    return AuthorModelWithBooks.fromModel(author, books, index)
+    return AuthorModelWithBooks.fromModel(
+        author = author.toModel(),
+        books = author.books.orderBy(TBooks.published to order).map { it.toModel() },
+        series = author.series.orderBy(TSeries.title.lowerCase() to order).map { it.toModel() }
+    )
 }
 
 fun Author.Companion.getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC): List<AuthorModel> {
@@ -43,6 +44,11 @@ fun Author.toModel(): AuthorModel {
         id = id.value,
         name = name,
         biography = biography,
-        image = imageID?.value,
+        provider = provider,
+        birthDate = birthDate,
+        bornIn = bornIn,
+        deathDate = deathDate,
+        imageID = imageID?.value,
+        website = website,
     )
 }
