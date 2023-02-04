@@ -8,7 +8,7 @@ interface MetadataSearchAuthor {
     val link: String
 }
 
-class MetadataSearchAuthorImpl(
+data class MetadataSearchAuthorImpl(
     override val id: MetadataProviderWithID,
     override val name: String?,
     override val link: String,
@@ -23,7 +23,7 @@ interface MetadataAuthor : MetadataSearchAuthor {
     val deathDate: LocalDate?
 }
 
-class MetadataAuthorImpl(
+data class MetadataAuthorImpl(
     override val id: MetadataProviderWithID,
     override val name: String?,
     override val link: String,

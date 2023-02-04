@@ -2,7 +2,7 @@ package io.thoth.metadata.audible.client
 
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
 import io.thoth.metadata.audible.models.AudibleRegions
-import io.thoth.metadata.responses.MetadataSearchSeriesImpl
+import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSeriesImpl
 import org.jsoup.nodes.Element
 
@@ -17,13 +17,15 @@ suspend fun getAudibleSeries(
     val seriesName = getSeriesName(document)
     val seriesLink = document.location().split("?").first()
     val seriesBooks = getAudibleSearchResult(document, region).mapIndexed { index, it ->
+        // Series information is not provided in the series overview page, so we need to add it here
         it.copy(
-            series = MetadataSearchSeriesImpl(
-                id = seriesID,
-                title = seriesName,
-                link = seriesLink,
-                cover = null,
-                author = it.author?.name,
+            series = listOf(
+                MetadataBookSeriesImpl(
+                    id = seriesID,
+                    title = seriesName,
+                    link = seriesLink,
+                    index = index + 1f,
+                )
             )
         )
     }

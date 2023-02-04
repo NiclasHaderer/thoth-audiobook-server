@@ -4,8 +4,8 @@ import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
 import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.responses.MetadataBookImpl
+import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
-import io.thoth.metadata.responses.MetadataSearchSeriesImpl
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import java.time.LocalDate
@@ -31,15 +31,27 @@ class AudibleBookTest {
                     name = "J.K. Rowling",
                     link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
                 ),
-                series = MetadataSearchSeriesImpl(
-                    id = AudibleProviderWithIDMetadata(itemID = "B0182T24GS"),
-                    title = "Harry Potter",
-                    index = 1.0f,
-                    link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS"
+                series = listOf(
+                    MetadataBookSeriesImpl(
+                        id = AudibleProviderWithIDMetadata(itemID = "B0182T24GS"),
+                        title = "Harry Potter",
+                        index = 1.0f,
+                        link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS"
+                    ),
+                    MetadataBookSeriesImpl(
+                        id = AudibleProviderWithIDMetadata(itemID = "B07CM7WPFV"),
+                        title = "Wizarding World",
+                        link = "https://audible.com/series/Wizarding-World-Audiobooks/B07CM7WPFV",
+                        index = 1.0f
+                    ),
                 ),
-                image = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
+                cover = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
                 narrator = "Stephen Fry",
-                date = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                isbn = null,
+                language = null,
+                providerRating = 4.9f,
+                publisher = null
             ),
             book,
         )
@@ -60,15 +72,27 @@ class AudibleBookTest {
                     name = "J.K. Rowling",
                     link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
                 ),
-                series = MetadataSearchSeriesImpl(
-                    id = AudibleProviderWithIDMetadata(itemID = "B0182T24GS"),
-                    title = "Harry Potter",
-                    index = 1.0f,
-                    link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS"
+                series = listOf(
+                    MetadataBookSeriesImpl(
+                        id = AudibleProviderWithIDMetadata(itemID = "B0182T24GS"),
+                        title = "Harry Potter",
+                        index = 1.0f,
+                        link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS"
+                    ),
+                    MetadataBookSeriesImpl(
+                        id = AudibleProviderWithIDMetadata(itemID = "B07CM7WPFV"),
+                        title = "Wizarding World",
+                        link = "https://audible.com/series/Wizarding-World-Audiobooks/B07CM7WPFV",
+                        index = 1.0f
+                    ),
                 ),
-                image = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
+                cover = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
                 narrator = "Stephen Fry",
-                date = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                isbn = null,
+                language = null,
+                providerRating = 4.9f,
+                publisher = null
             ),
             book,
         )
