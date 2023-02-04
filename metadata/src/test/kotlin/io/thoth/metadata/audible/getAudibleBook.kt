@@ -33,7 +33,7 @@ class AudibleBookTest {
                 ),
                 series = MetadataSearchSeriesImpl(
                     id = AudibleProviderWithIDMetadata(itemID = "B0182T24GS"),
-                    name = "Harry Potter",
+                    title = "Harry Potter",
                     index = 1.0f,
                     link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS"
                 ),
@@ -62,7 +62,7 @@ class AudibleBookTest {
                 ),
                 series = MetadataSearchSeriesImpl(
                     id = AudibleProviderWithIDMetadata(itemID = "B0182T24GS"),
-                    name = "Harry Potter",
+                    title = "Harry Potter",
                     index = 1.0f,
                     link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS"
                 ),

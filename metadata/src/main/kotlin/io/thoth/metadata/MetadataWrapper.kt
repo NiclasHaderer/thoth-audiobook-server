@@ -98,8 +98,8 @@ class MetadataWrapper constructor(
         val cacheKey = getKey(seriesName, authorName)
         return getOrSetCache(seriesNameCache, cacheKey) {
             val series = providerList.map { async { it.getSeriesByName(seriesName, authorName) } }.awaitAll().flatten()
-                .filter { it.name != null }
-            FuzzySearch.extractSorted(seriesName, series) { it.name }.map { it.referent }
+                .filter { it.title != null }
+            FuzzySearch.extractSorted(seriesName, series) { it.title }.map { it.referent }
         }
     }
 

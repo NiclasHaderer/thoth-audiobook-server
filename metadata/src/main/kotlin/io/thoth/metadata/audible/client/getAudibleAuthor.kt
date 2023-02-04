@@ -6,9 +6,7 @@ import io.thoth.metadata.responses.MetadataAuthorImpl
 import org.jsoup.nodes.Element
 
 suspend fun getAudibleAuthor(
-    regions: AudibleRegions,
-    imageSize: Int,
-    authorAsin: String
+    regions: AudibleRegions, imageSize: Int, authorAsin: String
 ): MetadataAuthorImpl? {
 
     val document = getAudiblePage(regions, listOf("author", authorAsin)) ?: return null
@@ -19,6 +17,10 @@ suspend fun getAudibleAuthor(
         name = getAuthorName(document),
         image = getAuthorImage(document, imageSize),
         biography = getAuthorBiography(document),
+        website = null,
+        deathDate = null,
+        birthDate = null,
+        bornIn = null,
     )
 }
 

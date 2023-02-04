@@ -21,7 +21,7 @@ fun Author.Companion.getDetailedById(authorId: UUID, order: SortOrder = SortOrde
 
     return AuthorModelWithBooks.fromModel(
         author = author.toModel(),
-        books = author.books.orderBy(TBooks.published to order).map { it.toModel() },
+        books = author.books.orderBy(TBooks.releaseDate to order).map { it.toModel() },
         series = author.series.orderBy(TSeries.title.lowerCase() to order).map { it.toModel() }
     )
 }

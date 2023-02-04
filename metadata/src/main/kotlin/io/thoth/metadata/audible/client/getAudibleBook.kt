@@ -23,12 +23,21 @@ suspend fun getAudibleBook(
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
         description = getDescription(document),
         title = extractTitle(document, region),
-        image = extractImageUrl(document),
+        cover = extractImageUrl(document),
         author = extractAuthorInfo(document),
         series = extractSeriesInfo(document),
         narrator = extractNarrator(document),
-        date = getPublishedDate(document)
+        releaseDate = getPublishedDate(document),
+        publisher = null,
+        providerRating = getBookRating(document),
+        language = null,
+        isbn = null,
     )
+}
+
+fun getBookRating(document: Document): Float? {
+    val rating = document.selectFirst(".ratingsLabel > [aria-hidden]")?.text() ?: return null
+    return rating.replace(",", ".").toFloatOrNull()
 }
 
 
@@ -51,9 +60,7 @@ private fun extractAuthorInfo(document: Document): MetadataSearchAuthorImpl? {
     val authorLink = document.selectFirst(".authorLabel a") ?: return null
     val link = authorLink.absUrl("href").split("?").first()
     return MetadataSearchAuthorImpl(
-        link = link,
-        name = authorLink.text(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link))
+        link = link, name = authorLink.text(), id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link))
     )
 }
 
@@ -70,15 +77,14 @@ private fun extractSeriesInfo(element: Element): MetadataSearchSeriesImpl? {
     val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return null
     val seriesNameElement = seriesElement.selectFirst("a") ?: return null
 
-    var seriesIndex = seriesElement.text().split(",").last().trim()
-    seriesIndex = seriesIndex.filter { it.isDigit() }
     val link = seriesNameElement.absUrl("href").split("?").first()
 
     return MetadataSearchSeriesImpl(
         link = link,
-        name = seriesNameElement.text(),
-        index = seriesIndex.toFloatOrNull(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link))
+        title = seriesNameElement.text(),
+        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
+        cover = null,
+        author = null,
     )
 
 }

@@ -13,7 +13,7 @@ object TBooks : UUIDTable("Books") {
     val provider = varchar("provider", 255).nullable()
     val providerID = varchar("providerID", 255).nullable()
     val providerRating = float("rating").nullable()
-    val published = date("year").nullable()
+    val releaseDate = date("releaseDate").nullable()
     val publisher = varchar("publisher", 255).nullable()
     val language = varchar("language", 255).nullable()
     val description = text("description").nullable()
@@ -30,7 +30,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id) {
     var provider by TBooks.provider
     var providerID by TBooks.providerID
     var description by TBooks.description
-    var published by TBooks.published
+    var releaseDate by TBooks.releaseDate
     var publisher by TBooks.publisher
     var language by TBooks.language
     var narrator by TBooks.narrator

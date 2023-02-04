@@ -48,7 +48,7 @@ class SeriesModelWithBooks(
             series: ISeriesModel, books: List<IBookModel>, authors: List<IAuthorModel>
         ): SeriesModelWithBooks {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
-            val years = books.mapNotNull { it.published }
+            val years = books.mapNotNull { it.releaseDate }
             val startDate = years.minOrNull()
             val endDate = years.maxOrNull()
 
