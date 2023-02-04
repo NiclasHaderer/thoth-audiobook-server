@@ -9,7 +9,7 @@ interface IBookModel {
     val provider: String?
     val providerID: String?
     val providerRating: Float?
-    val published: LocalDate?
+    val releaseDate: LocalDate?
     val publisher: String?
     val language: String?
     val description: String?
@@ -24,7 +24,7 @@ class BookModel(
     override val provider: String?,
     override val providerID: String?,
     override val providerRating: Float?,
-    override val published: LocalDate?,
+    override val releaseDate: LocalDate?,
     override val publisher: String?,
     override val language: String?,
     override val description: String?,
@@ -39,7 +39,7 @@ class BookModelWithTracks(
     override val provider: String?,
     override val providerID: String?,
     override val providerRating: Float?,
-    override val published: LocalDate?,
+    override val releaseDate: LocalDate?,
     override val publisher: String?,
     override val language: String?,
     override val description: String?,
@@ -64,7 +64,7 @@ class BookModelWithTracks(
             return BookModelWithTracks(
                 id = book.id,
                 title = book.title,
-                published = book.published,
+                releaseDate = book.releaseDate,
                 language = book.language,
                 description = book.description,
                 tracks = sortedTracks,

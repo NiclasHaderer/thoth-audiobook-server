@@ -1,5 +1,7 @@
 package io.thoth.metadata.responses
 
+import java.time.LocalDate
+
 interface MetadataSearchAuthor {
     val id: MetadataProviderWithID
     val name: String?
@@ -15,6 +17,10 @@ class MetadataSearchAuthorImpl(
 interface MetadataAuthor : MetadataSearchAuthor {
     val image: String?
     val biography: String?
+    val website: String?
+    val bornIn: String?
+    val birthDate: LocalDate?
+    val deathDate: LocalDate?
 }
 
 class MetadataAuthorImpl(
@@ -23,4 +29,8 @@ class MetadataAuthorImpl(
     override val link: String,
     override val image: String?,
     override val biography: String?,
+    override val website: String?,
+    override val bornIn: String?,
+    override val birthDate: LocalDate?,
+    override val deathDate: LocalDate?,
 ) : MetadataAuthor

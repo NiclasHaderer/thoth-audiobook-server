@@ -45,8 +45,6 @@ fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<Me
             link = link,
             series = extractSeriesInfo(it),
             cover = extractImageUrl(it),
-            language = extractLanguage(it),
-            narrator = extractNarrator(it),
             releaseDate = extractReleaseDate(it, regions),
             id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link))
         )
@@ -108,13 +106,18 @@ private fun extractSeriesInfo(element: Element): MetadataSearchSeriesImpl? {
     var seriesIndex = seriesElement.selectFirst("span")?.text() ?: return null
     seriesIndex = seriesIndex.split(",").last().trim()
     seriesIndex = seriesIndex.filter { it.isDigit() }
+    TODO("Implement series index")
+    TODO("Differenciate between search for series and series of book")
+    TODO("Make every class a data class")
+
     val link = seriesNameElement.absUrl("href").split("?").first()
 
     return MetadataSearchSeriesImpl(
         link = link,
-        name = seriesNameElement.text(),
-        index = seriesIndex.toFloatOrNull(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link))
+        title = seriesNameElement.text(),
+        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
+        author = null,
+        cover = null,
     )
 
 }

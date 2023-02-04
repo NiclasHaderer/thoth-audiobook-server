@@ -40,7 +40,7 @@ fun main() {
 
     audiobookDefinitions = audiobookDefinitions.replace("interface", "export interface")
 
-    var audibleDefinitions = generate(
+    var metadataDefinitions = generate(
         setOf(
             MetadataAuthor::class,
             MetadataBook::class,
@@ -48,17 +48,17 @@ fun main() {
             MetadataSeries::class
         )
     )
-    audibleDefinitions = audibleDefinitions.replace("interface", "export interface")
+    metadataDefinitions = metadataDefinitions.replace("interface", "export interface")
 
     if (!Files.exists(Path.of("gen/typescript"))) {
         Files.createDirectories(Path.of("gen/typescript"))
     }
 
-    File("gen/typescript/audiobook.ts").printWriter().use { out ->
+    File("gen/typescript/api.ts").printWriter().use { out ->
         out.println(audiobookDefinitions)
     }
-    File("gen/typescript/audible.ts").printWriter().use { out ->
-        out.println(audibleDefinitions)
+    File("gen/typescript/metadata.ts").printWriter().use { out ->
+        out.println(metadataDefinitions)
     }
 
 }

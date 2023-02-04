@@ -31,7 +31,7 @@ fun Series.Companion.getDetailedById(seriesId: UUID, order: SortOrder = SortOrde
     val series = findById(seriesId) ?: return null
     return SeriesModelWithBooks.fromModel(
         series = series.toModel(),
-        books = series.books.orderBy(TBooks.published to order).map { it.toModel() },
+        books = series.books.orderBy(TBooks.releaseDate to order).map { it.toModel() },
         authors = series.authors.orderBy(TAuthors.name.lowerCase() to order).map { it.toModel() }
     )
 }

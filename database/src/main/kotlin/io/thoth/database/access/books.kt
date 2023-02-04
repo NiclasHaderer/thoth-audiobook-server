@@ -65,7 +65,7 @@ fun Book.toModel(): BookModel {
         provider = provider,
         providerRating = providerRating,
         cover = coverID?.value,
-        published = published,
+        releaseDate = releaseDate,
         narrator = narrator,
         isbn = isbn,
         language = language,

@@ -85,10 +85,10 @@ class AudibleClient(
     }
 
     override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<MetadataSeriesImpl> {
-        val seriesResult = search(keywords = seriesName, author = authorName).filter { it.series?.name != null }
+        val seriesResult = search(keywords = seriesName, author = authorName).filter { it.series?.title != null }
 
         return coroutineScope {
-            FuzzySearch.extractSorted(seriesName, seriesResult) { it.series!!.name }
+            FuzzySearch.extractSorted(seriesName, seriesResult) { it.series!!.title }
                 .map {
                     async {
                         getSeriesByID(uniqueName, it.referent.series!!.id.itemID)

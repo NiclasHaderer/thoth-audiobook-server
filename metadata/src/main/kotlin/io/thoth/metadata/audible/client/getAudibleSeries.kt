@@ -20,21 +20,23 @@ suspend fun getAudibleSeries(
         it.copy(
             series = MetadataSearchSeriesImpl(
                 id = seriesID,
-                name = seriesName,
-                index = index + 1f,
-                link = seriesLink
+                title = seriesName,
+                link = seriesLink,
+                cover = null,
+                author = it.author?.name,
             )
         )
     }
     return MetadataSeriesImpl(
         link = seriesLink,
         id = seriesID,
-        name = seriesName,
+        title = seriesName,
         description = getSeriesDescription(document),
-        amount = getBookCount(document),
+        totalBooks = getBookCount(document),
         books = seriesBooks,
         author = seriesBooks.firstOrNull()?.author?.name,
-        image = null,
+        cover = null,
+        primaryWorks = seriesBooks.size,
     )
 }
 
