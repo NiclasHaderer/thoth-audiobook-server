@@ -6,10 +6,8 @@ import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.audible.models.getValue
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
-import io.thoth.metadata.responses.MetadataSearchSeriesImpl
 import org.json.JSONArray
 import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -25,7 +23,7 @@ suspend fun getAudibleBook(
         title = extractTitle(document, region),
         cover = extractImageUrl(document),
         author = extractAuthorInfo(document),
-        series = extractSeriesInfo(document),
+        series = extractBookSeriesInfo(document),
         narrator = extractNarrator(document),
         releaseDate = getPublishedDate(document),
         publisher = null,
@@ -71,20 +69,4 @@ private fun extractImageUrl(document: Document) = document.selectFirst(".hero-co
 private fun extractTitle(document: Document, region: AudibleRegions): String? {
     val title = document.selectFirst("h1.bc-heading")?.text() ?: return null
     return title.replaceAll(region.getValue().titleReplacers, "")
-}
-
-private fun extractSeriesInfo(element: Element): MetadataSearchSeriesImpl? {
-    val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return null
-    val seriesNameElement = seriesElement.selectFirst("a") ?: return null
-
-    val link = seriesNameElement.absUrl("href").split("?").first()
-
-    return MetadataSearchSeriesImpl(
-        link = link,
-        title = seriesNameElement.text(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
-        cover = null,
-        author = null,
-    )
-
 }

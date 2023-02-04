@@ -1,22 +1,25 @@
 package io.thoth.metadata.responses
 
-interface MetadataSearchSeries {
+interface MetadataBookSeries {
     val id: MetadataProviderWithID
     val title: String?
-    val author: String?
     val link: String
-    val cover: String?
+    val index: Float?
 }
 
-data class MetadataSearchSeriesImpl(
+data class MetadataBookSeriesImpl(
     override val id: MetadataProviderWithID,
     override val title: String?,
-    override val author: String?,
     override val link: String,
-    override val cover: String?,
-) : MetadataSearchSeries
+    override val index: Float?,
+) : MetadataBookSeries
 
-interface MetadataSeries : MetadataSearchSeries {
+interface MetadataSeries {
+    val id: MetadataProviderWithID
+    val link: String
+    val title: String?
+    val author: String?
+    val cover: String?
     val description: String?
     val totalBooks: Int?
     val primaryWorks: Int?

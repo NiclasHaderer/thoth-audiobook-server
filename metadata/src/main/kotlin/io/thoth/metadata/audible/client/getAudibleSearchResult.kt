@@ -3,10 +3,11 @@ package io.thoth.metadata.audible.client
 import io.ktor.http.*
 import io.thoth.common.extensions.appendOptional
 import io.thoth.common.extensions.replaceAll
+import io.thoth.common.extensions.saveSubList
 import io.thoth.metadata.audible.models.*
+import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
-import io.thoth.metadata.responses.MetadataSearchSeriesImpl
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
@@ -43,10 +44,12 @@ fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<Me
             author = extractAuthorInfo(it),
             title = extractTitle(it, regions),
             link = link,
-            series = extractSeriesInfo(it),
+            series = extractBookSeriesInfo(it),
             cover = extractImageUrl(it),
             releaseDate = extractReleaseDate(it, regions),
-            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link))
+            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
+            narrator = extractNarrator(it),
+            language = extractLanguage(it),
         )
     }
 }
@@ -99,25 +102,27 @@ private fun extractTitle(element: Element, regions: AudibleRegions): String? =
 private fun extractLink(element: Element): String? = element.selectFirst("h3 a")?.absUrl("href")?.split("?")?.first()
 
 
-private fun extractSeriesInfo(element: Element): MetadataSearchSeriesImpl? {
-    val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return null
-    val seriesNameElement = seriesElement.selectFirst("a") ?: return null
+internal fun extractBookSeriesInfo(element: Element): List<MetadataBookSeriesImpl> {
+    val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return listOf()
+    val seriesLinkElements = seriesElement.select("a")
+    if (seriesLinkElements.isEmpty()) return listOf()
 
-    var seriesIndex = seriesElement.selectFirst("span")?.text() ?: return null
-    seriesIndex = seriesIndex.split(",").last().trim()
-    seriesIndex = seriesIndex.filter { it.isDigit() }
-    TODO("Implement series index")
-    TODO("Differenciate between search for series and series of book")
-    TODO("Make every class a data class")
+    val seriesIndexElements = seriesElement.textNodes().saveSubList(1)
 
-    val link = seriesNameElement.absUrl("href").split("?").first()
+    return seriesLinkElements.mapIndexed { index, it ->
+        val seriesLink = it.absUrl("href").split("?").first()
+        val seriesTitle = it.text()
 
-    return MetadataSearchSeriesImpl(
-        link = link,
-        title = seriesNameElement.text(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
-        author = null,
-        cover = null,
-    )
+        val seriesIndexText = seriesIndexElements.getOrNull(index)?.text()
+        val floatRegex = Regex("[0-9]+(\\.[0-9]+)?")
+        // Find the last number in the string
+        val seriesIndex = floatRegex.findAll(seriesIndexText ?: "").lastOrNull()?.value?.toFloatOrNull()
 
+        MetadataBookSeriesImpl(
+            link = seriesLink,
+            title = seriesTitle,
+            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(seriesLink)),
+            index = seriesIndex
+        )
+    }
 }
