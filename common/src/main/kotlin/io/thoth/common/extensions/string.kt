@@ -3,11 +3,12 @@ package io.thoth.common.extensions
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import kotlinx.coroutines.runBlocking
 import java.util.*
 
 private val client = HttpClient()
 
-suspend fun imageFromString(url: String): ByteArray {
+private suspend fun imageFromString(url: String): ByteArray {
     return if (url.matches("^data://".toRegex())) {
         decodeDataURL(url)
     } else {
@@ -15,14 +16,14 @@ suspend fun imageFromString(url: String): ByteArray {
     }
 }
 
-internal fun decodeDataURL(dataUrl: String): ByteArray {
+private fun decodeDataURL(dataUrl: String): ByteArray {
     val contentStartIndex: Int = dataUrl.indexOf(",") + 1
     val data = dataUrl.substring(contentStartIndex)
     return Base64.getDecoder().decode(data)
 }
 
-suspend fun String.uriToFile(): ByteArray = imageFromString(this)
-
+fun String.syncUriToFile(): ByteArray = runBlocking { imageFromString(this@syncUriToFile) }
+suspend fun String.uriToFile(): ByteArray = imageFromString(this@uriToFile)
 
 fun String.replaceAll(values: List<Regex>, newValue: String): String {
     var result = this

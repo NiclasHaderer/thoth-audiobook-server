@@ -16,7 +16,7 @@ class PatchAuthor(
     val name: String?,
     val provider: String?,
     val biography: String?,
-    val imageID: UUID?,
+    val image: String?,
     val website: String?,
     val bornIn: String?,
     val birthDate: LocalDate?,
