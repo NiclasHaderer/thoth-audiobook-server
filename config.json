@@ -1,9 +1,0 @@
-{
-  "search": [
-    {
-      "pluginClassName": "com.MyClass",
-      "jarLocation": "test.jar"
-    }
-  ],
-  "scan": []
-}

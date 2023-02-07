@@ -1,6 +1,6 @@
 package io.thoth.server.file.analyzer
 
-import io.thoth.server.config.ThothConfig
+import io.thoth.config.ThothConfig
 import io.thoth.server.file.tagger.ReadonlyFileTagger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes

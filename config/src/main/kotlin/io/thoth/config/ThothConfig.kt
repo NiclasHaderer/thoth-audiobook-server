@@ -1,4 +1,4 @@
-package io.thoth.server.config
+package io.thoth.config
 
 import io.thoth.metadata.audible.models.AudibleRegions
 

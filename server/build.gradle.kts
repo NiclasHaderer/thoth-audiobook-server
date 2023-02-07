@@ -34,7 +34,6 @@ application {
     tasks.run.get().workingDir = rootProject.projectDir
 }
 
-// For kotlin annotations
 tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions {
         freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
@@ -59,6 +58,7 @@ dependencies {
     implementation(project(":openapi"))
     implementation(project(":database"))
     implementation(project(":metadata"))
+    implementation(project(":config"))
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -66,19 +66,10 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
 
-    // Config
-    implementation("com.sksamuel.hoplite:hoplite-core:2.6.2")
-    implementation("com.sksamuel.hoplite:hoplite-json:2.6.2")
-    implementation("com.sksamuel.hoplite:hoplite-yaml:2.6.2")
-    implementation("com.sksamuel.hoplite:hoplite-toml:2.6.2")
-    implementation("com.sksamuel.hoplite:hoplite-hocon:2.6.2")
-
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
     // Database drivers
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
-    implementation("com.zaxxer:HikariCP:$hikariVersion")
-    // Pined, because of exposed compatability
     implementation("com.h2database:h2:$h2Version")
     // Dependency Injection
     implementation("io.insert-koin:koin-ktor:$koinVersion")

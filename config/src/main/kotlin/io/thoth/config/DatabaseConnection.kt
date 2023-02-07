@@ -1,4 +1,4 @@
-package io.thoth.server.config
+package io.thoth.config
 
 
 internal object H2Database : DatabaseConnection {
@@ -18,7 +18,7 @@ internal object SqLite : DatabaseConnection {
         System.getenv("SQLITE_PATH") ?: "audiobook.db"
     }
     override val jdbcUrl: String by lazy {
-        System.getenv("DB_JDBC_URL") ?: "jdbc:sqlite:${this.sqlitePath}"
+        System.getenv("DB_JDBC_URL") ?: "jdbc:sqlite:$sqlitePath"
     }
     override val maximumPoolSize = 1
     override val autoCommit: Boolean by lazy {

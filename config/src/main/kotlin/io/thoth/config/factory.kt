@@ -1,4 +1,4 @@
-package io.thoth.server.config
+package io.thoth.config
 
 import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.addResourceOrFileSource
@@ -12,7 +12,7 @@ private fun getConfigPath(): String {
     val path = if (isProduction()) {
         System.getenv("THOTH_CONFIG_PATH")
     } else {
-        System.getenv("THOTH_CONFIG_PATH") ?: "config"
+        System.getenv("THOTH_CONFIG_PATH") ?: "config/preset"
     }
 
     return Path.of(path).toAbsolutePath().toString()

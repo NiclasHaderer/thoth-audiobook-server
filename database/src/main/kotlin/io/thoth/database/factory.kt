@@ -1,29 +1,26 @@
-package io.thoth.server.db
+package io.thoth.database
 
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.thoth.common.utils.memoize
+import io.thoth.config.DatabaseConnection
 import io.thoth.database.migrations.migrator.DatabaseMigrator
-import io.thoth.server.config.ThothConfig
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 
-private object DatabaseFactory : KoinComponent {
+private object DatabaseFactory {
     private val log = logger {}
-    private val thothConfig by inject<ThothConfig>()
-    private val dbInstance by lazy {
+    private val dbInstance = { config: DatabaseConnection ->
         log.info { "Initialising database" }
-        Database.connect(dataSource, databaseConfig = DatabaseConfig.invoke {
+        Database.connect(dataSource(config), databaseConfig = DatabaseConfig.invoke {
             useNestedTransactions = true
         })
-    }
+    }.memoize()
 
-    private val dataSource by lazy {
-        val dbConfig = thothConfig.database
+    private val dataSource = { dbConfig: DatabaseConnection ->
         val config = HikariConfig().apply {
             driverClassName = dbConfig.driverClassName
             jdbcUrl = dbConfig.jdbcUrl
@@ -32,22 +29,22 @@ private object DatabaseFactory : KoinComponent {
             transactionIsolation = dbConfig.transactionIsolation
         }.also { it.validate() }
         HikariDataSource(config)
-    }
+    }.memoize()
 
-    fun connect() = dbInstance.run { }
+    fun connect(config: DatabaseConnection) = dbInstance(config).run { }
 
-    fun migrate() {
+    fun migrate(config: DatabaseConnection) {
         log.info("Migrating database")
-        DatabaseMigrator(dbInstance).updateDatabase()
+        DatabaseMigrator(dbInstance(config)).updateDatabase()
         log.info("Migrations done")
     }
 
 }
 
-fun connectToDatabase() {
-    DatabaseFactory.connect()
+fun connectToDatabase(config: DatabaseConnection) {
+    DatabaseFactory.connect(config)
 }
 
-fun migrateDatabase() {
-    DatabaseFactory.migrate()
+fun migrateDatabase(config: DatabaseConnection) {
+    DatabaseFactory.migrate(config)
 }

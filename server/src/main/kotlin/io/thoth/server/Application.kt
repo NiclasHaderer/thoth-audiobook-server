@@ -14,10 +14,10 @@ import io.thoth.server.api.images.registerImageRouting
 import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
-import io.thoth.server.config.ThothConfig
-import io.thoth.server.config.loadConfig
-import io.thoth.server.db.connectToDatabase
-import io.thoth.server.db.migrateDatabase
+import io.thoth.config.ThothConfig
+import io.thoth.config.loadConfig
+import io.thoth.database.connectToDatabase
+import io.thoth.database.migrateDatabase
 import io.thoth.server.file.scanner.FileWatcher
 import io.thoth.server.file.scanner.RecursiveScan
 import io.thoth.server.plugins.*
@@ -43,8 +43,8 @@ fun Application.applicationModule() {
     configureKoin(config)
 
     try {
-        connectToDatabase().also {
-            migrateDatabase()
+        connectToDatabase(config.database).also {
+            migrateDatabase(config.database)
         }.also {
             launch {
                 get<FileWatcher>().watch()

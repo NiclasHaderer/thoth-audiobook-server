@@ -1,6 +1,6 @@
 package io.thoth.server.file.analyzer.impl
 
-import io.thoth.server.config.ThothConfig
+import io.thoth.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer

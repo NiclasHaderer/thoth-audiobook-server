@@ -5,7 +5,7 @@ import io.thoth.database.access.hasBeenUpdated
 import io.thoth.database.access.markAsTouched
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
-import io.thoth.server.config.ThothConfig
+import io.thoth.config.ThothConfig
 import io.thoth.server.file.persister.FileAnalyzingScheduler
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.transactions.transaction
