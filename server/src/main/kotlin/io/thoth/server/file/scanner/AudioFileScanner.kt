@@ -1,7 +1,7 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.common.extensions.isAudioFile
-import io.thoth.server.config.ThothConfig
+import io.thoth.config.ThothConfig
 import mu.KotlinLogging.logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

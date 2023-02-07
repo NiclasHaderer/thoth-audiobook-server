@@ -75,7 +75,7 @@ gen/
 *.db-journal
 *.jar
 bin
-config/*.pem
+*.pem
 !files
 dataSources
 .idea/dataSources.local.xml
