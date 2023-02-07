@@ -7,17 +7,6 @@ repositories {
     mavenCentral()
 }
 
-
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions {
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-        jvmTarget = "11"
-        apiVersion = "1.8"
-        languageVersion = "1.8"
-    }
-}
-
 dependencies {
     implementation(project(":metadata"))
 
