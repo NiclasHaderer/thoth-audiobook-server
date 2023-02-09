@@ -1,23 +1,11 @@
 package io.thoth.database.access
 
-import io.thoth.common.extensions.uriToFile
+import io.thoth.common.extensions.syncUriToFile
 import io.thoth.database.tables.Image
-import io.thoth.database.tables.TImages
 import io.thoth.models.ImageModel
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import java.util.*
-
-fun Image.Companion.getMultiple(limit: Int, offset: Long): List<UUID> {
-    return TImages.slice(TImages.id).selectAll().limit(limit, offset * limit).map {
-        it[TImages.id]
-    }.map { it.value }
-}
-
-suspend fun Image.Companion.create(string: String): Image {
-    val imageBytes = string.uriToFile()
-    return create(imageBytes)
-}
 
 fun Image.Companion.create(imageBytes: ByteArray): Image {
     return Image.new {
@@ -32,3 +20,26 @@ fun Image.Companion.getById(uuid: UUID): ImageModel? {
 fun Image.toModel() = ImageModel(
     id = id.value, blob = blob.bytes
 )
+
+fun Image.areSame(newImageBytes: ByteArray): Boolean {
+    return blob.bytes.contentEquals(newImageBytes)
+}
+
+
+fun Image.Companion.getNewImage(
+    newImage: String?, currentImageID: EntityID<UUID>?, default: EntityID<UUID>?
+): EntityID<UUID>? {
+    // TODO find a way to make this suspend
+    return if (newImage != null) {
+        val originalImage = if (currentImageID != null) Image.findById(currentImageID) else null
+        val newImageBytes = newImage.syncUriToFile()
+        val areSameImage = originalImage?.areSame(newImageBytes) ?: false
+        if (areSameImage) {
+            currentImageID
+        } else {
+            create(newImageBytes).id
+        }
+    } else {
+        default
+    }
+}

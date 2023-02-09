@@ -11,6 +11,7 @@ import io.thoth.models.PaginatedResponse
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
+import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -43,4 +44,6 @@ internal fun Route.routing() {
     }
 
     patch(RouteHandler::patchBook)
+
+    post(RouteHandler::postBook)
 }
