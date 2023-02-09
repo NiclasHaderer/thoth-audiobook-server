@@ -24,12 +24,11 @@ fun Route.registerSeriesRouting(path: String = "series") {
 }
 
 internal fun Route.routing() {
+    // TODO add update functionality
     get<QueryLimiter, PaginatedResponse<SeriesModel>> {
         transaction {
-            val seriesCount: Long
-            val series: List<SeriesModel>
-            series = Series.getMultiple(it.limit, it.offset)
-            seriesCount = Series.count()
+            val series = Series.getMultiple(it.limit, it.offset)
+            val seriesCount = Series.count()
             PaginatedResponse(series, total = seriesCount, offset = it.offset, limit = it.limit)
         }
     }

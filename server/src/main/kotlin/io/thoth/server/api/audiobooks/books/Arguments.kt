@@ -18,11 +18,25 @@ class PatchBook(
     val provider: String?,
     val providerID: String?,
     val providerRating: Float?,
-    val published: LocalDate?,
+    val releaseDate: LocalDate?,
     val publisher: String?,
     val language: String?,
     val description: String?,
     val narrator: String?,
     val isbn: String?,
-    val cover: UUID?
+    val cover: String?
+)
+
+class PostBook(
+    val title: String,
+    val provider: String?,
+    val providerID: String?,
+    val providerRating: Float?,
+    val releaseDate: LocalDate?,
+    val publisher: String?,
+    val language: String?,
+    val description: String?,
+    val narrator: String?,
+    val isbn: String?,
+    val cover: String?,
 )
