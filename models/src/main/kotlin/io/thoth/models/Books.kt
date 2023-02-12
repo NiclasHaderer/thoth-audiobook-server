@@ -1,5 +1,8 @@
 package io.thoth.models
 
+import io.thoth.common.serializion.kotlin.LocalDateSerializer
+import io.thoth.common.serializion.kotlin.UUIDSerializer
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.util.*
 
@@ -18,34 +21,36 @@ interface IBookModel {
     val cover: UUID?
 }
 
-class BookModel(
-    override val id: UUID,
+@Serializable
+data class BookModel(
+    @Serializable(UUIDSerializer::class) override val id: UUID,
     override val title: String,
     override val provider: String?,
     override val providerID: String?,
     override val providerRating: Float?,
-    override val releaseDate: LocalDate?,
+    @Serializable(LocalDateSerializer::class) override val releaseDate: LocalDate?,
     override val publisher: String?,
     override val language: String?,
     override val description: String?,
     override val narrator: String?,
     override val isbn: String?,
-    override val cover: UUID?,
+    @Serializable(UUIDSerializer::class) override val cover: UUID?,
 ) : IBookModel
 
-class BookModelWithTracks(
-    override val id: UUID,
+@Serializable
+data class BookModelWithTracks(
+    @Serializable(UUIDSerializer::class) override val id: UUID,
     override val title: String,
     override val provider: String?,
     override val providerID: String?,
     override val providerRating: Float?,
-    override val releaseDate: LocalDate?,
+    @Serializable(LocalDateSerializer::class) override val releaseDate: LocalDate?,
     override val publisher: String?,
     override val language: String?,
     override val description: String?,
     override val narrator: String?,
     override val isbn: String?,
-    override val cover: UUID?,
+    @Serializable(UUIDSerializer::class) override val cover: UUID?,
     val tracks: List<TrackModel>,
     val authors: List<IAuthorModel>,
     val series: List<ISeriesModel>,

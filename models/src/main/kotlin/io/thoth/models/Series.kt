@@ -1,5 +1,7 @@
 package io.thoth.models
 
+import io.thoth.common.serializion.kotlin.UUIDSerializer
+import kotlinx.serialization.Serializable
 import java.util.*
 
 interface ISeriesModel {
@@ -13,30 +15,33 @@ interface ISeriesModel {
     val description: String?
 }
 
-class SeriesModel(
-    override val id: UUID,
+@Serializable
+data class SeriesModel(
+    @Serializable(UUIDSerializer::class) override val id: UUID,
     override val title: String,
     override val provider: String?,
     override val providerID: String?,
     override val totalBooks: Int?,
     override val primaryWorks: Int?,
-    override val cover: UUID?,
+    @Serializable(UUIDSerializer::class) override val cover: UUID?,
     override val description: String?
 ) : ISeriesModel
 
-class YearRange(
+@Serializable
+data class YearRange(
     val start: Int,
     val end: Int,
 )
 
-class SeriesModelWithBooks(
-    override val id: UUID,
+@Serializable
+data class SeriesModelWithBooks(
+    @Serializable(UUIDSerializer::class) override val id: UUID,
     override val title: String,
     override val provider: String?,
     override val providerID: String?,
     override val totalBooks: Int?,
     override val primaryWorks: Int?,
-    override val cover: UUID?,
+    @Serializable(UUIDSerializer::class) override val cover: UUID?,
     override val description: String?,
     val yearRange: YearRange?,
     val narrators: List<String>,

@@ -1,6 +1,9 @@
 package io.thoth.models
 
-class SearchModel(
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class SearchModel(
     val books: List<BookModel>,
     val series: List<SeriesModel>,
     val authors: List<AuthorModel>,

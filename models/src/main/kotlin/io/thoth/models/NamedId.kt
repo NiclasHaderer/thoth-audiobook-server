@@ -1,13 +1,17 @@
 package io.thoth.models
 
+import io.thoth.common.serializion.kotlin.UUIDSerializer
+import kotlinx.serialization.Serializable
 import java.util.*
 
-class NamedId(
+@Serializable
+data class NamedId(
     val name: String,
-    val id: UUID,
+    @Serializable(UUIDSerializer::class) val id: UUID,
 )
 
-class TitledId(
+@Serializable
+data class TitledId(
     val title: String,
-    val id: UUID,
+    @Serializable(UUIDSerializer::class) val id: UUID,
 )

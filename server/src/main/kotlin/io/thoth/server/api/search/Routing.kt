@@ -22,6 +22,7 @@ internal fun Route.routing() {
         if (it.q != null) {
             return@get SearchService.everywhere(it.q)
         }
+
         if (it.series == null && it.author == null && it.book == null) {
             serverError(HttpStatusCode.BadRequest, "At least one query parameter has to have a value")
         }
