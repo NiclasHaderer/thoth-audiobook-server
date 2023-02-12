@@ -12,9 +12,9 @@ import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
-internal fun RouteHandler.getUser(): UserModel? {
+internal fun RouteHandler.getUser(): UserModel {
     val principal = thothPrincipal()
-    return User.getById(principal.userId)?.toPublicModel() ?: serverError(
+    return User.getById(principal.userId) ?: serverError(
         HttpStatusCode.NotFound,
         "Could not find user"
     )

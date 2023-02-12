@@ -5,7 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.Payload
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.thoth.models.UserModel
+import io.thoth.models.InternalUserModel
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.*
@@ -27,7 +27,7 @@ class ThothPrincipal(
     val type: JwtType
 ) : Principal
 
-internal fun generateJwtForUser(issuer: String, user: UserModel, config: AuthConfig): JwtPair {
+internal fun generateJwtForUser(issuer: String, user: InternalUserModel, config: AuthConfig): JwtPair {
     val keyPair = config.keyPair
     val bearerToken = JWT
         .create()

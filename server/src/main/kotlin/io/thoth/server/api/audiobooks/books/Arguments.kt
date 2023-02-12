@@ -1,7 +1,7 @@
 package io.thoth.server.api.audiobooks.books
 
 import io.ktor.resources.*
-import io.thoth.common.serializion.kotlin.UUIDSerializer
+import io.thoth.common.serializion.kotlin.UUID_S
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.util.*
@@ -9,7 +9,7 @@ import java.util.*
 @Serializable
 @Resource("{id}")
 internal class BookId(
-    @Serializable(UUIDSerializer::class) val id: UUID,
+    val id: UUID_S,
 )
 
 

@@ -10,6 +10,7 @@ import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.fileResponse
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
@@ -24,7 +25,7 @@ fun Route.registerStreamingRouting(route: String = "audio") {
 
 fun Route.streamingRouting() {
     get<AudioId, FileResponse> { fileId ->
-        val track = Track.getById(fileId.id) ?: serverError(
+        val track = transaction { Track.getById(fileId.id) } ?: serverError(
             HttpStatusCode.NotFound,
             "Database out of sync. Please start syncing process."
         )

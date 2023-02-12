@@ -1,6 +1,7 @@
 package io.thoth.common.serializion.kotlin
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -12,3 +13,5 @@ object UUIDSerializer : KSerializer<UUID> {
     override fun serialize(encoder: Encoder, value: UUID) = encoder.encodeString(value.toString())
     override fun deserialize(decoder: Decoder): UUID = UUID.fromString(decoder.decodeString())
 }
+
+typealias UUID_S = @Serializable(with = UUIDSerializer::class) UUID

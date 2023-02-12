@@ -1,7 +1,7 @@
 package io.thoth.server.api.stream
 
 import io.ktor.resources.*
-import io.thoth.common.serializion.kotlin.UUIDSerializer
+import io.thoth.common.serializion.kotlin.UUID_S
 import kotlinx.serialization.Serializable
 import java.util.*
 
@@ -9,5 +9,5 @@ import java.util.*
 @Resource("{id}")
 @Serializable
 class AudioId(
-    @Serializable(UUIDSerializer::class) val id: UUID,
+    val id: UUID_S,
 )

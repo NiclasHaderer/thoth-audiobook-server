@@ -11,6 +11,7 @@ import io.thoth.models.SeriesModelWithBooks
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
+import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -24,7 +25,6 @@ fun Route.registerSeriesRouting(path: String = "series") {
 }
 
 internal fun Route.routing() {
-    // TODO add update functionality
     get<QueryLimiter, PaginatedResponse<SeriesModel>> {
         transaction {
             val series = Series.getMultiple(it.limit, it.offset)
@@ -40,4 +40,6 @@ internal fun Route.routing() {
     }
 
     patch(RouteHandler::patchSeries)
+
+    post(RouteHandler::postSeries)
 }

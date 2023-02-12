@@ -1,7 +1,7 @@
 package io.thoth.auth.routes
 
 import io.ktor.resources.*
-import io.thoth.common.serializion.kotlin.UUIDSerializer
+import io.thoth.common.serializion.kotlin.UUID_S
 import kotlinx.serialization.Serializable
 import java.util.*
 
@@ -38,5 +38,5 @@ internal class UsernameChange(
 @Serializable
 @Resource("{id}")
 internal class IdRoute(
-    @Serializable(UUIDSerializer::class) val id: UUID
+    val id: UUID_S
 )

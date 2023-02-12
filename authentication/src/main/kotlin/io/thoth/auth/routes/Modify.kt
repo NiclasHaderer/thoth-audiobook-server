@@ -44,7 +44,7 @@ internal fun RouteHandler.modifyUser(userID: IdRoute, editUser: EditUser): UserM
         }
 
         user
-    }.toModel().toPublicModel()
+    }.toModel()
 }
 
 
