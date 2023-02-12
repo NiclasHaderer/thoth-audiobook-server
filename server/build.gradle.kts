@@ -15,6 +15,7 @@ val koinVersion: String by project
 val tsGeneratorVersion: String by project
 val kotlinLogging: String by project
 val slf4jVersion: String by project
+val kotlinxSerializationVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.8.0"
@@ -67,7 +68,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
 
     // Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     // Database drivers
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
     implementation("com.h2database:h2:$h2Version")

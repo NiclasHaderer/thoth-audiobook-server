@@ -1,26 +1,32 @@
 package io.thoth.models
 
+import io.thoth.common.serializion.kotlin.UUIDSerializer
+import kotlinx.serialization.Serializable
 import java.util.*
 
-
-open class UserModel(
-    val id: UUID,
-    val username: String,
-    val admin: Boolean,
+interface IUserModel {
+    val id: UUID
+    val username: String
+    val admin: Boolean
     val edit: Boolean
-)
+}
 
-class InternalUserModel(
-    id: UUID,
-    username: String,
-    admin: Boolean,
-    edit: Boolean,
+
+@Serializable
+data class UserModel(
+    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val username: String,
+    override val admin: Boolean,
+    override val edit: Boolean
+) : IUserModel
+
+@Serializable
+data class InternalUserModel(
+    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val username: String,
+    override val admin: Boolean,
+    override val edit: Boolean,
     val passwordHash: String,
-) : UserModel(
-    id,
-    username,
-    admin,
-    edit,
-) {
+) : IUserModel {
     fun toPublicModel(): UserModel = UserModel(id = id, username = username, admin = admin, edit = edit)
 }
