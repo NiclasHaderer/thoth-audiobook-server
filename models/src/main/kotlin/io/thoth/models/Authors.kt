@@ -1,7 +1,7 @@
 package io.thoth.models
 
-import io.thoth.common.serializion.kotlin.LocalDateSerializer
-import io.thoth.common.serializion.kotlin.UUIDSerializer
+import io.thoth.common.serializion.kotlin.LocalDate_S
+import io.thoth.common.serializion.kotlin.UUID_S
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.util.*
@@ -20,28 +20,28 @@ interface IAuthorModel {
 
 @Serializable
 data class AuthorModel(
-    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val id: UUID_S,
     override val name: String,
     override val provider: String?,
     override val biography: String?,
-    @Serializable(UUIDSerializer::class) override val imageID: UUID?,
+    override val imageID: UUID_S?,
     override val website: String?,
     override val bornIn: String?,
-    @Serializable(LocalDateSerializer::class) override val birthDate: LocalDate?,
-    @Serializable(LocalDateSerializer::class) override val deathDate: LocalDate?
+    override val birthDate: LocalDate_S?,
+    override val deathDate: LocalDate_S?
 ) : IAuthorModel
 
 @Serializable
 data class AuthorModelWithBooks(
-    @Serializable(UUIDSerializer::class) override val id: UUID,
+    override val id: UUID_S,
     override val name: String,
     override val provider: String?,
     override val biography: String?,
-    @Serializable(UUIDSerializer::class) override val imageID: UUID?,
+    override val imageID: UUID_S?,
     override val website: String?,
     override val bornIn: String?,
-    @Serializable(LocalDateSerializer::class) override val birthDate: LocalDate?,
-    @Serializable(LocalDateSerializer::class) override val deathDate: LocalDate?,
+    override val birthDate: LocalDate_S?,
+    override val deathDate: LocalDate_S?,
     val books: List<IBookModel>,
     val series: List<ISeriesModel>
 ) : IAuthorModel {

@@ -19,46 +19,46 @@ fun Route.registerMetadataRouting(path: String = "metadata") {
 
 
 internal fun Route.routing() {
-    val searchService by inject<MetadataProvider>()
+    val metadataProvider by inject<MetadataProvider>()
 
     get<MetadataSearch, List<MetadataSearchBook>>("search") { params ->
-        searchService.search(
+        metadataProvider.search(
             params.keywords, params.title, params.author, params.narrator, params.language, params.pageSize
         )
     }
 
     route("author") {
         get<AuthorID, MetadataAuthor> { id ->
-            searchService.getAuthorByID(id.provider, id.itemID) ?: serverError(
+            metadataProvider.getAuthorByID(id.provider, id.itemID) ?: serverError(
                 HttpStatusCode.NotFound, "Author with id ${id.itemID} and provider ${id.provider}was not found"
             )
         }
 
         get<AuthorName, List<MetadataAuthor>>("author") { params ->
-            searchService.getAuthorByName(params.name)
+            metadataProvider.getAuthorByName(params.name)
         }
     }
 
     route("book") {
         get<BookID, MetadataBook> { id ->
-            searchService.getBookByID(id.provider, id.itemID) ?: serverError(
+            metadataProvider.getBookByID(id.provider, id.itemID) ?: serverError(
                 HttpStatusCode.NotFound, "Book with id ${id.itemID} and provider ${id.provider}was not found"
             )
         }
 
         get<BookName, List<MetadataBook>>("search") { params ->
-            searchService.getBookByName(params.name, params.authorName)
+            metadataProvider.getBookByName(params.name, params.authorName)
         }
     }
 
     route("series") {
         get<SeriesID, MetadataSeries> { id ->
-            searchService.getSeriesByID(id.provider, id.itemID) ?: serverError(
+            metadataProvider.getSeriesByID(id.provider, id.itemID) ?: serverError(
                 HttpStatusCode.NotFound, "Series with id ${id.itemID} and provider ${id.provider}was not found"
             )
         }
         get<SeriesName, List<MetadataSeries>>("search") { params ->
-            searchService.getSeriesByName(params.name, params.authorName)
+            metadataProvider.getSeriesByName(params.name, params.authorName)
         }
     }
 

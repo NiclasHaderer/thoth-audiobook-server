@@ -2,6 +2,7 @@ package io.thoth.common.serializion.kotlin
 
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -40,3 +41,7 @@ object LocalDateSerializer : KSerializer<LocalDate> {
     override fun deserialize(decoder: Decoder): LocalDate =
         Instant.ofEpochMilli(decoder.decodeLong()).atZone(ZoneId.systemDefault()).toLocalDate()
 }
+
+typealias Date_S = @Serializable(with = DateSerializer::class) Date
+typealias LocalDate_S = @Serializable(with = LocalDateSerializer::class) LocalDate
+typealias LocalDateTime_S = @Serializable(with = LocalDateTimeSerializer::class) LocalDateTime

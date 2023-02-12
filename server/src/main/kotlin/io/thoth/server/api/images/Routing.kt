@@ -8,6 +8,7 @@ import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.binaryResponse
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
+import org.jetbrains.exposed.sql.transactions.transaction
 
 
 fun Route.registerImageRouting(route: String = "image") {
@@ -18,8 +19,11 @@ fun Route.registerImageRouting(route: String = "image") {
 
 internal fun Route.imageRouting() {
     get<ImageId, BinaryResponse> { image ->
-        val imageResponse = Image.getById(image.id) ?: serverError(HttpStatusCode.NotFound, "Could not find image")
-        binaryResponse(imageResponse.blob)
+        val imageBlob = transaction { Image.getById(image.id)?.blob } ?: serverError(
+            HttpStatusCode.NotFound,
+            "Could not find image"
+        )
+        binaryResponse(imageBlob)
     }
 }
 

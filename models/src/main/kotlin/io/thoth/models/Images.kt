@@ -1,12 +1,11 @@
 package io.thoth.models
 
-import io.thoth.common.serializion.kotlin.UUIDSerializer
+import io.thoth.common.serializion.kotlin.UUID_S
 import kotlinx.serialization.Serializable
-import java.util.*
 
 @Serializable
 data class ImageModel(
-    @Serializable(UUIDSerializer::class) val id: UUID,
+    val id: UUID_S,
     val blob: ByteArray,
 ) {
     override fun equals(other: Any?): Boolean {

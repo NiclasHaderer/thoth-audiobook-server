@@ -4,6 +4,7 @@ val fuzzyWuzzyVersion: String by project
 val reflectVersion: String by project
 val exposedVersion: String by project
 val kotlinLogging: String by project
+val kotlinxSerializationVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.8.0"
@@ -16,14 +17,13 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":models"))
     // Search
     implementation("me.xdrop:fuzzywuzzy:$fuzzyWuzzyVersion")
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     // Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     // Ktor
     implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")

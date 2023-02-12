@@ -1,19 +1,17 @@
 package io.thoth.models
 
-import io.thoth.common.serializion.kotlin.LocalDateTimeSerializer
-import io.thoth.common.serializion.kotlin.UUIDSerializer
+import io.thoth.common.serializion.kotlin.LocalDateTime_S
+import io.thoth.common.serializion.kotlin.UUID_S
 import kotlinx.serialization.Serializable
-import java.time.LocalDateTime
-import java.util.*
 
 @Serializable
 data class TrackModel(
-    @Serializable(UUIDSerializer::class) val id: UUID,
+    val id: UUID_S,
     val title: String,
     val trackNr: Int?,
     val duration: Int,
     val accessTime: Long,
     val book: TitledId,
     val path: String,
-    @Serializable(LocalDateTimeSerializer::class) val updateTime: LocalDateTime,
+    val updateTime: LocalDateTime_S,
 )
