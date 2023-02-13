@@ -9,6 +9,8 @@ import java.util.*
 interface IBookModel {
     val id: UUID
     val title: String
+    val authors: List<NamedId>
+    val series: List<TitledId>
     val provider: String?
     val providerID: String?
     val providerRating: Float?
@@ -18,12 +20,14 @@ interface IBookModel {
     val description: String?
     val narrator: String?
     val isbn: String?
-    val cover: UUID?
+    val coverID: UUID?
 }
 
 @Serializable
 data class BookModel(
     override val id: UUID_S,
+    override val authors: List<NamedId>,
+    override val series: List<TitledId>,
     override val title: String,
     override val provider: String?,
     override val providerID: String?,
@@ -34,12 +38,14 @@ data class BookModel(
     override val description: String?,
     override val narrator: String?,
     override val isbn: String?,
-    override val cover: UUID_S?,
+    override val coverID: UUID_S?
 ) : IBookModel
 
 @Serializable
 data class BookModelWithTracks(
     override val id: UUID_S,
+    override val authors: List<NamedId>,
+    override val series: List<TitledId>,
     override val title: String,
     override val provider: String?,
     override val providerID: String?,
@@ -50,14 +56,12 @@ data class BookModelWithTracks(
     override val description: String?,
     override val narrator: String?,
     override val isbn: String?,
-    override val cover: UUID_S?,
+    override val coverID: UUID_S?,
     val tracks: List<TrackModel>,
-    val authors: List<IAuthorModel>,
-    val series: List<ISeriesModel>,
 ) : IBookModel {
     companion object {
         fun fromModel(
-            book: IBookModel, tracks: List<TrackModel>, authors: List<IAuthorModel>, series: List<ISeriesModel>
+            book: IBookModel, tracks: List<TrackModel>
         ): BookModelWithTracks {
 
             val sortedTracks = if (tracks.any { it.trackNr == null }) {
@@ -73,10 +77,10 @@ data class BookModelWithTracks(
                 language = book.language,
                 description = book.description,
                 tracks = sortedTracks,
-                authors = authors,
+                authors = book.authors,
                 narrator = book.narrator,
-                series = series,
-                cover = book.cover,
+                series = book.series,
+                coverID = book.coverID,
                 isbn = book.isbn,
                 provider = book.provider,
                 providerID = book.providerID,

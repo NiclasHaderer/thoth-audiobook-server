@@ -16,3 +16,7 @@ fun Transaction.addMissingColumns(vararg tables: Table) {
         execInBatch(statements)
     }
 }
+
+fun <T> List<T>.toSizedIterable(): SizedIterable<T> {
+    return SizedCollection<T>(this)
+}

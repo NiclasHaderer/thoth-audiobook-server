@@ -15,7 +15,7 @@ data class MetadataSearchAuthorImpl(
 ) : MetadataSearchAuthor
 
 interface MetadataAuthor : MetadataSearchAuthor {
-    val image: String?
+    val imageURL: String?
     val biography: String?
     val website: String?
     val bornIn: String?
@@ -27,7 +27,7 @@ data class MetadataAuthorImpl(
     override val id: MetadataProviderWithID,
     override val name: String?,
     override val link: String,
-    override val image: String?,
+    override val imageURL: String?,
     override val biography: String?,
     override val website: String?,
     override val bornIn: String?,

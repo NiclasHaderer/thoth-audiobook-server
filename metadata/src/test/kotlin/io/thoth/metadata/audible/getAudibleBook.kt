@@ -45,7 +45,7 @@ class AudibleBookTest {
                         index = 1.0f
                     ),
                 ),
-                cover = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
+                coverURL = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
                 narrator = "Stephen Fry",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 isbn = null,
@@ -86,7 +86,7 @@ class AudibleBookTest {
                         index = 1.0f
                     ),
                 ),
-                cover = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
+                coverURL = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
                 narrator = "Stephen Fry",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 isbn = null,

@@ -37,7 +37,7 @@ suspend fun getAudibleSeries(
         totalBooks = getBookCount(document),
         books = seriesBooks,
         author = seriesBooks.firstOrNull()?.author?.name,
-        cover = null,
+        coverURL = null,
         primaryWorks = seriesBooks.size,
     )
 }

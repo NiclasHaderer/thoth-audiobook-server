@@ -15,6 +15,8 @@ internal class BookId(
 
 class PatchBook(
     val title: String?,
+    val authors: List<UUID_S>?,
+    val series: List<UUID_S>?,
     val provider: String?,
     val providerID: String?,
     val providerRating: Float?,
@@ -25,10 +27,16 @@ class PatchBook(
     val narrator: String?,
     val isbn: String?,
     val cover: String?
-)
+) {
+    init {
+        require(authors?.isNotEmpty() ?: true) { "Authors cannot be empty" }
+    }
+}
 
 class PostBook(
     val title: String,
+    val authors: List<UUID_S>,
+    val series: List<UUID_S>?,
     val provider: String?,
     val providerID: String?,
     val providerRating: Float?,
@@ -39,4 +47,8 @@ class PostBook(
     val narrator: String?,
     val isbn: String?,
     val cover: String?,
-)
+) {
+    init {
+        require(authors.isNotEmpty()) { "Authors cannot be empty" }
+    }
+}

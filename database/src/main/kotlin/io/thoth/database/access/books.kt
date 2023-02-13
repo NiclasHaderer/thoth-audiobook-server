@@ -3,6 +3,8 @@ package io.thoth.database.access
 import io.thoth.database.tables.*
 import io.thoth.models.BookModel
 import io.thoth.models.BookModelWithTracks
+import io.thoth.models.NamedId
+import io.thoth.models.TitledId
 import org.jetbrains.exposed.sql.*
 import java.util.*
 
@@ -16,8 +18,6 @@ fun Book.Companion.getDetailedById(bookId: UUID, order: SortOrder = SortOrder.AS
     return BookModelWithTracks.fromModel(
         book.toModel(),
         tracks,
-        book.authors.orderBy(TAuthors.name.lowerCase() to order).map { it.toModel() },
-        book.series.orderBy(TSeries.title.lowerCase() to order).map { it.toModel() }
     )
 }
 
@@ -56,7 +56,7 @@ fun Book.Companion.fromAuthor(authorID: UUID, order: SortOrder = SortOrder.ASC):
     return Book.find { TBooks.id inList bookIDs }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
 }
 
-fun Book.toModel(): BookModel {
+fun Book.toModel(order: SortOrder = SortOrder.ASC): BookModel {
     return BookModel(
         id = id.value,
         title = title,
@@ -64,11 +64,13 @@ fun Book.toModel(): BookModel {
         providerID = providerID,
         provider = provider,
         providerRating = providerRating,
-        cover = coverID?.value,
+        coverID = coverID?.value,
         releaseDate = releaseDate,
         narrator = narrator,
         isbn = isbn,
         language = language,
         publisher = publisher,
+        authors = authors.orderBy(TAuthors.name.lowerCase() to order).map { NamedId(it.name, it.id.value) },
+        series = series.orderBy(TSeries.title.lowerCase() to order).map { TitledId(it.title, it.id.value) }
     )
 }
