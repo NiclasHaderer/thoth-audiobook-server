@@ -1,6 +1,5 @@
 package io.thoth.server.file.tagger
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -30,8 +29,6 @@ interface ReadonlyFileTagger {
 
 
 open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger {
-    protected val mapper = ObjectMapper()
-
     constructor(path: Path) : this(path.toFile())
     constructor(file: File) : this(AudioFileIO.read(file))
     constructor(path: String) : this(File(path))

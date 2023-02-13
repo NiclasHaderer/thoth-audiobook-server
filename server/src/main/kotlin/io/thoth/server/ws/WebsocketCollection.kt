@@ -1,12 +1,12 @@
 package io.thoth.server.ws
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.EntityChangeType
 import java.util.*
 
-
+@Serializable
 class ChangeEvent(
     val type: EntityChangeType,
     val id: String,
@@ -14,7 +14,6 @@ class ChangeEvent(
 
 class WebsocketCollection {
     private val connections = Collections.synchronizedList<DefaultWebSocketServerSession>(mutableListOf())
-    private val mapper = ObjectMapper()
 
     fun add(connection: DefaultWebSocketServerSession) {
         connections.add(connection)
@@ -31,14 +30,9 @@ class WebsocketCollection {
         connections.remove(conn)
     }
 
-    suspend fun emit(value: String) {
-        connections.forEach {
-            it.send(value)
-        }
-    }
-
     suspend fun emit(value: ChangeEvent) {
-        val str = mapper.writeValueAsString(value)
-        emit(str)
+        connections.forEach {
+            it.sendSerialized(value)
+        }
     }
 }

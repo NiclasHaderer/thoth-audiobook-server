@@ -15,7 +15,7 @@ suspend fun getAudibleAuthor(
         link = document.location().split("?").first(),
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
         name = getAuthorName(document),
-        image = getAuthorImage(document, imageSize),
+        imageURL = getAuthorImage(document, imageSize),
         biography = getAuthorBiography(document),
         website = null,
         deathDate = null,

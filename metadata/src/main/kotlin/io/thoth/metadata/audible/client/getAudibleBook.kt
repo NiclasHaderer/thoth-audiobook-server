@@ -21,7 +21,7 @@ suspend fun getAudibleBook(
         id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
         description = getDescription(document),
         title = extractTitle(document, region),
-        cover = extractImageUrl(document),
+        coverURL = extractImageUrl(document),
         author = extractAuthorInfo(document),
         series = extractBookSeriesInfo(document),
         narrator = extractNarrator(document),

@@ -6,24 +6,26 @@ import java.util.*
 
 interface ISeriesModel {
     val id: UUID
+    val authors: List<NamedId>
     val title: String
     val provider: String?
     val providerID: String?
     val totalBooks: Int?
     val primaryWorks: Int?
-    val cover: UUID?
+    val coverID: UUID?
     val description: String?
 }
 
 @Serializable
 data class SeriesModel(
     override val id: UUID_S,
+    override val authors: List<NamedId>,
     override val title: String,
     override val provider: String?,
     override val providerID: String?,
     override val totalBooks: Int?,
     override val primaryWorks: Int?,
-    override val cover: UUID_S?,
+    override val coverID: UUID_S?,
     override val description: String?
 ) : ISeriesModel
 
@@ -36,21 +38,21 @@ data class YearRange(
 @Serializable
 data class SeriesModelWithBooks(
     override val id: UUID_S,
+    override val authors: List<NamedId>,
     override val title: String,
     override val provider: String?,
     override val providerID: String?,
     override val totalBooks: Int?,
     override val primaryWorks: Int?,
-    override val cover: UUID_S?,
+    override val coverID: UUID_S?,
     override val description: String?,
     val yearRange: YearRange?,
     val narrators: List<String>,
     val books: List<IBookModel>,
-    val authors: List<IAuthorModel>,
 ) : ISeriesModel {
     companion object {
         fun fromModel(
-            series: ISeriesModel, books: List<IBookModel>, authors: List<IAuthorModel>
+            series: ISeriesModel, books: List<IBookModel>
         ): SeriesModelWithBooks {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
             val years = books.mapNotNull { it.releaseDate }
@@ -70,9 +72,9 @@ data class SeriesModelWithBooks(
                 narrators = narrators,
                 description = series.description,
                 books = books,
-                authors = authors,
+                authors = series.authors,
                 primaryWorks = series.primaryWorks,
-                cover = series.cover,
+                coverID = series.coverID,
                 provider = series.provider,
                 providerID = series.providerID,
             )

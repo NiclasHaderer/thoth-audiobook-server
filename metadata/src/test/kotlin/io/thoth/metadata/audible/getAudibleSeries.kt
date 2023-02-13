@@ -40,7 +40,7 @@ class AudibleSeriesTest {
                         index = 1f
                     )
                 ),
-                cover = "https://m.media-amazon.com/images/I/51xJbFMRsxL._SL500_.jpg",
+                coverURL = "https://m.media-amazon.com/images/I/51xJbFMRsxL._SL500_.jpg",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 narrator = "Jim Dale",
                 language = "English"
@@ -62,7 +62,7 @@ class AudibleSeriesTest {
                         index = 2f
                     )
                 ),
-                cover = "https://m.media-amazon.com/images/I/61fmfnA-uCL._SL500_.jpg",
+                coverURL = "https://m.media-amazon.com/images/I/61fmfnA-uCL._SL500_.jpg",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 narrator = "Jim Dale",
                 language = "English"
@@ -84,7 +84,7 @@ class AudibleSeriesTest {
                         index = 3f
                     )
                 ),
-                cover = "https://m.media-amazon.com/images/I/51O29wSqEsL._SL500_.jpg",
+                coverURL = "https://m.media-amazon.com/images/I/51O29wSqEsL._SL500_.jpg",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 narrator = "Jim Dale",
                 language = "English"
@@ -106,7 +106,7 @@ class AudibleSeriesTest {
                         index = 4f
                     )
                 ),
-                cover = "https://m.media-amazon.com/images/I/61m99NmM4jL._SL500_.jpg",
+                coverURL = "https://m.media-amazon.com/images/I/61m99NmM4jL._SL500_.jpg",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 narrator = "Jim Dale",
                 language = "English"
@@ -128,7 +128,7 @@ class AudibleSeriesTest {
                         index = 5f
                     )
                 ),
-                cover = "https://m.media-amazon.com/images/I/51KHVovUpGL._SL500_.jpg",
+                coverURL = "https://m.media-amazon.com/images/I/51KHVovUpGL._SL500_.jpg",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 narrator = "Jim Dale",
                 language = "English"
@@ -150,7 +150,7 @@ class AudibleSeriesTest {
                         index = 6f
                     )
                 ),
-                cover = "https://m.media-amazon.com/images/I/51sImF7gqML._SL500_.jpg",
+                coverURL = "https://m.media-amazon.com/images/I/51sImF7gqML._SL500_.jpg",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 narrator = "Jim Dale",
                 language = "English"
@@ -172,13 +172,13 @@ class AudibleSeriesTest {
                         index = 7f
                     )
                 ),
-                cover = "https://m.media-amazon.com/images/I/61yMjtQzKcL._SL500_.jpg",
+                coverURL = "https://m.media-amazon.com/images/I/61yMjtQzKcL._SL500_.jpg",
                 releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 narrator = "Jim Dale",
                 language = "English"
             )
         ), author = "J.K. Rowling",
-        cover = null,
+        coverURL = null,
         primaryWorks = 7
     )
 

@@ -34,7 +34,8 @@ fun main() {
             SeriesModelWithBooks::class,
             TrackModel::class,
             ChangeEvent::class,
-            PaginatedResponse::class
+            PaginatedResponse::class,
+            NamedId::class,
         )
     )
 

@@ -45,7 +45,7 @@ fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<Me
             title = extractTitle(it, regions),
             link = link,
             series = extractBookSeriesInfo(it),
-            cover = extractImageUrl(it),
+            coverURL = extractImageUrl(it),
             releaseDate = extractReleaseDate(it, regions),
             id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
             narrator = extractNarrator(it),

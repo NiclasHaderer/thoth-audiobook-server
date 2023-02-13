@@ -15,21 +15,35 @@ internal class SeriesId(
 @Serializable
 data class PatchSeries(
     val title: String?,
+    val authors: List<UUID_S>?,
+    val books: List<UUID_S>?,
     val provider: String?,
     val providerID: String?,
     val totalBooks: Int?,
     val primaryWorks: Int?,
     val cover: String?,
     val description: String?
-)
+) {
+    init {
+        require(authors?.isNotEmpty() ?: true) { "Authors must not be empty" }
+        require(books?.isNotEmpty() ?: true) { "Books must not be empty" }
+    }
+}
 
 @Serializable
 data class PostSeries(
     val title: String,
+    val authors: List<UUID_S>,
+    val books: List<UUID_S>,
     val provider: String?,
     val providerID: String?,
     val totalBooks: Int?,
     val primaryWorks: Int?,
     val cover: String?,
     val description: String?,
-)
+) {
+    init {
+        require(authors.isNotEmpty()) { "Authors must not be empty" }
+        require(books.isNotEmpty()) { "Books must not be empty" }
+    }
+}

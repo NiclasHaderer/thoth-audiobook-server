@@ -19,7 +19,7 @@ interface MetadataSeries {
     val link: String
     val title: String?
     val author: String?
-    val cover: String?
+    val coverURL: String?
     val description: String?
     val totalBooks: Int?
     val primaryWorks: Int?
@@ -31,7 +31,7 @@ data class MetadataSeriesImpl(
     override val title: String?,
     override val author: String?,
     override val link: String,
-    override val cover: String?,
+    override val coverURL: String?,
     override val description: String?,
     override val totalBooks: Int?,
     override val primaryWorks: Int?,
