@@ -15,27 +15,25 @@ enum class NotificationType(val changeType: Set<EntityChangeType>) {
 
 
 fun Route.withNotifications(path: String, table: Table, type: NotificationType) {
-    val sockets = WebsocketCollection()
+    val collection = WebsocketCollection()
 
     EntityHook.subscribe {
-        if (type.changeType.contains(it.changeType)) {
-            if (it.entityClass.table == table) {
-                runBlocking {
-                    sockets.emit(
-                        ChangeEvent(
-                            type = it.changeType,
-                            id = it.entityId.value.toString(),
-                        )
-                    )
-                }
-            }
+        // Not correct change type of wrong table
+        if (!type.changeType.contains(it.changeType) || it.entityClass.table != table) return@subscribe
+        runBlocking {
+            collection.emit(
+                ChangeEvent(
+                    type = it.changeType,
+                    id = it.entityId.value.toString(),
+                )
+            )
         }
     }
 
     webSocket(path) {
-        sockets.add(this)
+        collection.add(this)
         this.closeReason.await()
-        sockets.remove(this)
+        collection.remove(this)
     }
 
 }

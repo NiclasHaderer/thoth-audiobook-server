@@ -2,7 +2,7 @@ package io.thoth.database.access
 
 import io.thoth.database.tables.*
 import io.thoth.models.BookModel
-import io.thoth.models.BookModelWithTracks
+import io.thoth.models.DetailedBookModel
 import io.thoth.models.NamedId
 import io.thoth.models.TitledId
 import org.jetbrains.exposed.sql.*
@@ -12,13 +12,19 @@ fun Book.Companion.getById(bookId: UUID): BookModel? {
     return findById(bookId)?.toModel() ?: return null
 }
 
-fun Book.Companion.getDetailedById(bookId: UUID, order: SortOrder = SortOrder.ASC): BookModelWithTracks? {
+fun Book.Companion.getDetailedById(bookId: UUID): DetailedBookModel? {
     val book = findById(bookId) ?: return null
     val tracks = Track.forBook(bookId)
-    return BookModelWithTracks.fromModel(
+    return DetailedBookModel.fromModel(
         book.toModel(),
         tracks,
     )
+}
+
+fun Book.Companion.positionOf(bookId: UUID, order: SortOrder = SortOrder.ASC): Long? {
+    val book = findById(bookId) ?: return null
+    return TBooks.select { TBooks.title.lowerCase() less book.title.lowercase() }
+        .orderBy(TBooks.title.lowerCase() to order).count()
 }
 
 fun Book.Companion.forSeries(seriesId: UUID, order: SortOrder = SortOrder.ASC): List<BookModel> {

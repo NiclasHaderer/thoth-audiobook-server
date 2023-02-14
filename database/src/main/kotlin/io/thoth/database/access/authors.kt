@@ -6,23 +6,29 @@ import io.thoth.database.tables.TAuthors
 import io.thoth.database.tables.TBooks
 import io.thoth.database.tables.TSeries
 import io.thoth.models.AuthorModel
-import io.thoth.models.AuthorModelWithBooks
+import io.thoth.models.DetailedAuthorModel
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.select
 import java.util.*
 
 fun Author.Companion.getById(authorId: UUID): AuthorModel? {
     return findById(authorId)?.toModel() ?: return null
 }
 
-fun Author.Companion.getDetailedById(authorId: UUID, order: SortOrder = SortOrder.ASC): AuthorModelWithBooks? {
+fun Author.Companion.positionOf(authorId: UUID, order: SortOrder = SortOrder.ASC): Long? {
+    val author = findById(authorId) ?: return null
+    return TAuthors.select { TAuthors.name.lowerCase() less author.name.lowercase() }
+        .orderBy(TAuthors.name.lowerCase() to order).count()
+}
+
+fun Author.Companion.getDetailedById(authorId: UUID, order: SortOrder = SortOrder.ASC): DetailedAuthorModel? {
     val author = findById(authorId) ?: return null
 
-
-    return AuthorModelWithBooks.fromModel(
+    return DetailedAuthorModel.fromModel(
         author = author.toModel(),
         books = author.books.orderBy(TBooks.releaseDate to order).map { it.toModel() },
-        series = author.series.orderBy(TSeries.title.lowerCase() to order).map { it.toModel() }
+        series = author.series.orderBy(TSeries.title.lowerCase() to order).map { it.toModel() },
     )
 }
 

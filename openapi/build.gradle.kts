@@ -1,6 +1,7 @@
 val logbackVersion: String by project
 val ktorVersion: String by project
-val openApiVersion = "2.2.0"
+val kotlinLogging: String by project
+val openApiVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.8.0"
@@ -13,6 +14,7 @@ repositories {
 
 dependencies {
     implementation(project(":common"))
+    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
 
     // Ktor
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")

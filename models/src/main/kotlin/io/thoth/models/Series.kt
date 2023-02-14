@@ -36,7 +36,7 @@ data class YearRange(
 )
 
 @Serializable
-data class SeriesModelWithBooks(
+data class DetailedSeriesModel(
     override val id: UUID_S,
     override val authors: List<NamedId>,
     override val title: String,
@@ -53,7 +53,7 @@ data class SeriesModelWithBooks(
     companion object {
         fun fromModel(
             series: ISeriesModel, books: List<IBookModel>
-        ): SeriesModelWithBooks {
+        ): DetailedSeriesModel {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
             val years = books.mapNotNull { it.releaseDate }
             val startDate = years.minOrNull()
@@ -64,7 +64,7 @@ data class SeriesModelWithBooks(
                 yearRange = YearRange(start = startDate.year, end = endDate.year)
             }
 
-            return SeriesModelWithBooks(
+            return DetailedSeriesModel(
                 id = series.id,
                 title = series.title,
                 totalBooks = series.totalBooks,

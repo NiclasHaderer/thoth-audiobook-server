@@ -32,7 +32,7 @@ data class AuthorModel(
 ) : IAuthorModel
 
 @Serializable
-data class AuthorModelWithBooks(
+data class DetailedAuthorModel(
     override val id: UUID_S,
     override val name: String,
     override val provider: String?,
@@ -43,21 +43,22 @@ data class AuthorModelWithBooks(
     override val birthDate: LocalDate_S?,
     override val deathDate: LocalDate_S?,
     val books: List<IBookModel>,
-    val series: List<ISeriesModel>
+    val series: List<ISeriesModel>,
 ) : IAuthorModel {
     companion object {
-        fun fromModel(author: IAuthorModel, books: List<IBookModel>, series: List<ISeriesModel>) = AuthorModelWithBooks(
-            id = author.id,
-            name = author.name,
-            biography = author.biography,
-            imageID = author.imageID,
-            website = author.website,
-            bornIn = author.bornIn,
-            birthDate = author.birthDate,
-            deathDate = author.deathDate,
-            books = books,
-            series = series,
-            provider = author.provider
-        )
+        fun fromModel(author: IAuthorModel, books: List<IBookModel>, series: List<ISeriesModel>) =
+            DetailedAuthorModel(
+                id = author.id,
+                name = author.name,
+                biography = author.biography,
+                imageID = author.imageID,
+                website = author.website,
+                bornIn = author.bornIn,
+                birthDate = author.birthDate,
+                deathDate = author.deathDate,
+                books = books,
+                series = series,
+                provider = author.provider,
+            )
     }
 }
