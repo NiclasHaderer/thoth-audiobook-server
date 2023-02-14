@@ -28,17 +28,14 @@ fun Book.Companion.positionOf(bookId: UUID, order: SortOrder = SortOrder.ASC): L
 }
 
 fun Book.Companion.forSeries(seriesId: UUID, order: SortOrder = SortOrder.ASC): List<BookModel> {
-    return TSeriesBookMapping
-        .join(TBooks, JoinType.INNER, TSeriesBookMapping.book, TBooks.id)
+    return TSeriesBookMapping.join(TBooks, JoinType.INNER, TSeriesBookMapping.book, TBooks.id)
         .join(TSeries, JoinType.INNER, TSeriesBookMapping.series, TSeries.id)
-        .select { TSeriesBookMapping.series eq seriesId }
-        .orderBy(TSeriesBookMapping.seriesIndex to order)
+        .select { TSeriesBookMapping.series eq seriesId }.orderBy(TSeriesBookMapping.seriesIndex to order)
         .map { Book.wrap(it[TBooks.id], it).toModel() }
 }
 
 fun Book.Companion.findByName(bookTitle: String, author: Author): Book? {
-    val rawBook = TBooks
-        .join(TAuthorBookMapping, JoinType.INNER, TBooks.id, TAuthorBookMapping.book)
+    val rawBook = TBooks.join(TAuthorBookMapping, JoinType.INNER, TBooks.id, TAuthorBookMapping.book)
         .join(TAuthors, JoinType.INNER, TAuthorBookMapping.author, TAuthors.id)
         .select { (TBooks.title like bookTitle) and (TAuthorBookMapping.author eq author.id) }.firstOrNull()
         ?: return null
@@ -56,8 +53,8 @@ fun Book.Companion.getMultiple(limit: Int, offset: Long, order: SortOrder = Sort
 
 
 fun Book.Companion.fromAuthor(authorID: UUID, order: SortOrder = SortOrder.ASC): List<BookModel> {
-    val bookIDs = TAuthorBookMapping.select { TAuthorBookMapping.author eq authorID }
-        .map { it[TAuthorBookMapping.book] }
+    val bookIDs =
+        TAuthorBookMapping.select { TAuthorBookMapping.author eq authorID }.map { it[TAuthorBookMapping.book] }
 
     return Book.find { TBooks.id inList bookIDs }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
 }
@@ -76,7 +73,11 @@ fun Book.toModel(order: SortOrder = SortOrder.ASC): BookModel {
         isbn = isbn,
         language = language,
         publisher = publisher,
-        authors = authors.orderBy(TAuthors.name.lowerCase() to order).map { NamedId(it.name, it.id.value) },
-        series = series.orderBy(TSeries.title.lowerCase() to order).map { TitledId(it.title, it.id.value) }
+        authors = authors.sortedBy { it.name.lowercase() }.map { NamedId(it.name, it.id.value) }.let {
+            if (order == SortOrder.DESC) it.reversed() else it
+        },
+        series = series.sortedBy { it.title.lowercase() }.map { TitledId(it.title, it.id.value) }.let {
+            if (order == SortOrder.DESC) it.reversed() else it
+        },
     )
 }

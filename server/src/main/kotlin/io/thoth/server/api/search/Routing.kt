@@ -15,8 +15,7 @@ fun Route.registerSearchRouting(route: String = "search") {
 }
 
 
-internal fun Route.routing() {
-
+private fun Route.routing() {
     get<SearchQuery, SearchModel> {
         if (it.q != null) {
             return@get SearchService.everywhere(it.q)
