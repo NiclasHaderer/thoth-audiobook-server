@@ -4,10 +4,12 @@ import io.ktor.http.*
 import io.ktor.server.routing.*
 import io.thoth.database.access.getDetailedById
 import io.thoth.database.access.getMultiple
+import io.thoth.database.access.positionOf
 import io.thoth.database.tables.Author
 import io.thoth.models.AuthorModel
-import io.thoth.models.AuthorModelWithBooks
+import io.thoth.models.DetailedAuthorModel
 import io.thoth.models.PaginatedResponse
+import io.thoth.models.Position
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
@@ -36,7 +38,13 @@ internal fun Route.routing() {
         Author.getMultiple(query.limit, query.offset).map { it.id }
     }
 
-    get<AuthorId, AuthorModelWithBooks> {
+    get<AuthorId, Position>("position") {
+        val sortOrder =
+            transaction { Author.positionOf(it.id) } ?: serverError(HttpStatusCode.NotFound, "Author was not found")
+        Position(sortIndex = sortOrder, id = it.id, order = Position.Order.ASC)
+    }
+
+    get<AuthorId, DetailedAuthorModel> {
         transaction { Author.getDetailedById(it.id) } ?: serverError(HttpStatusCode.NotFound, "Author was not found")
     }
 

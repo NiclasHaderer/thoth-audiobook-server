@@ -42,7 +42,7 @@ data class BookModel(
 ) : IBookModel
 
 @Serializable
-data class BookModelWithTracks(
+data class DetailedBookModel(
     override val id: UUID_S,
     override val authors: List<NamedId>,
     override val series: List<TitledId>,
@@ -62,7 +62,7 @@ data class BookModelWithTracks(
     companion object {
         fun fromModel(
             book: IBookModel, tracks: List<TrackModel>
-        ): BookModelWithTracks {
+        ): DetailedBookModel {
 
             val sortedTracks = if (tracks.any { it.trackNr == null }) {
                 tracks.sortedBy { it.path }
@@ -70,7 +70,7 @@ data class BookModelWithTracks(
                 tracks.sortedBy { it.trackNr }
             }
 
-            return BookModelWithTracks(
+            return DetailedBookModel(
                 id = book.id,
                 title = book.title,
                 releaseDate = book.releaseDate,

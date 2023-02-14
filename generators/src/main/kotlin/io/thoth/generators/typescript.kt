@@ -23,15 +23,15 @@ fun main() {
     var audiobookDefinitions = generate(
         setOf(
             AuthorModel::class,
-            AuthorModelWithBooks::class,
+            DetailedAuthorModel::class,
             BookModel::class,
-            BookModelWithTracks::class,
+            DetailedBookModel::class,
             SearchModel::class,
             SeriesModel::class,
             PatchAuthor::class,
             PatchSeries::class,
             PatchBook::class,
-            SeriesModelWithBooks::class,
+            DetailedSeriesModel::class,
             TrackModel::class,
             ChangeEvent::class,
             PaginatedResponse::class,

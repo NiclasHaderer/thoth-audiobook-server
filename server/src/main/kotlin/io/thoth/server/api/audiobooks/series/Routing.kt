@@ -4,10 +4,12 @@ import io.ktor.http.*
 import io.ktor.server.routing.*
 import io.thoth.database.access.getDetailedById
 import io.thoth.database.access.getMultiple
+import io.thoth.database.access.positionOf
 import io.thoth.database.tables.Series
+import io.thoth.models.DetailedSeriesModel
 import io.thoth.models.PaginatedResponse
+import io.thoth.models.Position
 import io.thoth.models.SeriesModel
-import io.thoth.models.SeriesModelWithBooks
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
@@ -35,7 +37,15 @@ internal fun Route.routing() {
     get<QueryLimiter, List<UUID>>("sorting") {
         transaction { Series.getMultiple(it.limit, it.offset) }.map { it.id }
     }
-    get<SeriesId, SeriesModelWithBooks> {
+
+    get<SeriesId, Position> {
+        val sortOrder =
+            transaction { Series.positionOf(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+        Position(sortIndex = sortOrder, id = it.id, order = Position.Order.ASC)
+    }
+
+
+    get<SeriesId, DetailedSeriesModel> {
         transaction { Series.getDetailedById(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
     }
 
