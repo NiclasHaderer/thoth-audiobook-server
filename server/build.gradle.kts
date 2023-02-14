@@ -7,15 +7,13 @@ val kotlinVersion: String by project
 val logbackVersion: String by project
 val exposedVersion: String by project
 val h2Version: String by project
-val hikariVersion: String by project
 val reflectVersion: String by project
-val openApiVersion: String by project
 val sqliteVersion: String by project
 val koinVersion: String by project
-val tsGeneratorVersion: String by project
 val kotlinLogging: String by project
 val slf4jVersion: String by project
 val kotlinxSerializationVersion: String by project
+val jAudioTaggerVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.8.0"
@@ -69,6 +67,7 @@ dependencies {
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
     // Database drivers
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
     implementation("com.h2database:h2:$h2Version")
@@ -78,7 +77,7 @@ dependencies {
     // Migration
     implementation("org.reflections:reflections:$reflectVersion")
     // Audio file processing
-    implementation("org.bitbucket.ijabz:jaudiotagger:v3.0.1")
+    implementation("org.bitbucket.ijabz:jaudiotagger:$jAudioTaggerVersion")
     // Folder watching
     implementation("io.methvin:directory-watcher:$fileWatcherVersion")
     // Search

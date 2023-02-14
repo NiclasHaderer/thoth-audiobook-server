@@ -5,6 +5,7 @@ val caffeineVersion: String by project
 val fuzzyWuzzyVersion: String by project
 val logbackVersion: String by project
 val kotlinLogging: String by project
+val jsonVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.8.0"
@@ -25,9 +26,8 @@ dependencies {
     implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
-    // TOD move version
     // JSON parsing
-    implementation("org.json:json:20220924")
+    implementation("org.json:json:$jsonVersion")
 
 
     // Tests

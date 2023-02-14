@@ -2,15 +2,16 @@ package io.thoth.server.api.audiobooks.books
 
 import io.ktor.resources.*
 import io.thoth.common.serializion.kotlin.UUID_S
-import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.util.*
 
-@Serializable
 @Resource("{id}")
 internal class BookId(
     val id: UUID_S,
-)
+) {
+    @Resource("position")
+    class Position(val parent: BookId)
+}
 
 
 class PatchBook(

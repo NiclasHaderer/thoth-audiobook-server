@@ -38,10 +38,10 @@ internal fun Route.routing() {
         transaction { Series.getMultiple(it.limit, it.offset) }.map { it.id }
     }
 
-    get<SeriesId, Position> {
+    get<SeriesId.Position, Position> {
         val sortOrder =
-            transaction { Series.positionOf(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
-        Position(sortIndex = sortOrder, id = it.id, order = Position.Order.ASC)
+            transaction { Series.positionOf(it.parent.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+        Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
     }
 
 

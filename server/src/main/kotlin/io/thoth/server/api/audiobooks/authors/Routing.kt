@@ -38,10 +38,13 @@ internal fun Route.routing() {
         Author.getMultiple(query.limit, query.offset).map { it.id }
     }
 
-    get<AuthorId, Position>("position") {
+    get<AuthorId.Position, Position> {
         val sortOrder =
-            transaction { Author.positionOf(it.id) } ?: serverError(HttpStatusCode.NotFound, "Author was not found")
-        Position(sortIndex = sortOrder, id = it.id, order = Position.Order.ASC)
+            transaction { Author.positionOf(it.parent.id) } ?: serverError(
+                HttpStatusCode.NotFound,
+                "Author was not found"
+            )
+        Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
     }
 
     get<AuthorId, DetailedAuthorModel> {
