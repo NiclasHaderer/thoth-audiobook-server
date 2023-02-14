@@ -8,16 +8,16 @@ import io.ktor.server.routing.*
 import io.thoth.auth.configureAuthentication
 import io.thoth.common.extensions.get
 import io.thoth.common.extensions.shutdown
+import io.thoth.config.ThothConfig
+import io.thoth.config.loadConfig
+import io.thoth.database.connectToDatabase
+import io.thoth.database.migrateDatabase
 import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
 import io.thoth.server.api.images.registerImageRouting
 import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
-import io.thoth.config.ThothConfig
-import io.thoth.config.loadConfig
-import io.thoth.database.connectToDatabase
-import io.thoth.database.migrateDatabase
 import io.thoth.server.file.scanner.FileWatcher
 import io.thoth.server.file.scanner.RecursiveScan
 import io.thoth.server.plugins.*
@@ -70,7 +70,7 @@ fun Application.server(config: ThothConfig) {
         protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
     }
     configurePartialContent()
-    configureCORS()
+    configureCORS(config)
     configureSockets()
     configureMonitoring()
     configureSerialization()

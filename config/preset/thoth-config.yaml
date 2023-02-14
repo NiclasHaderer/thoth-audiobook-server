@@ -1,6 +1,6 @@
 ---
 ignoreFile: ".thothignore"
-production: true
+production: false
 audioFileLocations:
   - test-resources
 analyzerThreads: 6

@@ -41,10 +41,11 @@ internal fun Route.routing() {
         }
     }
 
-    get<BookId, Position>("position") {
+
+    get<BookId.Position, Position> {
         val sortOrder =
-            transaction { Book.positionOf(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find book")
-        Position(sortIndex = sortOrder, id = it.id, order = Position.Order.ASC)
+            transaction { Book.positionOf(it.parent.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find book")
+        Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
     }
 
     get<BookId, DetailedBookModel> {

@@ -1,11 +1,10 @@
-val logbackVersion: String by project
 val ktorVersion: String by project
 val kotlinLogging: String by project
 val openApiVersion: String by project
+val swaggerUiVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.8.0"
-    kotlin("plugin.serialization") version "1.8.0"
 }
 
 repositories {
@@ -17,17 +16,11 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
 
     // Ktor
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-resources:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("io.ktor:ktor-server-locations-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-server-resources:$ktorVersion")
+    implementation("io.ktor:ktor-server-data-conversion:$ktorVersion")
     // Openapi
     implementation("io.swagger.core.v3:swagger-models:$openApiVersion")
     implementation("io.swagger.core.v3:swagger-core:$openApiVersion")
-    implementation("org.webjars:swagger-ui:4.4.1-1")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
+    implementation("org.webjars:swagger-ui:$swaggerUiVersion")
 }
