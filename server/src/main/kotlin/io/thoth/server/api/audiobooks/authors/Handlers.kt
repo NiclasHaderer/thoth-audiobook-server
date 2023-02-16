@@ -11,37 +11,31 @@ import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
-internal fun RouteHandler.patchAuthor(id: AuthorId, patchAuthor: PatchAuthor): AuthorModel {
-    val author = transaction { Author.findById(id.id) } ?: serverError(HttpStatusCode.NotFound, "Author not found")
-    return transaction {
-        author.apply {
-            name = patchAuthor.name ?: author.name
-            provider = patchAuthor.provider ?: author.provider
-            biography = patchAuthor.biography ?: author.biography
-            website = patchAuthor.website ?: author.website
-            bornIn = patchAuthor.bornIn ?: author.bornIn
-            birthDate = patchAuthor.birthDate ?: author.birthDate
-            deathDate = patchAuthor.deathDate ?: author.deathDate
-            imageID = Image.getNewImage(patchAuthor.image, currentImageID = imageID, default = imageID)
-        }
-        author.toModel()
-    }
+internal fun RouteHandler.patchAuthor(id: AuthorId, patchAuthor: PatchAuthor): AuthorModel = transaction {
+    val author = Author.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Author not found")
+    author.apply {
+        name = patchAuthor.name ?: author.name
+        provider = patchAuthor.provider ?: author.provider
+        biography = patchAuthor.biography ?: author.biography
+        website = patchAuthor.website ?: author.website
+        bornIn = patchAuthor.bornIn ?: author.bornIn
+        birthDate = patchAuthor.birthDate ?: author.birthDate
+        deathDate = patchAuthor.deathDate ?: author.deathDate
+        imageID = Image.getNewImage(patchAuthor.image, currentImageID = imageID, default = imageID)
+    }.toModel()
 }
 
 
-internal fun RouteHandler.postAuthor(id: AuthorId, postAuthor: PostAuthor): AuthorModel {
-    val author = transaction { Author.findById(id.id) } ?: serverError(HttpStatusCode.NotFound, "Author not found")
-    return transaction {
-        author.apply {
-            name = postAuthor.name
-            provider = postAuthor.provider
-            biography = postAuthor.biography
-            website = postAuthor.website
-            bornIn = postAuthor.bornIn
-            birthDate = postAuthor.birthDate
-            deathDate = postAuthor.deathDate
-            imageID = Image.getNewImage(postAuthor.image, currentImageID = imageID, default = null)
-        }
-        author.toModel()
-    }
+internal fun RouteHandler.postAuthor(id: AuthorId, postAuthor: PostAuthor): AuthorModel = transaction {
+    val author = Author.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Author not found")
+    author.apply {
+        name = postAuthor.name
+        provider = postAuthor.provider
+        biography = postAuthor.biography
+        website = postAuthor.website
+        bornIn = postAuthor.bornIn
+        birthDate = postAuthor.birthDate
+        deathDate = postAuthor.deathDate
+        imageID = Image.getNewImage(postAuthor.image, currentImageID = imageID, default = null)
+    }.toModel()
 }

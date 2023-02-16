@@ -20,13 +20,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 
-fun Route.registerBookRouting(path: String = "books") {
-    route(path) {
-        routing()
-    }
-}
-
-internal fun Route.routing() {
+fun Route.registerBookRouting() = route("books") {
     get<QueryLimiter, PaginatedResponse<BookModel>> {
         transaction {
             val books = Book.getMultiple(it.limit, it.offset)

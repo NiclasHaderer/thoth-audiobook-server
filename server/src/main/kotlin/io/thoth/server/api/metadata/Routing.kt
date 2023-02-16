@@ -11,14 +11,7 @@ import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
 import org.koin.ktor.ext.inject
 
-fun Route.registerMetadataRouting(path: String = "metadata") {
-    route(path) {
-        routing()
-    }
-}
-
-
-internal fun Route.routing() {
+fun Route.registerMetadataRouting() = route("metadata") {
     val metadataProvider by inject<MetadataProvider>()
 
     get<MetadataSearch, List<MetadataSearchBook>>("search") { params ->
@@ -61,6 +54,4 @@ internal fun Route.routing() {
             metadataProvider.getSeriesByName(params.name, params.authorName)
         }
     }
-
-
 }

@@ -20,13 +20,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 
-fun Route.registerAuthorRouting(path: String = "authors") {
-    route(path) {
-        routing()
-    }
-}
-
-internal fun Route.routing() {
+fun Route.registerAuthorRouting() = route("authors") {
     get<QueryLimiter, PaginatedResponse<AuthorModel>> {
         transaction {
             val books = Author.getMultiple(it.limit, it.offset)
@@ -35,20 +29,28 @@ internal fun Route.routing() {
         }
     }
     get<QueryLimiter, List<UUID>>("sorting") { query ->
-        Author.getMultiple(query.limit, query.offset).map { it.id }
+        transaction {
+            Author.getMultiple(query.limit, query.offset).map { it.id }
+        }
     }
 
     get<AuthorId.Position, Position> {
-        val sortOrder =
-            transaction { Author.positionOf(it.parent.id) } ?: serverError(
+        transaction {
+            val sortOrder = Author.positionOf(it.parent.id) ?: serverError(
                 HttpStatusCode.NotFound,
                 "Author was not found"
             )
-        Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
+            Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
+        }
     }
 
     get<AuthorId, DetailedAuthorModel> {
-        transaction { Author.getDetailedById(it.id) } ?: serverError(HttpStatusCode.NotFound, "Author was not found")
+        transaction {
+            Author.getDetailedById(it.id) ?: serverError(
+                HttpStatusCode.NotFound,
+                "Author was not found"
+            )
+        }
     }
 
     patch(RouteHandler::patchAuthor)
