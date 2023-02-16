@@ -20,13 +20,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
 
-fun Route.registerSeriesRouting(path: String = "series") {
-    route(path) {
-        routing()
-    }
-}
-
-internal fun Route.routing() {
+fun Route.registerSeriesRouting() = route("series") {
     get<QueryLimiter, PaginatedResponse<SeriesModel>> {
         transaction {
             val series = Series.getMultiple(it.limit, it.offset)
@@ -34,16 +28,19 @@ internal fun Route.routing() {
             PaginatedResponse(series, total = seriesCount, offset = it.offset, limit = it.limit)
         }
     }
+
     get<QueryLimiter, List<UUID>>("sorting") {
         transaction { Series.getMultiple(it.limit, it.offset) }.map { it.id }
     }
 
     get<SeriesId.Position, Position> {
         val sortOrder =
-            transaction { Series.positionOf(it.parent.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+            transaction { Series.positionOf(it.parent.id) } ?: serverError(
+                HttpStatusCode.NotFound,
+                "Could not find series"
+            )
         Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
     }
-
 
     get<SeriesId, DetailedSeriesModel> {
         transaction { Series.getDetailedById(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")

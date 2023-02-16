@@ -6,11 +6,9 @@ import io.thoth.server.api.audiobooks.books.registerBookRouting
 import io.thoth.server.api.audiobooks.rescan.registerRescan
 import io.thoth.server.api.audiobooks.series.registerSeriesRouting
 
-fun Route.registerAudiobookRouting(route: String = "audiobooks") {
-    route(route) {
-        registerBookRouting()
-        registerAuthorRouting()
-        registerSeriesRouting()
-        registerRescan()
-    }
+fun Route.registerAudiobookRouting() = route("audiobooks") {
+    registerBookRouting()
+    registerAuthorRouting()
+    registerSeriesRouting()
+    registerRescan()
 }

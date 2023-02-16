@@ -16,68 +16,62 @@ import org.jetbrains.exposed.sql.transactions.transaction
 internal fun RouteHandler.patchSeries(
     seriesId: SeriesId,
     patchSeries: PatchSeries,
-): SeriesModel {
-    val series =
-        transaction { Series.findById(seriesId.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+): SeriesModel = transaction {
+    val series = Series.findById(seriesId.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
 
-    return transaction {
-        series.apply {
-            title = patchSeries.title ?: title
-            provider = patchSeries.provider ?: provider
-            providerID = patchSeries.providerID ?: providerID
-            totalBooks = patchSeries.totalBooks ?: totalBooks
-            primaryWorks = patchSeries.primaryWorks ?: primaryWorks
-            coverID = Image.getNewImage(patchSeries.cover, currentImageID = coverID, default = coverID)
-            description = patchSeries.description ?: description
-        }
-
-        if (patchSeries.authors != null) {
-            series.authors = patchSeries.authors.map {
-                Author.findById(it) ?: serverError(
-                    HttpStatusCode.NotFound, "Could not find author"
-                )
-            }.toSizedIterable()
-        }
-
-        if (patchSeries.books != null) {
-            series.books = patchSeries.books.map {
-                Book.findById(it) ?: serverError(
-                    HttpStatusCode.NotFound, "Could not find book"
-                )
-            }.toSizedIterable()
-        }
-
-        series.toModel()
+    series.apply {
+        title = patchSeries.title ?: title
+        provider = patchSeries.provider ?: provider
+        providerID = patchSeries.providerID ?: providerID
+        totalBooks = patchSeries.totalBooks ?: totalBooks
+        primaryWorks = patchSeries.primaryWorks ?: primaryWorks
+        coverID = Image.getNewImage(patchSeries.cover, currentImageID = coverID, default = coverID)
+        description = patchSeries.description ?: description
     }
+
+    if (patchSeries.authors != null) {
+        series.authors = patchSeries.authors.map {
+            Author.findById(it) ?: serverError(
+                HttpStatusCode.NotFound, "Could not find author"
+            )
+        }.toSizedIterable()
+    }
+
+    if (patchSeries.books != null) {
+        series.books = patchSeries.books.map {
+            Book.findById(it) ?: serverError(
+                HttpStatusCode.NotFound, "Could not find book"
+            )
+        }.toSizedIterable()
+    }
+
+    series.toModel()
 }
 
 internal fun RouteHandler.postSeries(
     seriesId: SeriesId,
     postSeries: PostSeries,
-) {
-    val series =
-        transaction { Series.findById(seriesId.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+) = transaction {
+    val series = Series.findById(seriesId.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
 
-    return transaction {
-        series.apply {
-            title = postSeries.title
-            provider = postSeries.provider
-            providerID = postSeries.providerID
-            totalBooks = postSeries.totalBooks
-            primaryWorks = postSeries.primaryWorks
-            coverID = Image.getNewImage(postSeries.cover, currentImageID = coverID, default = null)
-            description = postSeries.description
-            series.authors = postSeries.authors.map {
-                Author.findById(it) ?: serverError(
-                    HttpStatusCode.NotFound, "Could not find author"
-                )
-            }.toSizedIterable()
-            series.books = postSeries.books.map {
-                Book.findById(it) ?: serverError(
-                    HttpStatusCode.NotFound, "Could not find book"
-                )
-            }.toSizedIterable()
-        }
-        series.toModel()
+    series.apply {
+        title = postSeries.title
+        provider = postSeries.provider
+        providerID = postSeries.providerID
+        totalBooks = postSeries.totalBooks
+        primaryWorks = postSeries.primaryWorks
+        coverID = Image.getNewImage(postSeries.cover, currentImageID = coverID, default = null)
+        description = postSeries.description
+        series.authors = postSeries.authors.map {
+            Author.findById(it) ?: serverError(
+                HttpStatusCode.NotFound, "Could not find author"
+            )
+        }.toSizedIterable()
+        series.books = postSeries.books.map {
+            Book.findById(it) ?: serverError(
+                HttpStatusCode.NotFound, "Could not find book"
+            )
+        }.toSizedIterable()
     }
+    series.toModel()
 }

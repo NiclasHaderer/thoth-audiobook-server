@@ -11,21 +11,14 @@ import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
-fun Route.registerImageRouting(route: String = "image") {
-    route(route) {
-        imageRouting()
-    }
-}
-
-internal fun Route.imageRouting() {
+fun Route.registerImageRouting() = route("image") {
     get<ImageId, BinaryResponse> { image ->
-        val imageBlob = transaction { Image.getById(image.id)?.blob } ?: serverError(
-            HttpStatusCode.NotFound,
-            "Could not find image"
-        )
-        binaryResponse(imageBlob)
+        transaction {
+            val imageBlob = Image.getById(image.id)?.blob ?: serverError(
+                HttpStatusCode.NotFound,
+                "Could not find image"
+            )
+            binaryResponse(imageBlob)
+        }
     }
 }
-
-
-
