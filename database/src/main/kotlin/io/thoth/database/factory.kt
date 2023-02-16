@@ -4,7 +4,7 @@ package io.thoth.database
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.thoth.common.utils.memoize
-import io.thoth.config.DatabaseConnection
+import io.thoth.config.public.DatabaseConnection
 import io.thoth.database.migrations.migrator.DatabaseMigrator
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.Database

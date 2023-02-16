@@ -4,7 +4,7 @@ import io.ktor.server.application.*
 import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.metadata.audible.client.AudibleClient
-import io.thoth.config.ThothConfig
+import io.thoth.config.public.PublicConfig
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapperImpl
 import io.thoth.server.file.analyzer.impl.AudioFolderScanner
@@ -18,7 +18,7 @@ import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
 
-fun Application.configureKoin(config: ThothConfig) {
+fun Application.configureKoin(config: PublicConfig) {
     install(Koin) {
         modules(
             module {
@@ -26,7 +26,7 @@ fun Application.configureKoin(config: ThothConfig) {
                 single<MetadataProvider> {
                     MetadataWrapper(
                         listOf(
-                            AudibleClient(get<ThothConfig>().audibleRegion)
+                            AudibleClient(get<PublicConfig>().audibleRegion)
                         )
                     )
                 }

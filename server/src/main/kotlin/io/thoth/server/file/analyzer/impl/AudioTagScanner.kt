@@ -1,6 +1,6 @@
 package io.thoth.server.file.analyzer.impl
 
-import io.thoth.config.ThothConfig
+import io.thoth.config.public.PublicConfig
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
@@ -8,7 +8,7 @@ import io.thoth.server.file.tagger.ReadonlyFileTagger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
-class AudioTagScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
+class AudioTagScanner(publicConfig: PublicConfig) : AudioFileAnalyzer(publicConfig) {
     override suspend fun analyze(
         path: Path,
         attrs: BasicFileAttributes,

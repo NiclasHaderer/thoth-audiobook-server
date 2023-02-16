@@ -8,8 +8,8 @@ import io.ktor.server.routing.*
 import io.thoth.auth.configureAuthentication
 import io.thoth.common.extensions.get
 import io.thoth.common.extensions.shutdown
-import io.thoth.config.ThothConfig
-import io.thoth.config.loadConfig
+import io.thoth.config.public.PublicConfig
+import io.thoth.config.public.loadPublicConfig
 import io.thoth.database.connectToDatabase
 import io.thoth.database.migrateDatabase
 import io.thoth.openapi.configureStatusPages
@@ -31,7 +31,7 @@ fun main() {
     SLF4JBridgeHandler.install()
     embeddedServer(
         Netty,
-        port = loadConfig().port,
+        port = loadPublicConfig().port,
         watchPaths = listOf("classes"),
         host = "0.0.0.0",
         module = Application::applicationModule
@@ -39,7 +39,7 @@ fun main() {
 }
 
 fun Application.applicationModule() {
-    val config = loadConfig()
+    val config = loadPublicConfig()
     configureKoin(config)
 
     try {
@@ -61,7 +61,7 @@ fun Application.applicationModule() {
     }
 }
 
-fun Application.server(config: ThothConfig) {
+fun Application.server(config: PublicConfig) {
     configureStatusPages()
     configureRouting()
     configureOpenApi()
