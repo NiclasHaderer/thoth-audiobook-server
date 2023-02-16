@@ -1,14 +1,14 @@
-package io.thoth.config
+package io.thoth.config.public
 
 import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.addResourceOrFileSource
 import java.nio.file.Path
 
-private fun isProduction(): Boolean {
+internal fun isProduction(): Boolean {
     return System.getenv("PRODUCTION")?.toBooleanStrictOrNull() ?: false
 }
 
-private fun getConfigPath(): String {
+internal fun getConfigPath(): String {
     val path = if (isProduction()) {
         System.getenv("THOTH_CONFIG_PATH")
     } else {
@@ -19,11 +19,11 @@ private fun getConfigPath(): String {
 }
 
 
-fun loadConfig(): ThothConfig {
+fun loadPublicConfig(): PublicConfig {
     val configPath = getConfigPath()
 
     return ConfigLoaderBuilder.default()
-        .addResourceOrFileSource("$configPath/thoth-config.yaml")
+        .addResourceOrFileSource("$configPath/thoth-config.json")
         .build()
-        .loadConfigOrThrow<ThothConfigImpl>()
+        .loadConfigOrThrow<PublicConfigImpl>()
 }

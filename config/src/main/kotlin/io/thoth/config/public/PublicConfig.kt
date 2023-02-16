@@ -1,8 +1,8 @@
-package io.thoth.config
+package io.thoth.config.public
 
 import io.thoth.metadata.audible.models.AudibleRegions
 
-interface ThothConfig {
+interface PublicConfig {
     val ignoreFile: String
     val production: Boolean
     val domain: String
@@ -23,7 +23,7 @@ interface DatabaseConnection {
     val transactionIsolation: String
 }
 
-data class ThothConfigImpl(
+data class PublicConfigImpl(
     override val ignoreFile: String,
     override val production: Boolean,
     override val audioFileLocations: List<String>,
@@ -34,7 +34,7 @@ data class ThothConfigImpl(
     override val audibleRegion: AudibleRegions,
     override val database: DatabaseConnectionImpl,
     override val configDirectory: String,
-) : ThothConfig
+) : PublicConfig
 
 data class DatabaseConnectionImpl(
     override val driverClassName: String,

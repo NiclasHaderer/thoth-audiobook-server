@@ -3,9 +3,9 @@ package io.thoth.server.plugins
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.cors.routing.*
-import io.thoth.config.ThothConfig
+import io.thoth.config.public.PublicConfig
 
-fun Application.configureCORS(config: ThothConfig) {
+fun Application.configureCORS(config: PublicConfig) {
     if (config.production) return
     install(CORS) {
         allowMethod(HttpMethod.Options)

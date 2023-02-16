@@ -1,9 +1,9 @@
-package io.thoth.config
+package io.thoth.config.public
 
 import io.thoth.metadata.audible.models.AudibleRegions
 
 
-object DevThothConfig : ThothConfig {
+object DevPublicConfig : PublicConfig {
     override val ignoreFile: String by lazy {
         System.getenv("THOTH_IGNORE_FILE") ?: ".thothignore"
     }

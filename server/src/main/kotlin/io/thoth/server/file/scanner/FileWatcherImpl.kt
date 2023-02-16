@@ -4,7 +4,7 @@ import io.methvin.watcher.DirectoryChangeEvent
 import io.methvin.watcher.DirectoryWatcher
 import io.methvin.watcher.hashing.FileHasher
 import io.thoth.common.extensions.hasAudioExtension
-import io.thoth.config.ThothConfig
+import io.thoth.config.public.PublicConfig
 import io.thoth.server.file.persister.FileAnalyzingScheduler
 import java.nio.file.Path
 import kotlin.io.path.name
@@ -15,20 +15,20 @@ interface FileWatcher {
 }
 
 class FileWatcherImpl(
-    private val thothConfig: ThothConfig,
+    private val publicConfig: PublicConfig,
     private val analyzer: FileAnalyzingScheduler
 ) : FileWatcher {
 
     private val watcher =
         DirectoryWatcher.builder()
-            .paths(thothConfig.audioFileLocations.map { Path.of(it) })
+            .paths(publicConfig.audioFileLocations.map { Path.of(it) })
             .listener { event: DirectoryChangeEvent ->
                 val path = event.path() // Ignore if it is a directory or not an audio file
                 val eventType = event.eventType()
 
                 if (event.isDirectory || !path.hasAudioExtension()) {
 
-                    val ignoreFile = thothConfig.ignoreFile
+                    val ignoreFile = publicConfig.ignoreFile
                     val fileName = path.name
                     if (fileName == ignoreFile) {
                         analyzer.queue(FileAnalyzingScheduler.Type.SCAN_FOLDER, path)
