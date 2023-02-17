@@ -1,7 +1,7 @@
 package io.thoth.server.file.persister
 
 import io.thoth.common.utils.Scheduler
-import io.thoth.config.public.PublicConfig
+import io.thoth.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.scanner.RecursiveScan
 import kotlinx.coroutines.CoroutineScope
@@ -29,11 +29,11 @@ interface FileAnalyzingScheduler {
 class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
     private val log = logger {}
     private val analyzer by inject<AudioFileAnalyzerWrapper>()
-    private val publicConfig by inject<PublicConfig>()
-    private val scanScheduler = Scheduler(publicConfig.analyzerThreads)
+    private val thothConfig by inject<ThothConfig>()
+    private val scanScheduler = Scheduler(thothConfig.analyzerThreads)
     private val trackManager = TrackManagerImpl()
-    private val fileQueue = Channel<Path>(publicConfig.analyzerThreads)
-    private val removeItem = Channel<Path>(publicConfig.analyzerThreads)
+    private val fileQueue = Channel<Path>(thothConfig.analyzerThreads)
+    private val removeItem = Channel<Path>(thothConfig.analyzerThreads)
     private val scope = CoroutineScope(Dispatchers.IO)
 
     init {

@@ -5,7 +5,6 @@ import io.ktor.server.routing.*
 import io.thoth.models.SearchModel
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
-import io.thoth.server.api.metadata.routing
 import io.thoth.server.services.SearchService
 
 

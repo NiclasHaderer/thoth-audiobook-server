@@ -8,8 +8,8 @@ import io.ktor.server.routing.*
 import io.thoth.auth.configureAuthentication
 import io.thoth.common.extensions.get
 import io.thoth.common.extensions.shutdown
-import io.thoth.config.public.PublicConfig
-import io.thoth.config.public.loadPublicConfig
+import io.thoth.config.ThothConfig
+import io.thoth.config.loadPublicConfig
 import io.thoth.database.connectToDatabase
 import io.thoth.database.migrateDatabase
 import io.thoth.openapi.configureStatusPages
@@ -61,7 +61,7 @@ fun Application.applicationModule() {
     }
 }
 
-fun Application.server(config: PublicConfig) {
+fun Application.server(config: ThothConfig) {
     configureStatusPages()
     configureRouting()
     configureOpenApi()

@@ -1,4 +1,4 @@
-package io.thoth.config.public
+package io.thoth.config
 
 import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.addResourceOrFileSource
@@ -19,11 +19,11 @@ internal fun getConfigPath(): String {
 }
 
 
-fun loadPublicConfig(): PublicConfig {
+fun loadPublicConfig(): ThothConfig {
     val configPath = getConfigPath()
 
     return ConfigLoaderBuilder.default()
         .addResourceOrFileSource("$configPath/thoth-config.json")
         .build()
-        .loadConfigOrThrow<PublicConfigImpl>()
+        .loadConfigOrThrow<ThothConfigImpl>()
 }

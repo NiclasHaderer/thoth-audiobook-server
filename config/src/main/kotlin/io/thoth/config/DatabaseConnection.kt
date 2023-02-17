@@ -1,4 +1,4 @@
-package io.thoth.config.public
+package io.thoth.config
 
 
 internal object H2Database : DatabaseConnection {
