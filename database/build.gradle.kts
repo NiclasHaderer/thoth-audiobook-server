@@ -3,6 +3,8 @@ val exposedVersion: String by project
 val springSecurityVersion: String by project
 val kotlinLogging: String by project
 val hikariVersion: String by project
+val h2Version: String by project
+val ktorVersion: String by project
 
 plugins {
     kotlin("jvm") version "1.8.0"
@@ -24,11 +26,11 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
-    // TODO remove
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
+    implementation("com.h2database:h2:$h2Version")
 
-
+    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
     implementation("org.reflections:reflections:$reflectVersion")
     implementation("org.springframework.security:spring-security-core:$springSecurityVersion")

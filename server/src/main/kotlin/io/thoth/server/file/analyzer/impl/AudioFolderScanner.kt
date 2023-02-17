@@ -1,7 +1,7 @@
 package io.thoth.server.file.analyzer.impl
 
 import io.thoth.common.extensions.*
- import io.thoth.config.public.PublicConfig
+ import io.thoth.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
@@ -9,7 +9,7 @@ import io.thoth.server.file.tagger.ReadonlyFileTagger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
-class AudioFolderScanner(publicConfig: PublicConfig) : AudioFileAnalyzer(publicConfig) {
+class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
     private val bookPrefixes = listOf(
         "^((Book|Volume|Vol) ?)?\\d\\d? ?[.\\-: ]+ ?".toRegex(),
         "^\\d\\d? - ".toRegex()
@@ -18,7 +18,7 @@ class AudioFolderScanner(publicConfig: PublicConfig) : AudioFileAnalyzer(publicC
     override suspend fun analyze(
         path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger
     ): AudioFileAnalysisResult? {
-        val cleanPath = path.replaceParts(publicConfig.audioFileLocations)
+        val cleanPath = path.replaceParts(thothConfig.audioFileLocations)
         val parentCount = cleanPath.countParents()
         if (parentCount != 2 && parentCount != 3) return null
 

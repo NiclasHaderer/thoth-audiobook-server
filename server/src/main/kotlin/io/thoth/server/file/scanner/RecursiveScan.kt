@@ -5,7 +5,7 @@ import io.thoth.database.access.hasBeenUpdated
 import io.thoth.database.access.markAsTouched
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
-import io.thoth.config.public.PublicConfig
+import io.thoth.config.ThothConfig
 import io.thoth.server.file.persister.FileAnalyzingScheduler
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -21,7 +21,7 @@ import kotlin.io.path.getLastModifiedTime
 
 class RecursiveScan(private var basePath: List<Path> = listOf()) : KoinComponent {
     private val log = logger {}
-    private val publicConfig by inject<PublicConfig>()
+    private val thothConfig by inject<ThothConfig>()
     private val fileAnalyzeScheduler by inject<FileAnalyzingScheduler>()
     private val scanIsOngoing = AtomicBoolean()
 
@@ -29,7 +29,7 @@ class RecursiveScan(private var basePath: List<Path> = listOf()) : KoinComponent
     constructor(basePath: Path) : this(listOf(basePath))
 
     init {
-        basePath += publicConfig.audioFileLocations.map { Paths.get(it) }
+        basePath += thothConfig.audioFileLocations.map { Paths.get(it) }
     }
 
     fun start() {
