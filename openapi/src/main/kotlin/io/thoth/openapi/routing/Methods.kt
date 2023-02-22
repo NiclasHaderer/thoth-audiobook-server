@@ -79,7 +79,10 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
         route(endPath.slice(0..endPath.length - 2)) {
             method(method) {
                 handle {
-                    call.respondRedirect("${call.request.uri}/", true)
+                    val uri = URLBuilder(call.request.uri).also {
+                        it.encodedPath = it.encodedPath + "/"
+                    }.toString().replace("https?://".toRegex(), "")
+                    call.respondRedirect(uri, true)
                 }
             }
         }
@@ -87,7 +90,10 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
         route("$endPath/") {
             method(method) {
                 handle {
-                    call.respondRedirect(call.request.uri.slice(0..call.request.uri.length - 2), true)
+                    val uri = URLBuilder(call.request.uri).also {
+                        it.encodedPath = it.encodedPath.slice(0..it.encodedPath.length - 2)
+                    }.toString().replace("https?://".toRegex(), "")
+                    call.respondRedirect(uri, true)
                 }
             }
         }
@@ -104,7 +110,6 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
             }
         }
     }
-
     return builtRoute
 }
 

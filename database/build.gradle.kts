@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":config"))
     implementation(project(":metadata"))
+    implementation(project(":openapi"))
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")

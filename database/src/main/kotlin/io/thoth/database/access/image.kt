@@ -1,8 +1,11 @@
 package io.thoth.database.access
 
+import io.ktor.http.*
+import io.thoth.common.extensions.isUUID
 import io.thoth.common.extensions.syncUriToFile
 import io.thoth.database.tables.Image
 import io.thoth.models.ImageModel
+import io.thoth.openapi.ErrorResponse
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import java.util.*
@@ -29,17 +32,24 @@ fun Image.areSame(newImageBytes: ByteArray): Boolean {
 fun Image.Companion.getNewImage(
     newImage: String?, currentImageID: EntityID<UUID>?, default: EntityID<UUID>?
 ): EntityID<UUID>? {
-    // TODO find a way to make this suspend
-    return if (newImage != null) {
-        val originalImage = if (currentImageID != null) Image.findById(currentImageID) else null
-        val newImageBytes = newImage.syncUriToFile()
-        val areSameImage = originalImage?.areSame(newImageBytes) ?: false
-        if (areSameImage) {
-            currentImageID
-        } else {
-            create(newImageBytes).id
-        }
+
+    if (newImage == null) return default
+
+
+    if (newImage.isUUID()) {
+        val newImageUUID = UUID.fromString(newImage)
+
+        return Image.findById(newImageUUID)?.id ?: throw ErrorResponse(
+            HttpStatusCode.BadRequest, "Image with id $newImageUUID does not exist"
+        )
+    }
+
+    val originalImage = if (currentImageID != null) Image.findById(currentImageID) else null
+    val newImageBytes = newImage.syncUriToFile()
+    val areSameImage = originalImage?.areSame(newImageBytes) ?: false
+    return if (areSameImage) {
+        currentImageID
     } else {
-        default
+        create(newImageBytes).id
     }
 }
