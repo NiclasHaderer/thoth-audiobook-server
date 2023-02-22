@@ -8,10 +8,6 @@ import io.thoth.models.TitledId
 import org.jetbrains.exposed.sql.*
 import java.util.*
 
-fun Book.Companion.getById(bookId: UUID): BookModel? {
-    return findById(bookId)?.toModel() ?: return null
-}
-
 fun Book.Companion.getDetailedById(bookId: UUID): DetailedBookModel? {
     val book = findById(bookId) ?: return null
     val tracks = Track.forBook(bookId)
@@ -42,13 +38,8 @@ fun Book.Companion.findByName(bookTitle: String, author: Author): Book? {
     return Book.wrap(rawBook[TBooks.id], rawBook)
 }
 
-
-fun Book.Companion.count(): Long {
-    return Book.all().count()
-}
-
 fun Book.Companion.getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC): List<BookModel> {
-    return Book.all().limit(limit, offset * limit).orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
+    return Book.all().limit(limit, offset).orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
 }
 
 

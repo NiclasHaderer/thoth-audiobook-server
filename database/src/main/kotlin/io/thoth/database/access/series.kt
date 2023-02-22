@@ -19,16 +19,6 @@ fun Series.Companion.getMultiple(limit: Int, offset: Long, order: SortOrder = So
     }
 }
 
-fun Series.Companion.count(): Long {
-    return Series.all().count()
-}
-
-
-fun Series.Companion.getById(seriesId: UUID): SeriesModel? {
-    return findById(seriesId)?.toModel() ?: return null
-}
-
-
 fun Series.Companion.getDetailedById(seriesId: UUID, order: SortOrder = SortOrder.ASC): DetailedSeriesModel? {
     val series = findById(seriesId) ?: return null
     return DetailedSeriesModel.fromModel(
