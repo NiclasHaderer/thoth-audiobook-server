@@ -16,7 +16,7 @@ internal fun RouteHandler.register(user: RegisterUser): UserModel {
         serverError(HttpStatusCode.BadRequest, "User already exists")
     }
 
-    val encoder = Argon2PasswordEncoder()
+    val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
     val encodedPassword = encoder.encode(user.password)
 
     return transaction {

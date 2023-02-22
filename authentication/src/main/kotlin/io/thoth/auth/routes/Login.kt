@@ -18,7 +18,7 @@ internal fun login(config: AuthConfig): RouteHandler.(user: LoginUser) -> JwtPai
             "Could not login user"
         )
 
-        val encoder = Argon2PasswordEncoder()
+        val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
         if (!encoder.matches(user.password, userModel.passwordHash)) {
             serverError(HttpStatusCode.BadRequest, "Could not login user")
         }
