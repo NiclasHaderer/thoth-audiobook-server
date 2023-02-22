@@ -1,24 +1,8 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val hopliteVersion: String by project
 val ktorVersion: String by project
 
 plugins {
-    java
-    kotlin("jvm") version "1.8.0"
-}
-
-repositories {
-    mavenCentral()
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions {
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-        jvmTarget = "16"
-        apiVersion = "1.8"
-        languageVersion = "1.8"
-    }
+    kotlin("jvm")
 }
 
 dependencies {
