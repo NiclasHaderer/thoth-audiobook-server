@@ -12,10 +12,6 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.select
 import java.util.*
 
-fun Author.Companion.getById(authorId: UUID): AuthorModel? {
-    return findById(authorId)?.toModel() ?: return null
-}
-
 fun Author.Companion.positionOf(authorId: UUID, order: SortOrder = SortOrder.ASC): Long? {
     val author = findById(authorId) ?: return null
     return TAuthors.select { TAuthors.name.lowerCase() less author.name.lowercase() }
@@ -33,12 +29,7 @@ fun Author.Companion.getDetailedById(authorId: UUID, order: SortOrder = SortOrde
 }
 
 fun Author.Companion.getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC): List<AuthorModel> {
-    return Author.all().limit(limit, offset * limit).orderBy(TAuthors.name.lowerCase() to order).map { it.toModel() }
-}
-
-
-fun Author.Companion.count(): Long {
-    return Author.all().count()
+    return Author.all().limit(limit, offset).orderBy(TAuthors.name.lowerCase() to order).map { it.toModel() }
 }
 
 fun Author.Companion.findByName(authorName: String): Author? {
