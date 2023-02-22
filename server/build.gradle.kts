@@ -8,7 +8,7 @@ val h2Version: String by project
 val reflectVersion: String by project
 val sqliteVersion: String by project
 val koinVersion: String by project
-val kotlinLogging: String by project
+val kotlinLoggingVersion: String by project
 val slf4jVersion: String by project
 val kotlinxSerializationVersion: String by project
 val jAudioTaggerVersion: String by project
@@ -67,7 +67,7 @@ dependencies {
     implementation("me.xdrop:fuzzywuzzy:$fuzzyWuzzyVersion")
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
+    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
     implementation("org.slf4j:jul-to-slf4j:$slf4jVersion")
 
     // Ktor
