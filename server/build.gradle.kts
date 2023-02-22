@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val fuzzyWuzzyVersion: String by project
 val fileWatcherVersion: String by project
 val ktorVersion: String by project
@@ -16,15 +14,10 @@ val kotlinxSerializationVersion: String by project
 val jAudioTaggerVersion: String by project
 
 plugins {
-    kotlin("jvm") version "1.8.0"
-    kotlin("plugin.serialization") version "1.8.0"
-    application
+    kotlin("jvm")
+    kotlin("plugin.serialization")
     id("com.github.johnrengelman.shadow") version "7.1.2"
-}
-
-// Shadow task depends on Jar task, so these configs are reflected for Shadow as well
-tasks.jar {
-    manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt"
+    application
 }
 
 application {
@@ -33,21 +26,11 @@ application {
     tasks.run.get().workingDir = rootProject.projectDir
 }
 
-tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions {
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-        jvmTarget = "16"
-        apiVersion = "1.8"
-        languageVersion = "1.8"
-    }
+// Shadow task depends on Jar task, so these configs are reflected for Shadow as well
+tasks.jar {
+    manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt"
 }
 
-
-
-repositories {
-    maven("https://jitpack.io")
-    mavenCentral()
-}
 
 dependencies {
     // Other projects

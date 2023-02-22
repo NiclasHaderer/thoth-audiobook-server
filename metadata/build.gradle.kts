@@ -8,11 +8,7 @@ val kotlinLogging: String by project
 val jsonVersion: String by project
 
 plugins {
-    kotlin("jvm") version "1.8.0"
-}
-
-repositories {
-    mavenCentral()
+    kotlin("jvm")
 }
 
 dependencies {

@@ -7,12 +7,7 @@ val h2Version: String by project
 val ktorVersion: String by project
 
 plugins {
-    kotlin("jvm") version "1.8.0"
-}
-
-repositories {
-    maven("https://jitpack.io")
-    mavenCentral()
+    kotlin("jvm")
 }
 
 dependencies {
