@@ -38,7 +38,7 @@ internal fun RouteHandler.modifyUser(userID: IdRoute, editUser: EditUser): UserM
         }
 
         if (editUser.password != null) {
-            val encoder = Argon2PasswordEncoder()
+            val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
             val encodedPassword = encoder.encode(editUser.password)
             user.passwordHash = encodedPassword
         }
@@ -60,7 +60,7 @@ internal fun RouteHandler.changePassword(passwordChange: PasswordChange) {
             "Could not find user with id ${principal.userId}"
         )
 
-        val encoder = Argon2PasswordEncoder()
+        val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
         if (!encoder.matches(passwordChange.currentPassword, user.passwordHash)) {
             serverError(HttpStatusCode.BadRequest, "Could change password. Old password is wrong.")
         }

@@ -87,9 +87,9 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
 
     private fun updateBook(book: Book, scan: AudioFileAnalysisResult, dbAuthor: Author): Book {
         val dbSeries = if (scan.series != null) getOrCreateSeries(scan, dbAuthor) else null
+        // TODO
         val dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
-
-        val dbList = if (dbSeries != null) listOf(dbSeries) else listOf<Series>()
+        val dbList = if (dbSeries != null) listOf(dbSeries) else listOf()
 
         return book.apply {
             title = scan.book
