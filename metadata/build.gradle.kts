@@ -4,7 +4,7 @@ val jsoupVersion: String by project
 val caffeineVersion: String by project
 val fuzzyWuzzyVersion: String by project
 val logbackVersion: String by project
-val kotlinLogging: String by project
+val kotlinLoggingVersion: String by project
 val jsonVersion: String by project
 
 plugins {
@@ -21,7 +21,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
+    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
     // JSON parsing
     implementation("org.json:json:$jsonVersion")
 

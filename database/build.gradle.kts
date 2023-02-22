@@ -1,7 +1,7 @@
 val reflectVersion: String by project
 val exposedVersion: String by project
 val springSecurityVersion: String by project
-val kotlinLogging: String by project
+val kotlinLoggingVersion: String by project
 val hikariVersion: String by project
 val h2Version: String by project
 val ktorVersion: String by project
@@ -21,7 +21,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
-    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
+    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     implementation("com.h2database:h2:$h2Version")
 

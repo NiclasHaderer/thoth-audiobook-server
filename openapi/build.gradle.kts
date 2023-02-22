@@ -1,5 +1,5 @@
 val ktorVersion: String by project
-val kotlinLogging: String by project
+val kotlinLoggingVersion: String by project
 val openApiVersion: String by project
 val swaggerUiVersion: String by project
 
@@ -10,7 +10,7 @@ plugins {
 
 dependencies {
     implementation(project(":common"))
-    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLogging")
+    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
 
     // Ktor
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
