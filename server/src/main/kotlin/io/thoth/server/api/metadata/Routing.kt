@@ -27,7 +27,7 @@ fun Route.registerMetadataRouting() = route("metadata") {
             )
         }
 
-        get<AuthorName, List<MetadataAuthor>>("author") { params ->
+        get<AuthorName, List<MetadataAuthor>>("search") { params ->
             metadataProvider.getAuthorByName(params.name)
         }
     }
