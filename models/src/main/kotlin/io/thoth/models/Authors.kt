@@ -10,6 +10,7 @@ interface IAuthorModel {
     val id: UUID
     val name: String
     val provider: String?
+    val providerID: String?
     val biography: String?
     val imageID: UUID?
     val website: String?
@@ -23,6 +24,7 @@ data class AuthorModel(
     override val id: UUID_S,
     override val name: String,
     override val provider: String?,
+    override val providerID: String?,
     override val biography: String?,
     override val imageID: UUID_S?,
     override val website: String?,
@@ -36,6 +38,7 @@ data class DetailedAuthorModel(
     override val id: UUID_S,
     override val name: String,
     override val provider: String?,
+    override val providerID: String?,
     override val biography: String?,
     override val imageID: UUID_S?,
     override val website: String?,
@@ -59,6 +62,7 @@ data class DetailedAuthorModel(
                 books = books,
                 series = series,
                 provider = author.provider,
+                providerID = author.providerID,
             )
     }
 }

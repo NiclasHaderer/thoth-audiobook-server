@@ -16,6 +16,7 @@ internal fun RouteHandler.patchAuthor(id: AuthorId, patchAuthor: PatchAuthor): A
     author.apply {
         name = patchAuthor.name ?: author.name
         provider = patchAuthor.provider ?: author.provider
+        providerID = patchAuthor.providerID ?: author.providerID
         biography = patchAuthor.biography ?: author.biography
         website = patchAuthor.website ?: author.website
         bornIn = patchAuthor.bornIn ?: author.bornIn
@@ -31,6 +32,7 @@ internal fun RouteHandler.postAuthor(id: AuthorId, postAuthor: PostAuthor): Auth
     author.apply {
         name = postAuthor.name
         provider = postAuthor.provider
+        providerID = postAuthor.providerID
         biography = postAuthor.biography
         website = postAuthor.website
         bornIn = postAuthor.bornIn

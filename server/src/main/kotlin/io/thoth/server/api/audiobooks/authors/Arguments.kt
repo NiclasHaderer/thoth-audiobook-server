@@ -23,6 +23,7 @@ internal class AuthorName(
 class PatchAuthor(
     val name: String?,
     val provider: String?,
+    val providerID: String?,
     val biography: String?,
     val image: String?,
     val website: String?,
@@ -34,6 +35,7 @@ class PatchAuthor(
 class PostAuthor(
     val name: String,
     val provider: String?,
+    val providerID: String?,
     val biography: String?,
     val image: String?,
     val website: String?,

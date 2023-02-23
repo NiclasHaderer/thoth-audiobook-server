@@ -17,7 +17,7 @@ class CustomLocalDateTimeSerializer : StdSerializer<LocalDateTime>(LocalDateTime
     @Throws(IOException::class)
     override fun serialize(value: LocalDateTime, gen: JsonGenerator, sp: SerializerProvider) {
         val epoch = value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        gen.writeString(epoch.toString())
+        gen.writeNumber(epoch)
     }
 }
 
@@ -35,7 +35,7 @@ class CustomLocalDateSerializer : StdSerializer<LocalDate>(LocalDate::class.java
     @Throws(IOException::class)
     override fun serialize(value: LocalDate, gen: JsonGenerator, sp: SerializerProvider) {
         val epoch = value.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        gen.writeString(epoch.toString())
+        gen.writeNumber(epoch)
     }
 }
 
