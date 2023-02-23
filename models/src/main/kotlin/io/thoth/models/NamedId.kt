@@ -5,12 +5,20 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class NamedId(
-    val name: String,
     val id: UUID_S,
-)
-
+    val name: String
+) {
+    @Deprecated("Use NamedId(id, name) instead", ReplaceWith("NamedId(id, name)"))
+    constructor(name: String, id: UUID_S) : this(id, name)
+}
 @Serializable
 data class TitledId(
-    val title: String,
     val id: UUID_S,
-)
+    val title: String,
+) {
+    @Deprecated("")
+    constructor(
+        title: String,
+        id: UUID_S,
+    ) : this(id, title)
+}

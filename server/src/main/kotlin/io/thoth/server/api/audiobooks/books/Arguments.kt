@@ -12,6 +12,10 @@ internal class BookId(
     @Resource("position")
     class Position(val parent: BookId)
 }
+@Resource("")
+internal class BookName(
+    val name: String
+)
 
 
 class PatchBook(

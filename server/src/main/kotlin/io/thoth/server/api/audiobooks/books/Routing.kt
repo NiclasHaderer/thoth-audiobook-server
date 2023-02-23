@@ -6,16 +6,17 @@ import io.thoth.database.access.getDetailedById
 import io.thoth.database.access.getMultiple
 import io.thoth.database.access.positionOf
 import io.thoth.database.tables.Book
-import io.thoth.models.BookModel
-import io.thoth.models.DetailedBookModel
-import io.thoth.models.PaginatedResponse
-import io.thoth.models.Position
+import io.thoth.database.tables.TBooks
+import io.thoth.models.*
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
 import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
+import io.thoth.server.api.audiobooks.authors.AuthorName
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -44,6 +45,15 @@ fun Route.registerBookRouting() = route("books") {
 
     get<BookId, DetailedBookModel> {
         transaction { Book.getDetailedById(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find book")
+    }
+
+    get<BookName, List<TitledId>>("autocomplete") {
+        transaction {
+            Book.all()
+                .orderBy(TBooks.title.lowerCase() to SortOrder.ASC)
+                .limit(30)
+                .map { TitledId(it.id.value, it.title) }
+        }
     }
 
     patch(RouteHandler::patchBook)

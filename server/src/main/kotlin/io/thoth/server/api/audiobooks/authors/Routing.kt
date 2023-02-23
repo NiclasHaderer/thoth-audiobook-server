@@ -6,16 +6,16 @@ import io.thoth.database.access.getDetailedById
 import io.thoth.database.access.getMultiple
 import io.thoth.database.access.positionOf
 import io.thoth.database.tables.Author
-import io.thoth.models.AuthorModel
-import io.thoth.models.DetailedAuthorModel
-import io.thoth.models.PaginatedResponse
-import io.thoth.models.Position
+import io.thoth.database.tables.TAuthors
+import io.thoth.models.*
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
 import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -50,6 +50,15 @@ fun Route.registerAuthorRouting() = route("authors") {
                 HttpStatusCode.NotFound,
                 "Author was not found"
             )
+        }
+    }
+
+    get<AuthorName, List<NamedId>>("autocomplete") {
+        transaction {
+            Author.all()
+                .orderBy(TAuthors.name.lowerCase() to SortOrder.ASC)
+                .limit(30)
+                .map { NamedId(it.id.value, it.name) }
         }
     }
 
