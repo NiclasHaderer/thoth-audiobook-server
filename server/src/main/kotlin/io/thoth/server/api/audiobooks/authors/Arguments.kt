@@ -15,6 +15,11 @@ internal class AuthorId(
     class Position(val parent: BookId)
 }
 
+@Resource("")
+internal class AuthorName(
+    val name: String
+)
+
 class PatchAuthor(
     val name: String?,
     val provider: String?,

@@ -50,7 +50,5 @@ fun Track.toModel() = TrackModel(
     updateTime = updateTime,
     duration = duration,
     accessTime = accessTime,
-    book = TitledId(
-        title = book.title, id = book.id.value
-    ),
+    book = TitledId(book.id.value, book.title),
 )

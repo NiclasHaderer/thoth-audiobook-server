@@ -6,16 +6,15 @@ import io.thoth.database.access.getDetailedById
 import io.thoth.database.access.getMultiple
 import io.thoth.database.access.positionOf
 import io.thoth.database.tables.Series
-import io.thoth.models.DetailedSeriesModel
-import io.thoth.models.PaginatedResponse
-import io.thoth.models.Position
-import io.thoth.models.SeriesModel
+import io.thoth.database.tables.TSeries
+import io.thoth.models.*
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
 import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
@@ -44,6 +43,15 @@ fun Route.registerSeriesRouting() = route("series") {
 
     get<SeriesId, DetailedSeriesModel> {
         transaction { Series.getDetailedById(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+    }
+
+    get<SeriesName, List<TitledId>>("autocomplete"){
+        transaction {
+            Series.all()
+                .orderBy(TSeries.title to SortOrder.ASC)
+                .limit(30)
+                .map{ TitledId(it.id.value, it.title)}
+        }
     }
 
     patch(RouteHandler::patchSeries)

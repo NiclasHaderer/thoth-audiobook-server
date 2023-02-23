@@ -13,6 +13,11 @@ internal class SeriesId(
     class Position(val parent: SeriesId)
 }
 
+@Resource("")
+internal class SeriesName(
+    val name: String
+)
+
 
 @Serializable
 data class PatchSeries(
