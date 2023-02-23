@@ -7,8 +7,11 @@ import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
 import io.thoth.models.*
 import io.thoth.server.api.audiobooks.authors.PatchAuthor
+import io.thoth.server.api.audiobooks.authors.PostAuthor
 import io.thoth.server.api.audiobooks.books.PatchBook
+import io.thoth.server.api.audiobooks.books.PostBook
 import io.thoth.server.api.audiobooks.series.PatchSeries
+import io.thoth.server.api.audiobooks.series.PostSeries
 import io.thoth.server.ws.ChangeEvent
 import me.ntrrgc.tsGenerator.TypeScriptGenerator
 import java.io.File
@@ -31,6 +34,9 @@ fun main() {
             PatchAuthor::class,
             PatchSeries::class,
             PatchBook::class,
+            PostAuthor::class,
+            PostSeries::class,
+            PostBook::class,
             DetailedSeriesModel::class,
             TrackModel::class,
             ChangeEvent::class,

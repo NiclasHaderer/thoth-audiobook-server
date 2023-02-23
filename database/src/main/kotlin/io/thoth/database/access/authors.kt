@@ -47,5 +47,6 @@ fun Author.toModel(): AuthorModel {
         deathDate = deathDate,
         imageID = imageID?.value,
         website = website,
+        providerID = providerID,
     )
 }
