@@ -64,10 +64,10 @@ fun Book.toModel(order: SortOrder = SortOrder.ASC): BookModel {
         isbn = isbn,
         language = language,
         publisher = publisher,
-        authors = authors.sortedBy { it.name.lowercase() }.map { NamedId(it.name, it.id.value) }.let {
+        authors = authors.sortedBy { it.name.lowercase() }.map { NamedId(it.id.value, it.name) }.let {
             if (order == SortOrder.DESC) it.reversed() else it
         },
-        series = series.sortedBy { it.title.lowercase() }.map { TitledId(it.title, it.id.value) }.let {
+        series = series.sortedBy { it.title.lowercase() }.map { TitledId(it.id.value, it.title) }.let {
             if (order == SortOrder.DESC) it.reversed() else it
         },
     )

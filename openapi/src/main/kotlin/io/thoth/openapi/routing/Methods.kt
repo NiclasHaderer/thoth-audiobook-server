@@ -1,6 +1,5 @@
 package io.thoth.openapi.routing
 
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -30,14 +29,13 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
         try {
             call.receive()
         } catch (e: Exception) {
-            val cause = e.cause?.cause ?: e.cause ?: e
-            if (cause is MismatchedInputException) {
-                serverError(
-                    HttpStatusCode.BadRequest,
-                    "body could not be parsed: ${cause.message} at ${cause.path.joinToString(".")}"
-                )
+            val errors = mutableListOf<Exception>()
+            errors.add(e)
+            while (errors.last().cause != null && errors.last().cause != errors.last()) {
+                errors.add(errors.last().cause as Exception)
             }
-            serverError(HttpStatusCode.BadRequest, e.message ?: "body could not be parsed")
+
+            serverError(HttpStatusCode.BadRequest, e.message ?: "body could not be parsed", errors.map { it.message })
         }
     }
 
