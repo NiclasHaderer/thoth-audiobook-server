@@ -18,6 +18,7 @@ object TAuthors : UUIDTable("Authors") {
     val birthDate = date("birthDate").nullable()
     val bornIn = varchar("bornIn", 255).nullable()
     val deathDate = date("deathDate").nullable()
+    val library = reference("library", TLibraries, onDelete = ReferenceOption.CASCADE)
 }
 
 class Author(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -32,8 +33,8 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id) {
     var birthDate by TAuthors.birthDate
     var bornIn by TAuthors.bornIn
     var deathDate by TAuthors.deathDate
-    val books by Book via TAuthorBookMapping
-    val series by Series via TSeriesAuthorMapping
-    val genres by Genre via TGenreAuthorMapping
+    var books by Book via TAuthorBookMapping
+    var series by Series via TSeriesAuthorMapping
+    val library by Library referencedOn TAuthors.library
 }
 

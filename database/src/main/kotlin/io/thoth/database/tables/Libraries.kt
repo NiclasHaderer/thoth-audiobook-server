@@ -28,11 +28,11 @@ object TLibraries : UUIDTable("Libraries") {
     val folders = text("folders").nullable()
     val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
     val metadataScanners = json<MetadataAgent>("metadataScanners").nullable()
-    val fileScanners = json<List<FileScanner>>("fileScanners"){ require(it.isNotEmpty()) }
+    val fileScanners = json<List<FileScanner>>("fileScanners") { require(it.isNotEmpty()) }
 }
 
-class Libraries(id: EntityID<UUID>) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Libraries>(TLibraries)
+class Library(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<Library>(TLibraries)
 
     var name by TLibraries.name
     var icon by TLibraries.icon

@@ -16,5 +16,4 @@ class Genre(id: EntityID<UUID>) : UUIDEntity(id) {
     var name by TGenres.name
     val books by Book via TGenreBookMapping
     val series by Series via TGenreSeriesMapping
-    val authors by Author via TGenreAuthorMapping
 }
