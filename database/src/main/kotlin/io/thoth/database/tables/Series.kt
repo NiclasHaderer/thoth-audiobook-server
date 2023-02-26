@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 import java.util.*
 
 object TSeries : UUIDTable("Series") {
@@ -14,6 +15,7 @@ object TSeries : UUIDTable("Series") {
     val primaryWorks = integer("primaryWorks").nullable()
     val coverID = reference("cover", TImages).nullable()
     val description = text("description").nullable()
+    val library = reference("library", TLibraries, onDelete = ReferenceOption.CASCADE)
 }
 
 class Series(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -29,4 +31,5 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id) {
     var authors by Author via TSeriesAuthorMapping
     var books by Book via TSeriesBookMapping
     var genres by Genre via TGenreSeriesMapping
+    val library by Library referencedOn TSeries.library
 }

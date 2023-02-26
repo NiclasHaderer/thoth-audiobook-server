@@ -20,6 +20,7 @@ object TBooks : UUIDTable("Books") {
     val narrator = varchar("name", 255).nullable()
     val isbn = varchar("isbn", 255).nullable()
     val cover = reference("cover", TImages, onDelete = ReferenceOption.CASCADE).nullable()
+    val library = reference("library", TLibraries, onDelete = ReferenceOption.CASCADE)
 }
 
 
@@ -40,4 +41,5 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id) {
     var authors by Author via TAuthorBookMapping
     var series by Series via TSeriesBookMapping
     var genres by Genre via TGenreBookMapping
+    val library by Library referencedOn TBooks.library
 }

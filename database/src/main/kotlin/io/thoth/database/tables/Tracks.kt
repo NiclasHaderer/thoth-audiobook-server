@@ -9,6 +9,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 
+// TODO make sure that two libraries do not cover the same paths, otherwise the path reference will not be unique
 object TTracks : UUIDTable("Tracks") {
     val title = varchar("title", 255)
     val duration = integer("duration")

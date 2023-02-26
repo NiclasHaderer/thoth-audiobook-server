@@ -12,14 +12,6 @@ object TAuthorBookMapping : Table("AuthorBookMapping") {
     )
 }
 
-object TGenreAuthorMapping : Table("GenreAuthorMapping") {
-    val genre = reference("genre", TGenres, onDelete = ReferenceOption.CASCADE)
-    val author = reference("author", TAuthors, onDelete = ReferenceOption.CASCADE)
-    override val primaryKey = PrimaryKey(
-        genre, author
-    )
-}
-
 object TGenreBookMapping : Table("GenreBookMapping") {
     val genre = reference("genre", TGenres, onDelete = ReferenceOption.CASCADE)
     val book = reference("book", TBooks, onDelete = ReferenceOption.CASCADE)

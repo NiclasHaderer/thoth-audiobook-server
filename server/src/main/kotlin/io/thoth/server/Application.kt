@@ -43,16 +43,13 @@ fun Application.applicationModule() {
     configureKoin(config)
 
     try {
-        connectToDatabase(config.database).also {
-            migrateDatabase(config.database)
-        }.also {
-            launch {
-                get<FileWatcher>().watch()
-            }
-        }.also {
-            launch {
-                RecursiveScan().start()
-            }
+        connectToDatabase(config.database)
+        migrateDatabase(config.database)
+        launch {
+            get<FileWatcher>().watch()
+        }
+        launch {
+            RecursiveScan().start()
         }
         server(config)
     } catch (e: Exception) {
