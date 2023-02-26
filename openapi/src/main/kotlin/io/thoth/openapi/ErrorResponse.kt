@@ -11,14 +11,21 @@ fun Application.configureStatusPages() {
     val logger = logger {}
     install(StatusPages) {
         exception<ErrorResponse> { call, cause ->
-            call.respond(cause.status, hashMapOf("error" to cause.message))
+            call.respond(
+                cause.status, hashMapOf(
+                    "error" to cause.message,
+                    "status" to cause.status.value,
+                    "details" to cause.details
+                )
+            )
         }
         exception<Throwable> { call, cause ->
             call.respond(
                 HttpStatusCode.InternalServerError,
                 hashMapOf(
                     "error" to cause.message,
-                    "trace" to cause.stackTrace.joinToString("\n")
+                    "status" to HttpStatusCode.InternalServerError.value,
+                    "trace" to cause.stackTrace
                 )
             )
             logger.error("Unhandled exception", cause)
@@ -27,8 +34,12 @@ fun Application.configureStatusPages() {
 }
 
 
-class ErrorResponse(val status: HttpStatusCode, message: String) : Exception(message)
+class ErrorResponse(
+    val status: HttpStatusCode,
+    message: String,
+    val details: Any? = null
+) : Exception(message)
 
-fun PipelineContext<*, *>.serverError(status: HttpStatusCode, message: String): Nothing {
-    throw ErrorResponse(status, message)
+fun PipelineContext<*, *>.serverError(status: HttpStatusCode, message: String, details: Any? = null): Nothing {
+    throw ErrorResponse(status, message, details)
 }
