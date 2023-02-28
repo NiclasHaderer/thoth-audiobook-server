@@ -20,7 +20,6 @@ class `01_Create_Tables` : Migration() {
         TTracks,
         TUsers,
         TAuthorBookMapping,
-        TGenreAuthorMapping,
         TGenreBookMapping,
         TGenreSeriesMapping,
         TSeriesBookMapping,

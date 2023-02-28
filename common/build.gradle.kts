@@ -5,6 +5,7 @@ val reflectVersion: String by project
 val exposedVersion: String by project
 val kotlinLoggingVersion: String by project
 val kotlinxSerializationVersion: String by project
+val cronUtilsVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -31,4 +32,7 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
+
+    // Scheduling
+    implementation("com.cronutils:cron-utils:$cronUtilsVersion")
 }
