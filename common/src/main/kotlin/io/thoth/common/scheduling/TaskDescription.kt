@@ -5,16 +5,24 @@ import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
 
-class TaskDescription(
-    val name: String,
-    val cron: Cron?,
-    val task: Task,
-) {
-    constructor(
-        name: String,
-        cronString: String?,
-        task: Task,
-    ) : this(
-        name, cronString?.let { CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX)).parse(it) }, task
-    )
+abstract class TaskDescription(
+    val name: String
+)
+
+class CronTaskDescription(
+    name: String,
+    val runner: () -> Unit,
+    cronString: String,
+) : TaskDescription(name) {
+    val cron: Cron by lazy {
+        val cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX)
+        val parser = CronParser(cronDefinition)
+        parser.parse(cronString)
+    }
 }
+
+class EventTaskDescription<T>(
+    name: String,
+    val runner: suspend (EventBuilder.Event<T>) -> Unit,
+    val event: EventBuilder<T>
+) : TaskDescription(name)
