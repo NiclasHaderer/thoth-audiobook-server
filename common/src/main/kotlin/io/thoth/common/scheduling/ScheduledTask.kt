@@ -26,7 +26,8 @@ internal abstract class ScheduledTask(
 internal class ScheduledCronTask(
     override val task: CronTaskDescription,
     executeAt: LocalDateTime,
-) : ScheduledTask(task, executeAt, task.cron.asString(), TaskType.CRON) {
+    cause: String = task.cron.asString()
+) : ScheduledTask(task, executeAt, cause, TaskType.CRON) {
     override suspend fun run() {
         task.runner()
     }

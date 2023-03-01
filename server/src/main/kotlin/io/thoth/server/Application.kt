@@ -7,6 +7,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.thoth.auth.configureAuthentication
 import io.thoth.common.extensions.get
+import io.thoth.common.scheduling.Scheduler
 import io.thoth.config.ThothConfig
 import io.thoth.database.connectToDatabase
 import io.thoth.database.migrateDatabase
@@ -17,9 +18,10 @@ import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
 import io.thoth.server.file.scanner.FileWatcher
-import io.thoth.server.file.scanner.RecursiveScan
 import io.thoth.server.plugins.*
+import io.thoth.server.scheduler.ThothSchedules
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.logging.LogManager
 
@@ -40,7 +42,7 @@ fun main() {
     // Start the server
     embeddedServer(
         Netty,
-        port = get<ThothConfig>().port,
+        port = config.port,
         watchPaths = listOf("classes"),
         host = "0.0.0.0",
         module = Application::applicationModule
@@ -49,10 +51,21 @@ fun main() {
 
 fun Application.applicationModule() {
     launch {
-        get<FileWatcher>().watch()
+        get<Scheduler>().start()
     }
+    runBlocking {
+        launch {
+            val scheduler = get<Scheduler>()
+            val thothSchedules = get<ThothSchedules>()
+            scheduler.schedule(thothSchedules.completeScan)
+            scheduler.schedule(thothSchedules.getMetadata)
+            scheduler.launchScheduledJob(thothSchedules.completeScan)
+            scheduler.launchScheduledJob(thothSchedules.getMetadata)
+        }.join()
+    }
+
     launch {
-        RecursiveScan().start()
+        get<FileWatcher>().watch()
     }
     server()
 }

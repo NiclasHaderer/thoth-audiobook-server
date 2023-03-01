@@ -11,7 +11,7 @@ abstract class TaskDescription(
 
 class CronTaskDescription(
     name: String,
-    val runner: () -> Unit,
+    val runner: suspend () -> Unit,
     cronString: String,
 ) : TaskDescription(name) {
     val cron: Cron by lazy {
