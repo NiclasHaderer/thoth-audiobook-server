@@ -7,9 +7,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.thoth.auth.configureAuthentication
 import io.thoth.common.extensions.get
-import io.thoth.common.extensions.shutdown
 import io.thoth.config.ThothConfig
-import io.thoth.config.loadPublicConfig
 import io.thoth.database.connectToDatabase
 import io.thoth.database.migrateDatabase
 import io.thoth.openapi.configureStatusPages
@@ -27,11 +25,22 @@ import java.util.logging.LogManager
 
 
 fun main() {
+    // Setup DI with Koin
+    configureKoin()
+
+    // Connect to database
+    val config = get<ThothConfig>()
+    connectToDatabase(config.database)
+    migrateDatabase(config.database)
+
+    // Force every library which is using the standard java logger to use SLF4J
     LogManager.getLogManager().reset()
     SLF4JBridgeHandler.install()
+
+    // Start the server
     embeddedServer(
         Netty,
-        port = loadPublicConfig().port,
+        port = get<ThothConfig>().port,
         watchPaths = listOf("classes"),
         host = "0.0.0.0",
         module = Application::applicationModule
@@ -39,26 +48,18 @@ fun main() {
 }
 
 fun Application.applicationModule() {
-    val config = loadPublicConfig()
-    configureKoin(config)
-
-    try {
-        connectToDatabase(config.database)
-        migrateDatabase(config.database)
-        launch {
-            get<FileWatcher>().watch()
-        }
-        launch {
-            RecursiveScan().start()
-        }
-        server(config)
-    } catch (e: Exception) {
-        log.error("Could not start server", e)
-        shutdown()
+    launch {
+        get<FileWatcher>().watch()
     }
+    launch {
+        RecursiveScan().start()
+    }
+    server()
 }
 
-fun Application.server(config: ThothConfig) {
+fun Application.server() {
+    val config = get<ThothConfig>()
+
     configureStatusPages()
     configureRouting()
     configureOpenApi()
