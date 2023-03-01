@@ -1,5 +1,6 @@
 package io.thoth.server.plugins
 
+import io.thoth.common.scheduling.Scheduler
 import io.thoth.config.ThothConfig
 import io.thoth.config.loadPublicConfig
 import io.thoth.metadata.MetadataProvider
@@ -13,6 +14,7 @@ import io.thoth.server.file.persister.FileAnalyzingScheduler
 import io.thoth.server.file.persister.FileAnalyzingSchedulerImpl
 import io.thoth.server.file.scanner.FileWatcher
 import io.thoth.server.file.scanner.FileWatcherImpl
+import io.thoth.server.scheduler.ThothSchedules
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.logger.slf4jLogger
@@ -37,6 +39,8 @@ fun configureKoin() = startKoin {
             single<FileAnalyzingScheduler> {
                 FileAnalyzingSchedulerImpl()
             }
+            single { Scheduler() }
+            single { ThothSchedules() }
         }
     )
     slf4jLogger()

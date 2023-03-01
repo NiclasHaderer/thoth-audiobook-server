@@ -7,7 +7,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.sync.Semaphore
 import mu.KotlinLogging.logger
 
-class Scheduler(parallelism: Int) {
+class ParallelismScheduler(parallelism: Int) {
     private val semaphore = Semaphore(parallelism)
     private val log = logger {}
 
@@ -18,7 +18,7 @@ class Scheduler(parallelism: Int) {
                 try {
                     callback()
                 } catch (e: Exception) {
-                    this@Scheduler.log.error(e) { "Queued task caused an exception" }
+                    this@ParallelismScheduler.log.error(e) { "Queued task caused an exception" }
                     null
                 }
             }

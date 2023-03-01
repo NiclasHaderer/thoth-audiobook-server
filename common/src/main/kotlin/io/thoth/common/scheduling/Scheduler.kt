@@ -3,11 +3,9 @@ package io.thoth.common.scheduling
 import io.thoth.common.extensions.nextExecution
 import io.thoth.common.extensions.toHumanReadable
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging.logger
 import java.time.Duration
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -22,14 +20,23 @@ class EventBuilder<T> internal constructor(val name: String) {
 }
 
 
-interface ScheduledEvents {
-    fun <T> create(event: String): EventBuilder<T> {
+class ScheduleBuilder(
+    val name: String, val cronString: String, val callback: suspend () -> Unit
+)
+
+
+interface SchedulingCollection {
+    fun <T> event(event: String): EventBuilder<T> {
         return EventBuilder(event)
+    }
+
+    fun schedule(cronString: String, name: String, callback: suspend () -> Unit): ScheduleBuilder {
+        return ScheduleBuilder(cronString, name, callback)
     }
 }
 
 
-class Scheduler {
+open class Scheduler {
     private var currentExecution: DelayedExecution? = null
     private val schedules = mutableListOf<TaskDescription>()
     private val log = logger {}
@@ -43,6 +50,29 @@ class Scheduler {
         }
         started.set(true)
         internalStart()
+    }
+
+
+    fun launchScheduledJob(schedule: ScheduleBuilder) {
+        launchScheduledJob(schedule.name)
+    }
+
+    fun launchScheduledJob(scheduleName: String) {
+        val relevantSchedules = schedules.filterIsInstance<CronTaskDescription>().filter { it.name == scheduleName }
+        relevantSchedules.forEach { task ->
+            val taskInSchedule = taskQueue.find { it.task == task }
+            // The task is already overdue, so we don't schedule it again
+            if (taskInSchedule != null && taskInSchedule.schedulesIn() < 0) {
+                log.info { "Task ${task.name} is already scheduled for next possible execution" }
+            } else {
+                taskQueue.add(ScheduledCronTask(task, LocalDateTime.now(), "Launched manually"))
+            }
+        }
+        if (relevantSchedules.isEmpty()) {
+            log.warn { "No schedules for scheduleName $scheduleName" }
+        } else {
+            log.info { "Dispatched schedule $scheduleName to ${relevantSchedules.size} schedules" }
+        }
     }
 
     suspend fun <T> dispatchEvent(event: EventBuilder.Event<T>) {
@@ -71,7 +101,11 @@ class Scheduler {
         schedules.add(newTask)
     }
 
-    suspend fun schedule(cronString: String, name: String? = null, task: () -> Unit) {
+    suspend fun schedule(schedule: ScheduleBuilder) {
+        schedule(schedule.cronString, schedule.name, schedule.callback)
+    }
+
+    suspend fun schedule(cronString: String, name: String? = null, task: suspend () -> Unit) {
         val newTask = CronTaskDescription(
             name = name ?: task.toString(),
             cronString = cronString,
@@ -139,26 +173,8 @@ class Scheduler {
 }
 
 
-object ThothEvents : ScheduledEvents {
-    val hello = create<String>("hello")
-    val goodbye = create<Long>("goodbye")
-    val nothing = create<Unit>("nothing")
-}
-
-
-fun main() = runBlocking {
-    val scheduler = Scheduler()
-    scheduler.register(ThothEvents.hello) { println("Hello ${it.data}") }
-    scheduler.register(ThothEvents.goodbye) { println("Goodbye ${it.data}") }
-    scheduler.register(ThothEvents.nothing) { println("Nothing ${it.data}") }
-    launch {
-        scheduler.start()
-    }
-    delay(10)
-    scheduler.dispatchEvent(ThothEvents.hello.build("World"))
-    scheduler.dispatchEvent(ThothEvents.goodbye.build(123))
-    scheduler.dispatchEvent(ThothEvents.nothing.build(Unit))
-    scheduler.schedule("* * * * *") {
-        println("Cron task")
-    }
+object ThothEvents : SchedulingCollection {
+    val hello = event<String>("hello")
+    val goodbye = event<Long>("goodbye")
+    val nothing = event<Unit>("nothing")
 }

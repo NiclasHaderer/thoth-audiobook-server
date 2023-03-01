@@ -1,23 +1,14 @@
 package io.thoth.database.tables
 
 import io.thoth.database.extensions.json
+import io.thoth.models.FileScanner
+import io.thoth.models.MetadataAgent
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.*
 import java.util.*
-import java.util.Locale.IsoCountryCode
-
-data class MetadataAgent(
-    var name: String,
-    var countryCode: IsoCountryCode
-)
-
-data class FileScanner(
-    var name: String,
-    var folders: List<String>
-)
 
 
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -25,9 +16,9 @@ object TLibraries : UUIDTable("Libraries") {
     val name = varchar("name", 255)
     val icon = text("icon").nullable()
     val scanIndex = ulong("scanIndex").default(0uL)
-    val folders = text("folders").nullable()
     val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
-    val metadataScanners = json<MetadataAgent>("metadataScanners").nullable()
+    val folders = json<List<String>>("folders") { require(it.isNotEmpty()) }
+    val metadataScanners = json<List<MetadataAgent>>("metadataScanners") { require(it.isNotEmpty()) }
     val fileScanners = json<List<FileScanner>>("fileScanners") { require(it.isNotEmpty()) }
 }
 

@@ -1,9 +1,8 @@
 package io.thoth.server.file.persister
 
-import io.thoth.common.utils.Scheduler
+import io.thoth.common.utils.ParallelismScheduler
 import io.thoth.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
-import io.thoth.server.file.scanner.RecursiveScan
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -30,7 +29,7 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
     private val log = logger {}
     private val analyzer by inject<AudioFileAnalyzerWrapper>()
     private val thothConfig by inject<ThothConfig>()
-    private val scanScheduler = Scheduler(thothConfig.analyzerThreads)
+    private val scanScheduler = ParallelismScheduler(thothConfig.analyzerThreads)
     private val trackManager = TrackManagerImpl()
     private val fileQueue = Channel<Path>(thothConfig.analyzerThreads)
     private val removeItem = Channel<Path>(thothConfig.analyzerThreads)
@@ -74,28 +73,20 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
      * @param path The path you want to queue for a scan
      * @param type Do you want to queue a complete scan, remove a file or add a file
      */
-    override fun queue(type: FileAnalyzingScheduler.Type, path: Path) {
-        runWithoutBlocking {
-            when (type) {
-                FileAnalyzingScheduler.Type.ADD_FILE -> {
-                    if (path.isDirectory()) {
-                        log.warn { "You tried to queue a folder for a metadata scan. This can not be done The folder ${path.fileName} will therefore be skipped" }
-                    } else {
-                        fileQueue.send(path)
-                    }
+    override fun queue(type: FileAnalyzingScheduler.Type, path: Path) = runWithoutBlocking {
+        when (type) {
+            FileAnalyzingScheduler.Type.ADD_FILE -> {
+                if (path.isDirectory()) {
+                    log.warn { "You tried to queue a folder for a metadata scan. This can not be done The folder ${path.fileName} will therefore be skipped" }
+                } else {
+                    fileQueue.send(path)
                 }
-
-                FileAnalyzingScheduler.Type.REMOVE_FILE -> removeItem.send(path)
-                FileAnalyzingScheduler.Type.SCAN_FOLDER -> RecursiveScan(path).start()
             }
+
+            FileAnalyzingScheduler.Type.REMOVE_FILE -> removeItem.send(path)
+            FileAnalyzingScheduler.Type.SCAN_FOLDER -> TODO("Not yet implemented")
         }
     }
 
-    private fun runWithoutBlocking(callback: suspend CoroutineScope.() -> Unit) {
-        scope.launch {
-            launch {
-                callback()
-            }
-        }
-    }
+    private fun runWithoutBlocking(callback: suspend CoroutineScope.() -> Unit) = scope.launch(block = callback).let { }
 }
