@@ -7,21 +7,35 @@ enum class TaskType {
     CRON, EVENT
 }
 
-typealias Task = suspend () -> Unit
-
-class ScheduledTask(
-    val task: TaskDescription, val executeAt: LocalDateTime, val type: TaskType, val cause: String
+internal abstract class ScheduledTask(
+    open val task: TaskDescription, val executeAt: LocalDateTime, val cause: String, val type: TaskType = TaskType.CRON
 ) {
+
     fun schedulesIn(): Long {
         val now = LocalDateTime.now()
-        var ms = try {
+        return try {
             Duration.between(now, executeAt).toMillis()
         } catch (e: ArithmeticException) {
             Long.MAX_VALUE
         }
-        if (now.isAfter(executeAt)) {
-            ms *= -1
-        }
-        return ms
+    }
+
+    abstract suspend fun run()
+}
+
+internal class ScheduledCronTask(
+    override val task: CronTaskDescription,
+    executeAt: LocalDateTime,
+) : ScheduledTask(task, executeAt, task.cron.asString(), TaskType.CRON) {
+    override suspend fun run() {
+        task.runner()
+    }
+}
+
+internal class ScheduledEventTask<T>(
+    override val task: EventTaskDescription<T>, val event: EventBuilder.Event<T>
+) : ScheduledTask(task, LocalDateTime.now(), event.name, TaskType.EVENT) {
+    override suspend fun run() {
+        task.runner(event)
     }
 }
