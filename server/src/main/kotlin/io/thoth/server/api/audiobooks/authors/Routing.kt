@@ -14,55 +14,49 @@ import io.thoth.openapi.routing.patch
 import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
 import io.thoth.server.api.audiobooks.QueryLimiter
+import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
 
-
-fun Route.registerAuthorRouting() = route("authors") {
-    get<QueryLimiter, PaginatedResponse<AuthorModel>> {
+fun Route.registerAuthorRouting() =
+    route("authors") {
+      get<QueryLimiter, PaginatedResponse<AuthorModel>> {
         transaction {
-            val books = Author.getMultiple(it.limit, it.offset)
-            val seriesCount = Author.count()
-            PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
+          val books = Author.getMultiple(it.limit, it.offset)
+          val seriesCount = Author.count()
+          PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
         }
-    }
-    get<QueryLimiter, List<UUID>>("sorting") { query ->
+      }
+      get<QueryLimiter, List<UUID>>("sorting") { query ->
+        transaction { Author.getMultiple(query.limit, query.offset).map { it.id } }
+      }
+
+      get<AuthorId.Position, Position> {
         transaction {
-            Author.getMultiple(query.limit, query.offset).map { it.id }
+          val sortOrder =
+              Author.positionOf(it.parent.id)
+                  ?: serverError(HttpStatusCode.NotFound, "Author was not found")
+          Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
         }
-    }
+      }
 
-    get<AuthorId.Position, Position> {
+      get<AuthorId, DetailedAuthorModel> {
         transaction {
-            val sortOrder = Author.positionOf(it.parent.id) ?: serverError(
-                HttpStatusCode.NotFound,
-                "Author was not found"
-            )
-            Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
+          Author.getDetailedById(it.id)
+              ?: serverError(HttpStatusCode.NotFound, "Author was not found")
         }
-    }
+      }
 
-    get<AuthorId, DetailedAuthorModel> {
+      get<AuthorName, List<NamedId>>("autocomplete") {
         transaction {
-            Author.getDetailedById(it.id) ?: serverError(
-                HttpStatusCode.NotFound,
-                "Author was not found"
-            )
+          Author.all().orderBy(TAuthors.name.lowerCase() to SortOrder.ASC).limit(30).map {
+            NamedId(it.id.value, it.name)
+          }
         }
+      }
+
+      patch(RouteHandler::patchAuthor)
+
+      post(RouteHandler::postAuthor)
     }
-
-    get<AuthorName, List<NamedId>>("autocomplete") {
-        transaction {
-            Author.all()
-                .orderBy(TAuthors.name.lowerCase() to SortOrder.ASC)
-                .limit(30)
-                .map { NamedId(it.id.value, it.name) }
-        }
-    }
-
-    patch(RouteHandler::patchAuthor)
-
-    post(RouteHandler::postAuthor)
-}

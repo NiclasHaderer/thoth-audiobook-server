@@ -19,29 +19,21 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.logger.slf4jLogger
 
-
 fun configureKoin() = startKoin {
-    val config = loadPublicConfig()
-    modules(
-        module {
-            single { config }
-            single<MetadataProvider> {
-                MetadataWrapper(
-                    listOf(
-                        AudibleClient(get<ThothConfig>().audibleRegion)
-                    )
-                )
-            }
-            single<FileWatcher> { FileWatcherImpl(get(), get()) }
-            single<AudioFileAnalyzerWrapper> {
-                AudioFileAnalyzerWrapperImpl(listOf(AudioTagScanner(get()), AudioFolderScanner(get())))
-            }
-            single<FileAnalyzingScheduler> {
-                FileAnalyzingSchedulerImpl()
-            }
-            single { Scheduler() }
-            single { ThothSchedules() }
+  val config = loadPublicConfig()
+  modules(
+      module {
+        single { config }
+        single<MetadataProvider> {
+          MetadataWrapper(listOf(AudibleClient(get<ThothConfig>().audibleRegion)))
         }
-    )
-    slf4jLogger()
+        single<FileWatcher> { FileWatcherImpl(get(), get()) }
+        single<AudioFileAnalyzerWrapper> {
+          AudioFileAnalyzerWrapperImpl(listOf(AudioTagScanner(get()), AudioFolderScanner(get())))
+        }
+        single<FileAnalyzingScheduler> { FileAnalyzingSchedulerImpl() }
+        single { Scheduler() }
+        single { ThothSchedules() }
+      })
+  slf4jLogger()
 }

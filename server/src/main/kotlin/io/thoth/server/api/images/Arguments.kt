@@ -2,9 +2,8 @@ package io.thoth.server.api.images
 
 import io.ktor.resources.*
 import io.thoth.common.serializion.kotlin.UUID_S
-import kotlinx.serialization.Serializable
 import java.util.*
-
+import kotlinx.serialization.Serializable
 
 @Serializable
 @Resource("{id}")

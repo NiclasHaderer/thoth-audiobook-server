@@ -8,15 +8,15 @@ data class ImageModel(
     val id: UUID_S,
     val blob: ByteArray,
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is ImageModel) return false
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is ImageModel) return false
 
-        return (id != other.id) && blob.contentEquals(other.blob)
-    }
+    return (id != other.id) && blob.contentEquals(other.blob)
+  }
 
-    override fun hashCode(): Int {
-        val result = id.hashCode()
-        return 31 * result + blob.contentHashCode()
-    }
+  override fun hashCode(): Int {
+    val result = id.hashCode()
+    return 31 * result + blob.contentHashCode()
+  }
 }

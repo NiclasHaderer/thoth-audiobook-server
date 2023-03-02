@@ -1,4 +1,5 @@
 rootProject.name = "thoth-audiobook-server"
+
 include(
     "authentication",
     "common",
@@ -8,5 +9,12 @@ include(
     "models",
     "openapi",
     "server",
-    "config"
-)
+    "config")
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url = uri("https://plugins.gradle.org/m2/") }
+    }
+}

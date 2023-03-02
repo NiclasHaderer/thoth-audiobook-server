@@ -2,22 +2,17 @@ package io.thoth.server.api.audiobooks.series
 
 import io.ktor.resources.*
 import io.thoth.common.serializion.kotlin.UUID_S
-import kotlinx.serialization.Serializable
 import java.util.*
+import kotlinx.serialization.Serializable
 
 @Resource("{id}")
 internal class SeriesId(
     val id: UUID_S,
 ) {
-    @Resource("position")
-    class Position(val parent: SeriesId)
+  @Resource("position") class Position(val parent: SeriesId)
 }
 
-@Resource("")
-internal class SeriesName(
-    val name: String
-)
-
+@Resource("") internal class SeriesName(val name: String)
 
 @Serializable
 data class PatchSeries(
@@ -31,10 +26,10 @@ data class PatchSeries(
     val cover: String?,
     val description: String?
 ) {
-    init {
-        require(authors?.isNotEmpty() ?: true) { "Authors must not be empty" }
-        require(books?.isNotEmpty() ?: true) { "Books must not be empty" }
-    }
+  init {
+    require(authors?.isNotEmpty() ?: true) { "Authors must not be empty" }
+    require(books?.isNotEmpty() ?: true) { "Books must not be empty" }
+  }
 }
 
 @Serializable
@@ -49,8 +44,8 @@ data class PostSeries(
     val cover: String?,
     val description: String?,
 ) {
-    init {
-        require(authors.isNotEmpty()) { "Authors must not be empty" }
-        require(books.isNotEmpty()) { "Books must not be empty" }
-    }
+  init {
+    require(authors.isNotEmpty()) { "Authors must not be empty" }
+    require(books.isNotEmpty()) { "Books must not be empty" }
+  }
 }

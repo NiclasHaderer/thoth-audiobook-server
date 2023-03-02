@@ -7,16 +7,17 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.thoth.openapi.SchemaHolder
 import io.thoth.openapi.models.generalOpenApiContext
 
-val OpenAPIRouting = createApplicationPlugin("OpenAPIRouting", createConfiguration = {
-    val api = OpenAPI()
-    SchemaHolder.set(api)
-    generalOpenApiContext(api)
-}) {
+val OpenAPIRouting =
+    createApplicationPlugin(
+        "OpenAPIRouting",
+        createConfiguration = {
+          val api = OpenAPI()
+          SchemaHolder.set(api)
+          generalOpenApiContext(api)
+        }) {
 
-    // Ensure that the dataconversion plugin is installed
-    application.plugin(DataConversion)
-    application.plugin(Resources)
-    application.environment.monitor.subscribe(ApplicationStarted) {
-        SchemaHolder.lock()
-    }
-}
+          // Ensure that the dataconversion plugin is installed
+          application.plugin(DataConversion)
+          application.plugin(Resources)
+          application.environment.monitor.subscribe(ApplicationStarted) { SchemaHolder.lock() }
+        }

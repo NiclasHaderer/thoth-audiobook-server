@@ -11,20 +11,21 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
 internal fun RouteHandler.register(user: RegisterUser): UserModel {
-    val dbUser = User.getByName(user.username)
-    if (dbUser != null) {
-        serverError(HttpStatusCode.BadRequest, "User already exists")
-    }
+  val dbUser = User.getByName(user.username)
+  if (dbUser != null) {
+    serverError(HttpStatusCode.BadRequest, "User already exists")
+  }
 
-    val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
-    val encodedPassword = encoder.encode(user.password)
+  val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
+  val encodedPassword = encoder.encode(user.password)
 
-    return transaction {
-        User.new {
-            username = user.username
-            passwordHash = encodedPassword
-            admin = user.admin
-            edit = user.edit
-        }.toModel()
-    }
+  return transaction {
+    User.new {
+          username = user.username
+          passwordHash = encodedPassword
+          admin = user.admin
+          edit = user.edit
+        }
+        .toModel()
+  }
 }

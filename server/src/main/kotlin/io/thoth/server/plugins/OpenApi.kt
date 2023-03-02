@@ -6,7 +6,7 @@ import io.thoth.openapi.plugin.OpenAPIRouting
 import io.thoth.openapi.plugin.OpenAPIWebUI
 
 fun Application.configureOpenApi() {
-    install(DataConversion)
-    install(OpenAPIRouting)
-    install(OpenAPIWebUI)
+  install(DataConversion)
+  install(OpenAPIRouting)
+  install(OpenAPIWebUI)
 }

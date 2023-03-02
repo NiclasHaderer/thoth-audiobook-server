@@ -2,8 +2,8 @@ package io.thoth.auth.routes
 
 import io.ktor.resources.*
 import io.thoth.common.serializion.kotlin.UUID_S
-import kotlinx.serialization.Serializable
 import java.util.*
+import kotlinx.serialization.Serializable
 
 internal class LoginUser(
     var username: String,
@@ -26,17 +26,8 @@ internal class EditUser(
     val changePassword: Boolean?
 )
 
-internal class PasswordChange(
-    val currentPassword: String,
-    val newPassword: String
-)
+internal class PasswordChange(val currentPassword: String, val newPassword: String)
 
-internal class UsernameChange(
-    val username: String
-)
+internal class UsernameChange(val username: String)
 
-@Serializable
-@Resource("{id}")
-internal class IdRoute(
-    val id: UUID_S
-)
+@Serializable @Resource("{id}") internal class IdRoute(val id: UUID_S)
