@@ -28,3 +28,16 @@ subprojects {
         }
     }
 }
+
+tasks.getByName("build").dependsOn("installLocalGitHook")
+
+tasks.register<DefaultTask>("installLocalGitHook") {
+    val file = File(rootProject.rootDir, ".hooks/pre-commit")
+    val target = File(rootProject.rootDir, ".git/hooks/pre-commit")
+    if (!file.exists()) {
+        throw GradleException("File ${file.absolutePath} does not exist")
+    }
+
+    file.copyTo(target, overwrite = true)
+    target.setExecutable(true)
+}
