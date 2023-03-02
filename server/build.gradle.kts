@@ -17,6 +17,7 @@ plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.ncorti.ktfmt.gradle")
     application
 }
 
@@ -27,10 +28,7 @@ application {
 }
 
 // Shadow task depends on Jar task, so these configs are reflected for Shadow as well
-tasks.jar {
-    manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt"
-}
-
+tasks.jar { manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt" }
 
 dependencies {
     // Other projects

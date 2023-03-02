@@ -4,7 +4,10 @@ plugins {
     base
     kotlin("jvm") version "1.8.0" apply false
     kotlin("plugin.serialization") version "1.8.0" apply false
+    id("com.ncorti.ktfmt.gradle") version "0.12.0"
 }
+
+ktfmt { googleStyle() }
 
 subprojects {
     group = "io.thoth"
@@ -12,6 +15,7 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven("https://plugins.gradle.org/m2/")
         maven("https://jitpack.io")
     }
 
@@ -23,5 +27,4 @@ subprojects {
             languageVersion = "1.8"
         }
     }
-
 }

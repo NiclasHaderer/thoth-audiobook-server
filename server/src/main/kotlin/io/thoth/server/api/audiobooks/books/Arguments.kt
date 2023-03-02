@@ -9,14 +9,10 @@ import java.util.*
 internal class BookId(
     val id: UUID_S,
 ) {
-    @Resource("position")
-    class Position(val parent: BookId)
+  @Resource("position") class Position(val parent: BookId)
 }
-@Resource("")
-internal class BookName(
-    val name: String
-)
 
+@Resource("") internal class BookName(val name: String)
 
 class PatchBook(
     val title: String?,
@@ -33,9 +29,9 @@ class PatchBook(
     val isbn: String?,
     val cover: String?
 ) {
-    init {
-        require(authors?.isNotEmpty() ?: true) { "Authors cannot be empty" }
-    }
+  init {
+    require(authors?.isNotEmpty() ?: true) { "Authors cannot be empty" }
+  }
 }
 
 class PostBook(
@@ -53,7 +49,7 @@ class PostBook(
     val isbn: String?,
     val cover: String?,
 ) {
-    init {
-        require(authors.isNotEmpty()) { "Authors cannot be empty" }
-    }
+  init {
+    require(authors.isNotEmpty()) { "Authors cannot be empty" }
+  }
 }

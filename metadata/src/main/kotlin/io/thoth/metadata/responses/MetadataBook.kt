@@ -3,15 +3,15 @@ package io.thoth.metadata.responses
 import java.time.LocalDate
 
 interface MetadataSearchBook {
-    val id: MetadataProviderWithID
-    val title: String?
-    val link: String?
-    val author: MetadataSearchAuthor?
-    val series: List<MetadataBookSeries>
-    val language: String?
-    val releaseDate: LocalDate?
-    val coverURL: String?
-    val narrator: String?
+  val id: MetadataProviderWithID
+  val title: String?
+  val link: String?
+  val author: MetadataSearchAuthor?
+  val series: List<MetadataBookSeries>
+  val language: String?
+  val releaseDate: LocalDate?
+  val coverURL: String?
+  val narrator: String?
 }
 
 data class MetadataSearchBookImpl(
@@ -27,10 +27,10 @@ data class MetadataSearchBookImpl(
 ) : MetadataSearchBook
 
 interface MetadataBook : MetadataSearchBook {
-    val description: String?
-    val providerRating: Float?
-    val publisher: String?
-    val isbn: String?
+  val description: String?
+  val providerRating: Float?
+  val publisher: String?
+  val isbn: String?
 }
 
 data class MetadataBookImpl(
@@ -48,4 +48,3 @@ data class MetadataBookImpl(
     override val language: String?,
     override val isbn: String?,
 ) : MetadataBook
-

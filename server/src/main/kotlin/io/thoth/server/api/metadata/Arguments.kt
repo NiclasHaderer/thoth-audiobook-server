@@ -42,7 +42,7 @@ internal class SeriesName(
 @Resource("")
 internal class BookName(
     val name: String,
-    val authorName: String?= null,
+    val authorName: String? = null,
 )
 
 @Resource("")

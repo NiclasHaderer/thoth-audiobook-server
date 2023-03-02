@@ -5,10 +5,10 @@ val springSecurityVersion: String by project
 val bouncyCastleVersion: String by project
 val joseJWTVersion: String by project
 
-
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
+    id("com.ncorti.ktfmt.gradle")
 }
 
 dependencies {

@@ -9,6 +9,7 @@ val jsonVersion: String by project
 
 plugins {
     kotlin("jvm")
+    id("com.ncorti.ktfmt.gradle")
 }
 
 dependencies {
@@ -24,7 +25,6 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
     // JSON parsing
     implementation("org.json:json:$jsonVersion")
-
 
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")

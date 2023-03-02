@@ -10,6 +10,7 @@ val cronUtilsVersion: String by project
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
+    id("com.ncorti.ktfmt.gradle")
 }
 
 dependencies {

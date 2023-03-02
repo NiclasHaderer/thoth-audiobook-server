@@ -1,34 +1,36 @@
 package io.thoth.generators
 //
-//import java.lang.reflect.ParameterizedType
-//import kotlin.reflect.KProperty
-//import kotlin.reflect.KType
-//import kotlin.reflect.KTypeParameter
-//import kotlin.reflect.KVisibility
-//import kotlin.reflect.full.createType
-//import kotlin.reflect.full.memberProperties
+// import java.lang.reflect.ParameterizedType
+// import kotlin.reflect.KProperty
+// import kotlin.reflect.KType
+// import kotlin.reflect.KTypeParameter
+// import kotlin.reflect.KVisibility
+// import kotlin.reflect.full.createType
+// import kotlin.reflect.full.memberProperties
 //
-//open class Fuck<T>
+// open class Fuck<T>
 //
-//val KType.isGeneric get() = this.classifier is KTypeParameter
+// val KType.isGeneric get() = this.classifier is KTypeParameter
 //
-//data class HelloResponse(
+// data class HelloResponse(
 //    val response: String
-//)
+// )
 //
-//data class HelloRequest<T>(
+// data class HelloRequest<T>(
 //    val request: T,
 //    val response: Any
-//)
+// )
 //
-//inline fun <reified TYPE> asdf() {
+// inline fun <reified TYPE> asdf() {
 //
 //    val inlineRefined = object : Fuck<TYPE>() {}
 //
-//    val asdff = (inlineRefined.javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0]
+//    val asdff = (inlineRefined.javaClass.genericSuperclass as
+// ParameterizedType).actualTypeArguments[0]
 //
 //    val refinedClass =
-//        ((inlineRefined.javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as ParameterizedType)
+//        ((inlineRefined.javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0]
+// as ParameterizedType)
 //
 //    val clazz = refinedClass.rawType.let {
 //        Class.forName((it as Class<*>).canonicalName).kotlin
@@ -61,16 +63,18 @@ package io.thoth.generators
 //    //        else -> println("class")
 //    //    }
 //
-//    //    val arg = (extractedType.type as MoreTypes.ParameterizedTypeImpl).actualTypeArguments[0] as Class<*>
-//    //    val refClass = Class.forName(extractedType.rawType.canonicalName).kotlin.memberProperties
+//    //    val arg = (extractedType.type as MoreTypes.ParameterizedTypeImpl).actualTypeArguments[0]
+// as Class<*>
+//    //    val refClass =
+// Class.forName(extractedType.rawType.canonicalName).kotlin.memberProperties
 //    //    val args = Class.forName(arg.canonicalName).kotlin
 //    //    println(args)
 //    //    println(refClass)
-//}
+// }
 //
-//fun main() {
+// fun main() {
 //    asdf<HelloRequest<HelloResponse>>()
 //    asdf<List<String>>()
 //    asdf<HelloResponse>()
 //    asdf<HelloRequest<*>>()
-//}
+// }

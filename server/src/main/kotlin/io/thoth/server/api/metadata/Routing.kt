@@ -11,47 +11,55 @@ import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
 import org.koin.ktor.ext.inject
 
-fun Route.registerMetadataRouting() = route("metadata") {
-    val metadataProvider by inject<MetadataProvider>()
+fun Route.registerMetadataRouting() =
+    route("metadata") {
+      val metadataProvider by inject<MetadataProvider>()
 
-    get<MetadataSearch, List<MetadataSearchBook>>("search") { params ->
+      get<MetadataSearch, List<MetadataSearchBook>>("search") { params ->
         metadataProvider.search(
-            params.keywords, params.title, params.author, params.narrator, params.language, params.pageSize
-        )
-    }
+            params.keywords,
+            params.title,
+            params.author,
+            params.narrator,
+            params.language,
+            params.pageSize)
+      }
 
-    route("author") {
+      route("author") {
         get<AuthorID, MetadataAuthor> { id ->
-            metadataProvider.getAuthorByID(id.provider, id.itemID) ?: serverError(
-                HttpStatusCode.NotFound, "Author with id ${id.itemID} and provider ${id.provider}was not found"
-            )
+          metadataProvider.getAuthorByID(id.provider, id.itemID)
+              ?: serverError(
+                  HttpStatusCode.NotFound,
+                  "Author with id ${id.itemID} and provider ${id.provider}was not found")
         }
 
         get<AuthorName, List<MetadataAuthor>>("search") { params ->
-            metadataProvider.getAuthorByName(params.name)
+          metadataProvider.getAuthorByName(params.name)
         }
-    }
+      }
 
-    route("book") {
+      route("book") {
         get<BookID, MetadataBook> { id ->
-            metadataProvider.getBookByID(id.provider, id.itemID) ?: serverError(
-                HttpStatusCode.NotFound, "Book with id ${id.itemID} and provider ${id.provider}was not found"
-            )
+          metadataProvider.getBookByID(id.provider, id.itemID)
+              ?: serverError(
+                  HttpStatusCode.NotFound,
+                  "Book with id ${id.itemID} and provider ${id.provider}was not found")
         }
 
         get<BookName, List<MetadataBook>>("search") { params ->
-            metadataProvider.getBookByName(params.name, params.authorName)
+          metadataProvider.getBookByName(params.name, params.authorName)
         }
-    }
+      }
 
-    route("series") {
+      route("series") {
         get<SeriesID, MetadataSeries> { id ->
-            metadataProvider.getSeriesByID(id.provider, id.itemID) ?: serverError(
-                HttpStatusCode.NotFound, "Series with id ${id.itemID} and provider ${id.provider}was not found"
-            )
+          metadataProvider.getSeriesByID(id.provider, id.itemID)
+              ?: serverError(
+                  HttpStatusCode.NotFound,
+                  "Series with id ${id.itemID} and provider ${id.provider}was not found")
         }
         get<SeriesName, List<MetadataSeries>>("search") { params ->
-            metadataProvider.getSeriesByName(params.name, params.authorName)
+          metadataProvider.getSeriesByName(params.name, params.authorName)
         }
+      }
     }
-}

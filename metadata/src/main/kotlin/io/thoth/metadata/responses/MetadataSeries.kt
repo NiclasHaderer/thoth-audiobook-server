@@ -1,10 +1,10 @@
 package io.thoth.metadata.responses
 
 interface MetadataBookSeries {
-    val id: MetadataProviderWithID
-    val title: String?
-    val link: String
-    val index: Float?
+  val id: MetadataProviderWithID
+  val title: String?
+  val link: String
+  val index: Float?
 }
 
 data class MetadataBookSeriesImpl(
@@ -15,15 +15,15 @@ data class MetadataBookSeriesImpl(
 ) : MetadataBookSeries
 
 interface MetadataSeries {
-    val id: MetadataProviderWithID
-    val link: String
-    val title: String?
-    val author: String?
-    val coverURL: String?
-    val description: String?
-    val totalBooks: Int?
-    val primaryWorks: Int?
-    val books: List<MetadataSearchBook>?
+  val id: MetadataProviderWithID
+  val link: String
+  val title: String?
+  val author: String?
+  val coverURL: String?
+  val description: String?
+  val totalBooks: Int?
+  val primaryWorks: Int?
+  val books: List<MetadataSearchBook>?
 }
 
 data class MetadataSeriesImpl(

@@ -2,21 +2,21 @@ package io.thoth.models
 
 import io.thoth.common.serializion.kotlin.LocalDate_S
 import io.thoth.common.serializion.kotlin.UUID_S
-import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.util.*
+import kotlinx.serialization.Serializable
 
 interface IAuthorModel {
-    val id: UUID
-    val name: String
-    val provider: String?
-    val providerID: String?
-    val biography: String?
-    val imageID: UUID?
-    val website: String?
-    val bornIn: String?
-    val birthDate: LocalDate?
-    val deathDate: LocalDate?
+  val id: UUID
+  val name: String
+  val provider: String?
+  val providerID: String?
+  val biography: String?
+  val imageID: UUID?
+  val website: String?
+  val bornIn: String?
+  val birthDate: LocalDate?
+  val deathDate: LocalDate?
 }
 
 @Serializable
@@ -48,21 +48,21 @@ data class DetailedAuthorModel(
     val books: List<IBookModel>,
     val series: List<ISeriesModel>,
 ) : IAuthorModel {
-    companion object {
-        fun fromModel(author: IAuthorModel, books: List<IBookModel>, series: List<ISeriesModel>) =
-            DetailedAuthorModel(
-                id = author.id,
-                name = author.name,
-                biography = author.biography,
-                imageID = author.imageID,
-                website = author.website,
-                bornIn = author.bornIn,
-                birthDate = author.birthDate,
-                deathDate = author.deathDate,
-                books = books,
-                series = series,
-                provider = author.provider,
-                providerID = author.providerID,
-            )
-    }
+  companion object {
+    fun fromModel(author: IAuthorModel, books: List<IBookModel>, series: List<ISeriesModel>) =
+        DetailedAuthorModel(
+            id = author.id,
+            name = author.name,
+            biography = author.biography,
+            imageID = author.imageID,
+            website = author.website,
+            bornIn = author.bornIn,
+            birthDate = author.birthDate,
+            deathDate = author.deathDate,
+            books = books,
+            series = series,
+            provider = author.provider,
+            providerID = author.providerID,
+        )
+  }
 }
