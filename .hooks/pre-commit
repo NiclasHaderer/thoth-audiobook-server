@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Get previously staged kotlin files
+STAGED_FILES=$(git diff --cached --name-only | while read filename; do if [ -f "$filename" ] && [ "${filename##*.}" = "kt" ]; then echo "$PWD/$filename"; fi; done)
+if [ -n "$STAGED_FILES" ]; then
+    # Run ktfmt on staged files
+    ./gradlew ktfmtFormat
+    # Add formatted files to staging
+    echo "$STAGED_FILES" | xargs git add
+fi
