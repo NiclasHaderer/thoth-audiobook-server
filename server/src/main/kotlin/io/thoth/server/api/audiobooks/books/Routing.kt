@@ -41,8 +41,7 @@ fun Route.registerBookRouting() =
         }
 
         get<BookId, DetailedBookModel> {
-            transaction { Book.getDetailedById(it.id) }
-                ?: serverError(HttpStatusCode.NotFound, "Could not find book")
+            transaction { Book.getDetailedById(it.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find book")
         }
 
         get<BookName, List<TitledId>>("autocomplete") {

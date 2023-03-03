@@ -61,10 +61,7 @@ fun getAuthConfig(configDir: String): AuthConfig {
     )
 }
 
-fun Application.configureAuthentication(
-    configDir: String,
-    configFactory: (AuthConfig.() -> Unit)? = null
-) {
+fun Application.configureAuthentication(configDir: String, configFactory: (AuthConfig.() -> Unit)? = null) {
     val config = getAuthConfig(configDir)
     configFactory?.invoke(config)
     assert(config.domain != null) { "Domain must be set" }
@@ -81,10 +78,7 @@ fun Application.configureAuthentication(
             .toURL()
 
     val jwkProvider =
-        JwkProviderBuilder(url)
-            .cached(5, 10, TimeUnit.MINUTES)
-            .rateLimited(10, 1, TimeUnit.MINUTES)
-            .build()
+        JwkProviderBuilder(url).cached(5, 10, TimeUnit.MINUTES).rateLimited(10, 1, TimeUnit.MINUTES).build()
 
     install(Authentication) {
         jwt(GuardTypes.User.value) {
@@ -99,10 +93,7 @@ fun Application.configureAuthentication(
                 if (principal.type == JwtType.Access) principal else null
             }
             challenge { _, _ ->
-                call.respond(
-                    HttpStatusCode.Unauthorized,
-                    mapOf("error" to "Token is not valid or has expired")
-                )
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
             }
         }
 
@@ -116,10 +107,7 @@ fun Application.configureAuthentication(
                 if (principal.type == JwtType.Access && principal.edit) principal else null
             }
             challenge { _, _ ->
-                call.respond(
-                    HttpStatusCode.Unauthorized,
-                    mapOf("error" to "Token is not valid or has expired")
-                )
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
             }
         }
 
@@ -130,14 +118,10 @@ fun Application.configureAuthentication(
             verifier(jwkProvider, config.issuer) { acceptLeeway(3) }
             validate { jwtCredential ->
                 val principal = jwtToPrincipal(jwtCredential) ?: return@validate null
-                if (principal.type == JwtType.Access && principal.edit && principal.admin) principal
-                else null
+                if (principal.type == JwtType.Access && principal.edit && principal.admin) principal else null
             }
             challenge { _, _ ->
-                call.respond(
-                    HttpStatusCode.Unauthorized,
-                    mapOf("error" to "Token is not valid or has expired")
-                )
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
             }
         }
     }

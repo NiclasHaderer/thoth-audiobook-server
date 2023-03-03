@@ -20,7 +20,10 @@ subprojects {
     }
 
     afterEvaluate {
-        ktfmt { kotlinLangStyle() }
+        ktfmt {
+            kotlinLangStyle()
+            maxWidth.set(120)
+        }
     }
 
     tasks.withType<KotlinCompile>().configureEach {

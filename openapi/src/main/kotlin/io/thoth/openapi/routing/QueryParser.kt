@@ -50,13 +50,8 @@ fun <T : Any> parseParametersIntoClass(
             throw ErrorResponse(HttpStatusCode.BadRequest, "${parameter.name} missing in url")
         }
         // Missing value for query parameter
-        else if (
-            queryAnnotation != null && (parameter.name !in queryParams && !parameter.isOptional)
-        ) {
-            throw ErrorResponse(
-                HttpStatusCode.BadRequest,
-                "${parameter.name} missing as queryParam"
-            )
+        else if (queryAnnotation != null && (parameter.name !in queryParams && !parameter.isOptional)) {
+            throw ErrorResponse(HttpStatusCode.BadRequest, "${parameter.name} missing as queryParam")
         }
 
         // Should the value of the constructor query parameter be read from the query params or the
@@ -75,13 +70,8 @@ fun <T : Any> parseParametersIntoClass(
         // primary constructor
         try {
             val parameterTypeInfo =
-                TypeInfo(
-                    parameter.type.classifier as KClass<*>,
-                    parameter.type.javaType,
-                    parameter.type
-                )
-            val requestParameterValue =
-                converter.fromValues(parameterSource[parameter.name]!!, parameterTypeInfo)
+                TypeInfo(parameter.type.classifier as KClass<*>, parameter.type.javaType, parameter.type)
+            val requestParameterValue = converter.fromValues(parameterSource[parameter.name]!!, parameterTypeInfo)
             constructorCallArgs[parameter] = requestParameterValue
         } catch (e: DataConversionException) {
             throw ErrorResponse(

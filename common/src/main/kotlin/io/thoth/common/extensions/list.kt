@@ -7,8 +7,7 @@ fun <T> List<T>.saveTo(index: Int): List<T> {
 
 fun <T> List<T>.saveSubList(startIndex: Int, endIndex: Int? = null): List<T> {
     val searchStartIndex = if (this.size < startIndex) this.size else startIndex
-    val searchEndIndex =
-        if (endIndex == null) this.size else if (this.size < endIndex) this.size else endIndex
+    val searchEndIndex = if (endIndex == null) this.size else if (this.size < endIndex) this.size else endIndex
     return this.subList(searchStartIndex, searchEndIndex)
 }
 

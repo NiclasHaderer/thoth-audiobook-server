@@ -27,11 +27,7 @@ class ThothPrincipal(
     val type: JwtType
 ) : Principal
 
-internal fun generateJwtForUser(
-    issuer: String,
-    user: InternalUserModel,
-    config: AuthConfig
-): JwtPair {
+internal fun generateJwtForUser(issuer: String, user: InternalUserModel, config: AuthConfig): JwtPair {
     val keyPair = config.keyPair
     val bearerToken =
         JWT.create()
@@ -43,9 +39,7 @@ internal fun generateJwtForUser(
             .withClaim("userId", user.id.toString())
             .withClaim("type", JwtType.Access.name)
             .withExpiresAt(Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
-            .sign(
-                Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey)
-            )
+            .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 
     val refreshAge = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(60)
     val refreshToken =
@@ -58,9 +52,7 @@ internal fun generateJwtForUser(
             .withClaim("userId", user.id.toString())
             .withClaim("username", user.username)
             .withExpiresAt(Date(refreshAge))
-            .sign(
-                Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey)
-            )
+            .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 
     return JwtPair(bearerToken, refreshToken)
 }

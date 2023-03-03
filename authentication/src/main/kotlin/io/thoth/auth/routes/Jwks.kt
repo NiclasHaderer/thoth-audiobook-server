@@ -11,11 +11,7 @@ internal class JwksResponse(val keys: Map<String, Any>)
 internal fun jwksEndpoint(config: AuthConfig): RouteHandler.() -> JwksResponse {
     return {
         val keyPair = config.keyPair
-        val jwk =
-            RSAKey.Builder(keyPair.public as RSAPublicKey)
-                .keyUse(KeyUse.SIGNATURE)
-                .keyID(config.keyId)
-                .build()
+        val jwk = RSAKey.Builder(keyPair.public as RSAPublicKey).keyUse(KeyUse.SIGNATURE).keyID(config.keyId).build()
 
         JwksResponse(jwk.toJSONObject())
     }

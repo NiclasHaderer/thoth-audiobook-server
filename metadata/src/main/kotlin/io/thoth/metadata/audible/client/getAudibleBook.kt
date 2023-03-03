@@ -37,9 +37,7 @@ fun getBookRating(document: Document): Float? {
 }
 
 private fun getPublishedDate(document: Document): LocalDate? {
-    val jsonString =
-        document.select("body script[type='application/ld+json']").firstOrNull()?.data()
-            ?: return null
+    val jsonString = document.select("body script[type='application/ld+json']").firstOrNull()?.data() ?: return null
     return try {
         val jsonArray = JSONArray(jsonString)
         val datePublished = jsonArray.getJSONObject(0)?.get("datePublished") ?: return null
@@ -63,11 +61,9 @@ private fun extractAuthorInfo(document: Document): MetadataSearchAuthorImpl? {
     )
 }
 
-private fun getDescription(document: Document) =
-    document.selectFirst(".productPublisherSummary span")?.text()
+private fun getDescription(document: Document) = document.selectFirst(".productPublisherSummary span")?.text()
 
-private fun extractImageUrl(document: Document) =
-    document.selectFirst(".hero-content img.bc-pub-block")?.attr("src")
+private fun extractImageUrl(document: Document) = document.selectFirst(".hero-content img.bc-pub-block")?.attr("src")
 
 private fun extractTitle(document: Document, region: AudibleRegions): String? {
     val title = document.selectFirst("h1.bc-heading")?.text() ?: return null

@@ -18,8 +18,7 @@ fun Route.withNotifications(path: String, table: Table, type: NotificationType) 
 
     EntityHook.subscribe {
         // Not correct change type of wrong table
-        if (!type.changeType.contains(it.changeType) || it.entityClass.table != table)
-            return@subscribe
+        if (!type.changeType.contains(it.changeType) || it.entityClass.table != table) return@subscribe
         runBlocking {
             collection.emit(
                 ChangeEvent(

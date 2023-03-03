@@ -48,14 +48,7 @@ fun main() {
     audiobookDefinitions = audiobookDefinitions.replace("interface", "export interface")
 
     var metadataDefinitions =
-        generate(
-            setOf(
-                MetadataAuthor::class,
-                MetadataBook::class,
-                MetadataSearchBook::class,
-                MetadataSeries::class
-            )
-        )
+        generate(setOf(MetadataAuthor::class, MetadataBook::class, MetadataSearchBook::class, MetadataSeries::class))
     metadataDefinitions = metadataDefinitions.replace("interface", "export interface")
 
     if (!Files.exists(Path.of("gen/typescript"))) {

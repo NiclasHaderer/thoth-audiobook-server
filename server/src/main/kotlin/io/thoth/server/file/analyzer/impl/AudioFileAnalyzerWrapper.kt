@@ -9,8 +9,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.absolute
 import mu.KotlinLogging.logger
 
-class AudioFileAnalyzerWrapperImpl(private val analyzers: List<AudioFileAnalyzer>) :
-    AudioFileAnalyzerWrapper {
+class AudioFileAnalyzerWrapperImpl(private val analyzers: List<AudioFileAnalyzer>) : AudioFileAnalyzerWrapper {
     private val log = logger {}
 
     override suspend fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult? {

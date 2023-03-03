@@ -24,10 +24,7 @@ fun Route.streamingRouting() {
     get<AudioId, FileResponse> { fileId ->
         val track =
             transaction { Track.getById(fileId.id) }
-                ?: serverError(
-                    HttpStatusCode.NotFound,
-                    "Database out of sync. Please start syncing process."
-                )
+                ?: serverError(HttpStatusCode.NotFound, "Database out of sync. Please start syncing process.")
         val path = Path.of(track.path)
         if (!path.exists() && path.isRegularFile()) {
             serverError(
@@ -37,11 +34,7 @@ fun Route.streamingRouting() {
         }
         call.response.header(
             HttpHeaders.ContentDisposition,
-            ContentDisposition.Attachment.withParameter(
-                    ContentDisposition.Parameters.FileName,
-                    path.name
-                )
-                .toString()
+            ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, path.name).toString()
         )
 
         fileResponse(path)

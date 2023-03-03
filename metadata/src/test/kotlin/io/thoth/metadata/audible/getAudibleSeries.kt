@@ -47,11 +47,7 @@ class AudibleSeriesTest {
                                 )
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/51xJbFMRsxL._SL500_.jpg",
-                        releaseDate =
-                            LocalDate.parse(
-                                "2015-11-20",
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            ),
+                        releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
                         language = "English"
                     ),
@@ -76,11 +72,7 @@ class AudibleSeriesTest {
                                 )
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/61fmfnA-uCL._SL500_.jpg",
-                        releaseDate =
-                            LocalDate.parse(
-                                "2015-11-20",
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            ),
+                        releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
                         language = "English"
                     ),
@@ -105,19 +97,14 @@ class AudibleSeriesTest {
                                 )
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/51O29wSqEsL._SL500_.jpg",
-                        releaseDate =
-                            LocalDate.parse(
-                                "2015-11-20",
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            ),
+                        releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
                         language = "English"
                     ),
                     MetadataSearchBookImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B017V4NUPO"),
                         title = "Harry Potter and the Goblet of Fire",
-                        link =
-                            "https://audible.com/pd/Harry-Potter-and-the-Goblet-of-Fire-Book-4-Audiobook/B017V4NUPO",
+                        link = "https://audible.com/pd/Harry-Potter-and-the-Goblet-of-Fire-Book-4-Audiobook/B017V4NUPO",
                         author =
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
@@ -134,11 +121,7 @@ class AudibleSeriesTest {
                                 )
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/61m99NmM4jL._SL500_.jpg",
-                        releaseDate =
-                            LocalDate.parse(
-                                "2015-11-20",
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            ),
+                        releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
                         language = "English"
                     ),
@@ -163,11 +146,7 @@ class AudibleSeriesTest {
                                 )
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/51KHVovUpGL._SL500_.jpg",
-                        releaseDate =
-                            LocalDate.parse(
-                                "2015-11-20",
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            ),
+                        releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
                         language = "English"
                     ),
@@ -192,11 +171,7 @@ class AudibleSeriesTest {
                                 )
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/51sImF7gqML._SL500_.jpg",
-                        releaseDate =
-                            LocalDate.parse(
-                                "2015-11-20",
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            ),
+                        releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
                         language = "English"
                     ),
@@ -221,11 +196,7 @@ class AudibleSeriesTest {
                                 )
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/61yMjtQzKcL._SL500_.jpg",
-                        releaseDate =
-                            LocalDate.parse(
-                                "2015-11-20",
-                                DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            ),
+                        releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
                         language = "English"
                     )

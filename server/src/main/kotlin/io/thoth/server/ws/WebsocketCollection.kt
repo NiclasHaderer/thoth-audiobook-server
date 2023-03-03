@@ -13,17 +13,14 @@ class ChangeEvent(
 )
 
 class WebsocketCollection {
-    private val connections =
-        Collections.synchronizedList<DefaultWebSocketServerSession>(mutableListOf())
+    private val connections = Collections.synchronizedList<DefaultWebSocketServerSession>(mutableListOf())
 
     fun add(connection: DefaultWebSocketServerSession) {
         connections.add(connection)
     }
 
     suspend fun closeAll() {
-        connections.forEach {
-            it.close(CloseReason(CloseReason.Codes.NORMAL, "server closed connection"))
-        }
+        connections.forEach { it.close(CloseReason(CloseReason.Codes.NORMAL, "server closed connection")) }
         connections.clear()
     }
 

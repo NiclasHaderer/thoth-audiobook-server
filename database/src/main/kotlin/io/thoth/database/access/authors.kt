@@ -19,10 +19,7 @@ fun Author.Companion.positionOf(authorId: UUID, order: SortOrder = SortOrder.ASC
         .count()
 }
 
-fun Author.Companion.getDetailedById(
-    authorId: UUID,
-    order: SortOrder = SortOrder.ASC
-): DetailedAuthorModel? {
+fun Author.Companion.getDetailedById(authorId: UUID, order: SortOrder = SortOrder.ASC): DetailedAuthorModel? {
     val author = findById(authorId) ?: return null
 
     return DetailedAuthorModel.fromModel(
@@ -32,14 +29,8 @@ fun Author.Companion.getDetailedById(
     )
 }
 
-fun Author.Companion.getMultiple(
-    limit: Int,
-    offset: Long,
-    order: SortOrder = SortOrder.ASC
-): List<AuthorModel> {
-    return Author.all().limit(limit, offset).orderBy(TAuthors.name.lowerCase() to order).map {
-        it.toModel()
-    }
+fun Author.Companion.getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC): List<AuthorModel> {
+    return Author.all().limit(limit, offset).orderBy(TAuthors.name.lowerCase() to order).map { it.toModel() }
 }
 
 fun Author.Companion.findByName(authorName: String): Author? {

@@ -107,8 +107,7 @@ object SchemaHolder {
                                 MediaType()
                                     .schema(
                                         Schema<Any>().also {
-                                            it.`$ref` =
-                                                RefUtils.constructRef(requestBody.java.simpleName)
+                                            it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
                                         }
                                     )
                             )
@@ -129,10 +128,7 @@ object SchemaHolder {
                                         MediaType()
                                             .schema(
                                                 Schema<Any>().also {
-                                                    it.`$ref` =
-                                                        RefUtils.constructRef(
-                                                            requestBody.java.simpleName
-                                                        )
+                                                    it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
                                                 }
                                             )
                                     )
@@ -144,8 +140,7 @@ object SchemaHolder {
     private fun generateSchema(clazz: KClass<*>): Map<String, Schema<*>>? {
         return getEnumSchema(clazz)
             ?: when (clazz) {
-                Unit::class ->
-                    mapOf(clazz.java.simpleName to StringSchema().also { it.maxLength = 0 })
+                Unit::class -> mapOf(clazz.java.simpleName to StringSchema().also { it.maxLength = 0 })
                 BinaryResponse::class -> mapOf(clazz.java.simpleName to BinarySchema())
                 RedirectResponse::class -> mapOf(clazz.java.simpleName to StringSchema())
                 FileResponse::class -> mapOf(clazz.java.simpleName to FileSchema())
@@ -179,9 +174,7 @@ object SchemaHolder {
             throw Error("Schema has not been set")
         }
         if (finalized) {
-            throw Error(
-                "Application startup has completed. You cannot modify the API object any more"
-            )
+            throw Error("Application startup has completed. You cannot modify the API object any more")
         }
 
         synchronized(this.api!!) { this.api!!.configure() }

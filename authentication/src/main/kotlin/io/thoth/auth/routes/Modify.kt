@@ -55,10 +55,7 @@ internal fun RouteHandler.changePassword(passwordChange: PasswordChange) {
     transaction {
         val user =
             User.findById(principal.userId)
-                ?: serverError(
-                    HttpStatusCode.BadRequest,
-                    "Could not find user with id ${principal.userId}"
-                )
+                ?: serverError(HttpStatusCode.BadRequest, "Could not find user with id ${principal.userId}")
 
         val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
         if (!encoder.matches(passwordChange.currentPassword, user.passwordHash)) {

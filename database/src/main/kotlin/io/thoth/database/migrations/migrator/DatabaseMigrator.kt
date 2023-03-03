@@ -50,10 +50,7 @@ class DatabaseMigrator(
 
     private fun getLatestVersion(): Int? =
         transaction(db = db) {
-            SchemaTracker.all()
-                .orderBy(TSchemaTrackers.version to SortOrder.DESC)
-                .firstOrNull()
-                ?.version
+            SchemaTracker.all().orderBy(TSchemaTrackers.version to SortOrder.DESC).firstOrNull()?.version
         }
 
     fun updateDatabase() {

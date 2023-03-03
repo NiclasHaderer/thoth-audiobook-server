@@ -62,9 +62,11 @@ fun Application.applicationModule() {
         launch {
                 val scheduler = get<Scheduler>()
                 val thothSchedules = get<ThothSchedules>()
-                scheduler.schedule(thothSchedules.completeScan)
+                scheduler.register(thothSchedules.scanFolder)
+                scheduler.register(thothSchedules.scanLibrary)
+                scheduler.schedule(thothSchedules.fullScan)
                 scheduler.schedule(thothSchedules.getMetadata)
-                scheduler.launchScheduledJob(thothSchedules.completeScan)
+                scheduler.launchScheduledJob(thothSchedules.fullScan)
                 scheduler.launchScheduledJob(thothSchedules.getMetadata)
             }
             .join()

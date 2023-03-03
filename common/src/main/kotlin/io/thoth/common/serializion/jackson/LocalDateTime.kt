@@ -20,13 +20,9 @@ class CustomLocalDateTimeSerializer : StdSerializer<LocalDateTime>(LocalDateTime
     }
 }
 
-class CustomLocalDateTimeDesSerializer :
-    StdDeserializer<LocalDateTime?>(LocalDateTime::class.java) {
+class CustomLocalDateTimeDesSerializer : StdDeserializer<LocalDateTime?>(LocalDateTime::class.java) {
     @Throws(IOException::class)
-    override fun deserialize(
-        jsonparser: JsonParser,
-        context: DeserializationContext?
-    ): LocalDateTime {
+    override fun deserialize(jsonparser: JsonParser, context: DeserializationContext?): LocalDateTime {
         val timestamp = jsonparser.text.toLong()
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())
     }

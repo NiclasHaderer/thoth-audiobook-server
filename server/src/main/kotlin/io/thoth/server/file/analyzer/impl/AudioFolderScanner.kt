@@ -10,8 +10,7 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
 class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
-    private val bookPrefixes =
-        listOf("^((Book|Volume|Vol) ?)?\\d\\d? ?[.\\-: ]+ ?".toRegex(), "^\\d\\d? - ".toRegex())
+    private val bookPrefixes = listOf("^((Book|Volume|Vol) ?)?\\d\\d? ?[.\\-: ]+ ?".toRegex(), "^\\d\\d? - ".toRegex())
 
     override suspend fun analyze(
         path: Path,
@@ -25,11 +24,7 @@ class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConf
         return this.getInformation(cleanPath, parentCount, tags)
     }
 
-    private fun getInformation(
-        path: Path,
-        parentCount: Int,
-        tags: ReadonlyFileTagger
-    ): AudioFileAnalysisResult {
+    private fun getInformation(path: Path, parentCount: Int, tags: ReadonlyFileTagger): AudioFileAnalysisResult {
         val book = path.parentName().replaceAll(bookPrefixes, "")
         val author = if (parentCount == 2) path.grandParentName() else path.grandGrandParentName()
         val series = if (parentCount == 2) null else path.grandParentName()

@@ -29,8 +29,7 @@ interface FileTagger : ReadonlyFileTagger {
     fun save()
 }
 
-open class FileTaggerImpl(private val audioFile: AudioFile) :
-    ReadonlyFileTaggerImpl(audioFile), FileTagger {
+open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTaggerImpl(audioFile), FileTagger {
     constructor(path: Path) : this(path.toFile())
     constructor(file: File) : this(AudioFileIO.read(file))
     constructor(path: String) : this(File(path))
@@ -47,10 +46,7 @@ open class FileTaggerImpl(private val audioFile: AudioFile) :
         get() = super.date
         set(value) {
             setOrDelete(FieldKey.YEAR, value?.format(DateTimeFormatter.ofPattern("yyyy")))
-            setOrDelete(
-                FieldKey.ORIGINALRELEASEDATE,
-                value?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            )
+            setOrDelete(FieldKey.ORIGINALRELEASEDATE, value?.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
         }
 
     override var book: String?

@@ -37,10 +37,7 @@ suspend fun getAudibleSearchResult(
     return getAudibleSearchResult(document, regions)
 }
 
-fun getAudibleSearchResult(
-    document: Document,
-    regions: AudibleRegions
-): List<MetadataSearchBookImpl> {
+fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<MetadataSearchBookImpl> {
     val searchResultItems = extractSearchResults(document)
     return searchResultItems.map {
         val link = extractLink(it)
@@ -60,8 +57,7 @@ fun getAudibleSearchResult(
 
 private fun extractSearchResults(document: Document): Elements = document.select(".productListItem")
 
-private fun extractNarrator(element: Element): String? =
-    element.selectFirst(".narratorLabel a")?.text()
+private fun extractNarrator(element: Element): String? = element.selectFirst(".narratorLabel a")?.text()
 
 private fun extractLanguage(element: Element): String? =
     element.selectFirst(".languageLabel > *")?.text()?.split(":")?.last()?.trim()
@@ -97,8 +93,7 @@ private fun extractAuthorInfo(element: Element): MetadataSearchAuthorImpl? {
 private fun extractTitle(element: Element, regions: AudibleRegions): String? =
     element.selectFirst("h3 a")?.text()?.replaceAll(regions.getValue().titleReplacers, "")
 
-private fun extractLink(element: Element): String? =
-    element.selectFirst("h3 a")?.absUrl("href")?.split("?")?.first()
+private fun extractLink(element: Element): String? = element.selectFirst("h3 a")?.absUrl("href")?.split("?")?.first()
 
 internal fun extractBookSeriesInfo(element: Element): List<MetadataBookSeriesImpl> {
     val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return listOf()
@@ -114,8 +109,7 @@ internal fun extractBookSeriesInfo(element: Element): List<MetadataBookSeriesImp
         val seriesIndexText = seriesIndexElements.getOrNull(index)?.text()
         val floatRegex = Regex("[0-9]+(\\.[0-9]+)?")
         // Find the last number in the string
-        val seriesIndex =
-            floatRegex.findAll(seriesIndexText ?: "").lastOrNull()?.value?.toFloatOrNull()
+        val seriesIndex = floatRegex.findAll(seriesIndexText ?: "").lastOrNull()?.value?.toFloatOrNull()
 
         MetadataBookSeriesImpl(
             link = seriesLink,

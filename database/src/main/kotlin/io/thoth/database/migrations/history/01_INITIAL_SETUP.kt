@@ -49,8 +49,7 @@ class `01_Create_Tables` : Migration() {
     }
 
     override fun generateRollbackStatements(db: Database): List<String> {
-        val tablesForDeletion =
-            SchemaUtils.sortTablesByReferences(tables.toList()).reversed().filter { it in tables }
+        val tablesForDeletion = SchemaUtils.sortTablesByReferences(tables.toList()).reversed().filter { it in tables }
         return tablesForDeletion.flatMap { it.dropStatement() }
     }
 }

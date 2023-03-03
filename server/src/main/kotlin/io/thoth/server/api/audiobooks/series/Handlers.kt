@@ -17,9 +17,7 @@ internal fun RouteHandler.patchSeries(
     seriesId: SeriesId,
     patchSeries: PatchSeries,
 ): SeriesModel = transaction {
-    val series =
-        Series.findById(seriesId.id)
-            ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+    val series = Series.findById(seriesId.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
 
     series.apply {
         title = patchSeries.title ?: title
@@ -34,19 +32,14 @@ internal fun RouteHandler.patchSeries(
     if (patchSeries.authors != null) {
         series.authors =
             patchSeries.authors
-                .map {
-                    Author.findById(it)
-                        ?: serverError(HttpStatusCode.NotFound, "Could not find author")
-                }
+                .map { Author.findById(it) ?: serverError(HttpStatusCode.NotFound, "Could not find author") }
                 .toSizedIterable()
     }
 
     if (patchSeries.books != null) {
         series.books =
             patchSeries.books
-                .map {
-                    Book.findById(it) ?: serverError(HttpStatusCode.NotFound, "Could not find book")
-                }
+                .map { Book.findById(it) ?: serverError(HttpStatusCode.NotFound, "Could not find book") }
                 .toSizedIterable()
     }
 
@@ -57,9 +50,7 @@ internal fun RouteHandler.postSeries(
     seriesId: SeriesId,
     postSeries: PostSeries,
 ) = transaction {
-    val series =
-        Series.findById(seriesId.id)
-            ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+    val series = Series.findById(seriesId.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
 
     series.apply {
         title = postSeries.title
@@ -71,16 +62,11 @@ internal fun RouteHandler.postSeries(
         description = postSeries.description
         series.authors =
             postSeries.authors
-                .map {
-                    Author.findById(it)
-                        ?: serverError(HttpStatusCode.NotFound, "Could not find author")
-                }
+                .map { Author.findById(it) ?: serverError(HttpStatusCode.NotFound, "Could not find author") }
                 .toSizedIterable()
         series.books =
             postSeries.books
-                .map {
-                    Book.findById(it) ?: serverError(HttpStatusCode.NotFound, "Could not find book")
-                }
+                .map { Book.findById(it) ?: serverError(HttpStatusCode.NotFound, "Could not find book") }
                 .toSizedIterable()
     }
     series.toModel()
