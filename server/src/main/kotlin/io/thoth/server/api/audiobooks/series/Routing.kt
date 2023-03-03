@@ -20,39 +20,39 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Route.registerSeriesRouting() =
     route("series") {
-      get<QueryLimiter, PaginatedResponse<SeriesModel>> {
-        transaction {
-          val series = Series.getMultiple(it.limit, it.offset)
-          val seriesCount = Series.count()
-          PaginatedResponse(series, total = seriesCount, offset = it.offset, limit = it.limit)
+        get<QueryLimiter, PaginatedResponse<SeriesModel>> {
+            transaction {
+                val series = Series.getMultiple(it.limit, it.offset)
+                val seriesCount = Series.count()
+                PaginatedResponse(series, total = seriesCount, offset = it.offset, limit = it.limit)
+            }
         }
-      }
 
-      get<QueryLimiter, List<UUID>>("sorting") {
-        transaction { Series.getMultiple(it.limit, it.offset) }.map { it.id }
-      }
+        get<QueryLimiter, List<UUID>>("sorting") {
+            transaction { Series.getMultiple(it.limit, it.offset) }.map { it.id }
+        }
 
-      get<SeriesId.Position, Position> {
-        val sortOrder =
-            transaction { Series.positionOf(it.parent.id) }
+        get<SeriesId.Position, Position> {
+            val sortOrder =
+                transaction { Series.positionOf(it.parent.id) }
+                    ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+            Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
+        }
+
+        get<SeriesId, DetailedSeriesModel> {
+            transaction { Series.getDetailedById(it.id) }
                 ?: serverError(HttpStatusCode.NotFound, "Could not find series")
-        Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
-      }
-
-      get<SeriesId, DetailedSeriesModel> {
-        transaction { Series.getDetailedById(it.id) }
-            ?: serverError(HttpStatusCode.NotFound, "Could not find series")
-      }
-
-      get<SeriesName, List<TitledId>>("autocomplete") {
-        transaction {
-          Series.all().orderBy(TSeries.title to SortOrder.ASC).limit(30).map {
-            TitledId(it.id.value, it.title)
-          }
         }
-      }
 
-      patch(RouteHandler::patchSeries)
+        get<SeriesName, List<TitledId>>("autocomplete") {
+            transaction {
+                Series.all().orderBy(TSeries.title to SortOrder.ASC).limit(30).map {
+                    TitledId(it.id.value, it.title)
+                }
+            }
+        }
 
-      post(RouteHandler::postSeries)
+        patch(RouteHandler::patchSeries)
+
+        post(RouteHandler::postSeries)
     }

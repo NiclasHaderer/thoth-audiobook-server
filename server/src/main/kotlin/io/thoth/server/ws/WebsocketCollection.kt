@@ -13,25 +13,25 @@ class ChangeEvent(
 )
 
 class WebsocketCollection {
-  private val connections =
-      Collections.synchronizedList<DefaultWebSocketServerSession>(mutableListOf())
+    private val connections =
+        Collections.synchronizedList<DefaultWebSocketServerSession>(mutableListOf())
 
-  fun add(connection: DefaultWebSocketServerSession) {
-    connections.add(connection)
-  }
-
-  suspend fun closeAll() {
-    connections.forEach {
-      it.close(CloseReason(CloseReason.Codes.NORMAL, "server closed connection"))
+    fun add(connection: DefaultWebSocketServerSession) {
+        connections.add(connection)
     }
-    connections.clear()
-  }
 
-  fun remove(conn: DefaultWebSocketServerSession) {
-    connections.remove(conn)
-  }
+    suspend fun closeAll() {
+        connections.forEach {
+            it.close(CloseReason(CloseReason.Codes.NORMAL, "server closed connection"))
+        }
+        connections.clear()
+    }
 
-  suspend fun emit(value: ChangeEvent) {
-    connections.forEach { it.sendSerialized(value) }
-  }
+    fun remove(conn: DefaultWebSocketServerSession) {
+        connections.remove(conn)
+    }
+
+    suspend fun emit(value: ChangeEvent) {
+        connections.forEach { it.sendSerialized(value) }
+    }
 }

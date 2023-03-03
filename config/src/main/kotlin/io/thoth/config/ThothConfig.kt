@@ -3,24 +3,24 @@ package io.thoth.config
 import io.thoth.metadata.audible.models.AudibleRegions
 
 interface ThothConfig {
-  val ignoreFile: String
-  val production: Boolean
-  val domain: String
-  val TLS: Boolean
-  val audioFileLocations: List<String>
-  val analyzerThreads: Int
-  val port: Int
-  val audibleRegion: AudibleRegions
-  val database: DatabaseConnection
-  val configDirectory: String
+    val ignoreFile: String
+    val production: Boolean
+    val domain: String
+    val TLS: Boolean
+    val audioFileLocations: List<String>
+    val analyzerThreads: Int
+    val port: Int
+    val audibleRegion: AudibleRegions
+    val database: DatabaseConnection
+    val configDirectory: String
 }
 
 interface DatabaseConnection {
-  val driverClassName: String
-  val jdbcUrl: String
-  val maximumPoolSize: Int
-  val autoCommit: Boolean
-  val transactionIsolation: String
+    val driverClassName: String
+    val jdbcUrl: String
+    val maximumPoolSize: Int
+    val autoCommit: Boolean
+    val transactionIsolation: String
 }
 
 data class ThothConfigImpl(

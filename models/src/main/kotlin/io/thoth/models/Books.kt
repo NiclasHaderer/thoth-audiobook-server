@@ -7,20 +7,20 @@ import java.util.*
 import kotlinx.serialization.Serializable
 
 interface IBookModel {
-  val id: UUID
-  val title: String
-  val authors: List<NamedId>
-  val series: List<TitledId>
-  val provider: String?
-  val providerID: String?
-  val providerRating: Float?
-  val releaseDate: LocalDate?
-  val publisher: String?
-  val language: String?
-  val description: String?
-  val narrator: String?
-  val isbn: String?
-  val coverID: UUID?
+    val id: UUID
+    val title: String
+    val authors: List<NamedId>
+    val series: List<TitledId>
+    val provider: String?
+    val providerID: String?
+    val providerRating: Float?
+    val releaseDate: LocalDate?
+    val publisher: String?
+    val language: String?
+    val description: String?
+    val narrator: String?
+    val isbn: String?
+    val coverID: UUID?
 }
 
 @Serializable
@@ -59,33 +59,33 @@ data class DetailedBookModel(
     override val coverID: UUID_S?,
     val tracks: List<TrackModel>,
 ) : IBookModel {
-  companion object {
-    fun fromModel(book: IBookModel, tracks: List<TrackModel>): DetailedBookModel {
+    companion object {
+        fun fromModel(book: IBookModel, tracks: List<TrackModel>): DetailedBookModel {
 
-      val sortedTracks =
-          if (tracks.any { it.trackNr == null }) {
-            tracks.sortedBy { it.path }
-          } else {
-            tracks.sortedBy { it.trackNr }
-          }
+            val sortedTracks =
+                if (tracks.any { it.trackNr == null }) {
+                    tracks.sortedBy { it.path }
+                } else {
+                    tracks.sortedBy { it.trackNr }
+                }
 
-      return DetailedBookModel(
-          id = book.id,
-          title = book.title,
-          releaseDate = book.releaseDate,
-          language = book.language,
-          description = book.description,
-          tracks = sortedTracks,
-          authors = book.authors,
-          narrator = book.narrator,
-          series = book.series,
-          coverID = book.coverID,
-          isbn = book.isbn,
-          provider = book.provider,
-          providerID = book.providerID,
-          providerRating = book.providerRating,
-          publisher = book.publisher,
-      )
+            return DetailedBookModel(
+                id = book.id,
+                title = book.title,
+                releaseDate = book.releaseDate,
+                language = book.language,
+                description = book.description,
+                tracks = sortedTracks,
+                authors = book.authors,
+                narrator = book.narrator,
+                series = book.series,
+                coverID = book.coverID,
+                isbn = book.isbn,
+                provider = book.provider,
+                providerID = book.providerID,
+                providerRating = book.providerRating,
+                publisher = book.publisher,
+            )
+        }
     }
-  }
 }

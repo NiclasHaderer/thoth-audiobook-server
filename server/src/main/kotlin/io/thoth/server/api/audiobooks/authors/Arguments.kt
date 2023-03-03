@@ -11,7 +11,7 @@ internal class AuthorId(
     val id: UUID_S,
 ) {
 
-  @Resource("position") class Position(val parent: BookId)
+    @Resource("position") class Position(val parent: BookId)
 }
 
 @Resource("") internal class AuthorName(val name: String)

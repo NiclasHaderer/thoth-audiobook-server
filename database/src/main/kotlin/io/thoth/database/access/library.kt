@@ -12,4 +12,5 @@ fun Library.toModel() =
         preferEmbeddedMetadata = preferEmbeddedMetadata,
         folders = folders,
         metadataScanners = metadataScanners,
-        fileScanners = fileScanners)
+        fileScanners = fileScanners
+    )

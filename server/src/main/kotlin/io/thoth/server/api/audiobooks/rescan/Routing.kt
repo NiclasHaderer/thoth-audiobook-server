@@ -7,12 +7,12 @@ import kotlinx.coroutines.launch
 
 fun Route.registerRescan(path: String = "rescan") =
     route(path) {
-      // TODO inject the scanner with DI
-      // TODO add a way to stop the scanner
-      post<Unit, Unit> {
-        launch {
-          // TODO scan only certain library
-          fullScan()
+        // TODO inject the scanner with DI
+        // TODO add a way to stop the scanner
+        post<Unit, Unit> {
+            launch {
+                // TODO scan only certain library
+                fullScan()
+            }
         }
-      }
     }

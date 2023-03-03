@@ -12,11 +12,11 @@ class CronTaskDescription(
     val runner: suspend () -> Unit,
     cronString: String,
 ) : TaskDescription(name) {
-  val cron: Cron by lazy {
-    val cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX)
-    val parser = CronParser(cronDefinition)
-    parser.parse(cronString)
-  }
+    val cron: Cron by lazy {
+        val cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX)
+        val parser = CronParser(cronDefinition)
+        parser.parse(cronString)
+    }
 }
 
 class EventTaskDescription<T>(

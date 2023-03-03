@@ -8,9 +8,9 @@ import io.ktor.util.pipeline.*
 import io.thoth.openapi.serverError
 
 internal enum class GuardTypes(val value: String) {
-  User("user-jwt"),
-  EditUser("edit-user-jwt"),
-  AdminUser("admin-user-jwt"),
+    User("user-jwt"),
+    EditUser("edit-user-jwt"),
+    AdminUser("admin-user-jwt"),
 }
 
 fun Route.userAuth(config: Route.() -> Unit) = authenticate(GuardTypes.User.value) { this.config() }
@@ -22,9 +22,11 @@ fun Route.adminUserAuth(config: Route.() -> Unit) =
     authenticate(GuardTypes.AdminUser.value) { this.config() }
 
 fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipal {
-  return call.principal()
-      ?: serverError(
-          HttpStatusCode.InternalServerError, "Call has to be surrounded with a jwt login")
+    return call.principal()
+        ?: serverError(
+            HttpStatusCode.InternalServerError,
+            "Call has to be surrounded with a jwt login"
+        )
 }
 
 fun PipelineContext<Unit, ApplicationCall>.thothPrincipalOrNull(): ThothPrincipal? =

@@ -8,30 +8,30 @@ import kotlinx.coroutines.sync.Semaphore
 import mu.KotlinLogging.logger
 
 class ParallelismScheduler(parallelism: Int) {
-  private val semaphore = Semaphore(parallelism)
-  private val log = logger {}
+    private val semaphore = Semaphore(parallelism)
+    private val log = logger {}
 
-  suspend fun <T> queueAsync(callback: suspend () -> T): Deferred<T?> {
-    semaphore.acquire()
-    return CoroutineScope(Dispatchers.IO).async {
-      val deferred = async {
-        try {
-          callback()
-        } catch (e: Exception) {
-          this@ParallelismScheduler.log.error(e) { "Queued task caused an exception" }
-          null
+    suspend fun <T> queueAsync(callback: suspend () -> T): Deferred<T?> {
+        semaphore.acquire()
+        return CoroutineScope(Dispatchers.IO).async {
+            val deferred = async {
+                try {
+                    callback()
+                } catch (e: Exception) {
+                    this@ParallelismScheduler.log.error(e) { "Queued task caused an exception" }
+                    null
+                }
+            }
+            return@async try {
+                deferred.await()
+            } finally {
+                semaphore.release()
+            }
         }
-      }
-      return@async try {
-        deferred.await()
-      } finally {
-        semaphore.release()
-      }
     }
-  }
 
-  @Suppress("DeferredResultUnused")
-  suspend fun queue(callback: suspend () -> Unit) {
-    this.queueAsync(callback)
-  }
+    @Suppress("DeferredResultUnused")
+    suspend fun queue(callback: suspend () -> Unit) {
+        this.queueAsync(callback)
+    }
 }
