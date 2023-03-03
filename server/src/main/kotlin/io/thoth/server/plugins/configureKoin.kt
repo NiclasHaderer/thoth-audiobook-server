@@ -10,10 +10,12 @@ import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapperImpl
 import io.thoth.server.file.analyzer.impl.AudioFolderScanner
 import io.thoth.server.file.analyzer.impl.AudioTagScanner
-import io.thoth.server.file.persister.FileAnalyzingScheduler
+import io.thoth.server.file.persister.AudioAnalyzer
 import io.thoth.server.file.persister.FileAnalyzingSchedulerImpl
 import io.thoth.server.file.scanner.FileWatcher
 import io.thoth.server.file.scanner.FileWatcherImpl
+import io.thoth.server.file.scanner.LibraryScanner
+import io.thoth.server.file.scanner.LibraryScannerImpl
 import io.thoth.server.scheduler.ThothSchedules
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -24,19 +26,18 @@ fun configureKoin() = startKoin {
     modules(
         module {
             single { config }
-            single<MetadataProvider> {
-                MetadataWrapper(listOf(AudibleClient(get<ThothConfig>().audibleRegion)))
-            }
-            single<FileWatcher> { FileWatcherImpl(get(), get()) }
+            single<MetadataProvider> { MetadataWrapper(listOf(AudibleClient(get<ThothConfig>().audibleRegion))) }
+            single<FileWatcher> { FileWatcherImpl() }
             single<AudioFileAnalyzerWrapper> {
                 AudioFileAnalyzerWrapperImpl(
-                    listOf(AudioTagScanner(get()), AudioFolderScanner(get()))
+                    listOf(AudioTagScanner(get()), AudioFolderScanner(get())),
                 )
             }
-            single<FileAnalyzingScheduler> { FileAnalyzingSchedulerImpl() }
+            single<AudioAnalyzer> { FileAnalyzingSchedulerImpl() }
+            single<LibraryScanner> { LibraryScannerImpl() }
             single { Scheduler() }
             single { ThothSchedules() }
-        }
+        },
     )
     slf4jLogger()
 }

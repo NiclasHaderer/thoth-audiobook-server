@@ -36,10 +36,7 @@ fun Image.Companion.getNewImage(
         val newImageUUID = UUID.fromString(newImage)
 
         return Image.findById(newImageUUID)?.id
-            ?: throw ErrorResponse(
-                HttpStatusCode.BadRequest,
-                "Image with id $newImageUUID does not exist"
-            )
+            ?: throw ErrorResponse(HttpStatusCode.BadRequest, "Image with id $newImageUUID does not exist")
     }
 
     val originalImage = if (currentImageID != null) Image.findById(currentImageID) else null

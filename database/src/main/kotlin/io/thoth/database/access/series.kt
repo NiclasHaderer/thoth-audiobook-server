@@ -13,20 +13,11 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.select
 
-fun Series.Companion.getMultiple(
-    limit: Int,
-    offset: Long,
-    order: SortOrder = SortOrder.ASC
-): List<SeriesModel> {
-    return Series.all().limit(limit, offset).orderBy(TSeries.title.lowerCase() to order).map {
-        it.toModel()
-    }
+fun Series.Companion.getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC): List<SeriesModel> {
+    return Series.all().limit(limit, offset).orderBy(TSeries.title.lowerCase() to order).map { it.toModel() }
 }
 
-fun Series.Companion.getDetailedById(
-    seriesId: UUID,
-    order: SortOrder = SortOrder.ASC
-): DetailedSeriesModel? {
+fun Series.Companion.getDetailedById(seriesId: UUID, order: SortOrder = SortOrder.ASC): DetailedSeriesModel? {
     val series = findById(seriesId) ?: return null
     return DetailedSeriesModel.fromModel(
         series = series.toModel(),
@@ -56,9 +47,6 @@ fun Series.toModel(order: SortOrder = SortOrder.ASC): SeriesModel {
         coverID = coverID?.value,
         primaryWorks = primaryWorks,
         totalBooks = totalBooks,
-        authors =
-            authors.orderBy(TAuthors.name.lowerCase() to order).map {
-                NamedId(it.id.value, it.name)
-            },
+        authors = authors.orderBy(TAuthors.name.lowerCase() to order).map { NamedId(it.id.value, it.name) },
     )
 }

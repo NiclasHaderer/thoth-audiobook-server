@@ -3,7 +3,12 @@ package io.thoth.server.file.scanner
 import io.thoth.common.extensions.isAudioFile
 import io.thoth.config.ThothConfig
 import java.io.IOException
-import java.nio.file.*
+import java.nio.file.FileSystems
+import java.nio.file.FileVisitResult
+import java.nio.file.FileVisitor
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
@@ -11,8 +16,8 @@ import mu.KotlinLogging.logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class AudioFileScanner(
-    private val removeSubtree: (Path) -> Unit,
+class FileTreeScanner(
+    private val ignoredSubtree: (Path) -> Unit,
     private val shouldUpdateFile: (Path) -> Boolean,
     private val addOrUpdate: (file: Path, attrs: BasicFileAttributes) -> Unit,
 ) : FileVisitor<Path>, KoinComponent {
@@ -22,12 +27,12 @@ class AudioFileScanner(
     override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes?): FileVisitResult {
         val ignoreFile =
             Paths.get(
-                "${dir.absolutePathString()}${FileSystems.getDefault().separator}${thothConfig.ignoreFile}"
+                "${dir.absolutePathString()}${FileSystems.getDefault().separator}${thothConfig.ignoreFile}",
             )
         return if (!Files.exists(ignoreFile)) {
             FileVisitResult.CONTINUE
         } else {
-            removeSubtree(dir.absolute().normalize())
+            ignoredSubtree(dir.absolute().normalize())
             log.debug { "Ignoring directory ${dir.absolute().normalize()}" }
             FileVisitResult.SKIP_SUBTREE
         }

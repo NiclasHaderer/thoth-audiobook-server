@@ -17,7 +17,7 @@ import mu.KotlinLogging.logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-interface FileAnalyzingScheduler {
+interface AudioAnalyzer {
     fun queue(type: Type, path: Path)
 
     enum class Type {
@@ -27,7 +27,7 @@ interface FileAnalyzingScheduler {
     }
 }
 
-class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
+class FileAnalyzingSchedulerImpl : KoinComponent, AudioAnalyzer {
     private val log = logger {}
     private val analyzer by inject<AudioFileAnalyzerWrapper>()
     private val thothConfig by inject<ThothConfig>()
@@ -64,15 +64,10 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
 
     private suspend fun extractAndSaveMetadata(path: Path) {
         scanScheduler.queue {
-            val attrs =
-                withContext(Dispatchers.IO) {
-                    Files.readAttributes(path, BasicFileAttributes::class.java)
-                }
+            val attrs = withContext(Dispatchers.IO) { Files.readAttributes(path, BasicFileAttributes::class.java) }
             val result =
                 analyzer.analyze(path, attrs)
-                    ?: return@queue log.warn {
-                        "Skipped ${path.absolute()} because it contains not enough information"
-                    }
+                    ?: return@queue log.warn { "Skipped ${path.absolute()} because it contains not enough information" }
             trackManager.insertScanResult(result, path)
         }
     }
@@ -83,9 +78,9 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
      * @param path The path you want to queue for a scan
      * @param type Do you want to queue a complete scan, remove a file or add a file
      */
-    override fun queue(type: FileAnalyzingScheduler.Type, path: Path) = runWithoutBlocking {
+    override fun queue(type: AudioAnalyzer.Type, path: Path) = runWithoutBlocking {
         when (type) {
-            FileAnalyzingScheduler.Type.ADD_FILE -> {
+            AudioAnalyzer.Type.ADD_FILE -> {
                 if (path.isDirectory()) {
                     log.warn {
                         "You tried to queue a folder for a metadata scan. This can not be done The folder ${path.fileName} will therefore be skipped"
@@ -94,11 +89,10 @@ class FileAnalyzingSchedulerImpl : KoinComponent, FileAnalyzingScheduler {
                     fileQueue.send(path)
                 }
             }
-            FileAnalyzingScheduler.Type.REMOVE_FILE -> removeItem.send(path)
-            FileAnalyzingScheduler.Type.SCAN_FOLDER -> TODO("Not yet implemented")
+            AudioAnalyzer.Type.REMOVE_FILE -> removeItem.send(path)
+            AudioAnalyzer.Type.SCAN_FOLDER -> TODO("Not yet implemented")
         }
     }
 
-    private fun runWithoutBlocking(callback: suspend CoroutineScope.() -> Unit) =
-        scope.launch(block = callback).let {}
+    private fun runWithoutBlocking(callback: suspend CoroutineScope.() -> Unit) = scope.launch(block = callback).let {}
 }

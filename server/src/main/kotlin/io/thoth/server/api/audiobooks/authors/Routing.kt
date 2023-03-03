@@ -35,16 +35,14 @@ fun Route.registerAuthorRouting() =
         get<AuthorId.Position, Position> {
             transaction {
                 val sortOrder =
-                    Author.positionOf(it.parent.id)
-                        ?: serverError(HttpStatusCode.NotFound, "Author was not found")
+                    Author.positionOf(it.parent.id) ?: serverError(HttpStatusCode.NotFound, "Author was not found")
                 Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
             }
         }
 
         get<AuthorId, DetailedAuthorModel> {
             transaction {
-                Author.getDetailedById(it.id)
-                    ?: serverError(HttpStatusCode.NotFound, "Author was not found")
+                Author.getDetailedById(it.id) ?: serverError(HttpStatusCode.NotFound, "Author was not found")
             }
         }
 

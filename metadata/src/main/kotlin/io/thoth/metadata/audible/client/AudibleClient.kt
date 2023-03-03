@@ -56,10 +56,7 @@ class AudibleClient(val region: AudibleRegions, val imageSize: Int = 500) : Meta
         return getAudibleBook(region, bookId)
     }
 
-    override suspend fun getBookByName(
-        bookName: String,
-        authorName: String?
-    ): List<MetadataBookImpl> {
+    override suspend fun getBookByName(bookName: String, authorName: String?): List<MetadataBookImpl> {
         val searchResult = search(title = bookName, author = authorName)
 
         return coroutineScope {
@@ -75,14 +72,9 @@ class AudibleClient(val region: AudibleRegions, val imageSize: Int = 500) : Meta
         return getAudibleSeries(region, seriesId)
     }
 
-    override suspend fun getSeriesByName(
-        seriesName: String,
-        authorName: String?
-    ): List<MetadataSeriesImpl> {
+    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<MetadataSeriesImpl> {
         val seriesResult =
-            search(keywords = seriesName, author = authorName)
-                .flatMap { it.series }
-                .filter { it.title != null }
+            search(keywords = seriesName, author = authorName).flatMap { it.series }.filter { it.title != null }
 
         return coroutineScope {
             FuzzySearch.extractSorted(seriesName, seriesResult) { it.title }

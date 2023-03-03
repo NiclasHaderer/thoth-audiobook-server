@@ -17,8 +17,7 @@ object TLibraries : UUIDTable("Libraries") {
     val scanIndex = ulong("scanIndex").default(0uL)
     val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
     val folders = json<List<String>>("folders") { require(it.isNotEmpty()) }
-    val metadataScanners =
-        json<List<MetadataAgent>>("metadataScanners") { require(it.isNotEmpty()) }
+    val metadataScanners = json<List<MetadataAgent>>("metadataScanners") { require(it.isNotEmpty()) }
     val fileScanners = json<List<FileScanner>>("fileScanners") { require(it.isNotEmpty()) }
 }
 

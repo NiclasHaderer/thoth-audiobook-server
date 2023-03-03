@@ -13,11 +13,7 @@ fun Application.configureStatusPages() {
         exception<ErrorResponse> { call, cause ->
             call.respond(
                 cause.status,
-                hashMapOf(
-                    "error" to cause.message,
-                    "status" to cause.status.value,
-                    "details" to cause.details
-                )
+                hashMapOf("error" to cause.message, "status" to cause.status.value, "details" to cause.details)
             )
         }
         exception<Throwable> { call, cause ->
@@ -34,13 +30,8 @@ fun Application.configureStatusPages() {
     }
 }
 
-class ErrorResponse(val status: HttpStatusCode, message: String, val details: Any? = null) :
-    Exception(message)
+class ErrorResponse(val status: HttpStatusCode, message: String, val details: Any? = null) : Exception(message)
 
-fun PipelineContext<*, *>.serverError(
-    status: HttpStatusCode,
-    message: String,
-    details: Any? = null
-): Nothing {
+fun PipelineContext<*, *>.serverError(status: HttpStatusCode, message: String, details: Any? = null): Nothing {
     throw ErrorResponse(status, message, details)
 }

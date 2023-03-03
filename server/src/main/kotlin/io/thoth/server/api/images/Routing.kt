@@ -15,8 +15,7 @@ fun Route.registerImageRouting() =
         get<ImageId, BinaryResponse> { image ->
             transaction {
                 val imageBlob =
-                    Image.getById(image.id)?.blob
-                        ?: serverError(HttpStatusCode.NotFound, "Could not find image")
+                    Image.getById(image.id)?.blob ?: serverError(HttpStatusCode.NotFound, "Could not find image")
                 binaryResponse(imageBlob)
             }
         }

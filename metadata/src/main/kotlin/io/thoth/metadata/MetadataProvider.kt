@@ -24,8 +24,5 @@ interface MetadataProvider {
 
     suspend fun getSeriesByID(providerId: String, seriesId: String): MetadataSeries?
 
-    suspend fun getSeriesByName(
-        seriesName: String,
-        authorName: String? = null
-    ): List<MetadataSeries>
+    suspend fun getSeriesByName(seriesName: String, authorName: String? = null): List<MetadataSeries>
 }

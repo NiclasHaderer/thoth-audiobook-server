@@ -46,9 +46,7 @@ fun Route.registerSeriesRouting() =
 
         get<SeriesName, List<TitledId>>("autocomplete") {
             transaction {
-                Series.all().orderBy(TSeries.title to SortOrder.ASC).limit(30).map {
-                    TitledId(it.id.value, it.title)
-                }
+                Series.all().orderBy(TSeries.title to SortOrder.ASC).limit(30).map { TitledId(it.id.value, it.title) }
             }
         }
 

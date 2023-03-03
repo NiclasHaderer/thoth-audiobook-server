@@ -18,10 +18,7 @@ private fun Route.routing() {
         }
 
         if (it.series == null && it.author == null && it.book == null) {
-            serverError(
-                HttpStatusCode.BadRequest,
-                "At least one query parameter has to have a value"
-            )
+            serverError(HttpStatusCode.BadRequest, "At least one query parameter has to have a value")
         }
 
         serverError(

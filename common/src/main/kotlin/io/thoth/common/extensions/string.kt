@@ -33,7 +33,6 @@ fun String.replaceAll(values: List<Regex>, newValue: String): String {
 }
 
 fun String.isUUID(): Boolean {
-    val uuidRegex =
-        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
+    val uuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
     return this.matches(uuidRegex)
 }

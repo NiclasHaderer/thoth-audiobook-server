@@ -22,9 +22,7 @@ object SearchService {
         val authors = Author.all().fuzzy(query) { listOfNotNull(it.name) }.saveTo(limit)
         val bookAuthors =
             Book.all()
-                .fuzzy(query) {
-                    listOfNotNull(it.title, it.narrator, it.series.joinToString(",") { it.title })
-                }
+                .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.series.joinToString(",") { it.title }) }
                 .saveTo(limit)
                 .flatMap { it.authors }
         (authors + bookAuthors).distinctBy { it.id }.saveTo(limit).map { it.toModel() }
@@ -34,9 +32,7 @@ object SearchService {
         val series = Series.all().fuzzy(query) { listOfNotNull(it.title) }.saveTo(limit)
         val authorSeries =
             Book.all()
-                .fuzzy(query) {
-                    listOfNotNull(it.title, it.narrator, it.authors.joinToString(",") { it.name })
-                }
+                .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.authors.joinToString(",") { it.name }) }
                 .saveTo(limit)
                 .flatMap { it.series }
         (series + authorSeries).distinctBy { it.id }.saveTo(limit).map { it.toModel() }

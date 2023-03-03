@@ -25,9 +25,7 @@ internal class WebUiServer(private val config: WebUiConfig) {
     private suspend fun respondWithSchema(call: ApplicationCall) {
         when (config.schemaType) {
             OpenAPISchemaType.JSON -> {
-                call.respondText(ContentType.Application.Json, HttpStatusCode.OK) {
-                    SchemaHolder.json
-                }
+                call.respondText(ContentType.Application.Json, HttpStatusCode.OK) { SchemaHolder.json }
             }
             OpenAPISchemaType.YAML -> {
                 call.respondText(ContentType.Text.Plain, HttpStatusCode.OK) { SchemaHolder.yaml }
@@ -66,11 +64,7 @@ internal class WebUiServer(private val config: WebUiConfig) {
             in notFound -> false
             else -> {
                 val resource =
-                    this::class
-                        .java
-                        .getResource(
-                            "/META-INF/resources/webjars/swagger-ui/$webUiVersion/$fileName"
-                        )
+                    this::class.java.getResource("/META-INF/resources/webjars/swagger-ui/$webUiVersion/$fileName")
                 if (resource == null) {
                     notFound.add(fileName)
                     false
@@ -111,9 +105,7 @@ internal class WebUiResource(
 
     private val bytes by lazy {
         if (contentType == ContentType.Text.Html) {
-            url.readText()
-                .replace("https://petstore.swagger.io/v2/swagger.json", schemaURL)
-                .toByteArray()
+            url.readText().replace("https://petstore.swagger.io/v2/swagger.json", schemaURL).toByteArray()
         } else {
             url.readBytes()
         }

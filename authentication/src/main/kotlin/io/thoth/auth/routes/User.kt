@@ -13,17 +13,14 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 internal fun RouteHandler.getUser(): UserModel {
     val principal = thothPrincipal()
-    return User.getById(principal.userId)
-        ?: serverError(HttpStatusCode.NotFound, "Could not find user")
+    return User.getById(principal.userId) ?: serverError(HttpStatusCode.NotFound, "Could not find user")
 }
 
 internal fun RouteHandler.changeUsername(usernameChange: UsernameChange): UserModel {
     val principal = thothPrincipal()
 
     return transaction {
-        val user =
-            User.findById(principal.userId)
-                ?: serverError(HttpStatusCode.NotFound, "Could not find user")
+        val user = User.findById(principal.userId) ?: serverError(HttpStatusCode.NotFound, "Could not find user")
         if (user.username === usernameChange.username) {
             serverError(HttpStatusCode.BadRequest, "Old name is the same as the new name")
         }

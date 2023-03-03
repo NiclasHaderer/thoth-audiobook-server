@@ -31,19 +31,13 @@ internal fun RouteHandler.patchBook(id: BookId, patchBook: PatchBook): BookModel
     if (patchBook.authors != null) {
         book.authors =
             patchBook.authors
-                .map {
-                    Author.findById(it)
-                        ?: serverError(HttpStatusCode.NotFound, "Author was not found")
-                }
+                .map { Author.findById(it) ?: serverError(HttpStatusCode.NotFound, "Author was not found") }
                 .toSizedIterable()
     }
     if (patchBook.series != null) {
         book.series =
             patchBook.series
-                .map {
-                    Series.findById(it)
-                        ?: serverError(HttpStatusCode.NotFound, "Series was not found")
-                }
+                .map { Series.findById(it) ?: serverError(HttpStatusCode.NotFound, "Series was not found") }
                 .toSizedIterable()
     }
     book.toModel()
@@ -65,17 +59,11 @@ internal fun RouteHandler.postBook(id: BookId, postBook: PostBook): BookModel = 
         coverID = Image.getNewImage(postBook.cover, currentImageID = coverID, default = null)
         authors =
             postBook.authors
-                .map {
-                    Author.findById(it)
-                        ?: serverError(HttpStatusCode.NotFound, "Author was not found")
-                }
+                .map { Author.findById(it) ?: serverError(HttpStatusCode.NotFound, "Author was not found") }
                 .toSizedIterable()
         series =
             postBook.series
-                ?.map {
-                    Series.findById(it)
-                        ?: serverError(HttpStatusCode.NotFound, "Series was not found")
-                }
+                ?.map { Series.findById(it) ?: serverError(HttpStatusCode.NotFound, "Series was not found") }
                 ?.toSizedIterable()
                 ?: emptyList<Series>().toSizedIterable()
     }

@@ -9,10 +9,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging.logger
 
-class EventBuilder<T> internal constructor(val name: String) {
+class EventBuilder<T>
+internal constructor(val name: String, internal val callback: suspend (EventBuilder.Event<T>) -> Unit) {
 
-    class Event<T>
-    internal constructor(val name: String, val data: T, internal val builder: EventBuilder<T>)
+    class Event<T> internal constructor(val name: String, val data: T, internal val builder: EventBuilder<T>)
 
     fun build(data: T): Event<T> {
         return Event(name, data, this)
@@ -22,8 +22,8 @@ class EventBuilder<T> internal constructor(val name: String) {
 class ScheduleBuilder(val name: String, val cronString: String, val callback: suspend () -> Unit)
 
 interface SchedulingCollection {
-    fun <T> event(event: String): EventBuilder<T> {
-        return EventBuilder(event)
+    fun <T> event(event: String, callback: suspend (EventBuilder.Event<T>) -> Unit): EventBuilder<T> {
+        return EventBuilder(event, callback)
     }
 
     fun schedule(cronString: String, name: String, callback: suspend () -> Unit): ScheduleBuilder {
@@ -52,8 +52,7 @@ open class Scheduler {
     }
 
     fun launchScheduledJob(scheduleName: String) {
-        val relevantSchedules =
-            schedules.filterIsInstance<CronTaskDescription>().filter { it.name == scheduleName }
+        val relevantSchedules = schedules.filterIsInstance<CronTaskDescription>().filter { it.name == scheduleName }
         relevantSchedules.forEach { task ->
             val taskInSchedule = taskQueue.find { it.task == task }
             // The task is already overdue, so we don't schedule it again
@@ -70,15 +69,13 @@ open class Scheduler {
         }
     }
 
-    suspend fun <T> dispatchEvent(event: EventBuilder.Event<T>) {
+    suspend fun <T> dispatch(event: EventBuilder.Event<T>) {
         if (!started.get()) {
             throw IllegalStateException("Scheduler not started")
         }
 
         val relevantSchedules =
-            schedules.filterIsInstance<EventTaskDescription<T>>().filter {
-                it.event == event.builder
-            }
+            schedules.filterIsInstance<EventTaskDescription<T>>().filter { it.event == event.builder }
 
         relevantSchedules.forEach { task -> taskQueue.add(ScheduledEventTask(task, event)) }
         if (relevantSchedules.isEmpty()) {
@@ -89,8 +86,8 @@ open class Scheduler {
         reevaluateNextExecutiontime()
     }
 
-    fun <T> register(event: EventBuilder<T>, task: suspend (EventBuilder.Event<T>) -> Unit) {
-        val newTask = EventTaskDescription(name = event.name, runner = task, event = event)
+    fun <T> register(event: EventBuilder<T>) {
+        val newTask = EventTaskDescription(name = event.name, runner = event.callback, event = event)
         schedules.add(newTask)
     }
 
@@ -153,9 +150,7 @@ open class Scheduler {
             if (currentExecution.executedSuccessfully()) {
                 // Task has been executed successfully
                 // Task can therefore be removed from the queue
-                log.debug {
-                    "Scheduled task '${scheduledTask.task.name}' was executed successfully"
-                }
+                log.debug { "Scheduled task '${scheduledTask.task.name}' was executed successfully" }
                 taskQueue.filter { it == scheduledTask }.forEach { taskQueue.remove(it) }
                 // If the task was a cron task, it should be rescheduled
                 if (scheduledTask is ScheduledCronTask) {
@@ -165,16 +160,8 @@ open class Scheduler {
                 // Task was canceled
                 // This can happen if a new task is added to the schedule or an event is dispatched
                 // In this case just look for the next task to run by checking the queue again
-                log.debug {
-                    "Waiting for scheduled task was canceled. Looking for the next task to run"
-                }
+                log.debug { "Waiting for scheduled task was canceled. Looking for the next task to run" }
             }
         }
     }
-}
-
-object ThothEvents : SchedulingCollection {
-    val hello = event<String>("hello")
-    val goodbye = event<Long>("goodbye")
-    val nothing = event<Unit>("nothing")
 }

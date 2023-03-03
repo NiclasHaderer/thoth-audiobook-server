@@ -42,24 +42,15 @@ fun Book.Companion.findByName(bookTitle: String, author: Author): Book? {
     return Book.wrap(rawBook[TBooks.id], rawBook)
 }
 
-fun Book.Companion.getMultiple(
-    limit: Int,
-    offset: Long,
-    order: SortOrder = SortOrder.ASC
-): List<BookModel> {
-    return Book.all().limit(limit, offset).orderBy(TBooks.title.lowerCase() to order).map {
-        it.toModel()
-    }
+fun Book.Companion.getMultiple(limit: Int, offset: Long, order: SortOrder = SortOrder.ASC): List<BookModel> {
+    return Book.all().limit(limit, offset).orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
 }
 
 fun Book.Companion.fromAuthor(authorID: UUID, order: SortOrder = SortOrder.ASC): List<BookModel> {
     val bookIDs =
-        TAuthorBookMapping.select { TAuthorBookMapping.author eq authorID }
-            .map { it[TAuthorBookMapping.book] }
+        TAuthorBookMapping.select { TAuthorBookMapping.author eq authorID }.map { it[TAuthorBookMapping.book] }
 
-    return Book.find { TBooks.id inList bookIDs }
-        .orderBy(TBooks.title.lowerCase() to order)
-        .map { it.toModel() }
+    return Book.find { TBooks.id inList bookIDs }.orderBy(TBooks.title.lowerCase() to order).map { it.toModel() }
 }
 
 fun Book.toModel(order: SortOrder = SortOrder.ASC): BookModel {

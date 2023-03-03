@@ -44,15 +44,13 @@ class AudibleBookTest {
                         MetadataBookSeriesImpl(
                             id = AudibleProviderWithIDMetadata(itemID = "B07CM7WPFV"),
                             title = "Wizarding World",
-                            link =
-                                "https://audible.com/series/Wizarding-World-Audiobooks/B07CM7WPFV",
+                            link = "https://audible.com/series/Wizarding-World-Audiobooks/B07CM7WPFV",
                             index = 1.0f
                         ),
                     ),
                 coverURL = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
                 narrator = "Stephen Fry",
-                releaseDate =
-                    LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 isbn = null,
                 language = null,
                 providerRating = 4.9f,
@@ -64,10 +62,7 @@ class AudibleBookTest {
 
     @Test
     fun testFindAudibleBook() = runBlocking {
-        val book =
-            client
-                .getBookByName("Harry Potter and the Philosopher's Stone", "J.K. Rowling")
-                .firstOrNull()
+        val book = client.getBookByName("Harry Potter and the Philosopher's Stone", "J.K. Rowling").firstOrNull()
 
         assertEquals(
             MetadataBookImpl(
@@ -93,15 +88,13 @@ class AudibleBookTest {
                         MetadataBookSeriesImpl(
                             id = AudibleProviderWithIDMetadata(itemID = "B07CM7WPFV"),
                             title = "Wizarding World",
-                            link =
-                                "https://audible.com/series/Wizarding-World-Audiobooks/B07CM7WPFV",
+                            link = "https://audible.com/series/Wizarding-World-Audiobooks/B07CM7WPFV",
                             index = 1.0f
                         ),
                     ),
                 coverURL = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
                 narrator = "Stephen Fry",
-                releaseDate =
-                    LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 isbn = null,
                 language = null,
                 providerRating = 4.9f,

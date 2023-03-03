@@ -15,20 +15,13 @@ constructor(
     private val separator = "--thṓth--"
 
     private val providerMap by lazy { providerList.associateBy { it.uniqueName } }
-    private val searchCache =
-        Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataSearchBook>>()
-    private val authorNameCache =
-        Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataAuthor>>()
-    private val seriesNameCache =
-        Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataSeries>>()
-    private val bookNameCache =
-        Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataBook>>()
-    private val authorIdCache =
-        Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataAuthor>>()
-    private val seriesIdCache =
-        Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataSeries>>()
-    private val bookIdCache =
-        Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataBook>>()
+    private val searchCache = Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataSearchBook>>()
+    private val authorNameCache = Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataAuthor>>()
+    private val seriesNameCache = Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataSeries>>()
+    private val bookNameCache = Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataBook>>()
+    private val authorIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataAuthor>>()
+    private val seriesIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataSeries>>()
+    private val bookIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataBook>>()
 
     override suspend fun search(
         keywords: String?,
@@ -52,8 +45,7 @@ constructor(
         val cacheKey = getKey(authorId, providerId)
 
         return getOrSetCache(authorIdCache, cacheKey) {
-                val provider =
-                    getProvider(authorId) ?: return@getOrSetCache Optional.ofNullable(null)
+                val provider = getProvider(authorId) ?: return@getOrSetCache Optional.ofNullable(null)
                 val value = provider.getAuthorByID(providerId, authorId)
                 Optional.ofNullable(value)
             }
@@ -73,8 +65,7 @@ constructor(
     override suspend fun getSeriesByID(providerId: String, seriesId: String): MetadataSeries? {
         val cacheKey = getKey(seriesId, providerId)
         return getOrSetCache(seriesIdCache, cacheKey) {
-                val provider =
-                    getProvider(seriesId) ?: return@getOrSetCache Optional.ofNullable(null)
+                val provider = getProvider(seriesId) ?: return@getOrSetCache Optional.ofNullable(null)
                 val value = provider.getSeriesByID(providerId, seriesId)
                 Optional.ofNullable(value)
             }
@@ -108,10 +99,7 @@ constructor(
         }
     }
 
-    override suspend fun getSeriesByName(
-        seriesName: String,
-        authorName: String?
-    ): List<MetadataSeries> {
+    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<MetadataSeries> {
         val cacheKey = getKey(seriesName, authorName)
         return getOrSetCache(seriesNameCache, cacheKey) {
             val series =
@@ -124,11 +112,7 @@ constructor(
         }
     }
 
-    private suspend fun <K, V> getOrSetCache(
-        cache: Cache<K, V>,
-        key: K,
-        getCache: suspend CoroutineScope.() -> V
-    ): V {
+    private suspend fun <K, V> getOrSetCache(cache: Cache<K, V>, key: K, getCache: suspend CoroutineScope.() -> V): V {
         var value = cache.getIfPresent(key)
         if (value != null) return value
 

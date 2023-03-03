@@ -37,10 +37,8 @@ internal class ScheduledCronTask(
     }
 }
 
-internal class ScheduledEventTask<T>(
-    override val task: EventTaskDescription<T>,
-    val event: EventBuilder.Event<T>
-) : ScheduledTask(task, LocalDateTime.now(), event.name, TaskType.EVENT) {
+internal class ScheduledEventTask<T>(override val task: EventTaskDescription<T>, val event: EventBuilder.Event<T>) :
+    ScheduledTask(task, LocalDateTime.now(), event.name, TaskType.EVENT) {
     override suspend fun run() {
         task.runner(event)
     }
