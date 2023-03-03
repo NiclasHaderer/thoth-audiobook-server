@@ -21,39 +21,39 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Route.registerBookRouting() =
     route("books") {
-      get<QueryLimiter, PaginatedResponse<BookModel>> {
-        transaction {
-          val books = Book.getMultiple(it.limit, it.offset)
-          val total = Book.count()
-          PaginatedResponse(books, total = total, offset = it.offset, limit = it.limit)
+        get<QueryLimiter, PaginatedResponse<BookModel>> {
+            transaction {
+                val books = Book.getMultiple(it.limit, it.offset)
+                val total = Book.count()
+                PaginatedResponse(books, total = total, offset = it.offset, limit = it.limit)
+            }
         }
-      }
 
-      get<QueryLimiter, List<UUID>>("sorting") { query ->
-        transaction { Book.getMultiple(query.limit, query.offset).map { it.id } }
-      }
+        get<QueryLimiter, List<UUID>>("sorting") { query ->
+            transaction { Book.getMultiple(query.limit, query.offset).map { it.id } }
+        }
 
-      get<BookId.Position, Position> {
-        val sortOrder =
-            transaction { Book.positionOf(it.parent.id) }
+        get<BookId.Position, Position> {
+            val sortOrder =
+                transaction { Book.positionOf(it.parent.id) }
+                    ?: serverError(HttpStatusCode.NotFound, "Could not find book")
+            Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
+        }
+
+        get<BookId, DetailedBookModel> {
+            transaction { Book.getDetailedById(it.id) }
                 ?: serverError(HttpStatusCode.NotFound, "Could not find book")
-        Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
-      }
-
-      get<BookId, DetailedBookModel> {
-        transaction { Book.getDetailedById(it.id) }
-            ?: serverError(HttpStatusCode.NotFound, "Could not find book")
-      }
-
-      get<BookName, List<TitledId>>("autocomplete") {
-        transaction {
-          Book.all().orderBy(TBooks.title.lowerCase() to SortOrder.ASC).limit(30).map {
-            TitledId(it.id.value, it.title)
-          }
         }
-      }
 
-      patch(RouteHandler::patchBook)
+        get<BookName, List<TitledId>>("autocomplete") {
+            transaction {
+                Book.all().orderBy(TBooks.title.lowerCase() to SortOrder.ASC).limit(30).map {
+                    TitledId(it.id.value, it.title)
+                }
+            }
+        }
 
-      post(RouteHandler::postBook)
+        patch(RouteHandler::patchBook)
+
+        post(RouteHandler::postBook)
     }

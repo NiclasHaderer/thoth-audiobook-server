@@ -6,11 +6,11 @@ import io.thoth.database.tables.TBooks
 import io.thoth.database.tables.TSeries
 
 fun Route.registerUpdateRoutes(path: String = "ws") {
-  route(path) {
-    updateForTables(
-        TAuthors,
-        TBooks,
-        TSeries,
-    )
-  }
+    route(path) {
+        updateForTables(
+            TAuthors,
+            TBooks,
+            TSeries,
+        )
+    }
 }

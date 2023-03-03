@@ -7,7 +7,7 @@ plugins {
     id("com.ncorti.ktfmt.gradle") version "0.12.0"
 }
 
-ktfmt { googleStyle() }
+ktfmt { kotlinLangStyle() }
 
 subprojects {
     group = "io.thoth"
@@ -19,10 +19,14 @@ subprojects {
         maven("https://jitpack.io")
     }
 
+    afterEvaluate {
+        ktfmt { kotlinLangStyle() }
+    }
+
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
             freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-            jvmTarget = "16"
+            jvmTarget = "11"
             apiVersion = "1.8"
             languageVersion = "1.8"
         }

@@ -11,17 +11,17 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 
 fun Image.Companion.create(imageBytes: ByteArray): Image {
-  return Image.new { blob = ExposedBlob(imageBytes) }
+    return Image.new { blob = ExposedBlob(imageBytes) }
 }
 
 fun Image.Companion.getById(uuid: UUID): ImageModel? {
-  return Image.findById(uuid)?.toModel()
+    return Image.findById(uuid)?.toModel()
 }
 
 fun Image.toModel() = ImageModel(id = id.value, blob = blob.bytes)
 
 fun Image.areSame(newImageBytes: ByteArray): Boolean {
-  return blob.bytes.contentEquals(newImageBytes)
+    return blob.bytes.contentEquals(newImageBytes)
 }
 
 fun Image.Companion.getNewImage(
@@ -30,22 +30,24 @@ fun Image.Companion.getNewImage(
     default: EntityID<UUID>?
 ): EntityID<UUID>? {
 
-  if (newImage == null) return default
+    if (newImage == null) return default
 
-  if (newImage.isUUID()) {
-    val newImageUUID = UUID.fromString(newImage)
+    if (newImage.isUUID()) {
+        val newImageUUID = UUID.fromString(newImage)
 
-    return Image.findById(newImageUUID)?.id
-        ?: throw ErrorResponse(
-            HttpStatusCode.BadRequest, "Image with id $newImageUUID does not exist")
-  }
+        return Image.findById(newImageUUID)?.id
+            ?: throw ErrorResponse(
+                HttpStatusCode.BadRequest,
+                "Image with id $newImageUUID does not exist"
+            )
+    }
 
-  val originalImage = if (currentImageID != null) Image.findById(currentImageID) else null
-  val newImageBytes = newImage.syncUriToFile()
-  val areSameImage = originalImage?.areSame(newImageBytes) ?: false
-  return if (areSameImage) {
-    currentImageID
-  } else {
-    create(newImageBytes).id
-  }
+    val originalImage = if (currentImageID != null) Image.findById(currentImageID) else null
+    val newImageBytes = newImage.syncUriToFile()
+    val areSameImage = originalImage?.areSame(newImageBytes) ?: false
+    return if (areSameImage) {
+        currentImageID
+    } else {
+        create(newImageBytes).id
+    }
 }

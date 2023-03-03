@@ -8,8 +8,8 @@ import io.thoth.server.api.audiobooks.series.registerSeriesRouting
 
 fun Route.registerAudiobookRouting() =
     route("audiobooks") {
-      registerBookRouting()
-      registerAuthorRouting()
-      registerSeriesRouting()
-      registerRescan()
+        registerBookRouting()
+        registerAuthorRouting()
+        registerSeriesRouting()
+        registerRescan()
     }

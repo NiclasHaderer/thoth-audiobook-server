@@ -11,16 +11,16 @@ import io.thoth.openapi.serverError
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
 internal fun login(config: AuthConfig): RouteHandler.(user: LoginUser) -> JwtPair {
-  return { user ->
-    val userModel =
-        User.internalGetByName(user.username)
-            ?: serverError(HttpStatusCode.BadRequest, "Could not login user")
+    return { user ->
+        val userModel =
+            User.internalGetByName(user.username)
+                ?: serverError(HttpStatusCode.BadRequest, "Could not login user")
 
-    val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
-    if (!encoder.matches(user.password, userModel.passwordHash)) {
-      serverError(HttpStatusCode.BadRequest, "Could not login user")
+        val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
+        if (!encoder.matches(user.password, userModel.passwordHash)) {
+            serverError(HttpStatusCode.BadRequest, "Could not login user")
+        }
+
+        generateJwtForUser(config.issuer, userModel, config)
     }
-
-    generateJwtForUser(config.issuer, userModel, config)
-  }
 }

@@ -14,25 +14,25 @@ class JsonColumnType<T : Any>(
     collate: String? = null,
     eagerLoading: Boolean = false,
 ) : TextColumnType(collate, eagerLoading) {
-  companion object {
-    private val mapper by lazy { ObjectMapper().registerKotlinModule() }
-  }
+    companion object {
+        private val mapper by lazy { ObjectMapper().registerKotlinModule() }
+    }
 
-  override fun valueFromDB(value: Any): Any =
-      when (value) {
-        is String -> mapper.readValue(value, mapperClass.java)
-        is JdbcClob -> mapper.readValue(value.characterStream, mapperClass.java)
-        else -> value
-      }
+    override fun valueFromDB(value: Any): Any =
+        when (value) {
+            is String -> mapper.readValue(value, mapperClass.java)
+            is JdbcClob -> mapper.readValue(value.characterStream, mapperClass.java)
+            else -> value
+        }
 
-  override fun valueToDB(value: Any?): Any? {
-    return value?.let(::notNullValueToDB)
-  }
+    override fun valueToDB(value: Any?): Any? {
+        return value?.let(::notNullValueToDB)
+    }
 
-  override fun notNullValueToDB(value: Any): Any {
-    @Suppress("UNCHECKED_CAST") validate(value as T)
-    return mapper.writeValueAsString(value)
-  }
+    override fun notNullValueToDB(value: Any): Any {
+        @Suppress("UNCHECKED_CAST") validate(value as T)
+        return mapper.writeValueAsString(value)
+    }
 }
 
 inline fun <reified T : Any> Table.json(
@@ -41,5 +41,5 @@ inline fun <reified T : Any> Table.json(
     eagerLoading: Boolean = false,
     noinline validate: (T) -> Unit = {},
 ): Column<T> {
-  return registerColumn(name, JsonColumnType(T::class, validate, collate, eagerLoading))
+    return registerColumn(name, JsonColumnType(T::class, validate, collate, eagerLoading))
 }

@@ -20,18 +20,18 @@ class AudioFileAnalysisResultImpl(
 ) : AudioFileAnalysisResult
 
 interface AudioFileAnalysisResult {
-  val title: String
-  val author: String
-  val book: String
-  val description: String?
-  val date: LocalDate?
-  val language: String?
-  val trackNr: Int?
-  val narrator: String?
-  val series: String?
-  val seriesIndex: Float?
-  val cover: ByteArray?
-  val duration: Int
-  val path: String
-  val lastModified: Long
+    val title: String
+    val author: String
+    val book: String
+    val description: String?
+    val date: LocalDate?
+    val language: String?
+    val trackNr: Int?
+    val narrator: String?
+    val series: String?
+    val seriesIndex: Float?
+    val cover: ByteArray?
+    val duration: Int
+    val path: String
+    val lastModified: Long
 }

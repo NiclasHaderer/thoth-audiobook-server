@@ -8,24 +8,30 @@ import io.ktor.util.pipeline.*
 import mu.KotlinLogging.logger
 
 fun Application.configureStatusPages() {
-  val logger = logger {}
-  install(StatusPages) {
-    exception<ErrorResponse> { call, cause ->
-      call.respond(
-          cause.status,
-          hashMapOf(
-              "error" to cause.message, "status" to cause.status.value, "details" to cause.details))
+    val logger = logger {}
+    install(StatusPages) {
+        exception<ErrorResponse> { call, cause ->
+            call.respond(
+                cause.status,
+                hashMapOf(
+                    "error" to cause.message,
+                    "status" to cause.status.value,
+                    "details" to cause.details
+                )
+            )
+        }
+        exception<Throwable> { call, cause ->
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                hashMapOf(
+                    "error" to cause.message,
+                    "status" to HttpStatusCode.InternalServerError.value,
+                    "trace" to cause.stackTrace
+                )
+            )
+            logger.error("Unhandled exception", cause)
+        }
     }
-    exception<Throwable> { call, cause ->
-      call.respond(
-          HttpStatusCode.InternalServerError,
-          hashMapOf(
-              "error" to cause.message,
-              "status" to HttpStatusCode.InternalServerError.value,
-              "trace" to cause.stackTrace))
-      logger.error("Unhandled exception", cause)
-    }
-  }
 }
 
 class ErrorResponse(val status: HttpStatusCode, message: String, val details: Any? = null) :
@@ -36,5 +42,5 @@ fun PipelineContext<*, *>.serverError(
     message: String,
     details: Any? = null
 ): Nothing {
-  throw ErrorResponse(status, message, details)
+    throw ErrorResponse(status, message, details)
 }

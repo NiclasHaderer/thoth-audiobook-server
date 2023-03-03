@@ -12,31 +12,31 @@ import kotlin.io.path.absolutePathString
 import org.jetbrains.exposed.sql.SortOrder
 
 fun Track.Companion.removeUntouched() {
-  val kvSettings = KeyValueSettings.get()
-  Track.find { TTracks.scanIndex eq kvSettings.scanIndex }.forEach { it.delete() }
+    val kvSettings = KeyValueSettings.get()
+    Track.find { TTracks.scanIndex eq kvSettings.scanIndex }.forEach { it.delete() }
 }
 
 fun Track.Companion.getById(uuid: UUID): TrackModel? {
-  return Track.findById(uuid)?.toModel()
+    return Track.findById(uuid)?.toModel()
 }
 
 fun Track.Companion.getByPath(path: Path) = getByPath(path.absolutePathString())
 
 fun Track.Companion.getByPath(path: String): Track? {
-  return Track.findOne { TTracks.path like path }
+    return Track.findOne { TTracks.path like path }
 }
 
 fun Track.Companion.forBook(bookID: UUID, order: SortOrder = SortOrder.ASC): List<TrackModel> {
-  return rawForBook(bookID, order).map { it.toModel() }
+    return rawForBook(bookID, order).map { it.toModel() }
 }
 
 fun Track.Companion.rawForBook(bookID: UUID, order: SortOrder = SortOrder.ASC): List<Track> {
-  return Track.find { TTracks.book eq bookID }.orderBy(TTracks.trackNr to order).toList()
+    return Track.find { TTracks.book eq bookID }.orderBy(TTracks.trackNr to order).toList()
 }
 
 fun Track.markAsTouched() {
-  val kvSettings = KeyValueSettings.get()
-  this.scanIndex = kvSettings.scanIndex + 1
+    val kvSettings = KeyValueSettings.get()
+    this.scanIndex = kvSettings.scanIndex + 1
 }
 
 fun Track.hasBeenUpdated(updateTime: Long) = this.accessTime >= updateTime

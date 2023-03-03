@@ -22,45 +22,48 @@ import kotlin.reflect.KClass
 import me.ntrrgc.tsGenerator.TypeScriptGenerator
 
 fun main() {
-  var audiobookDefinitions =
-      generate(
-          setOf(
-              AuthorModel::class,
-              DetailedAuthorModel::class,
-              BookModel::class,
-              DetailedBookModel::class,
-              SearchModel::class,
-              SeriesModel::class,
-              PatchAuthor::class,
-              PatchSeries::class,
-              PatchBook::class,
-              PostAuthor::class,
-              PostSeries::class,
-              PostBook::class,
-              DetailedSeriesModel::class,
-              TrackModel::class,
-              ChangeEvent::class,
-              PaginatedResponse::class,
-              NamedId::class,
-          ))
+    var audiobookDefinitions =
+        generate(
+            setOf(
+                AuthorModel::class,
+                DetailedAuthorModel::class,
+                BookModel::class,
+                DetailedBookModel::class,
+                SearchModel::class,
+                SeriesModel::class,
+                PatchAuthor::class,
+                PatchSeries::class,
+                PatchBook::class,
+                PostAuthor::class,
+                PostSeries::class,
+                PostBook::class,
+                DetailedSeriesModel::class,
+                TrackModel::class,
+                ChangeEvent::class,
+                PaginatedResponse::class,
+                NamedId::class,
+            )
+        )
 
-  audiobookDefinitions = audiobookDefinitions.replace("interface", "export interface")
+    audiobookDefinitions = audiobookDefinitions.replace("interface", "export interface")
 
-  var metadataDefinitions =
-      generate(
-          setOf(
-              MetadataAuthor::class,
-              MetadataBook::class,
-              MetadataSearchBook::class,
-              MetadataSeries::class))
-  metadataDefinitions = metadataDefinitions.replace("interface", "export interface")
+    var metadataDefinitions =
+        generate(
+            setOf(
+                MetadataAuthor::class,
+                MetadataBook::class,
+                MetadataSearchBook::class,
+                MetadataSeries::class
+            )
+        )
+    metadataDefinitions = metadataDefinitions.replace("interface", "export interface")
 
-  if (!Files.exists(Path.of("gen/typescript"))) {
-    Files.createDirectories(Path.of("gen/typescript"))
-  }
+    if (!Files.exists(Path.of("gen/typescript"))) {
+        Files.createDirectories(Path.of("gen/typescript"))
+    }
 
-  File("gen/typescript/api.ts").printWriter().use { out -> out.println(audiobookDefinitions) }
-  File("gen/typescript/metadata.ts").printWriter().use { out -> out.println(metadataDefinitions) }
+    File("gen/typescript/api.ts").printWriter().use { out -> out.println(audiobookDefinitions) }
+    File("gen/typescript/metadata.ts").printWriter().use { out -> out.println(metadataDefinitions) }
 }
 
 fun generate(classes: Iterable<KClass<*>>) =
@@ -72,5 +75,6 @@ fun generate(classes: Iterable<KClass<*>>) =
                     LocalDate::class to "number",
                     Date::class to "number",
                     UUID::class to "string",
-                ))
+                )
+        )
         .definitionsText

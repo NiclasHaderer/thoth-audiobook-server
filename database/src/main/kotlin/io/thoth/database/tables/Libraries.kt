@@ -12,23 +12,24 @@ import org.jetbrains.exposed.sql.*
 
 @OptIn(ExperimentalUnsignedTypes::class)
 object TLibraries : UUIDTable("Libraries") {
-  val name = varchar("name", 255)
-  val icon = text("icon").nullable()
-  val scanIndex = ulong("scanIndex").default(0uL)
-  val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
-  val folders = json<List<String>>("folders") { require(it.isNotEmpty()) }
-  val metadataScanners = json<List<MetadataAgent>>("metadataScanners") { require(it.isNotEmpty()) }
-  val fileScanners = json<List<FileScanner>>("fileScanners") { require(it.isNotEmpty()) }
+    val name = varchar("name", 255)
+    val icon = text("icon").nullable()
+    val scanIndex = ulong("scanIndex").default(0uL)
+    val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
+    val folders = json<List<String>>("folders") { require(it.isNotEmpty()) }
+    val metadataScanners =
+        json<List<MetadataAgent>>("metadataScanners") { require(it.isNotEmpty()) }
+    val fileScanners = json<List<FileScanner>>("fileScanners") { require(it.isNotEmpty()) }
 }
 
 class Library(id: EntityID<UUID>) : UUIDEntity(id) {
-  companion object : UUIDEntityClass<Library>(TLibraries)
+    companion object : UUIDEntityClass<Library>(TLibraries)
 
-  var name by TLibraries.name
-  var icon by TLibraries.icon
-  var scanIndex by TLibraries.scanIndex
-  var folders by TLibraries.folders
-  var preferEmbeddedMetadata by TLibraries.preferEmbeddedMetadata
-  var metadataScanners by TLibraries.metadataScanners
-  var fileScanners by TLibraries.fileScanners
+    var name by TLibraries.name
+    var icon by TLibraries.icon
+    var scanIndex by TLibraries.scanIndex
+    var folders by TLibraries.folders
+    var preferEmbeddedMetadata by TLibraries.preferEmbeddedMetadata
+    var metadataScanners by TLibraries.metadataScanners
+    var fileScanners by TLibraries.fileScanners
 }

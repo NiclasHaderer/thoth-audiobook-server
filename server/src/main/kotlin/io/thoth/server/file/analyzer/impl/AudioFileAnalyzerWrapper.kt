@@ -11,18 +11,18 @@ import mu.KotlinLogging.logger
 
 class AudioFileAnalyzerWrapperImpl(private val analyzers: List<AudioFileAnalyzer>) :
     AudioFileAnalyzerWrapper {
-  private val log = logger {}
+    private val log = logger {}
 
-  override suspend fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult? {
-    val tags = ReadonlyFileTaggerImpl(path)
-    for (analyzer in analyzers) {
-      try {
-        val result = analyzer.analyze(path, attrs, tags)
-        if (result != null) return result
-      } catch (e: Exception) {
-        log.warn(e) { "Could not analyze file ${path.absolute()}" }
-      }
+    override suspend fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult? {
+        val tags = ReadonlyFileTaggerImpl(path)
+        for (analyzer in analyzers) {
+            try {
+                val result = analyzer.analyze(path, attrs, tags)
+                if (result != null) return result
+            } catch (e: Exception) {
+                log.warn(e) { "Could not analyze file ${path.absolute()}" }
+            }
+        }
+        return null
     }
-    return null
-  }
 }

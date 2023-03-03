@@ -18,7 +18,14 @@ import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
 import io.thoth.server.file.scanner.FileWatcher
-import io.thoth.server.plugins.*
+import io.thoth.server.plugins.configureCORS
+import io.thoth.server.plugins.configureKoin
+import io.thoth.server.plugins.configureMonitoring
+import io.thoth.server.plugins.configureOpenApi
+import io.thoth.server.plugins.configurePartialContent
+import io.thoth.server.plugins.configureRouting
+import io.thoth.server.plugins.configureSerialization
+import io.thoth.server.plugins.configureSockets
 import io.thoth.server.scheduler.ThothSchedules
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch
@@ -26,69 +33,70 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 fun main() {
-  // Setup DI with Koin
-  configureKoin()
+    // Force every library which is using the standard java logger to use SLF4J
+    LogManager.getLogManager().reset()
+    SLF4JBridgeHandler.install()
 
-  // Connect to database
-  val config = get<ThothConfig>()
-  connectToDatabase(config.database)
-  migrateDatabase(config.database)
+    // Setup DI with Koin
+    configureKoin()
 
-  // Force every library which is using the standard java logger to use SLF4J
-  LogManager.getLogManager().reset()
-  SLF4JBridgeHandler.install()
+    // Connect to database
+    val config = get<ThothConfig>()
+    connectToDatabase(config.database)
+    migrateDatabase(config.database)
 
-  // Start the server
-  embeddedServer(
-          Netty,
-          port = config.port,
-          watchPaths = listOf("classes"),
-          host = "0.0.0.0",
-          module = Application::applicationModule)
-      .start(wait = true)
+    // Start the server
+    embeddedServer(
+            Netty,
+            port = config.port,
+            watchPaths = listOf("classes"),
+            host = "0.0.0.0",
+            module = Application::applicationModule,
+        )
+        .start(wait = true)
 }
 
 fun Application.applicationModule() {
-  launch { get<Scheduler>().start() }
-  runBlocking {
-    launch {
-          val scheduler = get<Scheduler>()
-          val thothSchedules = get<ThothSchedules>()
-          scheduler.schedule(thothSchedules.completeScan)
-          scheduler.schedule(thothSchedules.getMetadata)
-          scheduler.launchScheduledJob(thothSchedules.completeScan)
-          scheduler.launchScheduledJob(thothSchedules.getMetadata)
-        }
-        .join()
-  }
+    launch { get<Scheduler>().start() }
+    runBlocking {
+        launch {
+                val scheduler = get<Scheduler>()
+                val thothSchedules = get<ThothSchedules>()
+                scheduler.schedule(thothSchedules.completeScan)
+                scheduler.schedule(thothSchedules.getMetadata)
+                scheduler.launchScheduledJob(thothSchedules.completeScan)
+                scheduler.launchScheduledJob(thothSchedules.getMetadata)
+            }
+            .join()
+    }
 
-  launch { get<FileWatcher>().watch() }
-  server()
+    launch { get<FileWatcher>().watch() }
+    server()
 }
 
 fun Application.server() {
-  val config = get<ThothConfig>()
+    val config = get<ThothConfig>()
 
-  configureStatusPages()
-  configureRouting()
-  configureOpenApi()
-  configureAuthentication(config.configDirectory) {
-    domain = "127.0.0.1:${config.port}"
-    protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
-  }
-  configurePartialContent()
-  configureCORS(config)
-  configureSockets()
-  configureMonitoring()
-  configureSerialization()
-
-  routing {
-    route("api") {
-      registerMetadataRouting()
-      registerAudiobookRouting()
-      registerSearchRouting()
-      registerStreamingRouting()
-      registerImageRouting()
+    configureStatusPages()
+    configureRouting()
+    configureOpenApi()
+    configureAuthentication(config.configDirectory) {
+        domain = "127.0.0.1:${config.port}"
+        protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
     }
-  }
+    configurePartialContent()
+    configureCORS(config)
+    configureSockets()
+    configureMonitoring()
+    configureSerialization()
+
+    routing {
+        route("api") {
+            registerMetadataRouting()
+            registerAudiobookRouting()
+            registerSearchRouting()
+            registerStreamingRouting()
+            registerImageRouting()
+        }
+    }
 }
