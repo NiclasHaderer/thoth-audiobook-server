@@ -1,13 +1,13 @@
-package io.thoth.server.scheduler
+package io.thoth.server.schedules
 
-import io.thoth.common.scheduling.SchedulingCollection
+import io.thoth.common.scheduling.ScheduleCollection
 import io.thoth.config.ThothConfig
 import io.thoth.models.LibraryModel
 import io.thoth.server.file.scanner.LibraryScanner
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class ThothSchedules : SchedulingCollection, KoinComponent {
+class ThothSchedules : ScheduleCollection, KoinComponent {
     // TODO get schedule from config
     private val config by inject<ThothConfig>()
     private val libraryScanner: LibraryScanner by inject()

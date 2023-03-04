@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 
 // TODO make sure that two libraries do not cover the same paths, otherwise the path reference will
 // not be unique
+@OptIn(ExperimentalUnsignedTypes::class)
 object TTracks : UUIDTable("Tracks") {
     val title = varchar("title", 255)
     val duration = integer("duration")
@@ -17,12 +18,15 @@ object TTracks : UUIDTable("Tracks") {
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
     val path = text("path").uniqueIndex()
     val book = reference("book", TBooks)
-    val scanIndex = long("scanIndex")
+    val scanIndex = ulong("scanIndex")
     val trackNr = integer("trackNr").nullable()
 }
 
 class Track(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<Track>(TTracks)
+
+    val library: Library
+        get() = this.book.library
 
     var title by TTracks.title
     var trackNr by TTracks.trackNr
