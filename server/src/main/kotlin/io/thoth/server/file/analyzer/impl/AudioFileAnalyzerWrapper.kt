@@ -12,7 +12,7 @@ import mu.KotlinLogging.logger
 class AudioFileAnalyzerWrapperImpl(private val analyzers: List<AudioFileAnalyzer>) : AudioFileAnalyzerWrapper {
     private val log = logger {}
 
-    override suspend fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult? {
+    override fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult? {
         val tags = ReadonlyFileTaggerImpl(path)
         for (analyzer in analyzers) {
             try {

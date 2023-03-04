@@ -9,11 +9,7 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
 class AudioTagScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
-    override suspend fun analyze(
-        path: Path,
-        attrs: BasicFileAttributes,
-        tags: ReadonlyFileTagger
-    ): AudioFileAnalysisResult? {
+    override fun analyze(path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger): AudioFileAnalysisResult? {
         if (tags.author == null || tags.book == null) return null
         return AudioFileAnalysisResultImpl(
             title = tags.title,

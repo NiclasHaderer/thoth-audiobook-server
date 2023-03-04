@@ -9,35 +9,17 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging.logger
 
-class EventBuilder<T>
-internal constructor(val name: String, internal val callback: suspend (EventBuilder.Event<T>) -> Unit) {
-
-    class Event<T> internal constructor(val name: String, val data: T, internal val builder: EventBuilder<T>)
-
-    fun build(data: T): Event<T> {
-        return Event(name, data, this)
-    }
-}
-
-class ScheduleBuilder(val name: String, val cronString: String, val callback: suspend () -> Unit)
-
-interface SchedulingCollection {
-    fun <T> event(event: String, callback: suspend (EventBuilder.Event<T>) -> Unit): EventBuilder<T> {
-        return EventBuilder(event, callback)
-    }
-
-    fun schedule(cronString: String, name: String, callback: suspend () -> Unit): ScheduleBuilder {
-        return ScheduleBuilder(cronString, name, callback)
-    }
-}
-
 open class Scheduler {
+    class QueuedTask(val name: String, val executeAt: LocalDateTime, val type: TaskType)
+
     private var currentExecution: DelayedExecution? = null
-    private val schedules = mutableListOf<TaskDescription>()
+    private val schedules = mutableListOf<Task>()
     private val log = logger {}
     private val started = AtomicBoolean(false)
-
     private val taskQueue = mutableListOf<ScheduledTask>()
+
+    val queue: List<QueuedTask>
+        get() = taskQueue.map { QueuedTask(it.task.name, it.executeAt, it.task.type) }
 
     suspend fun start() {
         if (started.get()) {
@@ -47,20 +29,14 @@ open class Scheduler {
         internalStart()
     }
 
-    fun launchScheduledJob(schedule: ScheduleBuilder) {
+    fun launchScheduledJob(schedule: ScheduleTask) {
         launchScheduledJob(schedule.name)
     }
 
     fun launchScheduledJob(scheduleName: String) {
-        val relevantSchedules = schedules.filterIsInstance<CronTaskDescription>().filter { it.name == scheduleName }
+        val relevantSchedules = schedules.filterIsInstance<ScheduleTask>().filter { it.name == scheduleName }
         relevantSchedules.forEach { task ->
-            val taskInSchedule = taskQueue.find { it.task == task }
-            // The task is already overdue, so we don't schedule it again
-            if (taskInSchedule != null && taskInSchedule.schedulesIn() < 0) {
-                log.info { "Task ${task.name} is already scheduled for next possible execution" }
-            } else {
-                taskQueue.add(ScheduledCronTask(task, LocalDateTime.now(), "Launched manually"))
-            }
+            taskQueue.add(ScheduledCronTask(task, LocalDateTime.now(), "Launched manually"))
         }
         if (relevantSchedules.isEmpty()) {
             log.warn { "No schedules for scheduleName $scheduleName" }
@@ -69,13 +45,12 @@ open class Scheduler {
         }
     }
 
-    suspend fun <T> dispatch(event: EventBuilder.Event<T>) {
+    suspend fun <T> dispatch(event: EventTask.Event<T>) {
         if (!started.get()) {
             throw IllegalStateException("Scheduler not started")
         }
 
-        val relevantSchedules =
-            schedules.filterIsInstance<EventTaskDescription<T>>().filter { it.event == event.builder }
+        val relevantSchedules = schedules.filterIsInstance<EventTask<T>>().filter { it == event.origin }
 
         relevantSchedules.forEach { task -> taskQueue.add(ScheduledEventTask(task, event)) }
         if (relevantSchedules.isEmpty()) {
@@ -86,28 +61,17 @@ open class Scheduler {
         reevaluateNextExecutiontime()
     }
 
-    fun <T> register(event: EventBuilder<T>) {
-        val newTask = EventTaskDescription(name = event.name, runner = event.callback, event = event)
-        schedules.add(newTask)
+    fun <T> register(event: EventTask<T>) {
+        schedules.add(event)
     }
 
-    suspend fun schedule(schedule: ScheduleBuilder) {
-        schedule(schedule.cronString, schedule.name, schedule.callback)
-    }
-
-    suspend fun schedule(cronString: String, name: String? = null, task: suspend () -> Unit) {
-        val newTask =
-            CronTaskDescription(
-                name = name ?: task.toString(),
-                cronString = cronString,
-                runner = task,
-            )
-        schedules.add(newTask)
-        queueTask(newTask)
+    suspend fun schedule(schedule: ScheduleTask) {
+        schedules.add(schedule)
+        queueTask(schedule)
         reevaluateNextExecutiontime()
     }
 
-    private fun queueTask(task: CronTaskDescription) {
+    private fun queueTask(task: ScheduleTask) {
         val nextExecution = task.cron.nextExecution()
         taskQueue.add(ScheduledCronTask(task, nextExecution))
     }
@@ -137,7 +101,7 @@ open class Scheduler {
                 "Next task '${scheduledTask.task.name}' will be executed in ${
                     Duration.of(scheduledTask.schedulesIn(), ChronoUnit.MILLIS).toHumanReadable()
                 }. " +
-                    "Triggered by ${scheduledTask.type}:${scheduledTask.cause}"
+                    "Triggered by ${scheduledTask.task.type}:${scheduledTask.cause}"
             }
 
             // Schedule the task for execution

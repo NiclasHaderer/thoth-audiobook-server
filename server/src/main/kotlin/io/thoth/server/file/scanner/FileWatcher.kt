@@ -5,7 +5,6 @@ import io.methvin.watcher.DirectoryWatcher
 import io.methvin.watcher.hashing.FileHasher
 import io.thoth.common.extensions.hasAudioExtension
 import io.thoth.config.ThothConfig
-import io.thoth.server.file.persister.AudioAnalyzer
 import java.nio.file.Path
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -17,7 +16,6 @@ interface FileWatcher {
 
 class FileWatcherImpl : FileWatcher, KoinComponent {
     private val thothConfig: ThothConfig by inject()
-    private val audioAnalyzer: AudioAnalyzer by inject()
 
     private val watcher =
         DirectoryWatcher.builder()
@@ -38,9 +36,9 @@ class FileWatcherImpl : FileWatcher, KoinComponent {
         }
 
         if (eventType == DirectoryChangeEvent.EventType.DELETE) {
-            audioAnalyzer.queue(AudioAnalyzer.Type.REMOVE_FILE, path)
+            // TODO Remove from database
         } else if (eventType == DirectoryChangeEvent.EventType.CREATE) {
-            audioAnalyzer.queue(AudioAnalyzer.Type.ADD_FILE, path)
+            // TODO Add to database
         }
     }
 

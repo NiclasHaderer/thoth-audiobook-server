@@ -9,14 +9,15 @@ import io.thoth.database.tables.Library
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
 import io.thoth.models.LibraryModel
-import io.thoth.server.file.persister.AudioAnalyzer
-import io.thoth.server.scheduler.ThothSchedules
+import io.thoth.server.file.persister.TrackManager
+import io.thoth.server.schedules.ThothSchedules
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.getLastModifiedTime
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -25,13 +26,13 @@ import org.koin.core.component.inject
 interface LibraryScanner {
     fun fullScan()
     fun scanLibrary(library: LibraryModel)
-    fun scanFolder(folder: Path)
+    fun scanFolder(folder: Path, library: LibraryModel? = null)
 }
 
 class LibraryScannerImpl : LibraryScanner, KoinComponent {
-    private val audioAnalyzer: AudioAnalyzer by inject()
     private val scheduler: Scheduler by inject()
     private val thothSchedules: ThothSchedules by inject()
+    private val trackManager: TrackManager by inject()
     // TODO if there should be a lock on scanning a library/folder/everything
 
     companion object {
@@ -61,15 +62,27 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         }
     }
 
-    override fun scanFolder(folder: Path) {
+    override fun scanFolder(folder: Path, library: LibraryModel?) {
+        var selectedLibrary = library
+
+        if (selectedLibrary == null) {
+            selectedLibrary = Library.all().first().toModel()
+            TODO("Get library from folder path")
+            // Idea: Get all libraries. Then check if the folder is covered by any of them. If so,
+            // use that library
+            // If not go to the parent folder and check again. Do this until the root folder is
+            // reached
+            // If two libraries cover the same folder log a error and return
+        }
+
         val scanner =
             FileTreeScanner(
                 ignoredSubtree = {
                     foldersToIgnore.add(it.absolutePathString())
-                    audioAnalyzer.queue(AudioAnalyzer.Type.REMOVE_FILE, it)
+                    trackManager.removePath(it)
                 },
                 shouldUpdateFile = ::shouldUpdate,
-                addOrUpdate = { path, _ -> audioAnalyzer.queue(AudioAnalyzer.Type.ADD_FILE, path) },
+                addOrUpdate = { path, _ -> runBlocking { trackManager.addPath(path, selectedLibrary) } },
             )
         Files.walkFileTree(folder, scanner)
     }

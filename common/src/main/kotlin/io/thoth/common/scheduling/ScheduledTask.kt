@@ -3,18 +3,11 @@ package io.thoth.common.scheduling
 import java.time.Duration
 import java.time.LocalDateTime
 
-enum class TaskType {
-    CRON,
-    EVENT
-}
-
 internal abstract class ScheduledTask(
-    open val task: TaskDescription,
+    open val task: Task,
     val executeAt: LocalDateTime,
     val cause: String,
-    val type: TaskType = TaskType.CRON
 ) {
-
     fun schedulesIn(): Long {
         val now = LocalDateTime.now()
         return try {
@@ -28,18 +21,18 @@ internal abstract class ScheduledTask(
 }
 
 internal class ScheduledCronTask(
-    override val task: CronTaskDescription,
+    override val task: ScheduleTask,
     executeAt: LocalDateTime,
     cause: String = task.cron.asString()
-) : ScheduledTask(task, executeAt, cause, TaskType.CRON) {
+) : ScheduledTask(task, executeAt, cause) {
     override suspend fun run() {
-        task.runner()
+        task.callback()
     }
 }
 
-internal class ScheduledEventTask<T>(override val task: EventTaskDescription<T>, val event: EventBuilder.Event<T>) :
-    ScheduledTask(task, LocalDateTime.now(), event.name, TaskType.EVENT) {
+internal class ScheduledEventTask<T>(override val task: EventTask<T>, val event: EventTask.Event<T>) :
+    ScheduledTask(task, LocalDateTime.now(), event.name) {
     override suspend fun run() {
-        task.runner(event)
+        task.callback(event)
     }
 }

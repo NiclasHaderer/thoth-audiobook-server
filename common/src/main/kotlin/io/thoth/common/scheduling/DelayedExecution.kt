@@ -5,7 +5,7 @@ import kotlinx.coroutines.*
 
 class DelayedExecution(private val delay: Long, private val task: suspend () -> Unit) {
     private val isRunning = AtomicBoolean(false)
-    private var ranSucessful = false
+    private var ranSuccessful = false
 
     private lateinit var job: Job
 
@@ -18,7 +18,7 @@ class DelayedExecution(private val delay: Long, private val task: suspend () -> 
                     }
                     this@DelayedExecution.isRunning.set(true)
                     this@DelayedExecution.task()
-                    this@DelayedExecution.ranSucessful = true
+                    this@DelayedExecution.ranSuccessful = true
                 } catch (e: CancellationException) {
                     // Do nothing
                 }
@@ -34,7 +34,7 @@ class DelayedExecution(private val delay: Long, private val task: suspend () -> 
     }
 
     fun executedSuccessfully(): Boolean {
-        return ranSucessful
+        return ranSuccessful
     }
 
     suspend fun join() {

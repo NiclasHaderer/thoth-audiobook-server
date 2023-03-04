@@ -1,7 +1,6 @@
 package io.thoth.database.access
 
 import io.thoth.common.extensions.findOne
-import io.thoth.database.tables.KeyValueSettings
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
 import io.thoth.models.TitledId
@@ -12,8 +11,7 @@ import kotlin.io.path.absolutePathString
 import org.jetbrains.exposed.sql.SortOrder
 
 fun Track.Companion.removeUntouched() {
-    val kvSettings = KeyValueSettings.get()
-    Track.find { TTracks.scanIndex eq kvSettings.scanIndex }.forEach { it.delete() }
+    TODO("Not yet implemented")
 }
 
 fun Track.Companion.getById(uuid: UUID): TrackModel? {
@@ -35,8 +33,7 @@ fun Track.Companion.rawForBook(bookID: UUID, order: SortOrder = SortOrder.ASC): 
 }
 
 fun Track.markAsTouched() {
-    val kvSettings = KeyValueSettings.get()
-    this.scanIndex = kvSettings.scanIndex + 1
+    TODO("Not yet implemented")
 }
 
 fun Track.hasBeenUpdated(updateTime: Long) = this.accessTime >= updateTime

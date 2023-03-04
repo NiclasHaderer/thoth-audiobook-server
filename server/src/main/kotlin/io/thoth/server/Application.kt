@@ -17,16 +17,16 @@ import io.thoth.server.api.images.registerImageRouting
 import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
+import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileWatcher
 import io.thoth.server.plugins.configureCORS
-import io.thoth.server.plugins.configureKoin
 import io.thoth.server.plugins.configureMonitoring
 import io.thoth.server.plugins.configureOpenApi
 import io.thoth.server.plugins.configurePartialContent
 import io.thoth.server.plugins.configureRouting
 import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
-import io.thoth.server.scheduler.ThothSchedules
+import io.thoth.server.schedules.ThothSchedules
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -38,7 +38,7 @@ fun main() {
     SLF4JBridgeHandler.install()
 
     // Setup DI with Koin
-    configureKoin()
+    setupDependencyInjection()
 
     // Connect to database
     val config = get<ThothConfig>()
