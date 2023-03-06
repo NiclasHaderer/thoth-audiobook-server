@@ -7,7 +7,11 @@ import io.thoth.database.access.getMultiple
 import io.thoth.database.access.positionOf
 import io.thoth.database.tables.Book
 import io.thoth.database.tables.TBooks
-import io.thoth.models.*
+import io.thoth.models.BookModel
+import io.thoth.models.DetailedBookModel
+import io.thoth.models.PaginatedResponse
+import io.thoth.models.Position
+import io.thoth.models.TitledId
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
@@ -21,23 +25,22 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Route.registerBookRouting() =
     route("books") {
-        get<QueryLimiter, PaginatedResponse<BookModel>> {
+        get<QueryLimiter, PaginatedResponse<BookModel>> { (limit, offset) ->
             transaction {
-                val books = Book.getMultiple(it.limit, it.offset)
+                val books = Book.getMultiple(limit, offset)
                 val total = Book.count()
-                PaginatedResponse(books, total = total, offset = it.offset, limit = it.limit)
+                PaginatedResponse(books, total = total, offset = offset, limit = limit)
             }
         }
 
-        get<QueryLimiter, List<UUID>>("sorting") { query ->
-            transaction { Book.getMultiple(query.limit, query.offset).map { it.id } }
+        get<QueryLimiter, List<UUID>>("sorting") { (limit, offset) ->
+            transaction { Book.getMultiple(limit, offset).map { it.id } }
         }
 
-        get<BookId.Position, Position> {
+        get<BookId.Position, Position> { (route) ->
             val sortOrder =
-                transaction { Book.positionOf(it.parent.id) }
-                    ?: serverError(HttpStatusCode.NotFound, "Could not find book")
-            Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
+                transaction { Book.positionOf(route.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find book")
+            Position(sortIndex = sortOrder, id = route.id, order = Position.Order.ASC)
         }
 
         get<BookId, DetailedBookModel> {

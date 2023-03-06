@@ -7,6 +7,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Resource("{id}")
-internal class ImageId(
+data class ImageId(
     val id: UUID_S,
 )

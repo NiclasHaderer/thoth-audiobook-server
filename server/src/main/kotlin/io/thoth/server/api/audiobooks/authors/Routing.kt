@@ -21,15 +21,15 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Route.registerAuthorRouting() =
     route("authors") {
-        get<QueryLimiter, PaginatedResponse<AuthorModel>> {
+        get<QueryLimiter, PaginatedResponse<AuthorModel>> { (limit, offset) ->
             transaction {
-                val books = Author.getMultiple(it.limit, it.offset)
+                val books = Author.getMultiple(limit, offset)
                 val seriesCount = Author.count()
-                PaginatedResponse(books, total = seriesCount, offset = it.offset, limit = it.limit)
+                PaginatedResponse(books, total = seriesCount, offset = offset, limit = limit)
             }
         }
-        get<QueryLimiter, List<UUID>>("sorting") { query ->
-            transaction { Author.getMultiple(query.limit, query.offset).map { it.id } }
+        get<QueryLimiter, List<UUID>>("sorting") { (limit, offset) ->
+            transaction { Author.getMultiple(limit, offset).map { it.id } }
         }
 
         get<AuthorId.Position, Position> {
@@ -40,10 +40,8 @@ fun Route.registerAuthorRouting() =
             }
         }
 
-        get<AuthorId, DetailedAuthorModel> {
-            transaction {
-                Author.getDetailedById(it.id) ?: serverError(HttpStatusCode.NotFound, "Author was not found")
-            }
+        get<AuthorId, DetailedAuthorModel> { (id) ->
+            transaction { Author.getDetailedById(id) ?: serverError(HttpStatusCode.NotFound, "Author was not found") }
         }
 
         get<AuthorName, List<NamedId>>("autocomplete") {

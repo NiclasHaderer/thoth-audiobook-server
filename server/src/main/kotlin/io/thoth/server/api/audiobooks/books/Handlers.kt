@@ -13,7 +13,7 @@ import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 
-internal fun RouteHandler.patchBook(id: BookId, patchBook: PatchBook): BookModel = transaction {
+fun RouteHandler.patchBook(id: BookId, patchBook: PatchBook): BookModel = transaction {
     val book = Book.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Book was not found")
     book.apply {
         title = patchBook.title ?: title
@@ -43,7 +43,7 @@ internal fun RouteHandler.patchBook(id: BookId, patchBook: PatchBook): BookModel
     book.toModel()
 }
 
-internal fun RouteHandler.postBook(id: BookId, postBook: PostBook): BookModel = transaction {
+fun RouteHandler.postBook(id: BookId, postBook: PostBook): BookModel = transaction {
     val book = Book.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Book was not found")
     book.apply {
         title = postBook.title
