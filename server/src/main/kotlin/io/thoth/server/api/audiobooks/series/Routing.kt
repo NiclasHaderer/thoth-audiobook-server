@@ -7,7 +7,11 @@ import io.thoth.database.access.getMultiple
 import io.thoth.database.access.positionOf
 import io.thoth.database.tables.Series
 import io.thoth.database.tables.TSeries
-import io.thoth.models.*
+import io.thoth.models.DetailedSeriesModel
+import io.thoth.models.PaginatedResponse
+import io.thoth.models.Position
+import io.thoth.models.SeriesModel
+import io.thoth.models.TitledId
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
@@ -20,28 +24,27 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Route.registerSeriesRouting() =
     route("series") {
-        get<QueryLimiter, PaginatedResponse<SeriesModel>> {
+        get<QueryLimiter, PaginatedResponse<SeriesModel>> { (limit, offset) ->
             transaction {
-                val series = Series.getMultiple(it.limit, it.offset)
+                val series = Series.getMultiple(limit, offset)
                 val seriesCount = Series.count()
-                PaginatedResponse(series, total = seriesCount, offset = it.offset, limit = it.limit)
+                PaginatedResponse(series, total = seriesCount, offset = offset, limit = limit)
             }
         }
 
-        get<QueryLimiter, List<UUID>>("sorting") {
-            transaction { Series.getMultiple(it.limit, it.offset) }.map { it.id }
+        get<QueryLimiter, List<UUID>>("sorting") { (limit, offset) ->
+            transaction { Series.getMultiple(limit, offset) }.map { it.id }
         }
 
-        get<SeriesId.Position, Position> {
+        get<SeriesId.Position, Position> { (route) ->
             val sortOrder =
-                transaction { Series.positionOf(it.parent.id) }
+                transaction { Series.positionOf(route.id) }
                     ?: serverError(HttpStatusCode.NotFound, "Could not find series")
-            Position(sortIndex = sortOrder, id = it.parent.id, order = Position.Order.ASC)
+            Position(sortIndex = sortOrder, id = route.id, order = Position.Order.ASC)
         }
 
-        get<SeriesId, DetailedSeriesModel> {
-            transaction { Series.getDetailedById(it.id) }
-                ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+        get<SeriesId, DetailedSeriesModel> { (id) ->
+            transaction { Series.getDetailedById(id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
         }
 
         get<SeriesName, List<TitledId>>("autocomplete") {

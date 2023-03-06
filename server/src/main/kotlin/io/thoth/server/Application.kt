@@ -16,6 +16,7 @@ import io.thoth.database.tables.Library
 import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
 import io.thoth.server.api.images.registerImageRouting
+import io.thoth.server.api.library.registerLibraryRouting
 import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
@@ -104,6 +105,7 @@ fun Application.server() {
             registerSearchRouting()
             registerStreamingRouting()
             registerImageRouting()
+            registerLibraryRouting()
         }
     }
 }

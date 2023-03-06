@@ -29,3 +29,10 @@ fun Library.Companion.getMatching(path: Path): Library? {
 }
 
 fun Library.Companion.allFolders(): List<Path> = all().flatMap { it.folders.map { Path.of(it) } }
+
+fun Library.Companion.foldersOverlap(folders: List<String>): Pair<Boolean, List<String>> {
+    val newFolders = folders.map { Path.of(it) }
+    val allFolders = all().flatMap { it.folders }.map { Path.of(it) }
+    val overlaps = newFolders.filter { newFolder -> allFolders.any { it.contains(newFolder) } }
+    return Pair(overlaps.isEmpty(), overlaps.map { it.toString() })
+}

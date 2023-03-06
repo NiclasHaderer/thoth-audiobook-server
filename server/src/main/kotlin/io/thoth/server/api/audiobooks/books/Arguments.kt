@@ -6,13 +6,13 @@ import java.time.LocalDate
 import java.util.*
 
 @Resource("{id}")
-internal class BookId(
+data class BookId(
     val id: UUID_S,
 ) {
-    @Resource("position") class Position(val parent: BookId)
+    @Resource("position") data class Position(val route: BookId)
 }
 
-@Resource("") internal class BookName(val name: String)
+@Resource("") data class BookName(val name: String)
 
 class PatchBook(
     val title: String?,

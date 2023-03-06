@@ -13,7 +13,7 @@ import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 
-internal fun RouteHandler.patchSeries(
+fun RouteHandler.patchSeries(
     seriesId: SeriesId,
     patchSeries: PatchSeries,
 ): SeriesModel = transaction {
@@ -46,7 +46,7 @@ internal fun RouteHandler.patchSeries(
     series.toModel()
 }
 
-internal fun RouteHandler.postSeries(
+fun RouteHandler.postSeries(
     seriesId: SeriesId,
     postSeries: PostSeries,
 ) = transaction {

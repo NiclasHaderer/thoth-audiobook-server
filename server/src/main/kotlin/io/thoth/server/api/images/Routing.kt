@@ -12,10 +12,9 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Route.registerImageRouting() =
     route("image") {
-        get<ImageId, BinaryResponse> { image ->
+        get<ImageId, BinaryResponse> { (id) ->
             transaction {
-                val imageBlob =
-                    Image.getById(image.id)?.blob ?: serverError(HttpStatusCode.NotFound, "Could not find image")
+                val imageBlob = Image.getById(id)?.blob ?: serverError(HttpStatusCode.NotFound, "Could not find image")
                 binaryResponse(imageBlob)
             }
         }

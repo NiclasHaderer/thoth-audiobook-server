@@ -7,16 +7,16 @@ import java.time.LocalDate
 import java.util.*
 
 @Resource("{id}")
-internal class AuthorId(
+data class AuthorId(
     val id: UUID_S,
 ) {
 
-    @Resource("position") class Position(val parent: BookId)
+    @Resource("position") data class Position(val parent: BookId)
 }
 
-@Resource("") internal class AuthorName(val name: String)
+@Resource("") data class AuthorName(val name: String)
 
-class PatchAuthor(
+data class PatchAuthor(
     val name: String?,
     val provider: String?,
     val providerID: String?,
@@ -28,7 +28,7 @@ class PatchAuthor(
     val deathDate: LocalDate?
 )
 
-class PostAuthor(
+data class PostAuthor(
     val name: String,
     val provider: String?,
     val providerID: String?,

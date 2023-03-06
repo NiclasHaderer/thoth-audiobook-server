@@ -6,7 +6,7 @@ import io.thoth.metadata.responses.MetadataProviderWithID
 import io.thoth.metadata.responses.MetadataSearchCount
 
 @Resource("")
-internal class MetadataSearch(
+data class MetadataSearch(
     val keywords: String? = null,
     val title: String? = null,
     val author: String? = null,
@@ -16,36 +16,36 @@ internal class MetadataSearch(
 )
 
 @Resource("{itemID}")
-internal class AuthorID(
+data class AuthorID(
     override val itemID: String,
     override val provider: String,
 ) : MetadataProviderWithID
 
 @Resource("{itemID}")
-internal class SeriesID(
+data class SeriesID(
     override val itemID: String,
     override val provider: String,
 ) : MetadataProviderWithID
 
 @Resource("{itemID}")
-internal class BookID(
+data class BookID(
     override val itemID: String,
     override val provider: String,
 ) : MetadataProviderWithID
 
 @Resource("")
-internal class SeriesName(
+data class SeriesName(
     val name: String,
     val authorName: String? = null,
 )
 
 @Resource("")
-internal class BookName(
+data class BookName(
     val name: String,
     val authorName: String? = null,
 )
 
 @Resource("")
-internal class AuthorName(
+data class AuthorName(
     val name: String,
 )

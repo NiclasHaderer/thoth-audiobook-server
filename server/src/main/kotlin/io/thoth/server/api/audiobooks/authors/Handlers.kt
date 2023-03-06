@@ -10,7 +10,7 @@ import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 
-internal fun RouteHandler.patchAuthor(id: AuthorId, patchAuthor: PatchAuthor): AuthorModel = transaction {
+fun RouteHandler.patchAuthor(id: AuthorId, patchAuthor: PatchAuthor): AuthorModel = transaction {
     val author = Author.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Author not found")
     author
         .apply {
@@ -27,7 +27,7 @@ internal fun RouteHandler.patchAuthor(id: AuthorId, patchAuthor: PatchAuthor): A
         .toModel()
 }
 
-internal fun RouteHandler.postAuthor(id: AuthorId, postAuthor: PostAuthor): AuthorModel = transaction {
+fun RouteHandler.postAuthor(id: AuthorId, postAuthor: PostAuthor): AuthorModel = transaction {
     val author = Author.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Author not found")
     author
         .apply {

@@ -6,13 +6,13 @@ import java.util.*
 import kotlinx.serialization.Serializable
 
 @Resource("{id}")
-internal class SeriesId(
+data class SeriesId(
     val id: UUID_S,
 ) {
-    @Resource("position") class Position(val parent: SeriesId)
+    @Resource("position") data class Position(val route: SeriesId)
 }
 
-@Resource("") internal class SeriesName(val name: String)
+@Resource("") data class SeriesName(val name: String)
 
 @Serializable
 data class PatchSeries(
