@@ -4,9 +4,11 @@ import io.thoth.common.extensions.findOne
 import io.thoth.database.access.getMatching
 import io.thoth.database.access.hasBeenUpdated
 import io.thoth.database.access.markAsTouched
+import io.thoth.database.access.toModel
 import io.thoth.database.tables.Library
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
+import io.thoth.models.LibraryModel
 import io.thoth.server.file.TrackManager
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -21,13 +23,14 @@ import org.koin.core.component.inject
 
 interface LibraryScanner {
     fun fullScan()
+    fun scanLibrary(library: LibraryModel)
     fun scanLibrary(library: Library)
-    fun scanFolder(folder: Path, library: Library?)
+    fun scanFolder(folder: Path, library: LibraryModel?)
     fun unIgnoreFolder(folder: Path)
     fun ignoreFolder(folder: Path)
     fun removePath(path: Path)
     fun isIgnored(folder: Path): Boolean
-    suspend fun addOrUpdatePath(path: Path, library: Library?)
+    suspend fun addOrUpdatePath(path: Path, library: LibraryModel?)
 }
 
 class LibraryScannerImpl : LibraryScanner, KoinComponent {
@@ -69,7 +72,7 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         }
         fullScanIsOngoing.set(true)
         log.info { "Starting complete scan" }
-        val libraries = transaction { Library.all() }
+        val libraries = transaction { Library.all().map { it.toModel() } }
         libraries.forEach { library ->
             log.info { "Scanning library ${library.name}" }
             scanLibrary(library)
@@ -78,20 +81,30 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
 
     override fun scanLibrary(library: Library) {
         log.info { "Scanning library ${library.name}" }
-        library.scanIndex += 1u
+        val selectedLibrary = transaction {
+            Library[library.id].let {
+                it.scanIndex += 1u
+                it.toModel()
+            }
+        }
 
         for (folder in library.folders.map { Paths.get(it) }) {
-            scanFolder(folder, library)
+            scanFolder(folder, selectedLibrary)
         }
     }
 
-    override fun scanFolder(folder: Path, library: Library?) {
+    override fun scanLibrary(library: LibraryModel) {
+        val dbLib = transaction { Library[library.id] }
+        scanLibrary(dbLib)
+    }
+
+    override fun scanFolder(folder: Path, library: LibraryModel?) {
         if (isIgnored(folder)) {
             log.info { "Skipping $folder because it is ignored" }
             return
         }
 
-        val selectedLibrary = library ?: transaction { Library.getMatching(folder) }
+        val selectedLibrary = library ?: transaction { Library.getMatching(folder)?.toModel() }
 
         if (selectedLibrary == null) {
             log.error { "No library found for folder $folder. Ignoring folder!" }
@@ -109,12 +122,12 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         )
     }
 
-    override suspend fun addOrUpdatePath(path: Path, library: Library?) {
+    override suspend fun addOrUpdatePath(path: Path, library: LibraryModel?) {
         if (isIgnored(path)) {
             log.info { "Skipping $path because it is in a folder that is ignored" }
             return
         }
-        val selectedLibrary = library ?: transaction { Library.getMatching(path) }
+        val selectedLibrary = library ?: transaction { Library.getMatching(path)?.toModel() }
         if (selectedLibrary == null) {
             log.error { "No library found for path $path. Ignoring path!" }
             return

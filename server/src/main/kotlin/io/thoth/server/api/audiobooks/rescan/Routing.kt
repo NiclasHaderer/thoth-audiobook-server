@@ -3,6 +3,7 @@ package io.thoth.server.api.audiobooks.rescan
 import io.ktor.http.*
 import io.ktor.server.routing.*
 import io.thoth.common.extensions.get
+import io.thoth.database.access.toModel
 import io.thoth.database.tables.Library
 import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
@@ -19,7 +20,7 @@ fun Route.registerRescan(path: String = "rescan") =
 
         post<LibraryId, Unit> { (id) ->
             val library =
-                transaction { Library.findById(id) }
+                transaction { Library.findById(id)?.toModel() }
                     ?: serverError(
                         HttpStatusCode.BadRequest,
                         "Library with id $id not found",

@@ -10,7 +10,7 @@ import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging.logger
 
 open class Scheduler {
-    class QueuedTask(val name: String, val executeAt: LocalDateTime, val type: TaskType)
+    data class QueuedTask(val name: String, val executeAt: LocalDateTime, val type: TaskType)
 
     private var currentExecution: DelayedExecution? = null
     private val schedules = mutableListOf<Task>()
@@ -30,18 +30,14 @@ open class Scheduler {
     }
 
     fun launchScheduledJob(schedule: ScheduleTask) {
-        launchScheduledJob(schedule.name)
-    }
-
-    fun launchScheduledJob(scheduleName: String) {
-        val relevantSchedules = schedules.filterIsInstance<ScheduleTask>().filter { it.name == scheduleName }
+        val relevantSchedules = schedules.filterIsInstance<ScheduleTask>().filter { it == schedule }
         relevantSchedules.forEach { task ->
             taskQueue.add(ScheduledCronTask(task, LocalDateTime.now(), "Launched manually"))
         }
         if (relevantSchedules.isEmpty()) {
-            log.warn { "No schedules for scheduleName $scheduleName" }
+            log.warn { "No schedules for scheduleName ${schedule.name}" }
         } else {
-            log.info { "Dispatched schedule $scheduleName to ${relevantSchedules.size} schedules" }
+            log.info { "Dispatched schedule ${schedule.name} to ${relevantSchedules.size} schedules" }
         }
     }
 
@@ -84,8 +80,7 @@ open class Scheduler {
     private suspend fun internalStart() = coroutineScope {
         while (true) {
             // Get the task with the next execution time. This time can also be in the past if the
-            // task is
-            // overdue.
+            // task is overdue.
             val scheduledTask = taskQueue.minByOrNull { it.executeAt }
 
             if (scheduledTask == null) {

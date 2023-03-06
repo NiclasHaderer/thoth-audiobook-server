@@ -1,9 +1,7 @@
 package io.thoth.common.scheduling
 
 import com.cronutils.model.Cron
-import com.cronutils.model.CronType
-import com.cronutils.model.definition.CronDefinitionBuilder
-import com.cronutils.parser.CronParser
+import io.thoth.common.extensions.toCron
 
 enum class TaskType {
     CRON,
@@ -27,14 +25,19 @@ class EventTask<T> internal constructor(override val name: String, internal val 
 }
 
 class ScheduleTask
-internal constructor(override val name: String, val cronString: String, internal val callback: suspend () -> Unit) :
-    Task {
+internal constructor(override val name: String, val cron: Cron, internal val callback: suspend () -> Unit) : Task {
+
+    constructor(
+        name: String,
+        cronString: String,
+        callback: suspend () -> Unit
+    ) : this(
+        name,
+        cronString.toCron(),
+        callback,
+    )
+
     override val type: TaskType = TaskType.CRON
-    val cron: Cron by lazy {
-        val cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX)
-        val parser = CronParser(cronDefinition)
-        parser.parse(cronString)
-    }
 }
 
 interface ScheduleCollection {
@@ -44,5 +47,9 @@ interface ScheduleCollection {
 
     fun schedule(cronString: String, name: String, callback: suspend () -> Unit): ScheduleTask {
         return ScheduleTask(cronString, name, callback)
+    }
+
+    fun schedule(name: String, cron: Cron, callback: suspend () -> Unit): ScheduleTask {
+        return ScheduleTask(name, cron, callback)
     }
 }
