@@ -1,10 +1,13 @@
 package io.thoth.config
 
+import com.cronutils.model.Cron
 import io.thoth.metadata.audible.models.AudibleRegions
 
 interface ThothConfig {
     val ignoreFile: String
     val production: Boolean
+    val fullScanCron: Cron
+    val metadataRefreshCron: Cron
     val domain: String
     val TLS: Boolean
     val analyzerThreads: Int
@@ -25,6 +28,8 @@ interface DatabaseConnection {
 data class ThothConfigImpl(
     override val ignoreFile: String,
     override val production: Boolean,
+    override val fullScanCron: Cron,
+    override val metadataRefreshCron: Cron,
     override val analyzerThreads: Int,
     override val port: Int,
     override val domain: String,

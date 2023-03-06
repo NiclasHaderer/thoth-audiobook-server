@@ -23,6 +23,7 @@ fun loadPublicConfig(): ThothConfig {
     val configPath = getConfigPath()
 
     return ConfigLoaderBuilder.default()
+        .addDecoder(CronDecoder())
         .addResourceOrFileSource("$configPath/thoth-config.json")
         .build()
         .loadConfigOrThrow<ThothConfigImpl>()

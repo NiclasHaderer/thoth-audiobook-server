@@ -67,9 +67,9 @@ fun Application.applicationModule() {
                 val thothSchedules = get<ThothSchedules>()
                 scheduler.register(thothSchedules.scanLibrary)
                 scheduler.schedule(thothSchedules.fullScan)
-                scheduler.schedule(thothSchedules.getMetadata)
+                scheduler.schedule(thothSchedules.retrieveMetadata)
                 scheduler.launchScheduledJob(thothSchedules.fullScan)
-                scheduler.launchScheduledJob(thothSchedules.getMetadata)
+                scheduler.launchScheduledJob(thothSchedules.retrieveMetadata)
             }
             .join()
     }

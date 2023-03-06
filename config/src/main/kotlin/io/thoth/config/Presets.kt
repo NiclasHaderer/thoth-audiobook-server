@@ -1,10 +1,19 @@
 package io.thoth.config
 
+import com.cronutils.model.Cron
+import io.thoth.common.extensions.toCron
 import io.thoth.metadata.audible.models.AudibleRegions
 
 object DevThothConfig : ThothConfig {
     override val ignoreFile: String by lazy { System.getenv("THOTH_IGNORE_FILE") ?: ".thothignore" }
+
     override val production: Boolean by lazy { System.getenv("THOTH_PRODUCTION")?.toBooleanStrictOrNull() ?: false }
+
+    override val fullScanCron: Cron by lazy { System.getenv("THOTH_FULL_SCAN_CRON")?.toCron() ?: "0 0 * * *".toCron() }
+
+    override val metadataRefreshCron: Cron by lazy {
+        System.getenv("THOTH_METADATA_REFRESH_CRON")?.toCron() ?: "0 0 * * *".toCron()
+    }
 
     override val analyzerThreads: Int by lazy { System.getenv("THOTH_ANALYZER_THREADS")?.toIntOrNull() ?: 10 }
 

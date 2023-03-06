@@ -1,5 +1,6 @@
 val hopliteVersion: String by project
 val ktorVersion: String by project
+val cronUtilsVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -16,4 +17,5 @@ dependencies {
     implementation("com.sksamuel.hoplite:hoplite-toml:$hopliteVersion")
     implementation("com.sksamuel.hoplite:hoplite-hocon:$hopliteVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
+    implementation("com.cronutils:cron-utils:$cronUtilsVersion")
 }

@@ -12,6 +12,7 @@ val kotlinLoggingVersion: String by project
 val slf4jVersion: String by project
 val kotlinxSerializationVersion: String by project
 val jAudioTaggerVersion: String by project
+val cronUtilsVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -67,6 +68,8 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
     implementation("org.slf4j:jul-to-slf4j:$slf4jVersion")
+    // Scheduler
+    implementation("com.cronutils:cron-utils:$cronUtilsVersion")
 
     // Ktor
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
