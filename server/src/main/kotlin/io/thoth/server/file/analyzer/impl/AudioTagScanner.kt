@@ -1,6 +1,5 @@
 package io.thoth.server.file.analyzer.impl
 
-import io.thoth.config.ThothConfig
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
@@ -8,8 +7,13 @@ import io.thoth.server.file.tagger.ReadonlyFileTagger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
-class AudioTagScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
-    override fun analyze(path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger): AudioFileAnalysisResult? {
+class AudioTagScanner : AudioFileAnalyzer {
+    override fun analyze(
+        filePath: Path,
+        attrs: BasicFileAttributes,
+        tags: ReadonlyFileTagger,
+        libraryPath: Path
+    ): AudioFileAnalysisResult? {
         if (tags.author == null || tags.book == null) return null
         return AudioFileAnalysisResultImpl(
             title = tags.title,

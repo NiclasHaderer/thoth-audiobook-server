@@ -1,4 +1,4 @@
-package io.thoth.server.file.persister
+package io.thoth.server.file
 
 import io.thoth.common.extensions.add
 import io.thoth.database.access.create
@@ -7,10 +7,10 @@ import io.thoth.database.access.getByPath
 import io.thoth.database.tables.Author
 import io.thoth.database.tables.Book
 import io.thoth.database.tables.Image
+import io.thoth.database.tables.Library
 import io.thoth.database.tables.Series
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
-import io.thoth.models.LibraryModel
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import java.nio.file.Path
@@ -25,8 +25,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 interface TrackManager {
-    suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: LibraryModel)
-    suspend fun addPath(path: Path, library: LibraryModel)
+    suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: Library)
+    suspend fun addPath(path: Path, library: Library)
     fun removePath(path: Path)
 }
 
@@ -35,18 +35,22 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
     private val semaphore = Semaphore(1)
     private val log = logger {}
 
-    override suspend fun addPath(path: Path, library: LibraryModel) {
+    override suspend fun addPath(path: Path, library: Library) {
         if (path.isDirectory()) {
             log.warn { "Skipped ${path.absolute()} because it is a directory" }
             return
         }
         val result =
-            analyzer.analyze(path, path.readAttributes())
+            analyzer.analyze(
+                path,
+                path.readAttributes(),
+                library.folders.map { Path.of(it) }.first { path.contains(it) },
+            )
                 ?: return log.warn { "Skipped ${path.absolute()} because it contains not enough information" }
         insertScanResult(result, path, library)
     }
 
-    override suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: LibraryModel) {
+    override suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: Library) {
         this.semaphore.acquire()
         try {
             transaction { insertOrUpdateTrack(scan, library) }
@@ -59,7 +63,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         Track.find { TTracks.path like "${path.absolute()}%" }.forEach { it.delete() }
     }
 
-    private fun insertOrUpdateTrack(scan: AudioFileAnalysisResult, library: LibraryModel): Track {
+    private fun insertOrUpdateTrack(scan: AudioFileAnalysisResult, library: Library): Track {
         val track = Track.getByPath(scan.path)
         return if (track != null) {
             updateTrack(track, scan, library)
@@ -68,7 +72,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         }
     }
 
-    private fun createTrack(scan: AudioFileAnalysisResult, library: LibraryModel): Track {
+    private fun createTrack(scan: AudioFileAnalysisResult, library: Library): Track {
         val dbBook = getOrCreateBook(scan)
         return Track.new {
             title = scan.title
@@ -81,7 +85,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
         }
     }
 
-    private fun updateTrack(track: Track, scan: AudioFileAnalysisResult, library: LibraryModel): Track {
+    private fun updateTrack(track: Track, scan: AudioFileAnalysisResult, library: Library): Track {
         val dbBook = getOrCreateBook(scan)
         return track.apply {
             title = scan.title

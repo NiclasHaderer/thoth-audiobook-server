@@ -9,8 +9,10 @@ import io.thoth.auth.configureAuthentication
 import io.thoth.common.extensions.get
 import io.thoth.common.scheduling.Scheduler
 import io.thoth.config.ThothConfig
+import io.thoth.database.access.allFolders
 import io.thoth.database.connectToDatabase
 import io.thoth.database.migrateDatabase
+import io.thoth.database.tables.Library
 import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
 import io.thoth.server.api.images.registerImageRouting
@@ -18,7 +20,7 @@ import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
 import io.thoth.server.di.setupDependencyInjection
-import io.thoth.server.file.scanner.FileWatcher
+import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.plugins.configureCORS
 import io.thoth.server.plugins.configureMonitoring
 import io.thoth.server.plugins.configureOpenApi
@@ -30,6 +32,7 @@ import io.thoth.server.schedules.ThothSchedules
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 fun main() {
@@ -62,7 +65,6 @@ fun Application.applicationModule() {
         launch {
                 val scheduler = get<Scheduler>()
                 val thothSchedules = get<ThothSchedules>()
-                scheduler.register(thothSchedules.scanFolder)
                 scheduler.register(thothSchedules.scanLibrary)
                 scheduler.schedule(thothSchedules.fullScan)
                 scheduler.schedule(thothSchedules.getMetadata)
@@ -72,7 +74,10 @@ fun Application.applicationModule() {
             .join()
     }
 
-    launch { get<FileWatcher>().watch() }
+    launch {
+        val folders = transaction { Library.allFolders() }
+        get<FileTreeWatcher>().watch(folders)
+    }
     server()
 }
 

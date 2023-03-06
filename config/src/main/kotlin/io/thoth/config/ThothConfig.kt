@@ -7,7 +7,6 @@ interface ThothConfig {
     val production: Boolean
     val domain: String
     val TLS: Boolean
-    val audioFileLocations: List<String>
     val analyzerThreads: Int
     val port: Int
     val audibleRegion: AudibleRegions
@@ -26,7 +25,6 @@ interface DatabaseConnection {
 data class ThothConfigImpl(
     override val ignoreFile: String,
     override val production: Boolean,
-    override val audioFileLocations: List<String>,
     override val analyzerThreads: Int,
     override val port: Int,
     override val domain: String,
