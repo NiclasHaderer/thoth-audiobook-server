@@ -48,6 +48,9 @@ class FileTreeWatcherImpl : FileTreeWatcher, KoinComponent {
     }
 
     override fun watch(folders: List<Path>) {
+        if (watcher != null) {
+            stop()
+        }
 
         watcher =
             DirectoryWatcher.builder()
