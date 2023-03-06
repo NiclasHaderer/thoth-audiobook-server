@@ -1,18 +1,29 @@
 package io.thoth.server.api.audiobooks.rescan
 
+import io.ktor.http.*
 import io.ktor.server.routing.*
+import io.thoth.common.extensions.get
+import io.thoth.database.tables.Library
 import io.thoth.openapi.routing.post
-import io.thoth.server.file.scanner.fullScan
+import io.thoth.openapi.serverError
+import io.thoth.server.file.scanner.LibraryScanner
 import kotlinx.coroutines.launch
+import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Route.registerRescan(path: String = "rescan") =
     route(path) {
-        // TODO inject the scanner with DI
         // TODO add a way to stop the scanner
-        post<Unit, Unit> {
-            launch {
-                // TODO scan only certain library
-                fullScan()
-            }
+        val scanner = get<LibraryScanner>()
+
+        post<Unit, Unit> { launch { scanner.fullScan() } }
+
+        post<LibraryId, Unit> { (id) ->
+            val library =
+                transaction { Library.findById(id) }
+                    ?: serverError(
+                        HttpStatusCode.BadRequest,
+                        "Library with id $id not found",
+                    )
+            launch { scanner.scanLibrary(library) }
         }
     }

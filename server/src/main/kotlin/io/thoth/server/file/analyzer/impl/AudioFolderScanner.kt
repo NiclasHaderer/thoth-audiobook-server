@@ -5,20 +5,25 @@ import io.thoth.common.extensions.grandGrandParentName
 import io.thoth.common.extensions.grandParentName
 import io.thoth.common.extensions.parentName
 import io.thoth.common.extensions.replaceAll
-import io.thoth.common.extensions.replaceParts
-import io.thoth.config.ThothConfig
+import io.thoth.common.extensions.replacePart
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.tagger.ReadonlyFileTagger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
+import kotlin.io.path.absolutePathString
 
-class AudioFolderScanner(thothConfig: ThothConfig) : AudioFileAnalyzer(thothConfig) {
+class AudioFolderScanner : AudioFileAnalyzer {
     private val bookPrefixes = listOf("^((Book|Volume|Vol) ?)?\\d\\d? ?[.\\-: ]+ ?".toRegex(), "^\\d\\d? - ".toRegex())
 
-    override fun analyze(path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger): AudioFileAnalysisResult? {
-        val cleanPath = path.replaceParts(thothConfig.audioFileLocations)
+    override fun analyze(
+        filePath: Path,
+        attrs: BasicFileAttributes,
+        tags: ReadonlyFileTagger,
+        libraryPath: Path
+    ): AudioFileAnalysisResult? {
+        val cleanPath = filePath.replacePart(libraryPath.absolutePathString())
         val parentCount = cleanPath.countParents()
         if (parentCount != 2 && parentCount != 3) return null
 

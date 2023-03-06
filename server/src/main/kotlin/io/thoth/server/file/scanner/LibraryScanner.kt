@@ -1,17 +1,13 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.common.extensions.findOne
-import io.thoth.common.scheduling.Scheduler
+import io.thoth.database.access.getMatching
 import io.thoth.database.access.hasBeenUpdated
 import io.thoth.database.access.markAsTouched
-import io.thoth.database.access.toModel
 import io.thoth.database.tables.Library
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
-import io.thoth.models.LibraryModel
-import io.thoth.server.file.persister.TrackManager
-import io.thoth.server.schedules.ThothSchedules
-import java.nio.file.Files
+import io.thoth.server.file.TrackManager
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,20 +21,44 @@ import org.koin.core.component.inject
 
 interface LibraryScanner {
     fun fullScan()
-    fun scanLibrary(library: LibraryModel)
-    fun scanFolder(folder: Path, library: LibraryModel? = null)
+    fun scanLibrary(library: Library)
+    fun scanFolder(folder: Path, library: Library?)
+    fun unIgnoreFolder(folder: Path)
+    fun ignoreFolder(folder: Path)
+    fun removePath(path: Path)
+    fun isIgnored(folder: Path): Boolean
+    suspend fun addOrUpdatePath(path: Path, library: Library?)
 }
 
 class LibraryScannerImpl : LibraryScanner, KoinComponent {
-    private val scheduler: Scheduler by inject()
-    private val thothSchedules: ThothSchedules by inject()
     private val trackManager: TrackManager by inject()
     // TODO if there should be a lock on scanning a library/folder/everything
 
     companion object {
         private val fullScanIsOngoing = AtomicBoolean()
-        private val foldersToIgnore = mutableSetOf<String>()
+        private val foldersToIgnore = mutableSetOf<Path>()
         private val log = logger {}
+    }
+
+    override fun isIgnored(folder: Path): Boolean {
+        return foldersToIgnore.any { it.contains(folder) }
+    }
+
+    override fun unIgnoreFolder(folder: Path) {
+        foldersToIgnore.removeIf { it.absolutePathString() == folder.absolutePathString() }
+    }
+
+    override fun ignoreFolder(folder: Path) {
+        if (!foldersToIgnore.any { it.absolutePathString() == folder.absolutePathString() }) {
+            return
+        }
+        foldersToIgnore.add(folder)
+        removePath(folder)
+        // TODO schedule a cleanup to remove empty albums, artists, etc.
+    }
+
+    override fun removePath(path: Path) {
+        trackManager.removePath(path)
     }
 
     override fun fullScan() {
@@ -49,42 +69,58 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         }
         fullScanIsOngoing.set(true)
         log.info { "Starting complete scan" }
-        val libraries = transaction { Library.all().map { it.toModel() } }
+        val libraries = transaction { Library.all() }
         libraries.forEach { library ->
             log.info { "Scanning library ${library.name}" }
             scanLibrary(library)
         }
     }
 
-    override fun scanLibrary(library: LibraryModel) {
+    override fun scanLibrary(library: Library) {
+        log.info { "Scanning library ${library.name}" }
+        library.scanIndex += 1u
+
         for (folder in library.folders.map { Paths.get(it) }) {
-            scanFolder(folder)
+            scanFolder(folder, library)
         }
     }
 
-    override fun scanFolder(folder: Path, library: LibraryModel?) {
-        var selectedLibrary = library
-
-        if (selectedLibrary == null) {
-            selectedLibrary = Library.all().first().toModel()
-            TODO("Get library from folder path")
-            // Idea: Get all libraries. Then check if the folder is covered by any of them. If so,
-            // use that library
-            // If not go to the parent folder and check again. Do this until the root folder is
-            // reached
-            // If two libraries cover the same folder log a error and return
+    override fun scanFolder(folder: Path, library: Library?) {
+        if (isIgnored(folder)) {
+            log.info { "Skipping $folder because it is ignored" }
+            return
         }
 
-        val scanner =
-            FileTreeScanner(
-                ignoredSubtree = {
-                    foldersToIgnore.add(it.absolutePathString())
-                    trackManager.removePath(it)
-                },
-                shouldUpdateFile = ::shouldUpdate,
-                addOrUpdate = { path, _ -> runBlocking { trackManager.addPath(path, selectedLibrary) } },
-            )
-        Files.walkFileTree(folder, scanner)
+        val selectedLibrary = library ?: transaction { Library.getMatching(folder) }
+
+        if (selectedLibrary == null) {
+            log.error { "No library found for folder $folder. Ignoring folder!" }
+            return
+        }
+
+        walkFiles(
+            folder,
+            ignoredSubtree = {
+                foldersToIgnore.add(it)
+                trackManager.removePath(it)
+            },
+            shouldUpdateFile = { path -> shouldUpdate(path) },
+            addOrUpdate = { path, attrs -> runBlocking { addOrUpdatePath(path, selectedLibrary) } },
+        )
+    }
+
+    override suspend fun addOrUpdatePath(path: Path, library: Library?) {
+        if (isIgnored(path)) {
+            log.info { "Skipping $path because it is in a folder that is ignored" }
+            return
+        }
+        val selectedLibrary = library ?: transaction { Library.getMatching(path) }
+        if (selectedLibrary == null) {
+            log.error { "No library found for path $path. Ignoring path!" }
+            return
+        }
+
+        trackManager.addPath(path, selectedLibrary)
     }
 
     private fun shouldUpdate(path: Path): Boolean {

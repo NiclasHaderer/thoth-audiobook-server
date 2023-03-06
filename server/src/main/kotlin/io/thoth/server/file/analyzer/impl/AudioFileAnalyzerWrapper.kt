@@ -12,14 +12,14 @@ import mu.KotlinLogging.logger
 class AudioFileAnalyzerWrapperImpl(private val analyzers: List<AudioFileAnalyzer>) : AudioFileAnalyzerWrapper {
     private val log = logger {}
 
-    override fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult? {
-        val tags = ReadonlyFileTaggerImpl(path)
+    override fun analyze(filePath: Path, attrs: BasicFileAttributes, libraryPath: Path): AudioFileAnalysisResult? {
+        val tags = ReadonlyFileTaggerImpl(filePath)
         for (analyzer in analyzers) {
             try {
-                val result = analyzer.analyze(path, attrs, tags)
+                val result = analyzer.analyze(filePath, attrs, tags, libraryPath)
                 if (result != null) return result
             } catch (e: Exception) {
-                log.warn(e) { "Could not analyze file ${path.absolute()}" }
+                log.warn(e) { "Could not analyze file ${filePath.absolute()}" }
             }
         }
         return null

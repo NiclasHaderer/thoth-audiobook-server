@@ -6,10 +6,6 @@ object DevThothConfig : ThothConfig {
     override val ignoreFile: String by lazy { System.getenv("THOTH_IGNORE_FILE") ?: ".thothignore" }
     override val production: Boolean by lazy { System.getenv("THOTH_PRODUCTION")?.toBooleanStrictOrNull() ?: false }
 
-    override val audioFileLocations: List<String> by lazy {
-        System.getenv("THOTH_AUDIO_FILE_LOCATION")?.split(",") ?: listOf("test-resources")
-    }
-
     override val analyzerThreads: Int by lazy { System.getenv("THOTH_ANALYZER_THREADS")?.toIntOrNull() ?: 10 }
 
     override val port: Int by lazy { System.getenv("THOTH_PORT")?.toIntOrNull() ?: 8080 }

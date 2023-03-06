@@ -16,7 +16,7 @@ import mu.KotlinLogging.logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class FileTreeScanner(
+private class FileTreeScanner(
     private val ignoredSubtree: (Path) -> Unit,
     private val shouldUpdateFile: (Path) -> Boolean,
     private val addOrUpdate: (file: Path, attrs: BasicFileAttributes) -> Unit,
@@ -48,4 +48,14 @@ class FileTreeScanner(
     override fun visitFileFailed(file: Path, exc: IOException?) = FileVisitResult.CONTINUE
 
     override fun postVisitDirectory(dir: Path, exc: IOException?) = FileVisitResult.CONTINUE
+}
+
+fun walkFiles(
+    startingDirectory: Path,
+    ignoredSubtree: (Path) -> Unit,
+    shouldUpdateFile: (Path) -> Boolean,
+    addOrUpdate: (file: Path, attrs: BasicFileAttributes) -> Unit,
+) {
+    val fileTreeScanner = FileTreeScanner(ignoredSubtree, shouldUpdateFile, addOrUpdate)
+    Files.walkFileTree(startingDirectory, fileTreeScanner)
 }

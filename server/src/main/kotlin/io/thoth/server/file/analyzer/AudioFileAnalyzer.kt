@@ -1,16 +1,18 @@
 package io.thoth.server.file.analyzer
 
-import io.thoth.config.ThothConfig
 import io.thoth.server.file.tagger.ReadonlyFileTagger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
-abstract class AudioFileAnalyzer(
-    protected val thothConfig: ThothConfig,
-) {
-    abstract fun analyze(path: Path, attrs: BasicFileAttributes, tags: ReadonlyFileTagger): AudioFileAnalysisResult?
+interface AudioFileAnalyzer {
+    fun analyze(
+        filePath: Path,
+        attrs: BasicFileAttributes,
+        tags: ReadonlyFileTagger,
+        libraryPath: Path
+    ): AudioFileAnalysisResult?
 }
 
 interface AudioFileAnalyzerWrapper {
-    fun analyze(path: Path, attrs: BasicFileAttributes): AudioFileAnalysisResult?
+    fun analyze(filePath: Path, attrs: BasicFileAttributes, libraryPath: Path): AudioFileAnalysisResult?
 }
