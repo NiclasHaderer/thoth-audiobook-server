@@ -1,4 +1,4 @@
-package io.thoth.server.api.audiobooks.authors
+package io.thoth.server.api.audiobooks.library.authors
 
 import io.ktor.http.*
 import io.thoth.database.access.getNewImage

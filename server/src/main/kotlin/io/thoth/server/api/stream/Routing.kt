@@ -16,27 +16,25 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun Route.registerStreamingRouting(route: String = "audio") {
-    route(route) { streamingRouting() }
-}
-
-fun Route.streamingRouting() {
-    get<AudioId, FileResponse> { fileId ->
-        val track =
-            transaction { Track.getById(fileId.id) }
-                ?: serverError(HttpStatusCode.NotFound, "Database out of sync. Please start syncing process.")
-        val path = Path.of(track.path)
-        if (!path.exists() && path.isRegularFile()) {
-            serverError(
-                HttpStatusCode.NotFound,
-                "File does not exist. Database out of sync. Please start syncing process."
+fun Route.registerStreamingRouting() {
+    route("audio") {
+        get<AudioId, FileResponse> { fileId ->
+            val track =
+                transaction { Track.getById(fileId.id) } ?: serverError(HttpStatusCode.NotFound, "Track not found.")
+            val path = Path.of(track.path)
+            if (!path.exists() && path.isRegularFile()) {
+                serverError(
+                    HttpStatusCode.NotFound,
+                    "File does not exist. Database out of sync. Please start syncing process.",
+                )
+            }
+            call.response.header(
+                HttpHeaders.ContentDisposition,
+                ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, path.name)
+                    .toString(),
             )
-        }
-        call.response.header(
-            HttpHeaders.ContentDisposition,
-            ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, path.name).toString()
-        )
 
-        fileResponse(path)
+            fileResponse(path)
+        }
     }
 }

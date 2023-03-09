@@ -4,13 +4,22 @@ import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
-import io.thoth.models.*
-import io.thoth.server.api.audiobooks.authors.PatchAuthor
-import io.thoth.server.api.audiobooks.authors.PostAuthor
-import io.thoth.server.api.audiobooks.books.PatchBook
-import io.thoth.server.api.audiobooks.books.PostBook
-import io.thoth.server.api.audiobooks.series.PatchSeries
-import io.thoth.server.api.audiobooks.series.PostSeries
+import io.thoth.models.AuthorModel
+import io.thoth.models.BookModel
+import io.thoth.models.DetailedAuthorModel
+import io.thoth.models.DetailedBookModel
+import io.thoth.models.DetailedSeriesModel
+import io.thoth.models.NamedId
+import io.thoth.models.PaginatedResponse
+import io.thoth.models.SearchModel
+import io.thoth.models.SeriesModel
+import io.thoth.models.TrackModel
+import io.thoth.server.api.audiobooks.library.authors.PatchAuthor
+import io.thoth.server.api.audiobooks.library.authors.PostAuthor
+import io.thoth.server.api.audiobooks.library.books.PatchBook
+import io.thoth.server.api.audiobooks.library.books.PostBook
+import io.thoth.server.api.audiobooks.library.series.PatchSeries
+import io.thoth.server.api.audiobooks.library.series.PostSeries
 import io.thoth.server.ws.ChangeEvent
 import java.io.File
 import java.nio.file.Files
@@ -42,7 +51,7 @@ fun main() {
                 ChangeEvent::class,
                 PaginatedResponse::class,
                 NamedId::class,
-            )
+            ),
         )
 
     audiobookDefinitions = audiobookDefinitions.replace("interface", "export interface")
@@ -68,6 +77,6 @@ fun generate(classes: Iterable<KClass<*>>) =
                     LocalDate::class to "number",
                     Date::class to "number",
                     UUID::class to "string",
-                )
+                ),
         )
         .definitionsText

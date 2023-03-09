@@ -1,4 +1,4 @@
-package io.thoth.server.api.audiobooks.series
+package io.thoth.server.api.audiobooks.library.series
 
 import io.ktor.http.*
 import io.thoth.common.extensions.toSizedIterable
