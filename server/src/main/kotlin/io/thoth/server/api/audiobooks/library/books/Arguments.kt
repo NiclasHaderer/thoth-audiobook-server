@@ -1,4 +1,4 @@
-package io.thoth.server.api.audiobooks.books
+package io.thoth.server.api.audiobooks.library.books
 
 import io.ktor.resources.*
 import io.thoth.common.serializion.kotlin.UUID_S

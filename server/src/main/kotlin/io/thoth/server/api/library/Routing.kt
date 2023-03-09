@@ -9,14 +9,29 @@ import io.thoth.database.access.foldersOverlap
 import io.thoth.database.access.toModel
 import io.thoth.database.tables.Library
 import io.thoth.models.LibraryModel
+import io.thoth.openapi.ErrorResponse
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
 import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
 import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.schedules.ThothSchedules
+import java.util.*
 import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.transactions.transaction
+
+fun validateFolders(id: UUID, folders: List<String>) {
+    val (overlaps, overlapping) = Library.foldersOverlap(id, folders)
+    if (!overlaps)
+        throw ErrorResponse(
+            HttpStatusCode.Conflict,
+            "Folders overlap with existing libraries",
+            mapOf(
+                "overlaps" to overlapping,
+                "library" to id,
+            ),
+        )
+}
 
 fun Route.registerLibraryRouting() {
     val fileWatcher = get<FileTreeWatcher>()
@@ -34,13 +49,7 @@ fun Route.registerLibraryRouting() {
 
         post<LibraryId, PostLibrary, LibraryModel> { (id), postLibrary ->
             transaction {
-                    val (overlaps, overlapping) = Library.foldersOverlap(postLibrary.folders)
-                    if (!overlaps)
-                        serverError(
-                            HttpStatusCode.Conflict,
-                            "Folders overlap with existing libraries",
-                            "overlaps" to overlapping,
-                        )
+                    validateFolders(id, postLibrary.folders)
 
                     val library = Library.findById(id) ?: Library.new { name = postLibrary.name }
                     library.apply {
@@ -60,13 +69,7 @@ fun Route.registerLibraryRouting() {
         patch<LibraryId, PatchLibrary, LibraryModel> { (id), patchLibrary ->
             transaction {
                     if (patchLibrary.folders != null) {
-                        val (overlaps, overlapping) = Library.foldersOverlap(patchLibrary.folders)
-                        if (!overlaps)
-                            serverError(
-                                HttpStatusCode.Conflict,
-                                "Folders overlap with existing libraries",
-                                "overlaps" to overlapping,
-                            )
+                        validateFolders(id, patchLibrary.folders)
                     }
 
                     val library = Library.findById(id) ?: serverError(HttpStatusCode.NotFound, "Library was not found")

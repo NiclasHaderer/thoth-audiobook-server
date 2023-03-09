@@ -11,7 +11,7 @@ import io.thoth.server.file.scanner.LibraryScanner
 import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun Route.registerRescan(path: String = "rescan") =
+fun Route.registerRescan(path: String = "rescan") {
     route(path) {
         // TODO add a way to stop the scanner
         val scanner = get<LibraryScanner>()
@@ -28,3 +28,4 @@ fun Route.registerRescan(path: String = "rescan") =
             launch { scanner.scanLibrary(library) }
         }
     }
+}

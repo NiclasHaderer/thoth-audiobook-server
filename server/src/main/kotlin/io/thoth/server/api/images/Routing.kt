@@ -10,7 +10,7 @@ import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun Route.registerImageRouting() =
+fun Route.registerImageRouting() {
     route("image") {
         get<ImageId, BinaryResponse> { (id) ->
             transaction {
@@ -19,3 +19,4 @@ fun Route.registerImageRouting() =
             }
         }
     }
+}

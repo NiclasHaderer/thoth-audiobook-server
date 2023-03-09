@@ -1,4 +1,4 @@
-package io.thoth.server.api.audiobooks.series
+package io.thoth.server.api.audiobooks.library.series
 
 import io.ktor.http.*
 import io.ktor.server.routing.*
@@ -22,7 +22,7 @@ import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun Route.registerSeriesRouting() =
+fun Route.registerSeriesRouting() {
     route("series") {
         get<QueryLimiter, PaginatedResponse<SeriesModel>> { (limit, offset) ->
             transaction {
@@ -57,3 +57,4 @@ fun Route.registerSeriesRouting() =
 
         post(RouteHandler::postSeries)
     }
+}

@@ -1,4 +1,4 @@
-package io.thoth.server.api.audiobooks.books
+package io.thoth.server.api.audiobooks.library.books
 
 import io.ktor.http.*
 import io.ktor.server.routing.*
@@ -23,7 +23,7 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun Route.registerBookRouting() =
+fun Route.registerBookRouting() {
     route("books") {
         get<QueryLimiter, PaginatedResponse<BookModel>> { (limit, offset) ->
             transaction {
@@ -59,3 +59,4 @@ fun Route.registerBookRouting() =
 
         post(RouteHandler::postBook)
     }
+}

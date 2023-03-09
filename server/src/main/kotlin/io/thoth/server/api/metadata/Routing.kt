@@ -11,7 +11,7 @@ import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
 import org.koin.ktor.ext.inject
 
-fun Route.registerMetadataRouting() =
+fun Route.registerMetadataRouting() {
     route("metadata") {
         val metadataProvider by inject<MetadataProvider>()
 
@@ -22,7 +22,7 @@ fun Route.registerMetadataRouting() =
                 params.author,
                 params.narrator,
                 params.language,
-                params.pageSize
+                params.pageSize,
             )
         }
 
@@ -31,7 +31,7 @@ fun Route.registerMetadataRouting() =
                 metadataProvider.getAuthorByID(id.provider, id.itemID)
                     ?: serverError(
                         HttpStatusCode.NotFound,
-                        "Author with id ${id.itemID} and provider ${id.provider}was not found"
+                        "Author with id ${id.itemID} and provider ${id.provider}was not found",
                     )
             }
 
@@ -43,7 +43,7 @@ fun Route.registerMetadataRouting() =
                 metadataProvider.getBookByID(id.provider, id.itemID)
                     ?: serverError(
                         HttpStatusCode.NotFound,
-                        "Book with id ${id.itemID} and provider ${id.provider}was not found"
+                        "Book with id ${id.itemID} and provider ${id.provider}was not found",
                     )
             }
 
@@ -57,7 +57,7 @@ fun Route.registerMetadataRouting() =
                 metadataProvider.getSeriesByID(id.provider, id.itemID)
                     ?: serverError(
                         HttpStatusCode.NotFound,
-                        "Series with id ${id.itemID} and provider ${id.provider}was not found"
+                        "Series with id ${id.itemID} and provider ${id.provider}was not found",
                     )
             }
             get<SeriesName, List<MetadataSeries>>("search") { params ->
@@ -65,3 +65,4 @@ fun Route.registerMetadataRouting() =
             }
         }
     }
+}
