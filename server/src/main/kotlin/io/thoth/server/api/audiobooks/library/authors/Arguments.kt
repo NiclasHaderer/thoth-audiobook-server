@@ -2,7 +2,6 @@ package io.thoth.server.api.audiobooks.library.authors
 
 import io.ktor.resources.*
 import io.thoth.common.serializion.kotlin.UUID_S
-import io.thoth.server.api.audiobooks.library.books.BookId
 import java.time.LocalDate
 import java.util.*
 
@@ -10,7 +9,7 @@ import java.util.*
 data class AuthorId(
     val id: UUID_S,
 ) {
-    @Resource("position") data class Position(val parent: BookId)
+    @Resource("position") data class Position(val parent: AuthorId)
 }
 
 @Resource("") data class AuthorName(val name: String)

@@ -16,8 +16,6 @@ import io.thoth.models.SeriesModel
 import io.thoth.models.TrackModel
 import io.thoth.server.api.audiobooks.library.authors.PatchAuthor
 import io.thoth.server.api.audiobooks.library.authors.PostAuthor
-import io.thoth.server.api.audiobooks.library.books.PatchBook
-import io.thoth.server.api.audiobooks.library.books.PostBook
 import io.thoth.server.api.audiobooks.library.series.PatchSeries
 import io.thoth.server.api.audiobooks.library.series.PostSeries
 import io.thoth.server.ws.ChangeEvent
@@ -42,10 +40,8 @@ fun main() {
                 SeriesModel::class,
                 PatchAuthor::class,
                 PatchSeries::class,
-                PatchBook::class,
                 PostAuthor::class,
                 PostSeries::class,
-                PostBook::class,
                 DetailedSeriesModel::class,
                 TrackModel::class,
                 ChangeEvent::class,
