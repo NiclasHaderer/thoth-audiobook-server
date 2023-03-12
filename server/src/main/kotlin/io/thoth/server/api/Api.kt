@@ -2,6 +2,8 @@ package io.thoth.server.api
 
 import io.ktor.resources.*
 import io.thoth.common.serializion.kotlin.UUID_S
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataSearchCount
 
 @Resource("/api")
 class Api {
@@ -125,48 +127,35 @@ class Api {
 
     @Resource("/metadata")
     class Metadata {
-        @Resource("/search") class Search
+        @Resource("/search")
+        class Search(
+            val keywords: String? = null,
+            val title: String? = null,
+            val author: String? = null,
+            val narrator: String? = null,
+            val language: MetadataLanguage? = null,
+            val pageSize: MetadataSearchCount? = null,
+        )
 
         @Resource("/author")
         class Author {
-            @Resource("/{itemID}")
-            data class Id(val id: String, val provider: String) {
-                @Resource("/position")
-                data class Position(private val parent: Id) {
-                    val id
-                        get() = parent.id
-                }
-            }
+            @Resource("/{itemID}") data class Id(val id: String, val provider: String)
 
             @Resource("/search") data class Search(val q: String)
         }
 
         @Resource("/book")
         class Book {
-            @Resource("/{id}")
-            data class Id(val id: String, val provider: String) {
-                @Resource("/position")
-                data class Position(private val parent: Author.Id) {
-                    val id
-                        get() = parent.id
-                }
-            }
+            @Resource("/{id}") data class Id(val id: String, val provider: String)
 
-            @Resource("/search") data class Search(val q: String)
+            @Resource("/search") data class Search(val q: String, val authorName: String? = null)
         }
 
         @Resource("/book")
         class Series {
-            @Resource("/{id}")
-            data class Id(val id: String, val provider: String) {
-                @Resource("/position")
-                data class Position(private val parent: Author.Id) {
-                    val id
-                        get() = parent.id
-                }
-            }
+            @Resource("/{id}") data class Id(val id: String, val provider: String)
 
-            @Resource("/search") data class Search(val q: String)
+            @Resource("/search") data class Search(val q: String, val authorName: String? = null)
         }
     }
 

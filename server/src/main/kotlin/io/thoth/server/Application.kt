@@ -17,10 +17,10 @@ import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
 import io.thoth.server.api.images.registerImageRouting
 import io.thoth.server.api.library.registerLibraryRouting
-import io.thoth.server.api.metadata.registerMetadataRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.stream.registerStreamingRouting
 import io.thoth.server.api.v1.bookRouting
+import io.thoth.server.api.v1.metadataRouting
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.plugins.configureCORS
@@ -101,8 +101,8 @@ fun Application.server() {
 
     routing {
         bookRouting()
+        metadataRouting()
         route("api") {
-            registerMetadataRouting()
             registerAudiobookRouting()
             registerSearchRouting()
             registerStreamingRouting()
