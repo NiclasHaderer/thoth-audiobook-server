@@ -15,11 +15,11 @@ import io.thoth.database.migrateDatabase
 import io.thoth.database.tables.Library
 import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
-import io.thoth.server.api.images.registerImageRouting
 import io.thoth.server.api.library.registerLibraryRouting
 import io.thoth.server.api.search.registerSearchRouting
-import io.thoth.server.api.stream.registerStreamingRouting
+import io.thoth.server.api.v1.audioRouting
 import io.thoth.server.api.v1.bookRouting
+import io.thoth.server.api.v1.imageRouting
 import io.thoth.server.api.v1.metadataRouting
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
@@ -102,11 +102,12 @@ fun Application.server() {
     routing {
         bookRouting()
         metadataRouting()
+        audioRouting()
+        imageRouting()
+
         route("api") {
             registerAudiobookRouting()
             registerSearchRouting()
-            registerStreamingRouting()
-            registerImageRouting()
             registerLibraryRouting()
         }
     }

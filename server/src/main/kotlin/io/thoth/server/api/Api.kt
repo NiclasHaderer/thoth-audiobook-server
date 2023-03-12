@@ -112,16 +112,16 @@ class Api {
         }
     }
 
-    @Resource("/images")
-    class Images {
-        @Resource("/{id}") data class Id(val id: String)
-    }
-
     @Resource("/stream")
-    class Stream {
+    class Files {
         @Resource("/audio")
         class Audio {
-            @Resource("/{id}") data class Id(val id: String)
+            @Resource("/{id}") data class Id(val id: UUID_S)
+        }
+
+        @Resource("/images")
+        class Images {
+            @Resource("/{id}") data class Id(val id: UUID_S)
         }
     }
 
