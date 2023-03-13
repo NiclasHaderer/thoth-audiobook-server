@@ -17,6 +17,7 @@ dependencies {
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("io.ktor:ktor-server-resources:$ktorVersion")
     implementation("io.ktor:ktor-server-data-conversion:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-auth:$ktorVersion")
     // Openapi
     implementation("io.swagger.core.v3:swagger-models:$openApiVersion")
     implementation("io.swagger.core.v3:swagger-core:$openApiVersion")

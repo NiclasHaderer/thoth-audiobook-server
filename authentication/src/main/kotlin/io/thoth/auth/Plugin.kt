@@ -57,7 +57,7 @@ fun getAuthConfig(configDir: String): AuthConfig {
         issuer = "thoth",
         domain = null,
         protocol = URLProtocol.HTTP,
-        basePath = "/api/auth"
+        basePath = "/api/auth",
     )
 }
 
@@ -81,7 +81,7 @@ fun Application.configureAuthentication(configDir: String, configFactory: (AuthC
         JwkProviderBuilder(url).cached(5, 10, TimeUnit.MINUTES).rateLimited(10, 1, TimeUnit.MINUTES).build()
 
     install(Authentication) {
-        jwt(GuardTypes.User.value) {
+        jwt(Guards.User) {
             if (config.realm != null) {
                 realm = config.realm!!
             }
@@ -97,7 +97,7 @@ fun Application.configureAuthentication(configDir: String, configFactory: (AuthC
             }
         }
 
-        jwt(GuardTypes.EditUser.value) {
+        jwt(Guards.EditUser) {
             if (config.realm != null) {
                 realm = config.realm!!
             }
@@ -111,7 +111,7 @@ fun Application.configureAuthentication(configDir: String, configFactory: (AuthC
             }
         }
 
-        jwt(GuardTypes.AdminUser.value) {
+        jwt(Guards.AdminUser) {
             if (config.realm != null) {
                 realm = config.realm!!
             }

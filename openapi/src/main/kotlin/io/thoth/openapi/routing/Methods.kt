@@ -3,6 +3,7 @@ package io.thoth.openapi.routing
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.handle as resourceHandle
@@ -12,7 +13,9 @@ import io.ktor.util.pipeline.*
 import io.thoth.common.extensions.fullPath
 import io.thoth.openapi.SchemaHolder
 import io.thoth.openapi.responses.BaseResponse
+import io.thoth.openapi.security.extractSecured
 import io.thoth.openapi.serverError
+import kotlin.reflect.KClass
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
 
@@ -63,20 +66,9 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
     }
 }
 
-inline fun <reified PARAMS : Any, reified RESPONSE> Route.wrapRequest(
-    method: HttpMethod,
-    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
-) = wrapRequest<PARAMS, Unit, RESPONSE>(method) { params, _ -> callback(params) }
-
-inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wrapRequest(
-    method: HttpMethod,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
-): Route {
-    lateinit var builtRoute: Route
-
-    val res = PARAMS::class.annotations.find { a -> a is Resource } as? Resource
+fun Route.includeRedirect(parameter: KClass<*>, method: HttpMethod) {
+    val res = parameter.annotations.find { a -> a is Resource } as? Resource
     val endPath = res?.path ?: ""
-    SchemaHolder.addRouteToApi(fullPath, method, BODY::class, PARAMS::class, RESPONSE::class)
 
     // Redirect different trailing / to the same route
     if (endPath.endsWith("/")) {
@@ -106,16 +98,42 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
             }
         }
     }
+}
 
-    if (PARAMS::class == Unit::class) {
-        builtRoute = method(method) { handle { wrapInnerRequest(callback, Unit as PARAMS, method) } }
+inline fun <reified PARAMS : Any, reified RESPONSE> Route.wrapRequest(
+    method: HttpMethod,
+    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
+) = wrapRequest<PARAMS, Unit, RESPONSE>(method) { params, _ -> callback(params) }
+
+inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wrapRequest(
+    method: HttpMethod,
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+) {
+    // Redirect different trailing / to the same route
+    includeRedirect(PARAMS::class, method)
+
+    SchemaHolder.addRouteToApi(fullPath, method, BODY::class, PARAMS::class, RESPONSE::class)
+
+    val secured = extractSecured(PARAMS::class)
+    if (secured != null) {
+        authenticate(secured.name) {
+            if (PARAMS::class == Unit::class) {
+                method(method) { handle { wrapInnerRequest(callback, Unit as PARAMS, method) } }
+            } else {
+                resource<PARAMS> {
+                    method(method) { resourceHandle<PARAMS> { params -> wrapInnerRequest(callback, params, method) } }
+                }
+            }
+        }
     } else {
-        resource<PARAMS> {
-            builtRoute =
+        if (PARAMS::class == Unit::class) {
+            method(method) { handle { wrapInnerRequest(callback, Unit as PARAMS, method) } }
+        } else {
+            resource<PARAMS> {
                 method(method) { resourceHandle<PARAMS> { params -> wrapInnerRequest(callback, params, method) } }
+            }
         }
     }
-    return builtRoute
 }
 
 inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.get(
