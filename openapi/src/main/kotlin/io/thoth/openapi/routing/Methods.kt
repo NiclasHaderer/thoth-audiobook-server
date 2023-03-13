@@ -11,9 +11,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import io.thoth.common.extensions.fullPath
 import io.thoth.openapi.SchemaHolder
-import io.thoth.openapi.responses.BinaryResponse
-import io.thoth.openapi.responses.FileResponse
-import io.thoth.openapi.responses.RedirectResponse
+import io.thoth.openapi.responses.BaseResponse
 import io.thoth.openapi.serverError
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
@@ -39,19 +37,12 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
                 serverError(
                     HttpStatusCode.BadRequest,
                     e.message ?: "body could not be parsed",
-                    errors.map { it.message }
+                    errors.map { it.message },
                 )
             }
         }
 
     val response: RESPONSE = this.callback(params, parsedBody)
-
-    // Catch some edge cases which will be handled differently
-    when (response) {
-        is FileResponse -> return call.respondFile(response.path.toFile())
-        is BinaryResponse -> return call.respondBytes(response.bytes)
-        is RedirectResponse -> return call.respondRedirect(response.url)
-    }
 
     if (call.response.status() == null) {
         val newStatusCode =
@@ -65,8 +56,8 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
         call.response.status(newStatusCode)
     }
 
-    if (RESPONSE::class == Unit::class) {
-        call.respond("")
+    if (response is BaseResponse) {
+        response.respond(call)
     } else {
         call.respond(response ?: "")
     }
