@@ -7,17 +7,25 @@ import io.thoth.database.tables.User
 import io.thoth.models.UserModel
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.serverError
+import java.util.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
-internal fun RouteHandler.modifyUser(userID: IdRoute, editUser: EditUser): UserModel {
+class ModifyUser(
+    var username: String?,
+    val password: String?,
+    var admin: Boolean?,
+    var edit: Boolean?,
+    val enabled: Boolean?,
+    val changePassword: Boolean?
+)
 
+internal fun RouteHandler.modifyUser(userID: UUID, modifyUser: ModifyUser): UserModel {
     val principal = thothPrincipal()
 
     return transaction {
             val user =
-                User.findById(userID.id)
-                    ?: serverError(HttpStatusCode.BadRequest, "Could not find user with id $userID")
+                User.findById(userID) ?: serverError(HttpStatusCode.BadRequest, "Could not find user with id $userID")
 
             val editUserIsAdmin = principal.admin
             val editUserIsSelf = principal.userId == user.id.value
@@ -26,41 +34,22 @@ internal fun RouteHandler.modifyUser(userID: IdRoute, editUser: EditUser): UserM
                 serverError(HttpStatusCode.BadRequest, "You are not allowed to edit this user")
             }
 
-            user.username = editUser.username ?: user.username
-            user.edit = editUser.edit ?: user.edit
-            user.changePassword = editUser.changePassword ?: user.changePassword
+            user.username = modifyUser.username ?: user.username
+            user.edit = modifyUser.edit ?: user.edit
+            user.changePassword = modifyUser.changePassword ?: user.changePassword
 
             if (editUserIsAdmin) {
-                user.admin = editUser.admin ?: user.admin
-                user.enabled = editUser.enabled ?: user.enabled
+                user.admin = modifyUser.admin ?: user.admin
+                user.enabled = modifyUser.enabled ?: user.enabled
             }
 
-            if (editUser.password != null) {
+            if (modifyUser.password != null) {
                 val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
-                val encodedPassword = encoder.encode(editUser.password)
+                val encodedPassword = encoder.encode(modifyUser.password)
                 user.passwordHash = encodedPassword
             }
 
             user
         }
         .toModel()
-}
-
-internal fun RouteHandler.changePassword(passwordChange: PasswordChange) {
-    if (passwordChange.currentPassword == passwordChange.newPassword) {
-        serverError(HttpStatusCode.BadRequest, "New password is the same as the current one")
-    }
-
-    val principal = thothPrincipal()
-    transaction {
-        val user =
-            User.findById(principal.userId)
-                ?: serverError(HttpStatusCode.BadRequest, "Could not find user with id ${principal.userId}")
-
-        val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
-        if (!encoder.matches(passwordChange.currentPassword, user.passwordHash)) {
-            serverError(HttpStatusCode.BadRequest, "Could change password. Old password is wrong.")
-        }
-        user.passwordHash = encoder.encode(passwordChange.newPassword)
-    }
 }

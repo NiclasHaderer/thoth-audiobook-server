@@ -10,6 +10,13 @@ import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
+class RegisterUser(
+    var username: String,
+    val password: String,
+    var admin: Boolean,
+    var edit: Boolean,
+)
+
 internal fun RouteHandler.register(user: RegisterUser): UserModel {
     val dbUser = User.getByName(user.username)
     if (dbUser != null) {

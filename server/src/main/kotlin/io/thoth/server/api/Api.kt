@@ -1,12 +1,35 @@
 package io.thoth.server.api
 
 import io.ktor.resources.*
+import io.thoth.auth.Guards
 import io.thoth.common.serializion.kotlin.UUID_S
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
+import io.thoth.openapi.Secured
 
 @Resource("/api")
 class Api {
+
+    @Resource("/")
+    class Auth {
+        @Resource("/login") class Login
+
+        @Resource("/register") class Register
+
+        @Resource(".well-known/jwks.json") class Jwks
+
+        @Secured(Guards.Normal)
+        @Resource("/user")
+        class User {
+
+            @Secured(Guards.Admin) @Resource("/edit") data class Id(val id: UUID_S)
+
+            @Resource("/username") class Username
+
+            @Resource("/password") class Password
+        }
+    }
+
     @Resource("/ping") class Ping
 
     @Resource("/libraries")

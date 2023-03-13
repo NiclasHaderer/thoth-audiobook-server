@@ -11,7 +11,7 @@ import java.security.interfaces.RSAPublicKey
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-internal class JwtPair(val bearer: String, val refresh: String)
+class JwtPair(val bearer: String, val refresh: String)
 
 enum class JwtType {
     Access,
@@ -27,7 +27,7 @@ class ThothPrincipal(
     val type: JwtType
 ) : Principal
 
-internal fun generateJwtForUser(issuer: String, user: InternalUserModel, config: AuthConfig): JwtPair {
+internal fun generateJwtForUser(issuer: String, user: InternalUserModel, config: AuthConfigImpl): JwtPair {
     val keyPair = config.keyPair
     val bearerToken =
         JWT.create()
@@ -76,6 +76,6 @@ internal fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
         userId = UUID.fromString(userId),
         edit = edit,
         admin = admin,
-        type = enumType
+        type = enumType,
     )
 }
