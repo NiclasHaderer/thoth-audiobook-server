@@ -1,39 +1,31 @@
 package io.thoth.auth.routes
 
-import io.ktor.server.application.*
-import io.ktor.server.routing.*
-import io.thoth.auth.AuthConfig
-import io.thoth.auth.adminUserAuth
-import io.thoth.auth.userAuth
+import io.thoth.auth.AuthConfigImpl
+import io.thoth.auth.JwtPair
+import io.thoth.models.UserModel
 import io.thoth.openapi.routing.RouteHandler
-import io.thoth.openapi.routing.get
-import io.thoth.openapi.routing.patch
-import io.thoth.openapi.routing.post
+import java.util.*
 
-internal fun Application.authRoutes(config: AuthConfig) {
-    routing {
-        route(config.basePath) {
-            route("login") { post(login(config)) }
+interface AuthRoutes {
+    val login: RouteHandler.(user: LoginUser) -> JwtPair
+    val register: RouteHandler.(RegisterUser) -> UserModel
+    val jwks: RouteHandler.() -> JwksResponse
+    val modify: RouteHandler.(UUID, ModifyUser) -> UserModel
+    val getUser: RouteHandler.() -> UserModel
+    val delete: RouteHandler.() -> Unit
+    val changeUsername: RouteHandler.(UsernameChange) -> UserModel
+    val changePassword: RouteHandler.(PasswordChange) -> Unit
+}
 
-            route("register") { post(RouteHandler::register) }
-
-            route(".well-known/jwks.json") { get(jwksEndpoint(config)) }
-
-            adminUserAuth { route("user") { patch(RouteHandler::modifyUser) } }
-
-            userAuth {
-                route("user") {
-
-                    // TODO add ability to logout everywhere
-                    get(RouteHandler::getUser)
-                    post(RouteHandler::changeUsername)
-
-                    route("password") {
-                        // TODO logout user if password gets changed
-                        post(RouteHandler::changePassword)
-                    }
-                }
-            }
-        }
+internal fun authRoutes(config: AuthConfigImpl): AuthRoutes {
+    return object : AuthRoutes {
+        override val login = login(config)
+        override val jwks = jwksEndpoint(config)
+        override val modify = RouteHandler::modifyUser
+        override val register = RouteHandler::register
+        override val getUser = RouteHandler::getUser
+        override val delete = RouteHandler::deleteUser
+        override val changeUsername = RouteHandler::changeUsername
+        override val changePassword = RouteHandler::changePassword
     }
 }

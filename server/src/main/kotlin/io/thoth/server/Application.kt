@@ -14,13 +14,16 @@ import io.thoth.database.connectToDatabase
 import io.thoth.database.migrateDatabase
 import io.thoth.database.tables.Library
 import io.thoth.openapi.configureStatusPages
+import io.thoth.server.api.Api
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
 import io.thoth.server.api.library.registerLibraryRouting
 import io.thoth.server.api.search.registerSearchRouting
 import io.thoth.server.api.v1.audioRouting
+import io.thoth.server.api.v1.authRoutes
 import io.thoth.server.api.v1.bookRouting
 import io.thoth.server.api.v1.imageRouting
 import io.thoth.server.api.v1.metadataRouting
+import io.thoth.server.api.v1.pingRouting
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.plugins.configureCORS
@@ -34,6 +37,7 @@ import io.thoth.server.schedules.ThothSchedules
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.serializer
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.bridge.SLF4JBridgeHandler
 
@@ -86,24 +90,32 @@ fun Application.applicationModule() {
 fun Application.server() {
     val config = get<ThothConfig>()
 
+    // Install plugins
     configureStatusPages()
     configureRouting()
     configureOpenApi()
-    configureAuthentication(config.configDirectory) {
-        domain = "127.0.0.1:${config.port}"
-        protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
-    }
     configurePartialContent()
     configureCORS(config)
     configureSockets()
     configureMonitoring()
     configureSerialization()
 
+    // Authentication
+    val authRoutes = configureAuthentication {
+        val ser = serializer<Api.Auth.Jwks>()
+        domain = "127.0.0.1:${config.port}"
+        protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
+        jwksPath = "/api/.well-known/jwks.json"
+        keyPairPath = "${config.configDirectory}/jwt.pem"
+    }
+
     routing {
+        authRoutes(authRoutes)
         bookRouting()
         metadataRouting()
         audioRouting()
         imageRouting()
+        pingRouting()
 
         route("api") {
             registerAudiobookRouting()

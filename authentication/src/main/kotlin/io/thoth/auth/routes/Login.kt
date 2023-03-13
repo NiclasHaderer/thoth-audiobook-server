@@ -1,7 +1,7 @@
 package io.thoth.auth.routes
 
 import io.ktor.http.*
-import io.thoth.auth.AuthConfig
+import io.thoth.auth.AuthConfigImpl
 import io.thoth.auth.JwtPair
 import io.thoth.auth.generateJwtForUser
 import io.thoth.database.access.internalGetByName
@@ -10,7 +10,12 @@ import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.serverError
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
-internal fun login(config: AuthConfig): RouteHandler.(user: LoginUser) -> JwtPair {
+class LoginUser(
+    var username: String,
+    val password: String,
+)
+
+internal fun login(config: AuthConfigImpl): RouteHandler.(user: LoginUser) -> JwtPair {
     return { user ->
         val userModel =
             User.internalGetByName(user.username) ?: serverError(HttpStatusCode.BadRequest, "Could not login user")
