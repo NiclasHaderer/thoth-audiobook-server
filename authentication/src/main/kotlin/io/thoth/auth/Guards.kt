@@ -7,17 +7,17 @@ import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import io.thoth.openapi.serverError
 
-internal enum class GuardTypes(val value: String) {
-    User("user-jwt"),
-    EditUser("edit-user-jwt"),
-    AdminUser("admin-user-jwt"),
+object Guards {
+    const val User = "user-jwt"
+    const val EditUser = "edit-user-jwt"
+    const val AdminUser = "admin-user-jwt"
 }
 
-fun Route.userAuth(config: Route.() -> Unit) = authenticate(GuardTypes.User.value) { this.config() }
+fun Route.userAuth(config: Route.() -> Unit) = authenticate(Guards.User) { this.config() }
 
-fun Route.editUserAuth(config: Route.() -> Unit) = authenticate(GuardTypes.EditUser.value) { this.config() }
+fun Route.editUserAuth(config: Route.() -> Unit) = authenticate(Guards.EditUser) { this.config() }
 
-fun Route.adminUserAuth(config: Route.() -> Unit) = authenticate(GuardTypes.AdminUser.value) { this.config() }
+fun Route.adminUserAuth(config: Route.() -> Unit) = authenticate(Guards.AdminUser) { this.config() }
 
 fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipal {
     return call.principal()
