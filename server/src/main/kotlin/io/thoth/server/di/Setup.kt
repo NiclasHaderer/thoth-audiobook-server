@@ -17,6 +17,8 @@ import io.thoth.server.file.scanner.FileTreeWatcherImpl
 import io.thoth.server.file.scanner.LibraryScanner
 import io.thoth.server.file.scanner.LibraryScannerImpl
 import io.thoth.server.schedules.ThothSchedules
+import io.thoth.server.services.BookService
+import io.thoth.server.services.BookServiceImpl
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.logger.slf4jLogger
@@ -35,6 +37,7 @@ fun setupDependencyInjection() = startKoin {
             }
             single<LibraryScanner> { LibraryScannerImpl() }
             single { Scheduler() }
+            single<BookService> { BookServiceImpl() }
             single { ThothSchedules() }
             single<TrackManager> { TrackManagerImpl() }
         },

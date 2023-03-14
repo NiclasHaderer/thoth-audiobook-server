@@ -1,5 +1,6 @@
 package io.thoth.server.plugins
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
 import io.ktor.serialization.jackson.*
@@ -18,6 +19,7 @@ fun Application.configureSerialization() {
             val module = SimpleModule()
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            setSerializationInclusion(JsonInclude.Include.NON_NULL)
             module.addSerializer(LocalDateTime::class.java, CustomLocalDateTimeSerializer())
             module.addDeserializer(LocalDateTime::class.java, CustomLocalDateTimeDesSerializer())
             module.addSerializer(LocalDate::class.java, CustomLocalDateSerializer())

@@ -14,10 +14,6 @@ import io.thoth.models.PaginatedResponse
 import io.thoth.models.SearchModel
 import io.thoth.models.SeriesModel
 import io.thoth.models.TrackModel
-import io.thoth.server.api.audiobooks.library.authors.PatchAuthor
-import io.thoth.server.api.audiobooks.library.authors.PostAuthor
-import io.thoth.server.api.audiobooks.library.series.PatchSeries
-import io.thoth.server.api.audiobooks.library.series.PostSeries
 import io.thoth.server.ws.ChangeEvent
 import java.io.File
 import java.nio.file.Files
@@ -38,10 +34,6 @@ fun main() {
                 DetailedBookModel::class,
                 SearchModel::class,
                 SeriesModel::class,
-                PatchAuthor::class,
-                PatchSeries::class,
-                PostAuthor::class,
-                PostSeries::class,
                 DetailedSeriesModel::class,
                 TrackModel::class,
                 ChangeEvent::class,

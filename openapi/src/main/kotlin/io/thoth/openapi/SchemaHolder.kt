@@ -6,14 +6,30 @@ import io.swagger.v3.core.converter.ModelConverters
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.core.util.RefUtils
 import io.swagger.v3.core.util.Yaml
-import io.swagger.v3.oas.models.*
-import io.swagger.v3.oas.models.media.*
+import io.swagger.v3.oas.models.Components
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.Operation
+import io.swagger.v3.oas.models.PathItem
+import io.swagger.v3.oas.models.Paths
+import io.swagger.v3.oas.models.media.ArraySchema
+import io.swagger.v3.oas.models.media.BinarySchema
+import io.swagger.v3.oas.models.media.BooleanSchema
+import io.swagger.v3.oas.models.media.Content
+import io.swagger.v3.oas.models.media.DateSchema
+import io.swagger.v3.oas.models.media.DateTimeSchema
+import io.swagger.v3.oas.models.media.FileSchema
+import io.swagger.v3.oas.models.media.IntegerSchema
+import io.swagger.v3.oas.models.media.MediaType
+import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.StringSchema
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
+import io.thoth.openapi.schema.generate
+import java.lang.reflect.Type
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -59,8 +75,11 @@ object SchemaHolder {
         url: String,
         method: HttpMethod,
         requestBody: KClass<*>,
+        requestBodyType: Type,
         params: KClass<*>,
+        paramsType: Type,
         responseBody: KClass<*>,
+        responseType: Type,
         responseStatus: HttpStatusCode? = null
     ) {
         val completeResponseStatus: HttpStatusCode =
@@ -108,11 +127,13 @@ object SchemaHolder {
                                     .schema(
                                         Schema<Any>().also {
                                             it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
-                                        }
-                                    )
-                            )
-                    )
+                                        },
+                                    ),
+                            ),
+                    ),
             )
+            generate(requestBody, requestBodyType)
+            generate(responseBody, responseType)
 
             generateSchema(responseBody)?.also { schemaHolder.putAll(it) }
             operation.responses =
@@ -129,15 +150,15 @@ object SchemaHolder {
                                             .schema(
                                                 Schema<Any>().also {
                                                     it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
-                                                }
-                                            )
-                                    )
-                            )
+                                                },
+                                            ),
+                                    ),
+                            ),
                     )
         }
     }
 
-    private fun generateSchema(clazz: KClass<*>): Map<String, Schema<*>>? {
+    private fun generateSchema(clazz: KClass<*>): Map<String, Schema<*>> {
         return getEnumSchema(clazz)
             ?: when (clazz) {
                 Unit::class -> mapOf(clazz.java.simpleName to StringSchema().also { it.maxLength = 0 })

@@ -1,5 +1,6 @@
 package io.thoth.openapi.routing
 
+import com.google.gson.reflect.TypeToken
 import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.application.*
@@ -111,8 +112,11 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
 ) {
     // Redirect different trailing / to the same route
     includeRedirect(PARAMS::class, method)
+    val body = object : TypeToken<BODY>() {}.type
+    val params = object : TypeToken<PARAMS>() {}.type
+    val response = object : TypeToken<RESPONSE>() {}.type
 
-    SchemaHolder.addRouteToApi(fullPath, method, BODY::class, PARAMS::class, RESPONSE::class)
+    SchemaHolder.addRouteToApi(fullPath, method, BODY::class, body, PARAMS::class, params, RESPONSE::class, response)
 
     val secured = extractSecured(PARAMS::class)
     if (secured != null) {

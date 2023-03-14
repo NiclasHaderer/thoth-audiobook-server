@@ -1,4 +1,5 @@
 package io.thoth.generators
+
 //
 // import java.lang.reflect.ParameterizedType
 // import kotlin.reflect.KProperty
