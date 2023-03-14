@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.util.pipeline.*
+import java.util.*
 import mu.KotlinLogging.logger
 
 fun Application.configureStatusPages() {
@@ -13,7 +14,7 @@ fun Application.configureStatusPages() {
         exception<ErrorResponse> { call, cause ->
             call.respond(
                 cause.status,
-                hashMapOf("error" to cause.message, "status" to cause.status.value, "details" to cause.details)
+                hashMapOf("error" to cause.message, "status" to cause.status.value, "details" to cause.details),
             )
         }
         exception<Throwable> { call, cause ->
@@ -22,15 +23,21 @@ fun Application.configureStatusPages() {
                 hashMapOf(
                     "error" to cause.message,
                     "status" to HttpStatusCode.InternalServerError.value,
-                    "trace" to cause.stackTrace
-                )
+                    "trace" to cause.stackTrace,
+                ),
             )
             logger.error("Unhandled exception", cause)
         }
     }
 }
 
-class ErrorResponse(val status: HttpStatusCode, message: String, val details: Any? = null) : Exception(message)
+class ErrorResponse(val status: HttpStatusCode, message: String, val details: Any? = null) : Exception(message) {
+    companion object {
+        fun notFound(thing: String, id: UUID, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.NotFound, "$thing with ID:$id not found", details)
+        }
+    }
+}
 
 fun PipelineContext<*, *>.serverError(status: HttpStatusCode, message: String, details: Any? = null): Nothing {
     throw ErrorResponse(status, message, details)
