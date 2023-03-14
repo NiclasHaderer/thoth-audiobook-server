@@ -1,12 +1,4 @@
-package io.thoth.server.api.library
-
-import io.ktor.resources.*
-import io.thoth.common.serializion.kotlin.UUID_S
-
-@Resource("{id}")
-data class LibraryId(
-    val id: UUID_S,
-)
+package io.thoth.server.api.v1
 
 data class PostLibrary(
     val name: String,

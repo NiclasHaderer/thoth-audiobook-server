@@ -34,7 +34,16 @@ class Api {
 
     @Resource("/libraries")
     class Libraries {
-        @Resource("/{id}") data class Id(val id: UUID_S)
+
+        @Resource("/rescan") class Rescan
+        @Resource("/{id}")
+        data class Id(val id: UUID_S) {
+            @Resource("/rescan")
+            data class Rescan(private val parent: Id) {
+                val libraryId
+                    get() = parent.id
+            }
+        }
 
         @Resource("/books")
         class Books(private val parent: Id) {
@@ -188,7 +197,13 @@ class Api {
         val author: String? = null,
         val book: String? = null,
         val series: String? = null,
-    )
+    ) {
+        init {
+            require(q != null || author != null || book != null || series != null) {
+                "At least one of the following parameters must be provided: q, author, book, series"
+            }
+        }
+    }
 
     @Resource("/scan")
     class Scan {
