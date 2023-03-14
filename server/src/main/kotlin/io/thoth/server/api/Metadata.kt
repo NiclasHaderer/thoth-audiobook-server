@@ -1,4 +1,4 @@
-package io.thoth.server.api.v1
+package io.thoth.server.api
 
 import io.ktor.http.*
 import io.ktor.server.routing.*
@@ -9,7 +9,6 @@ import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
-import io.thoth.server.api.Api
 import org.koin.ktor.ext.inject
 
 fun Routing.metadataRouting() {

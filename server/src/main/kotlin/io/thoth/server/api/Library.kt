@@ -1,4 +1,4 @@
-package io.thoth.server.api.v1
+package io.thoth.server.api
 
 import io.ktor.http.*
 import io.ktor.server.routing.*
@@ -13,7 +13,6 @@ import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
 import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
-import io.thoth.server.api.Api
 import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.schedules.ThothSchedules
 import java.util.*
