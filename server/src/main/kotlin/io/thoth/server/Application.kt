@@ -16,30 +16,17 @@ import io.thoth.database.tables.Library
 import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.Api
 import io.thoth.server.api.audiobooks.registerAudiobookRouting
-import io.thoth.server.api.library.registerLibraryRouting
-import io.thoth.server.api.search.registerSearchRouting
-import io.thoth.server.api.v1.audioRouting
-import io.thoth.server.api.v1.authRoutes
-import io.thoth.server.api.v1.bookRouting
-import io.thoth.server.api.v1.imageRouting
-import io.thoth.server.api.v1.metadataRouting
-import io.thoth.server.api.v1.pingRouting
+import io.thoth.server.api.v1.*
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
-import io.thoth.server.plugins.configureCORS
-import io.thoth.server.plugins.configureMonitoring
-import io.thoth.server.plugins.configureOpenApi
-import io.thoth.server.plugins.configurePartialContent
-import io.thoth.server.plugins.configureRouting
-import io.thoth.server.plugins.configureSerialization
-import io.thoth.server.plugins.configureSockets
+import io.thoth.server.plugins.*
 import io.thoth.server.schedules.ThothSchedules
-import java.util.logging.LogManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.serializer
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.bridge.SLF4JBridgeHandler
+import java.util.logging.LogManager
 
 fun main() {
     // Force every library which is using the standard java logger to use SLF4J
@@ -56,12 +43,12 @@ fun main() {
 
     // Start the server
     embeddedServer(
-            Netty,
-            port = config.port,
-            watchPaths = listOf("classes"),
-            host = "0.0.0.0",
-            module = Application::applicationModule,
-        )
+        Netty,
+        port = config.port,
+        watchPaths = listOf("classes"),
+        host = "0.0.0.0",
+        module = Application::applicationModule,
+    )
         .start(wait = true)
 }
 
@@ -69,14 +56,14 @@ fun Application.applicationModule() {
     launch { get<Scheduler>().start() }
     runBlocking {
         launch {
-                val scheduler = get<Scheduler>()
-                val thothSchedules = get<ThothSchedules>()
-                scheduler.register(thothSchedules.scanLibrary)
-                scheduler.schedule(thothSchedules.fullScan)
-                scheduler.schedule(thothSchedules.retrieveMetadata)
-                scheduler.launchScheduledJob(thothSchedules.fullScan)
-                scheduler.launchScheduledJob(thothSchedules.retrieveMetadata)
-            }
+            val scheduler = get<Scheduler>()
+            val thothSchedules = get<ThothSchedules>()
+            scheduler.register(thothSchedules.scanLibrary)
+            scheduler.schedule(thothSchedules.fullScan)
+            scheduler.schedule(thothSchedules.retrieveMetadata)
+            scheduler.launchScheduledJob(thothSchedules.fullScan)
+            scheduler.launchScheduledJob(thothSchedules.retrieveMetadata)
+        }
             .join()
     }
 
@@ -95,14 +82,13 @@ fun Application.server() {
     configureRouting()
     configureOpenApi()
     configurePartialContent()
-    configureCORS(config)
+    configureCORS(production = config.production)
     configureSockets()
     configureMonitoring()
     configureSerialization()
 
     // Authentication
     val authRoutes = configureAuthentication {
-        val ser = serializer<Api.Auth.Jwks>()
         domain = "127.0.0.1:${config.port}"
         protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
         jwksPath = "/api/.well-known/jwks.json"
@@ -116,11 +102,11 @@ fun Application.server() {
         audioRouting()
         imageRouting()
         pingRouting()
+        searchRouting()
+        libraryRouting()
 
         route("api") {
             registerAudiobookRouting()
-            registerSearchRouting()
-            registerLibraryRouting()
         }
     }
 }
