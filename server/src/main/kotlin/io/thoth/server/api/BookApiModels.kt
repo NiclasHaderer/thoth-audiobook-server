@@ -1,4 +1,4 @@
-package io.thoth.server.api.v1
+package io.thoth.server.api
 
 import io.thoth.common.serializion.kotlin.UUID_S
 import java.time.LocalDate

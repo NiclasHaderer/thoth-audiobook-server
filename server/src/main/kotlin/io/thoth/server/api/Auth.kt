@@ -1,4 +1,4 @@
-package io.thoth.server.api.v1
+package io.thoth.server.api
 
 import io.ktor.server.routing.*
 import io.thoth.auth.JwtPair
@@ -14,7 +14,6 @@ import io.thoth.openapi.routing.delete
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.post
 import io.thoth.openapi.routing.put
-import io.thoth.server.api.Api
 
 fun Routing.authRoutes(routes: AuthRoutes) {
     post<Api.Auth.Login, LoginUser, JwtPair> { _, loginUser -> routes.login.invoke(this, loginUser) }

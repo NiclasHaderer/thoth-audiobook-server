@@ -1,4 +1,4 @@
-package io.thoth.server.api.v1
+package io.thoth.server.api
 
 data class PostLibrary(
     val name: String,

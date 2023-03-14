@@ -1,18 +1,7 @@
-package io.thoth.server.api.audiobooks.library.series
+package io.thoth.server.api
 
-import io.ktor.resources.*
 import io.thoth.common.serializion.kotlin.UUID_S
-import java.util.*
 import kotlinx.serialization.Serializable
-
-@Resource("{id}")
-data class SeriesId(
-    val id: UUID_S,
-) {
-    @Resource("position") data class Position(val route: SeriesId)
-}
-
-@Resource("") data class SeriesName(val name: String)
 
 @Serializable
 data class PatchSeries(
@@ -33,7 +22,7 @@ data class PatchSeries(
 }
 
 @Serializable
-data class PostSeries(
+data class PutSeries(
     val title: String,
     val authors: List<UUID_S>,
     val books: List<UUID_S>,

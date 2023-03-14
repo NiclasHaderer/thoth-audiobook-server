@@ -1,4 +1,4 @@
-package io.thoth.server.api.v1
+package io.thoth.server.api
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -13,7 +13,6 @@ import io.thoth.openapi.responses.binaryResponse
 import io.thoth.openapi.responses.fileResponse
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
-import io.thoth.server.api.Api
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
