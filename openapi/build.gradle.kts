@@ -24,8 +24,6 @@ dependencies {
     implementation("io.swagger.core.v3:swagger-models:$openApiVersion")
     implementation("io.swagger.core.v3:swagger-core:$openApiVersion")
     implementation("org.webjars:swagger-ui:$swaggerUiVersion")
-    // Gson
-    implementation("com.google.code.gson:gson:2.10.1")
 
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")

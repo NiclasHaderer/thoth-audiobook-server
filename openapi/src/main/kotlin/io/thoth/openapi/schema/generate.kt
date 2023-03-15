@@ -1,17 +1,7 @@
 package io.thoth.openapi.schema
 
-import com.google.gson.reflect.TypeToken
 import io.swagger.v3.core.util.Json
-import io.swagger.v3.oas.models.media.ArraySchema
-import io.swagger.v3.oas.models.media.BooleanSchema
-import io.swagger.v3.oas.models.media.DateSchema
-import io.swagger.v3.oas.models.media.DateTimeSchema
-import io.swagger.v3.oas.models.media.IntegerSchema
-import io.swagger.v3.oas.models.media.NumberSchema
-import io.swagger.v3.oas.models.media.ObjectSchema
-import io.swagger.v3.oas.models.media.Schema
-import io.swagger.v3.oas.models.media.StringSchema
-import io.thoth.models.BookModel
+import io.swagger.v3.oas.models.media.*
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.lang.reflect.WildcardType
@@ -28,9 +18,6 @@ import kotlin.reflect.javaType
 
 private val <T, V> KProperty1<T, V>.optional: Boolean
     get() = returnType.isMarkedNullable
-
-val KClass<*>.schema: Schema<*>
-    get() = toSchema(this, object : TypeToken<Any>() {}.type)
 
 val KClass<*>.fields: List<KProperty1<out Any, *>>
     get() = declaredMemberProperties.toList()
@@ -123,23 +110,19 @@ fun toSchema(clazz: KClass<*>, type: Type, depth: Int = 0): Schema<*> {
 //    return elementType.kotlin
 // }
 
-fun getGenericTypes(type: Type): Map<String, Class<*>> {
+fun getGenericTypes(type: Type): List<KClass<*>> {
     if (type !is ParameterizedType) {
         throw IllegalArgumentException("Type not parameterized")
     }
-    val returnMap = mutableMapOf<String, Class<*>>()
+    val returnMap = mutableListOf<KClass<*>>()
     for (elementType in type.actualTypeArguments) {
         when (elementType) {
-            is Class<*> -> returnMap["hello"] = elementType
-            is WildcardType -> returnMap["hello"] = elementType.upperBounds.first() as Class<*>
-            else -> returnMap["hello"] = Any::class.java
+            is Class<*> -> returnMap.add(elementType.kotlin)
+            is WildcardType -> returnMap.add((elementType.upperBounds.first() as Class<*>).kotlin)
+            else -> returnMap.add(Any::class)
         }
     }
     return returnMap
-}
-
-inline fun <T> asdf(): TypeToken<T> {
-    return object : TypeToken<T>() {}
 }
 
 data class PaginatedResponse<T>(
@@ -148,11 +131,3 @@ data class PaginatedResponse<T>(
     val offset: Long,
     val limit: Int,
 )
-
-fun main() {
-    val objectType = object : TypeToken<PaginatedResponse<BookModel>>() {}.type
-    val listType = object : TypeToken<List<BookModel>>() {}.type
-
-    getGenericTypes(objectType).also { println(it) }
-    getGenericTypes(listType).also { println(it) }
-}
