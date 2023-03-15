@@ -25,11 +25,11 @@ import io.swagger.v3.oas.models.media.StringSchema
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
+import io.thoth.common.extensions.ClassType
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
 import io.thoth.openapi.schema.generate
-import java.lang.reflect.Type
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -74,17 +74,14 @@ object SchemaHolder {
     fun addRouteToApi(
         url: String,
         method: HttpMethod,
-        requestBody: KClass<*>,
-        requestBodyType: Type,
-        params: KClass<*>,
-        paramsType: Type,
-        responseBody: KClass<*>,
-        responseType: Type,
+        requestBody: ClassType,
+        params: ClassType,
+        responseBody: ClassType,
         responseStatus: HttpStatusCode? = null
     ) {
         val completeResponseStatus: HttpStatusCode =
             responseStatus
-                ?: if (responseBody == Unit::class) {
+                ?: if (responseBody.clazz == Unit::class) {
                     HttpStatusCode.NoContent
                 } else if (method == HttpMethod.Post) {
                     HttpStatusCode.Created
@@ -114,7 +111,7 @@ object SchemaHolder {
             }
 
             val schemaHolder = components.schemas
-            generateSchema(requestBody)?.also { schemaHolder.putAll(it) }
+            generateSchema(requestBody.clazz)?.also { schemaHolder.putAll(it) }
 
             operation.requestBody(
                 RequestBody()
@@ -126,16 +123,16 @@ object SchemaHolder {
                                 MediaType()
                                     .schema(
                                         Schema<Any>().also {
-                                            it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
+                                            it.`$ref` = RefUtils.constructRef(requestBody.clazz.java.simpleName)
                                         },
                                     ),
                             ),
                     ),
             )
-            generate(requestBody, requestBodyType)
-            generate(responseBody, responseType)
+            generate(requestBody)
+            generate(responseBody)
 
-            generateSchema(responseBody)?.also { schemaHolder.putAll(it) }
+            generateSchema(responseBody.clazz).also { schemaHolder.putAll(it) }
             operation.responses =
                 ApiResponses()
                     .addApiResponse(
@@ -149,7 +146,7 @@ object SchemaHolder {
                                         MediaType()
                                             .schema(
                                                 Schema<Any>().also {
-                                                    it.`$ref` = RefUtils.constructRef(requestBody.java.simpleName)
+                                                    it.`$ref` = RefUtils.constructRef(requestBody.clazz.java.simpleName)
                                                 },
                                             ),
                                     ),
