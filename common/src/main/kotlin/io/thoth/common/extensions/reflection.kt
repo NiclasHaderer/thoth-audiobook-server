@@ -10,27 +10,6 @@ val <T, V> KProperty1<T, V>.optional: Boolean
 val KClass<*>.fields: List<KProperty1<out Any, *>>
     get() = declaredMemberProperties.toList()
 
-val KClass<*>.parameterizedValues: Map<KProperty1<*, *>, List<KTypeParameter>>
-    get() {
-        val typeParameterMap = typeParameters.associateBy { it.starProjectedType }
-
-        return declaredMemberProperties
-            .filter { member -> member.returnType.arguments.any { typeParameterMap.containsKey(it.type) } }
-            .mapNotNull { property ->
-                val typeParameters = property.returnType.arguments.mapNotNull { typeParameterMap[it.type] }
-                if (typeParameters.isNotEmpty()) property to typeParameters else null
-            }
-            .toMap()
-    }
-
-val KClass<*>.genericMembers: List<KProperty1<*, *>>
-    get() {
-        val typeParameterMap = typeParameters.map { it.starProjectedType }.toSet()
-        return declaredMemberProperties.filter { member ->
-            member.returnType.arguments.any { typeParameterMap.contains(it.type) }
-        }
-    }
-
 val KType.genericArguments: List<KClass<*>>
     get() = arguments.mapNotNull { it.type?.classifier as? KClass<*> }
 
@@ -41,11 +20,40 @@ class ClassType(val genericArguments: List<KClass<*>>, val clazz: KClass<*>) {
      * this: { someProperty: [A, V] } These generics (A,V) can then be resolved th their actual values using the
      * parameterToValue map
      */
-    val parameterizedValues by lazy { clazz.parameterizedValues }
+    val parameterizedValues: Map<KProperty1<*, *>, List<KTypeParameter>> by lazy {
+        val typeParameterMap = clazz.typeParameters.associateBy { it.starProjectedType }
+
+        clazz.fields
+            .filter { member -> member.returnType.arguments.any { typeParameterMap.containsKey(it.type) } }
+            .mapNotNull { property ->
+                val typeParameters = property.returnType.arguments.mapNotNull { typeParameterMap[it.type] }
+                if (typeParameters.isNotEmpty()) property to typeParameters else null
+            }
+            .toMap()
+    }
+
+    /**
+     * Same structure as `ClassType.parameterizedValues` but the values are already resolved to the next ClassType,
+     * because the property return type is parameterized and has a generic as parameter
+     */
+    val resolvedParameterizedValue: Map<KProperty1<*, *>, ClassType> by lazy {
+        val typeParameterMap = clazz.typeParameters.associateBy { it.starProjectedType }
+
+        clazz.fields
+            .filter { member -> member.returnType.arguments.any { typeParameterMap.containsKey(it.type) } }
+            .mapNotNull { property ->
+                val typeParameters = property.returnType.arguments.mapNotNull { typeParameterMap[it.type] }
+                if (typeParameters.isNotEmpty()) property to typeParameters.mapNotNull { parameterToValue[it] }
+                else null
+            }
+            .associate { (property, genericArguments) ->
+                property to ClassType(genericArguments, property.returnType.classifier as KClass<*>)
+            }
+    }
 
     /** This is a list with the property of the class as key and the value (of the generic) as a value */
     val resolvedGenericValues: Map<KProperty1<*, *>, KClass<*>> by lazy {
-        clazz.declaredMemberProperties
+        clazz.fields
             .mapNotNull { property ->
                 val param = clazz.typeParameters.find { it == property.returnType.classifier } ?: return@mapNotNull null
                 property to param
@@ -75,11 +83,8 @@ class ClassType(val genericArguments: List<KClass<*>>, val clazz: KClass<*>) {
                 ClassType(listOf(), resolvedGenericValues[property]!!)
             }
             // The return type is a parameterized type which takes one of the generic parameters
-            in parameterizedValues -> {
-                ClassType(
-                    parameterizedValues[property]!!.mapNotNull { parameterToValue[it] },
-                    property.returnType.classifier as KClass<*>,
-                )
+            in resolvedParameterizedValue -> {
+                resolvedParameterizedValue[property]!!
             }
             // The return type is a non-generic class
             else -> {
