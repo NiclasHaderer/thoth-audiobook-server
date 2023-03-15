@@ -21,7 +21,9 @@ import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KTypeParameter
 import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.javaType
 
 private val <T, V> KProperty1<T, V>.optional: Boolean
@@ -36,6 +38,19 @@ val KClass<*>.fields: List<KProperty1<out Any, *>>
 fun generate(clazz: KClass<*>, type: Type): Map<String, Schema<*>> {
     return mapOf(clazz.java.simpleName to toSchema(clazz, type))
 }
+
+val KClass<*>.genericMembers: Map<String, List<KTypeParameter>>
+    get() {
+        val typeParameterMap = typeParameters.associateBy { it.starProjectedType }
+
+        return declaredMemberProperties
+            .filter { member -> member.returnType.arguments.any { typeParameterMap.containsKey(it.type) } }
+            .mapNotNull { property ->
+                val typeParameters = property.returnType.arguments.mapNotNull { typeParameterMap[it.type] }
+                if (typeParameters.isNotEmpty()) property.name to typeParameters else null
+            }
+            .toMap()
+    }
 
 @OptIn(ExperimentalStdlibApi::class)
 fun toSchema(clazz: KClass<*>, type: Type, depth: Int = 0): Schema<*> {
@@ -57,7 +72,7 @@ fun toSchema(clazz: KClass<*>, type: Type, depth: Int = 0): Schema<*> {
             return ArraySchema().also {
                 val elementType =
                     try {
-                        getListType(type)
+                        getGenericTypes(type)
                     } catch (e: Exception) {
                         println("asdf")
                         throw e
@@ -95,7 +110,6 @@ fun toSchema(clazz: KClass<*>, type: Type, depth: Int = 0): Schema<*> {
         }
     }
 }
-
 // fun getListType(type: Type): KClass<*> {
 //    if (type !is ParameterizedType) {
 //        throw IllegalArgumentException("List type not parameterized")
@@ -109,16 +123,19 @@ fun toSchema(clazz: KClass<*>, type: Type, depth: Int = 0): Schema<*> {
 //    return elementType.kotlin
 // }
 
-fun getListType(type: Type): Class<*> {
+fun getGenericTypes(type: Type): Map<String, Class<*>> {
     if (type !is ParameterizedType) {
-        throw IllegalArgumentException("List type not parameterized")
+        throw IllegalArgumentException("Type not parameterized")
     }
-    val elementType = type.actualTypeArguments.first()
-    return when (elementType) {
-        is Class<*> -> elementType
-        is WildcardType -> elementType.upperBounds.first() as Class<*>
-        else -> Any::class.java
+    val returnMap = mutableMapOf<String, Class<*>>()
+    for (elementType in type.actualTypeArguments) {
+        when (elementType) {
+            is Class<*> -> returnMap["hello"] = elementType
+            is WildcardType -> returnMap["hello"] = elementType.upperBounds.first() as Class<*>
+            else -> returnMap["hello"] = Any::class.java
+        }
     }
+    return returnMap
 }
 
 inline fun <T> asdf(): TypeToken<T> {
@@ -136,6 +153,6 @@ fun main() {
     val objectType = object : TypeToken<PaginatedResponse<BookModel>>() {}.type
     val listType = object : TypeToken<List<BookModel>>() {}.type
 
-    getListType(objectType).also { println(it) }
-    getListType(listType).also { println(it) }
+    getGenericTypes(objectType).also { println(it) }
+    getGenericTypes(listType).also { println(it) }
 }
