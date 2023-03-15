@@ -25,11 +25,11 @@ import io.swagger.v3.oas.models.media.StringSchema
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
-import io.thoth.common.extensions.ClassType
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
-import io.thoth.openapi.schema.generate
+import io.thoth.openapi.schema.ClassType
+import io.thoth.openapi.schema.generateSchema
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -129,8 +129,8 @@ object SchemaHolder {
                             ),
                     ),
             )
-            generate(requestBody)
-            generate(responseBody)
+            requestBody.generateSchema()
+            responseBody.generateSchema()
 
             generateSchema(responseBody.clazz).also { schemaHolder.putAll(it) }
             operation.responses =

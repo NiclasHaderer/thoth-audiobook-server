@@ -1,12 +1,13 @@
 package io.thoth.openapi
 
-import io.thoth.common.extensions.ClassType
 import io.thoth.common.extensions.genericArguments
+import io.thoth.openapi.schema.ClassType
+import io.thoth.openapi.schema.generateSchema
+import org.junit.Test
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.typeOf
 import kotlin.test.assertEquals
-import org.junit.Test
 
 class InnerType
 
@@ -57,5 +58,20 @@ class GenericExtractionTest {
             ),
             generic,
         )
+    }
+
+    @Test
+    fun testSomething() {
+        class Test<T>(
+            val a: String,
+            val b: T,
+        )
+
+        class Fuck
+
+        val schema = ClassType.create<Test<List<Fuck>>>().generateSchema()
+        // TODO Hello::b is not resolved correctly. It is only List<Any> instead of List<Number>
+        print(schema)
+
     }
 }
