@@ -60,22 +60,9 @@ fun toSchema(classType: ClassType, depth: Int = 0): Schema<*> {
         }
     }
 }
-// fun getListType(type: Type): KClass<*> {
-//    if (type !is ParameterizedType) {
-//        throw IllegalArgumentException("List type not parameterized")
-//    }
-//    val elementType = type.actualTypeArguments.first()
-//    if (elementType is WildcardType) {
-//        return (elementType.upperBounds.first() as Class<*>).kotlin
-//    } else if (elementType !is Class<*>) {
-//        throw IllegalArgumentException("List element type not a class")
-//    }
-//    return elementType.kotlin
-// }
 
-data class PaginatedResponse<T>(
+data class PaginatedResponse<T, V>(
     val items: List<T>,
+    val value: V,
     val total: Long,
-    val offset: Long,
-    val limit: Int,
 )

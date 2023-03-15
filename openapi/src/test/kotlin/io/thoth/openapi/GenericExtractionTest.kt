@@ -2,7 +2,6 @@ package io.thoth.openapi
 
 import io.thoth.common.extensions.ClassType
 import io.thoth.common.extensions.genericArguments
-import io.thoth.common.extensions.parameterizedValues
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.typeOf
@@ -40,43 +39,10 @@ class GenericExtractionTest {
     }
 
     @Test
-    fun testGenericMembersList() {
-        val genericMembers = List::class.parameterizedValues
-        assertEquals(0, genericMembers.size)
-    }
-
-    @Test
-    fun testGenericMembersInner() {
-        val genericMembers = InnerType::class.parameterizedValues
-        assertEquals(0, genericMembers.size)
-    }
-
-    @Test
-    fun testGenericMembersWrapper() {
-        val genericMembers =
-            ListWrapper::class
-                .parameterizedValues
-                .mapValues { entry -> entry.value.map { it.toString() } }
-                .mapKeys { entry -> entry.key.name }
-        assertEquals(mapOf("listProp1" to listOf("T"), "listProp2" to listOf("V")), genericMembers)
-    }
-
-    @Test
-    fun testGenericMembersTwoListWrapper() {
-        val genericMembers =
-            TwoListWrapper::class
-                .parameterizedValues
-                .mapValues { entry -> entry.value.map { it.toString() } }
-                .mapKeys { entry -> entry.key.name }
-        assertEquals(mapOf("list" to listOf("V"), "listWrapper" to listOf("T", "V")), genericMembers)
-    }
-
-    @Test
     fun testClassType() {
         val type = ClassType.create<TwoListWrapper<InnerType, SecondInnerType>>()
         val listWrapper = type.fromMember(TwoListWrapper<*, *>::listWrapper)
-        val parameterized =
-            listWrapper.parameterizedValues.mapValues { entry -> listWrapper.fromMember(entry.key).clazz }
+        val parameterized = listWrapper.resolvedParameterizedValue.mapValues { it.value.clazz }
         assertEquals(
             mapOf<KProperty1<*, *>, KClass<*>>(
                 ListWrapper<*, *>::listGeneric to List::class,
