@@ -4,17 +4,7 @@ import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
-import io.thoth.models.AuthorModel
-import io.thoth.models.BookModel
-import io.thoth.models.DetailedAuthorModel
-import io.thoth.models.DetailedBookModel
-import io.thoth.models.DetailedSeriesModel
-import io.thoth.models.NamedId
 import io.thoth.models.PaginatedResponse
-import io.thoth.models.SearchModel
-import io.thoth.models.SeriesModel
-import io.thoth.models.TrackModel
-import io.thoth.server.ws.ChangeEvent
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -28,17 +18,7 @@ fun main() {
     var audiobookDefinitions =
         generate(
             setOf(
-                AuthorModel::class,
-                DetailedAuthorModel::class,
-                BookModel::class,
-                DetailedBookModel::class,
-                SearchModel::class,
-                SeriesModel::class,
-                DetailedSeriesModel::class,
-                TrackModel::class,
-                ChangeEvent::class,
                 PaginatedResponse::class,
-                NamedId::class,
             ),
         )
 

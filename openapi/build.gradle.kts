@@ -2,6 +2,7 @@ val ktorVersion: String by project
 val kotlinLoggingVersion: String by project
 val openApiVersion: String by project
 val swaggerUiVersion: String by project
+val kotlinVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -25,4 +26,7 @@ dependencies {
     implementation("org.webjars:swagger-ui:$swaggerUiVersion")
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // Tests
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
 }
