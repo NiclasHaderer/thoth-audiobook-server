@@ -7,46 +7,46 @@ import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.openapi.Secured
 
-@Resource("/api")
+@Resource("api")
 class Api {
 
-    @Resource("/")
-    class Auth {
-        @Resource("/login") class Login
+    @Resource("auth")
+    data class Auth(private val parent: Api) {
+        @Resource("login") data class Login(private val parent: Auth)
 
-        @Resource("/register") class Register
+        @Resource("register") data class Register(private val parent: Auth)
 
-        @Resource(".well-known/jwks.json") class Jwks
+        @Resource(".well-known/jwks.json") data class Jwks(private val parent: Auth)
 
         @Secured(Guards.Normal)
-        @Resource("/user")
-        class User {
+        @Resource("user")
+        data class User(private val parent: Auth) {
 
-            @Secured(Guards.Admin) @Resource("/edit") data class Id(val id: UUID_S)
+            @Secured(Guards.Admin) @Resource("edit") data class Id(val id: UUID_S, private val parent: User)
 
-            @Resource("/username") class Username
+            @Resource("username") data class Username(private val parent: User)
 
-            @Resource("/password") class Password
+            @Resource("password") data class Password(private val parent: User)
         }
     }
 
-    @Resource("ping") class Ping
+    @Resource("ping") data class Ping(private val parent: Api)
 
     @Resource("libraries")
-    class Libraries {
+    data class Libraries(private val parent: Api) {
 
-        @Resource("rescan") class Rescan
+        @Resource("rescan") data class Rescan(private val parent: Libraries)
 
         @Resource("{id}")
-        data class Id(val id: UUID_S) {
-            @Resource("/rescan")
+        data class Id(val id: UUID_S, private val parent: Libraries) {
+            @Resource("rescan")
             data class Rescan(private val parent: Id) {
                 val libraryId
                     get() = parent.id
             }
 
-            @Resource("/books")
-            class Books(private val parent: Libraries.Id) {
+            @Resource("books")
+            data class Books(private val parent: Libraries.Id) {
                 val libraryId
                     get() = parent.id
 
@@ -56,19 +56,19 @@ class Api {
                         get() = parent.libraryId
                 }
 
-                @Resource("/sorting")
+                @Resource("sorting")
                 data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Books) {
                     val libraryId
                         get() = parent.libraryId
                 }
 
-                @Resource("/autocomplete")
+                @Resource("autocomplete")
                 data class Autocomplete(val q: String, private val parent: Books) {
                     val libraryId
                         get() = parent.libraryId
                 }
 
-                @Resource("/{id}")
+                @Resource("{id}")
                 data class Id(val id: UUID_S, private val parent: Books) {
                     val libraryId
                         get() = parent.libraryId
@@ -83,8 +83,8 @@ class Api {
                 }
             }
 
-            @Resource("/authors")
-            class Authors(private val parent: Libraries.Id) {
+            @Resource("authors")
+            data class Authors(private val parent: Libraries.Id) {
                 val libraryId
                     get() = parent.id
 
@@ -94,19 +94,19 @@ class Api {
                         get() = parent.libraryId
                 }
 
-                @Resource("/sorting")
+                @Resource("sorting")
                 data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
                     val libraryId
                         get() = parent.libraryId
                 }
 
-                @Resource("/autocomplete")
+                @Resource("autocomplete")
                 data class Autocomplete(val q: String, private val parent: Authors) {
                     val libraryId
                         get() = parent.libraryId
                 }
 
-                @Resource("/{id}")
+                @Resource("{id}")
                 data class Id(val id: UUID_S, private val parent: Authors) {
                     val libraryId
                         get() = parent.libraryId
@@ -121,8 +121,8 @@ class Api {
                 }
             }
 
-            @Resource("/series")
-            class Series(private val parent: Libraries.Id) {
+            @Resource("series")
+            data class Series(private val parent: Libraries.Id) {
                 val libraryId
                     get() = parent.id
 
@@ -132,19 +132,19 @@ class Api {
                         get() = parent.libraryId
                 }
 
-                @Resource("/sorting")
+                @Resource("sorting")
                 data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Series) {
                     val libraryId
                         get() = parent.libraryId
                 }
 
-                @Resource("/autocomplete")
+                @Resource("autocomplete")
                 data class Autocomplete(val q: String, private val parent: Series) {
                     val libraryId
                         get() = parent.libraryId
                 }
 
-                @Resource("/{id}")
+                @Resource("{id}")
                 data class Id(val id: UUID_S, private val parent: Series) {
                     val libraryId
                         get() = parent.libraryId
@@ -161,59 +161,63 @@ class Api {
         }
     }
 
-    @Resource("/stream")
-    class Files {
-        @Resource("/audio")
-        class Audio {
-            @Resource("/{id}") data class Id(val id: UUID_S)
+    @Resource("stream")
+    data class Files(private val parent: Api) {
+        @Resource("audio")
+        data class Audio(private val parent: Files) {
+            @Resource("{id}") data class Id(val id: UUID_S, private val parent: Audio)
         }
 
-        @Resource("/images")
-        class Images {
-            @Resource("/{id}") data class Id(val id: UUID_S)
+        @Resource("images")
+        data class Images(private val parent: Files) {
+            @Resource("{id}") data class Id(val id: UUID_S, private val parent: Images)
         }
     }
 
-    @Resource("/metadata")
-    class Metadata {
-        @Resource("/search")
-        class Search(
+    @Resource("metadata")
+    data class Metadata(private val parent: Api) {
+        @Resource("search")
+        data class Search(
             val keywords: String? = null,
             val title: String? = null,
             val author: String? = null,
             val narrator: String? = null,
             val language: MetadataLanguage? = null,
             val pageSize: MetadataSearchCount? = null,
+            private val parent: Metadata,
         )
 
-        @Resource("/author")
-        class Author {
-            @Resource("/{id}") data class Id(val id: String, val provider: String)
+        @Resource("author")
+        data class Author(private val parent: Metadata) {
+            @Resource("{id}") data class Id(val id: String, val provider: String, private val parent: Author)
 
-            @Resource("/search") data class Search(val q: String)
+            @Resource("search") data class Search(val q: String, private val parent: Author)
         }
 
-        @Resource("/book")
-        class Book {
-            @Resource("/{id}") data class Id(val id: String, val provider: String)
+        @Resource("book")
+        data class Book(private val parent: Metadata) {
+            @Resource("{id}") data class Id(val id: String, val provider: String, private val parent: Book)
 
-            @Resource("/search") data class Search(val q: String, val authorName: String? = null)
+            @Resource("search")
+            data class Search(val q: String, val authorName: String? = null, private val parent: Book)
         }
 
-        @Resource("/book")
-        class Series {
-            @Resource("/{id}") data class Id(val id: String, val provider: String)
+        @Resource("book")
+        data class Series(private val parent: Metadata) {
+            @Resource("{id}") data class Id(val id: String, val provider: String, private val parent: Series)
 
-            @Resource("/search") data class Search(val q: String, val authorName: String? = null)
+            @Resource("search")
+            data class Search(val q: String, val authorName: String? = null, private val parent: Series)
         }
     }
 
-    @Resource("/search")
+    @Resource("search")
     data class Search(
         val q: String? = null,
         val author: String? = null,
         val book: String? = null,
         val series: String? = null,
+        private val parent: Api
     ) {
         init {
             require(q != null || author != null || book != null || series != null) {

@@ -9,7 +9,6 @@ import io.ktor.server.resources.handle as resourceHandle
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
-import io.thoth.common.extensions.fullPath
 import io.thoth.openapi.SchemaHolder
 import io.thoth.openapi.responses.BaseResponse
 import io.thoth.openapi.security.extractSecured
@@ -73,7 +72,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     method: HttpMethod,
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
-    SchemaHolder.addRouteToApi<PARAMS, BODY, RESPONSE>(fullPath, method)
+    SchemaHolder.addRouteToApi<PARAMS, BODY, RESPONSE>(fullPath(PARAMS::class), method)
 
     val secured = extractSecured(PARAMS::class)
     if (secured != null) {

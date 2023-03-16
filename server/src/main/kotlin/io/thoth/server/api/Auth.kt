@@ -19,7 +19,7 @@ fun Routing.authRoutes(routes: AuthRoutes) {
     post<Api.Auth.Login, LoginUser, JwtPair> { _, loginUser -> routes.login.invoke(this, loginUser) }
     post<Api.Auth.Register, RegisterUser, UserModel> { _, registerUser -> routes.register.invoke(this, registerUser) }
     get<Api.Auth.Jwks, JwksResponse> { routes.jwks.invoke(this) }
-    put<Api.Auth.User.Id, ModifyUser, UserModel> { (id), editUser -> routes.modify.invoke(this, id, editUser) }
+    put<Api.Auth.User.Id, ModifyUser, UserModel> { route, editUser -> routes.modify.invoke(this, route.id, editUser) }
     get<Api.Auth.User, UserModel> { routes.getUser.invoke(this) }
     delete<Api.Auth.User, Unit> { routes.delete.invoke(this) }
     post<Api.Auth.User.Username, UsernameChange, UserModel> { _, usernameChange ->
