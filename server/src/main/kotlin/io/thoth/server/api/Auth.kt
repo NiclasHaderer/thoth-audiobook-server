@@ -21,7 +21,10 @@ fun Routing.authRoutes(routes: AuthRoutes) {
     get<Api.Auth.Jwks, JwksResponse> { routes.jwks.invoke(this) }
     put<Api.Auth.User.Id, ModifyUser, UserModel> { route, editUser -> routes.modify.invoke(this, route.id, editUser) }
     get<Api.Auth.User, UserModel> { routes.getUser.invoke(this) }
-    delete<Api.Auth.User, Unit> { routes.delete.invoke(this) }
+    delete<Api.Auth.User, Unit, Unit> { _, _,
+        ->
+        routes.delete.invoke(this)
+    }
     post<Api.Auth.User.Username, UsernameChange, UserModel> { _, usernameChange ->
         routes.changeUsername.invoke(this, usernameChange)
     }

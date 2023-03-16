@@ -15,7 +15,9 @@ import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
 import io.thoth.openapi.schema.ClassType
+import io.thoth.openapi.schema.ContentTypeLookup
 import io.thoth.openapi.schema.generateSchema
+import kotlin.reflect.full.findAnnotation
 
 object SchemaHolder {
     private val _api: OpenAPI =
@@ -54,7 +56,7 @@ object SchemaHolder {
         requestBody: ClassType,
         responseBody: ClassType,
     ) {
-        val operation = addPath(url, method)
+        val operation = getPath(url, method, requestParams)
         if (
             method != HttpMethod.Get &&
                 method != HttpMethod.Head &&
@@ -77,19 +79,22 @@ object SchemaHolder {
         }
     }
 
-    private fun addResponse(responseBody: ClassType, statusCode: HttpStatusCode, operation: Operation) {
-        val (responseSchema, responseNamedSchemas) = responseBody.generateSchema()
+    private fun addResponse(response: ClassType, statusCode: HttpStatusCode, operation: Operation) {
+        val (responseSchema, responseNamedSchemas) = response.generateSchema()
         _api.components.schemas.putAll(responseNamedSchemas)
         operation.responses =
             ApiResponses()
                 .addApiResponse(
                     statusCode.value.toString(),
                     ApiResponse()
-                        .description("TODO")
+                        .also {
+                            val description = response.clazz.findAnnotation<Description>()
+                            it.description(description?.description)
+                        }
                         .content(
                             Content()
                                 .addMediaType(
-                                    "application/json",
+                                    ContentTypeLookup.forClassType(response),
                                     MediaType()
                                         .schema(
                                             responseSchema,
@@ -99,10 +104,13 @@ object SchemaHolder {
                 )
     }
 
-    private fun addPath(url: String, method: HttpMethod): Operation {
+    private fun getPath(url: String, method: HttpMethod, requestParams: ClassType): Operation {
         val pathItem = _api.paths.getOrPut(url) { PathItem() }
+        val tags = requestParams.clazz.findNearestAnnotations<Tagged>().map { it.name }
 
-        val operation = Operation()
+        val operation = Operation().tags(tags)
+        operation.description(requestParams.clazz.findAnnotation<Description>()?.description)
+        operation.summary(requestParams.clazz.findAnnotation<Summary>()?.summary)
         when (method) {
             HttpMethod.Get -> pathItem.get = operation
             HttpMethod.Post -> pathItem.post = operation
@@ -121,11 +129,14 @@ object SchemaHolder {
         _api.components.schemas.putAll(bodyNamedSchemas)
         operation.requestBody(
             RequestBody()
-                .description("TODO")
+                .also {
+                    val description = body.clazz.findAnnotation<Description>()
+                    it.description(description?.description)
+                }
                 .content(
                     Content()
                         .addMediaType(
-                            "application/json",
+                            ContentTypeLookup.forClassType(body),
                             MediaType()
                                 .schema(
                                     bodySchema,

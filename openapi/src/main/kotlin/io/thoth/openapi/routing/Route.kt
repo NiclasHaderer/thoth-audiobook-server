@@ -3,7 +3,7 @@ package io.thoth.openapi.routing
 import io.ktor.resources.*
 import io.ktor.server.auth.*
 import io.ktor.server.routing.*
-import io.thoth.common.extensions.parent
+import io.thoth.openapi.schema.parent
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 

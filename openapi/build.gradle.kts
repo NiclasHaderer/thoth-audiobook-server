@@ -11,10 +11,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":common"))
-    implementation(project(":models"))
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
-
     // Ktor
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("io.ktor:ktor-server-resources:$ktorVersion")

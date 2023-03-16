@@ -8,6 +8,7 @@ import io.thoth.database.access.foldersOverlap
 import io.thoth.database.access.toModel
 import io.thoth.database.tables.Library
 import io.thoth.models.LibraryModel
+import io.thoth.models.SearchModel
 import io.thoth.openapi.routing.RouteHandler
 import io.thoth.openapi.routing.get
 import io.thoth.openapi.routing.patch
@@ -15,6 +16,7 @@ import io.thoth.openapi.routing.post
 import io.thoth.openapi.serverError
 import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.schedules.ThothSchedules
+import io.thoth.server.services.SearchService
 import java.util.*
 import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -86,7 +88,7 @@ fun Routing.libraryRouting() {
             .toModel()
     }
 
-    post<Api.Libraries.Id.Rescan, Unit> { route ->
+    post<Api.Libraries.Id.Rescan, Unit, Unit> { route, _ ->
         val library =
             transaction { Library.findById(route.libraryId) }
                 ?: serverError(
@@ -96,5 +98,16 @@ fun Routing.libraryRouting() {
         scheduler.dispatch(schedules.scanLibrary.build(library))
     }
 
-    post<Api.Libraries.Rescan, Unit> { scheduler.launchScheduledJob(schedules.fullScan) }
+    post<Api.Libraries.Rescan, Unit, Unit> { _, _ -> scheduler.launchScheduledJob(schedules.fullScan) }
+
+    get<Api.Libraries.Search, SearchModel> {
+        if (it.q != null) {
+            return@get SearchService.everywhere(it.q)
+        }
+
+        serverError(
+            HttpStatusCode.NotImplemented,
+            "This is still under construction. Currently only the parameter 'q' is supported",
+        )
+    }
 }

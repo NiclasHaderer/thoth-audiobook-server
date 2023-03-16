@@ -33,7 +33,7 @@ fun Routing.authorRouting() {
             PaginatedResponse(books, total = seriesCount, offset = offset, limit = limit)
         }
     }
-    get<Api.Libraries.Id.Authors.Sorting, List<UUID>>("sorting") { (limit, offset) ->
+    get<Api.Libraries.Id.Authors.Sorting, List<UUID>> { (limit, offset) ->
         transaction { Author.getMultiple(limit, offset).map { it.id } }
     }
 

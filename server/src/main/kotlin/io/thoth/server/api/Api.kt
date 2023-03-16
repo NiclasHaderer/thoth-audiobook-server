@@ -6,11 +6,13 @@ import io.thoth.common.serializion.kotlin.UUID_S
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.openapi.Secured
+import io.thoth.openapi.Tagged
 
 @Resource("api")
 class Api {
 
     @Resource("auth")
+    @Tagged("Auth")
     data class Auth(private val parent: Api) {
         @Resource("login") data class Login(private val parent: Auth)
 
@@ -33,7 +35,23 @@ class Api {
     @Resource("ping") data class Ping(private val parent: Api)
 
     @Resource("libraries")
+    @Tagged("Library")
     data class Libraries(private val parent: Api) {
+
+        @Resource("search")
+        data class Search(
+            val q: String? = null,
+            val author: String? = null,
+            val book: String? = null,
+            val series: String? = null,
+            private val parent: Libraries
+        ) {
+            init {
+                require(q != null || author != null || book != null || series != null) {
+                    "At least one of the following parameters must be provided: q, author, book, series"
+                }
+            }
+        }
 
         @Resource("rescan") data class Rescan(private val parent: Libraries)
 
@@ -46,6 +64,7 @@ class Api {
             }
 
             @Resource("books")
+            @Tagged("Books")
             data class Books(private val parent: Libraries.Id) {
                 val libraryId
                     get() = parent.id
@@ -84,6 +103,7 @@ class Api {
             }
 
             @Resource("authors")
+            @Tagged("Authors")
             data class Authors(private val parent: Libraries.Id) {
                 val libraryId
                     get() = parent.id
@@ -122,6 +142,7 @@ class Api {
             }
 
             @Resource("series")
+            @Tagged("Series")
             data class Series(private val parent: Libraries.Id) {
                 val libraryId
                     get() = parent.id
@@ -162,6 +183,7 @@ class Api {
     }
 
     @Resource("stream")
+    @Tagged("Files")
     data class Files(private val parent: Api) {
         @Resource("audio")
         data class Audio(private val parent: Files) {
@@ -175,6 +197,7 @@ class Api {
     }
 
     @Resource("metadata")
+    @Tagged("Metadata")
     data class Metadata(private val parent: Api) {
         @Resource("search")
         data class Search(
@@ -208,21 +231,6 @@ class Api {
 
             @Resource("search")
             data class Search(val q: String, val authorName: String? = null, private val parent: Series)
-        }
-    }
-
-    @Resource("search")
-    data class Search(
-        val q: String? = null,
-        val author: String? = null,
-        val book: String? = null,
-        val series: String? = null,
-        private val parent: Api
-    ) {
-        init {
-            require(q != null || author != null || book != null || series != null) {
-                "At least one of the following parameters must be provided: q, author, book, series"
-            }
         }
     }
 }
