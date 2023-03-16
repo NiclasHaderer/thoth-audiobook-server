@@ -25,10 +25,10 @@ internal class WebUiServer(private val config: WebUiConfig) {
     private suspend fun respondWithSchema(call: ApplicationCall) {
         when (config.schemaType) {
             OpenAPISchemaType.JSON -> {
-                call.respondText(ContentType.Application.Json, HttpStatusCode.OK) { SchemaHolder.json }
+                call.respondText(ContentType.Application.Json, HttpStatusCode.OK) { SchemaHolder.json() }
             }
             OpenAPISchemaType.YAML -> {
-                call.respondText(ContentType.Text.Plain, HttpStatusCode.OK) { SchemaHolder.yaml }
+                call.respondText(ContentType.Text.Plain, HttpStatusCode.OK) { SchemaHolder.yaml() }
             }
         }
     }
@@ -39,7 +39,7 @@ internal class WebUiServer(private val config: WebUiConfig) {
         return callPath == schemaPath
     }
 
-    private suspend fun redirectToRightURL(call: ApplicationCall): Unit {
+    private suspend fun redirectToRightURL(call: ApplicationCall) {
         val callPath = call.request.path()
         val isDocs = callPath.trimEnd('/') == config.webUiPath.trimEnd('/')
         if (isDocs && callPath.last() != '/') {
@@ -95,7 +95,7 @@ private val extensionToContentType =
         "css" to ContentType.Text.CSS,
         "js" to ContentType.Text.JavaScript,
         "json" to ContentType.Application.Json,
-        "png" to ContentType.Image.PNG
+        "png" to ContentType.Image.PNG,
     )
 
 internal class WebUiResource(

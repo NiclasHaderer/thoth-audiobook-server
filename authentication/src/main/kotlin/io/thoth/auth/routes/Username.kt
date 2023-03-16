@@ -17,7 +17,7 @@ internal fun RouteHandler.changeUsername(usernameChange: UsernameChange): UserMo
     return transaction {
         val user =
             User.findById(principal.userId) ?: serverError(io.ktor.http.HttpStatusCode.NotFound, "Could not find user")
-        if (user.username === usernameChange.username) {
+        if (user.username == usernameChange.username) {
             serverError(io.ktor.http.HttpStatusCode.BadRequest, "Old name is the same as the new name")
         }
         val existingUser = User.getByName(usernameChange.username)

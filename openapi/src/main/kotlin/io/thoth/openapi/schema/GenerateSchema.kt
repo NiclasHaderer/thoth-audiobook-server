@@ -1,6 +1,6 @@
 package io.thoth.openapi.schema
 
-import io.swagger.v3.core.util.Json
+import io.swagger.v3.core.util.RefUtils
 import io.swagger.v3.oas.models.media.ArraySchema
 import io.swagger.v3.oas.models.media.BooleanSchema
 import io.swagger.v3.oas.models.media.DateSchema
@@ -19,62 +19,108 @@ import java.time.LocalDateTime
 import java.util.*
 import mu.KotlinLogging.logger
 
-fun ClassType.generateSchema(): Map<String, Schema<*>> {
-    return (mapOf(clazz.simpleName!! to toSchema(this)))
+fun ClassType.generateSchema(): Pair<Schema<*>, Map<String, Schema<*>>> {
+    val namedSchemas = mutableMapOf<String, Schema<*>>()
+    var (schemaName, schema) = SchemaCreator.createSchemaForClassType(this, namedSchemas)
+    if (schemaName != null) {
+        namedSchemas[schemaName] = schema
+        schema = SchemaCreator.createRef(schemaName)
+    }
+    return schema to namedSchemas
 }
 
-val log = logger {}
+typealias SchemaName = String?
 
-internal fun toSchema(classType: ClassType, depth: Int = 0): Schema<*> {
-    if (depth > 10) {
-        throw Error("Maximum depth exceeded")
+private object SchemaCreator {
+    private val log = logger {}
+    fun createRef(name: String): Schema<*> {
+        return Schema<Any>()
+            .`$ref`(
+                RefUtils.constructRef(
+                    name,
+                ),
+            )
     }
-    when (classType.clazz) {
-        String::class -> return StringSchema()
-        Int::class -> return IntegerSchema()
-        Long::class -> return IntegerSchema()
-        Double::class -> return NumberSchema()
-        Float::class -> return NumberSchema()
-        Boolean::class -> return BooleanSchema()
-        List::class ->
-            return ArraySchema().also {
-                if (classType.genericArguments.isNotEmpty()) {
-                    it.items = toSchema(classType.genericArguments[0], depth + 1)
-                } else {
-                    log.warn { "Could not resolve generic argument for list" }
-                }
+
+    fun createSchemaForClassType(
+        classType: ClassType,
+        namedSideProducts: MutableMap<String, Schema<*>>
+    ): Pair<SchemaName, Schema<*>> {
+        if (classType.isEnum) {
+            val schema = StringSchema()
+            val values = classType.clazz.java.enumConstants
+            for (enumVal in values) {
+                schema.addEnumItem(enumVal.toString())
             }
-        Map::class ->
-            return MapSchema().also {
-                if (classType.genericArguments.isNotEmpty()) {
-                    it.items = toSchema(classType.genericArguments[1], depth + 1)
-                } else {
-                    log.warn { "Could not resolve generic argument for map" }
-                }
-            }
-        Unit::class -> return StringSchema().maxLength(0)
-        Date::class -> return DateTimeSchema()
-        LocalDate::class -> return DateSchema()
-        LocalDateTime::class -> return DateTimeSchema()
-        BigDecimal::class -> return IntegerSchema()
-        UUID::class -> return StringSchema()
-        else -> {
-            val schema =
-                ObjectSchema().also { schema ->
-                    schema.required = classType.clazz.fields.filter { !it.optional }.map { it.name }
-                    schema.properties =
-                        classType.clazz.fields.associate {
-                            it.name to
-                                toSchema(
-                                    classType.fromMember(it),
-                                    depth + 1,
+            return classType.clazz.qualifiedName to schema
+        }
+
+        when (classType.clazz) {
+            ByteArray::class -> return null to StringSchema().format("binary")
+            String::class -> return null to StringSchema()
+            Int::class -> return null to IntegerSchema()
+            Long::class -> return null to IntegerSchema()
+            Double::class -> return null to NumberSchema()
+            Float::class -> return null to NumberSchema()
+            Boolean::class -> return null to BooleanSchema()
+            ULong::class -> return null to IntegerSchema()
+            List::class ->
+                return null to
+                    ArraySchema().also {
+                        if (classType.genericArguments.isNotEmpty()) {
+                            var (schemaName, schema) =
+                                createSchemaForClassType(
+                                    classType.genericArguments[0],
+                                    namedSideProducts,
                                 )
+                            if (schemaName != null) {
+                                namedSideProducts[schemaName] = schema
+                                schema = createRef(schemaName)
+                            }
+                            it.items = schema
+                        } else {
+                            log.warn { "Could not resolve generic argument for list" }
                         }
-                }
-            val debug = Json.mapper().writeValueAsString(schema)
-            println(classType.clazz.simpleName!!)
-            println(debug)
-            return schema
+                    }
+            Map::class ->
+                return null to
+                    MapSchema().also {
+                        if (classType.genericArguments.size != 2) {
+                            var (schemaName, schema) =
+                                createSchemaForClassType(
+                                    classType.genericArguments[1],
+                                    namedSideProducts,
+                                )
+                            if (schemaName != null) {
+                                namedSideProducts[schemaName] = schema
+                                schema = createRef(schemaName)
+                            }
+                            it.items = schema
+                        } else {
+                            log.warn { "Could not resolve generic argument for map" }
+                        }
+                    }
+            Unit::class -> return null to StringSchema().maxLength(0)
+            Date::class -> return null to DateTimeSchema()
+            LocalDate::class -> return null to DateSchema()
+            LocalDateTime::class -> return null to DateTimeSchema()
+            BigDecimal::class -> return null to IntegerSchema()
+            UUID::class -> return null to StringSchema()
+            else -> {
+                val objectSchema = ObjectSchema()
+                objectSchema.required = classType.clazz.fields.filter { !it.optional }.map { it.name }
+                objectSchema.properties =
+                    classType.clazz.fields.associate {
+                        var (schemaName, schema) = createSchemaForClassType(classType.fromMember(it), namedSideProducts)
+                        if (schemaName != null) {
+                            namedSideProducts[schemaName] = schema
+                            schema = createRef(schemaName)
+                        }
+
+                        it.name to schema
+                    }
+                return classType.clazz.qualifiedName to objectSchema
+            }
         }
     }
 }

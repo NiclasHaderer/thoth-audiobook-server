@@ -9,15 +9,14 @@
     </root>
 
     <!-- Ktor -->
-    <logger name="io.ktor" level="WARN"/>
+    <logger name="io.ktor" level="DEBUG"/>
+    <logger name="io.netty" level="INFO"/>
     <!-- Audiotagger -->
     <logger name="org.jaudiotagger.tag" level="WARN"/>
     <!-- OpenAPI -->
     <logger name="io.swagger.v3.core" level="WARN"/>
     <!--  Watchservice  -->
     <logger name="io.methvin.watcher.DirectoryWatcher" level="INFO"/>
-    <!-- Webserver -->
-    <logger name="io.netty" level="INFO"/>
     <!-- DB connector -->
     <logger name="com.zaxxer.hikari" level="WARN"/>
     <!-- Reflection for db migrations -->

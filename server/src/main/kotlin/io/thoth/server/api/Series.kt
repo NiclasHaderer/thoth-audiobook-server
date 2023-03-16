@@ -28,7 +28,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Routing.seriesRouting() {
     // TODO limit to library
-    get<Api.Libraries.Series.All, PaginatedResponse<SeriesModel>> { (limit, offset) ->
+    get<Api.Libraries.Id.Series.All, PaginatedResponse<SeriesModel>> { (limit, offset) ->
         transaction {
             val series = Series.getMultiple(limit, offset)
             val seriesCount = Series.count()
@@ -36,21 +36,21 @@ fun Routing.seriesRouting() {
         }
     }
 
-    get<Api.Libraries.Series.Sorting, List<UUID>>("sorting") { (limit, offset) ->
+    get<Api.Libraries.Id.Series.Sorting, List<UUID>>("sorting") { (limit, offset) ->
         transaction { Series.getMultiple(limit, offset) }.map { it.id }
     }
 
-    get<Api.Libraries.Series.Id.Position, Position> { route ->
+    get<Api.Libraries.Id.Series.Id.Position, Position> { route ->
         val sortOrder =
             transaction { Series.positionOf(route.id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
         Position(sortIndex = sortOrder, id = route.id, order = Position.Order.ASC)
     }
 
-    get<Api.Libraries.Series.Id, DetailedSeriesModel> { (id) ->
+    get<Api.Libraries.Id.Series.Id, DetailedSeriesModel> { (id) ->
         transaction { Series.getDetailedById(id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
     }
 
-    get<Api.Libraries.Series.Autocomplete, List<TitledId>>("autocomplete") { (q) ->
+    get<Api.Libraries.Id.Series.Autocomplete, List<TitledId>>("autocomplete") { (q) ->
         transaction {
             Series.find { TSeries.title like "%$q%" }
                 .orderBy(TSeries.title to SortOrder.ASC)
@@ -59,7 +59,7 @@ fun Routing.seriesRouting() {
         }
     }
 
-    patch<Api.Libraries.Series.Id, PatchSeries, SeriesModel> { seriesId, patchSeries ->
+    patch<Api.Libraries.Id.Series.Id, PatchSeries, SeriesModel> { seriesId, patchSeries ->
         transaction {
             val series = Series.findById(seriesId.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
 
@@ -91,7 +91,7 @@ fun Routing.seriesRouting() {
         }
     }
 
-    put<Api.Libraries.Series.Id, PutSeries, SeriesModel> { seriesId, putSeries ->
+    put<Api.Libraries.Id.Series.Id, PutSeries, SeriesModel> { seriesId, putSeries ->
         transaction {
             val series = Series.findById(seriesId.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
 

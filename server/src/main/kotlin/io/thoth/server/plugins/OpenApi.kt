@@ -7,6 +7,12 @@ import io.thoth.openapi.plugin.OpenAPIWebUI
 
 fun Application.configureOpenApi() {
     install(DataConversion)
-    install(OpenAPIRouting)
+    install(OpenAPIRouting) {
+        info {
+            title = "Thoth"
+            version = "0.0.1"
+            description = "Audiobook server"
+        }
+    }
     install(OpenAPIWebUI)
 }
