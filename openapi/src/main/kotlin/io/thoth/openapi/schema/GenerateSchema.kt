@@ -13,11 +13,11 @@ import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.media.StringSchema
 import io.thoth.common.extensions.fields
 import io.thoth.common.extensions.optional
-import mu.KotlinLogging.logger
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import mu.KotlinLogging.logger
 
 fun ClassType.generateSchema(): Map<String, Schema<*>> {
     return (mapOf(clazz.simpleName!! to toSchema(this)))
@@ -39,20 +39,19 @@ internal fun toSchema(classType: ClassType, depth: Int = 0): Schema<*> {
         List::class ->
             return ArraySchema().also {
                 if (classType.genericArguments.isNotEmpty()) {
-                    it.items = toSchema(ClassType.create(classType.genericArguments[0]), depth + 1)
+                    it.items = toSchema(classType.genericArguments[0], depth + 1)
                 } else {
                     log.warn { "Could not resolve generic argument for list" }
                 }
             }
-
-        Map::class -> return MapSchema().also {
-            if (classType.genericArguments.isNotEmpty()) {
-                it.items = toSchema(ClassType.create(classType.genericArguments[1]), depth + 1)
-            } else {
-                log.warn { "Could not resolve generic argument for map" }
+        Map::class ->
+            return MapSchema().also {
+                if (classType.genericArguments.isNotEmpty()) {
+                    it.items = toSchema(classType.genericArguments[1], depth + 1)
+                } else {
+                    log.warn { "Could not resolve generic argument for map" }
+                }
             }
-        }
-
         Unit::class -> return StringSchema().maxLength(0)
         Date::class -> return DateTimeSchema()
         LocalDate::class -> return DateSchema()
@@ -60,17 +59,18 @@ internal fun toSchema(classType: ClassType, depth: Int = 0): Schema<*> {
         BigDecimal::class -> return IntegerSchema()
         UUID::class -> return StringSchema()
         else -> {
-            val schema = ObjectSchema().also { schema ->
-                schema.required = classType.clazz.fields.filter { !it.optional }.map { it.name }
-                schema.properties = classType.clazz.fields
-                    .associate {
-                        it.name to
-                            toSchema(
-                                classType.fromMember(it),
-                                depth + 1,
-                            )
-                    }
-            }
+            val schema =
+                ObjectSchema().also { schema ->
+                    schema.required = classType.clazz.fields.filter { !it.optional }.map { it.name }
+                    schema.properties =
+                        classType.clazz.fields.associate {
+                            it.name to
+                                toSchema(
+                                    classType.fromMember(it),
+                                    depth + 1,
+                                )
+                        }
+                }
             val debug = Json.mapper().writeValueAsString(schema)
             println(classType.clazz.simpleName!!)
             println(debug)
@@ -78,9 +78,3 @@ internal fun toSchema(classType: ClassType, depth: Int = 0): Schema<*> {
         }
     }
 }
-
-data class PaginatedResponse<T, V>(
-    val items: List<T>,
-    val value: V,
-    val total: Long,
-)
