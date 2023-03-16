@@ -6,6 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
+import io.ktor.server.resources.handle as resourceHandle
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
@@ -16,7 +17,6 @@ import io.thoth.openapi.schema.ClassType
 import io.thoth.openapi.security.extractSecured
 import io.thoth.openapi.serverError
 import kotlin.reflect.KClass
-import io.ktor.server.resources.handle as resourceHandle
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
 
