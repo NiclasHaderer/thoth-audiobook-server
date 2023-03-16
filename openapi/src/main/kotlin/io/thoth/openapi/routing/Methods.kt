@@ -1,7 +1,6 @@
 package io.thoth.openapi.routing
 
 import io.ktor.http.*
-import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -13,10 +12,8 @@ import io.ktor.util.pipeline.*
 import io.thoth.common.extensions.fullPath
 import io.thoth.openapi.SchemaHolder
 import io.thoth.openapi.responses.BaseResponse
-import io.thoth.openapi.schema.ClassType
 import io.thoth.openapi.security.extractSecured
 import io.thoth.openapi.serverError
-import kotlin.reflect.KClass
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
 
@@ -26,7 +23,7 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
     method: HttpMethod
 ) {
     val parsedBody: BODY =
-        if (BODY::class === Unit::class) {
+        if (BODY::class == Unit::class) {
             Unit as BODY
         } else {
             try {
@@ -67,40 +64,6 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
     }
 }
 
-fun Route.includeRedirect(parameter: KClass<*>, method: HttpMethod) {
-    val res = parameter.annotations.find { a -> a is Resource } as? Resource
-    val endPath = res?.path ?: ""
-
-    // Redirect different trailing / to the same route
-    if (endPath.endsWith("/")) {
-        route(endPath.slice(0..endPath.length - 2)) {
-            method(method) {
-                handle {
-                    val uri =
-                        URLBuilder(call.request.uri)
-                            .also { it.encodedPath = it.encodedPath + "/" }
-                            .toString()
-                            .replace("https?://".toRegex(), "")
-                    call.respondRedirect(uri, true)
-                }
-            }
-        }
-    } else {
-        route("$endPath/") {
-            method(method) {
-                handle {
-                    val uri =
-                        URLBuilder(call.request.uri)
-                            .also { it.encodedPath = it.encodedPath.slice(0..it.encodedPath.length - 2) }
-                            .toString()
-                            .replace("https?://".toRegex(), "")
-                    call.respondRedirect(uri, true)
-                }
-            }
-        }
-    }
-}
-
 inline fun <reified PARAMS : Any, reified RESPONSE> Route.wrapRequest(
     method: HttpMethod,
     noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
@@ -110,14 +73,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     method: HttpMethod,
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
-    // Redirect different trailing / to the same route
-    includeRedirect(PARAMS::class, method)
-
-    val body = ClassType.create<BODY>()
-    val params = ClassType.create<PARAMS>()
-    val response = ClassType.create<RESPONSE>()
-
-    SchemaHolder.addRouteToApi(fullPath, method, body, params, response)
+    SchemaHolder.addRouteToApi<PARAMS, BODY, RESPONSE>(fullPath, method)
 
     val secured = extractSecured(PARAMS::class)
     if (secured != null) {

@@ -30,132 +30,132 @@ class Api {
         }
     }
 
-    @Resource("/ping") class Ping
+    @Resource("ping") class Ping
 
-    @Resource("/libraries")
+    @Resource("libraries")
     class Libraries {
 
-        @Resource("/rescan") class Rescan
+        @Resource("rescan") class Rescan
 
-        @Resource("/{id}")
+        @Resource("{id}")
         data class Id(val id: UUID_S) {
             @Resource("/rescan")
             data class Rescan(private val parent: Id) {
                 val libraryId
                     get() = parent.id
             }
-        }
 
-        @Resource("/books")
-        class Books(private val parent: Id) {
-            val libraryId
-                get() = parent.id
-
-            @Resource("")
-            data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
+            @Resource("/books")
+            class Books(private val parent: Libraries.Id) {
                 val libraryId
-                    get() = parent.libraryId
-            }
+                    get() = parent.id
 
-            @Resource("/sorting")
-            data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
-                val libraryId
-                    get() = parent.libraryId
-            }
-
-            @Resource("/autocomplete")
-            data class Autocomplete(val q: String, private val parent: Authors) {
-                val libraryId
-                    get() = parent.libraryId
-            }
-
-            @Resource("/{id}")
-            data class Id(val id: UUID_S, private val parent: Books) {
-                val libraryId
-                    get() = parent.libraryId
-
-                @Resource("position")
-                data class Position(private val parent: Id) {
+                @Resource("")
+                data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Books) {
                     val libraryId
                         get() = parent.libraryId
-                    val id
-                        get() = parent.id
+                }
+
+                @Resource("/sorting")
+                data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Books) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+
+                @Resource("/autocomplete")
+                data class Autocomplete(val q: String, private val parent: Books) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+
+                @Resource("/{id}")
+                data class Id(val id: UUID_S, private val parent: Books) {
+                    val libraryId
+                        get() = parent.libraryId
+
+                    @Resource("position")
+                    data class Position(private val parent: Id) {
+                        val libraryId
+                            get() = parent.libraryId
+                        val id
+                            get() = parent.id
+                    }
                 }
             }
-        }
 
-        @Resource("/authors")
-        class Authors(private val parent: Id) {
-            val libraryId
-                get() = parent.id
-
-            @Resource("")
-            data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
+            @Resource("/authors")
+            class Authors(private val parent: Libraries.Id) {
                 val libraryId
-                    get() = parent.libraryId
-            }
+                    get() = parent.id
 
-            @Resource("/sorting")
-            data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
-                val libraryId
-                    get() = parent.libraryId
-            }
-
-            @Resource("/autocomplete")
-            data class Autocomplete(val q: String, private val parent: Authors) {
-                val libraryId
-                    get() = parent.libraryId
-            }
-
-            @Resource("/{id}")
-            data class Id(val id: UUID_S, private val parent: Authors) {
-                val libraryId
-                    get() = parent.libraryId
-
-                @Resource("position")
-                data class Position(private val parent: Id) {
+                @Resource("")
+                data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
                     val libraryId
                         get() = parent.libraryId
-                    val id
-                        get() = parent.id
+                }
+
+                @Resource("/sorting")
+                data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+
+                @Resource("/autocomplete")
+                data class Autocomplete(val q: String, private val parent: Authors) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+
+                @Resource("/{id}")
+                data class Id(val id: UUID_S, private val parent: Authors) {
+                    val libraryId
+                        get() = parent.libraryId
+
+                    @Resource("position")
+                    data class Position(private val parent: Id) {
+                        val libraryId
+                            get() = parent.libraryId
+                        val id
+                            get() = parent.id
+                    }
                 }
             }
-        }
 
-        @Resource("/series")
-        class Series(private val parent: Id) {
-            val libraryId
-                get() = parent.id
-
-            @Resource("")
-            data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
+            @Resource("/series")
+            class Series(private val parent: Libraries.Id) {
                 val libraryId
-                    get() = parent.libraryId
-            }
+                    get() = parent.id
 
-            @Resource("/sorting")
-            data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
-                val libraryId
-                    get() = parent.libraryId
-            }
-
-            @Resource("/autocomplete")
-            data class Autocomplete(val q: String, private val parent: Authors) {
-                val libraryId
-                    get() = parent.libraryId
-            }
-
-            @Resource("/{id}")
-            data class Id(val id: UUID_S, private val parent: Series) {
-                val libraryId
-                    get() = parent.libraryId
-
-                @Resource("position")
-                data class Position(private val parent: Authors.Id) {
+                @Resource("")
+                data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Series) {
                     val libraryId
                         get() = parent.libraryId
-                    val id
-                        get() = parent.id
+                }
+
+                @Resource("/sorting")
+                data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Series) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+
+                @Resource("/autocomplete")
+                data class Autocomplete(val q: String, private val parent: Series) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+
+                @Resource("/{id}")
+                data class Id(val id: UUID_S, private val parent: Series) {
+                    val libraryId
+                        get() = parent.libraryId
+
+                    @Resource("position")
+                    data class Position(private val parent: Id) {
+                        val libraryId
+                            get() = parent.libraryId
+                        val id
+                            get() = parent.id
+                    }
                 }
             }
         }
@@ -188,7 +188,7 @@ class Api {
 
         @Resource("/author")
         class Author {
-            @Resource("/{itemID}") data class Id(val id: String, val provider: String)
+            @Resource("/{id}") data class Id(val id: String, val provider: String)
 
             @Resource("/search") data class Search(val q: String)
         }

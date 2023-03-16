@@ -26,29 +26,29 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Routing.authorRouting() {
     // TODO restrict to library
-    get<Api.Libraries.Authors.All, PaginatedResponse<AuthorModel>> { (limit, offset) ->
+    get<Api.Libraries.Id.Authors.All, PaginatedResponse<AuthorModel>> { (limit, offset) ->
         transaction {
             val books = Author.getMultiple(limit, offset)
             val seriesCount = Author.count()
             PaginatedResponse(books, total = seriesCount, offset = offset, limit = limit)
         }
     }
-    get<Api.Libraries.Authors.Sorting, List<UUID>>("sorting") { (limit, offset) ->
+    get<Api.Libraries.Id.Authors.Sorting, List<UUID>>("sorting") { (limit, offset) ->
         transaction { Author.getMultiple(limit, offset).map { it.id } }
     }
 
-    get<Api.Libraries.Authors.Id.Position, Position> {
+    get<Api.Libraries.Id.Authors.Id.Position, Position> {
         transaction {
             val sortOrder = Author.positionOf(it.id) ?: serverError(HttpStatusCode.NotFound, "Author was not found")
             Position(sortIndex = sortOrder, id = it.id, order = Position.Order.ASC)
         }
     }
 
-    get<Api.Libraries.Authors.Id, DetailedAuthorModel> { (id) ->
+    get<Api.Libraries.Id.Authors.Id, DetailedAuthorModel> { (id) ->
         transaction { Author.getDetailedById(id) ?: serverError(HttpStatusCode.NotFound, "Author was not found") }
     }
 
-    get<Api.Libraries.Authors.Autocomplete, List<NamedId>> { (name) ->
+    get<Api.Libraries.Id.Authors.Autocomplete, List<NamedId>> { (name) ->
         transaction {
             Author.find { TAuthors.name like "%$name%" }
                 .orderBy(TAuthors.name.lowerCase() to SortOrder.ASC)
@@ -57,7 +57,7 @@ fun Routing.authorRouting() {
         }
     }
 
-    patch<Api.Libraries.Authors.Id, PatchAuthor, AuthorModel> { id, patchAuthor ->
+    patch<Api.Libraries.Id.Authors.Id, PatchAuthor, AuthorModel> { id, patchAuthor ->
         transaction {
             val author = Author.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Author not found")
             author
@@ -76,7 +76,7 @@ fun Routing.authorRouting() {
         }
     }
 
-    put<Api.Libraries.Authors.Id, PutAuthor, AuthorModel> { id, postAuthor ->
+    put<Api.Libraries.Id.Authors.Id, PutAuthor, AuthorModel> { id, postAuthor ->
         transaction {
             val author = Author.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Author not found")
             author

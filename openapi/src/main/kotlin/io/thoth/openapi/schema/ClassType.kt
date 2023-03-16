@@ -7,6 +7,9 @@ import kotlin.reflect.*
 import kotlin.reflect.full.starProjectedType
 
 class ClassType private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>) {
+    val isEnum: Boolean
+        get() = clazz.java.enumConstants != null
+
     companion object {
         private fun resolveArguments(kType: KType): List<ClassType> {
             val classTypes = mutableListOf<ClassType>()
@@ -72,13 +75,7 @@ class ClassType private constructor(val genericArguments: List<ClassType>, val c
 
         return when (property) {
             in resolvedGenericValues -> {
-                val newClazz = resolvedGenericValues[property]!!
-                log.warn {
-                    "Property ${property.name} is a generic parameter of ${clazz.simpleName}"
-                    "If newClazz is generic some values might be missing"
-                }
-                // ClassType(listOf(), newClazz)
-                return newClazz
+                return resolvedGenericValues[property]!!
             }
             // The return type is a parameterized type which takes one of the generic parameters
             in resolvedParameterizedValue -> {

@@ -26,7 +26,13 @@ import io.thoth.server.api.searchRouting
 import io.thoth.server.api.seriesRouting
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
-import io.thoth.server.plugins.*
+import io.thoth.server.plugins.configureCORS
+import io.thoth.server.plugins.configureMonitoring
+import io.thoth.server.plugins.configureOpenApi
+import io.thoth.server.plugins.configurePartialContent
+import io.thoth.server.plugins.configureRouting
+import io.thoth.server.plugins.configureSerialization
+import io.thoth.server.plugins.configureSockets
 import io.thoth.server.schedules.ThothSchedules
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch
@@ -46,7 +52,6 @@ fun main() {
     val config = get<ThothConfig>()
     connectToDatabase(config.database)
     migrateDatabase(config.database)
-
     // Start the server
     embeddedServer(
             Netty,

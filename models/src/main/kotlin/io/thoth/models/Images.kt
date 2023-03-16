@@ -9,7 +9,6 @@ data class ImageModel(
     val blob: ByteArray,
 ) {
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
         if (other !is ImageModel) return false
 
         return (id != other.id) && blob.contentEquals(other.blob)
