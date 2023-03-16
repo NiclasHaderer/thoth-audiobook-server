@@ -2,12 +2,12 @@ package io.thoth.openapi
 
 import io.thoth.common.extensions.genericArguments
 import io.thoth.openapi.schema.ClassType
-import io.thoth.openapi.schema.generateSchema
-import org.junit.Test
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.typeOf
 import kotlin.test.assertEquals
+import kotlin.test.expect
+import org.junit.Test
 
 class InnerType
 
@@ -43,35 +43,56 @@ class GenericExtractionTest {
     fun testClassType() {
         val type = ClassType.create<TwoListWrapper<InnerType, SecondInnerType>>()
         val listWrapper = type.fromMember(TwoListWrapper<*, *>::listWrapper)
-        val parameterized = listWrapper.resolvedParameterizedValue.mapValues { it.value.clazz }
+        val parameterizedOuter = listWrapper.resolvedParameterizedValue.mapValues { it.value.clazz }
         assertEquals(
             mapOf<KProperty1<*, *>, KClass<*>>(
                 ListWrapper<*, *>::listGeneric to List::class,
             ),
-            parameterized,
+            parameterizedOuter,
         )
 
-        val generic = listWrapper.resolvedGenericValues
+        val generic = listWrapper.resolvedGenericValues.mapValues { it.value.clazz }
         assertEquals(
             mapOf<KProperty1<*, *>, KClass<*>>(
                 ListWrapper<*, *>::noListGeneric to InnerType::class,
             ),
             generic,
         )
+
+        val parameterizedInner =
+            listWrapper.resolvedParameterizedValue.mapValues {
+                Pair(
+                    it.value.clazz,
+                    it.value.genericArguments.map { it.clazz },
+                )
+            }
+        assertEquals(
+            mapOf<KProperty1<*, *>, Pair<KClass<*>, List<KClass<*>>>>(
+                ListWrapper<*, *>::listGeneric to Pair(List::class, listOf(SecondInnerType::class)),
+            ),
+            parameterizedInner,
+        )
     }
 
     @Test
     fun testSomething() {
-        class Test<T>(
-            val a: String,
-            val b: T,
-        )
+        data class HardToResolve<LONG_TYPE_PARAM>(val a: LONG_TYPE_PARAM, val b: List<LONG_TYPE_PARAM>, val c: String)
+        class Unique
 
-        class Fuck
+        val classType = ClassType.create<HardToResolve<List<Unique>>>()
 
-        val schema = ClassType.create<Test<List<Fuck>>>().generateSchema()
-        // TODO Hello::b is not resolved correctly. It is only List<Any> instead of List<Number>
-        print(schema)
+        val aMember = classType.fromMember(HardToResolve<*>::a)
+        expect(aMember.clazz) { List::class }
+        expect(aMember.genericArguments.map { it.clazz }) { listOf(Unique::class) }
 
+        val bMember = classType.fromMember(HardToResolve<*>::b)
+        expect(bMember.clazz) { List::class }
+        bMember.genericArguments.forEach {
+            expect(it.clazz) { List::class }
+            it.genericArguments.forEach { expect(it.clazz) { Unique::class } }
+        }
+
+        val cMember = classType.fromMember(HardToResolve<*>::c)
+        expect(cMember.clazz) { String::class }
     }
 }

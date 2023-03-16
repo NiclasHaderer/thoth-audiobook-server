@@ -2,31 +2,35 @@ package io.thoth.openapi.schema
 
 import io.ktor.util.reflect.*
 import io.thoth.common.extensions.fields
-import io.thoth.common.extensions.genericArguments
-import mu.KotlinLogging.logger
 import java.lang.reflect.ParameterizedType
 import kotlin.reflect.*
 import kotlin.reflect.full.starProjectedType
 
-
-class ClassType(val genericArguments: List<KClass<*>>, val clazz: KClass<*>) {
-    private val log = logger { }
-
-    /**
-     * This holds a map of the property and the parameterized value of the property So this could be something like
-     * this: { someProperty: [A, V] } These generics (A,V) can then be resolved th their actual values using the
-     * parameterToValue map
-     */
-    val parameterizedValues: Map<KProperty1<*, *>, List<KTypeParameter>> by lazy {
-        val typeParameterMap = clazz.typeParameters.associateBy { it.starProjectedType }
-
-        clazz.fields
-            .filter { member -> member.returnType.arguments.any { typeParameterMap.containsKey(it.type) } }
-            .mapNotNull { property ->
-                val typeParameters = property.returnType.arguments.mapNotNull { typeParameterMap[it.type] }
-                if (typeParameters.isNotEmpty()) property to typeParameters else null
+class ClassType private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>) {
+    companion object {
+        private fun resolveArguments(kType: KType): List<ClassType> {
+            val classTypes = mutableListOf<ClassType>()
+            for (arg in kType.arguments) {
+                val type = arg.type
+                if (type != null) {
+                    classTypes.add(create(type))
+                }
             }
-            .toMap()
+            return classTypes
+        }
+
+        fun create(type: KType): ClassType {
+            val resolvedArgs = resolveArguments(type)
+            return ClassType(resolvedArgs, type.classifier as KClass<*>)
+        }
+
+        inline fun <reified T> create(): ClassType {
+            return create(typeOf<T>())
+        }
+
+        fun wrap(clazz: KClass<*>, args: List<KClass<*>> = listOf()): ClassType {
+            return ClassType(args.map { wrap(it) }, clazz)
+        }
     }
 
     /**
@@ -49,28 +53,17 @@ class ClassType(val genericArguments: List<KClass<*>>, val clazz: KClass<*>) {
     }
 
     /** This is a list with the property of the class as key and the value (of the generic) as a value */
-    val resolvedGenericValues: Map<KProperty1<*, *>, KClass<*>> by lazy {
+    val resolvedGenericValues: Map<KProperty1<*, *>, ClassType> by lazy {
         clazz.fields
             .mapNotNull { property ->
                 val param = clazz.typeParameters.find { it == property.returnType.classifier } ?: return@mapNotNull null
-                property to param
+                property to parameterToValue[param]!!
             }
             .toMap()
-            .mapValues { entry -> parameterToValue[entry.value]!! }
     }
 
     /** This resolves the generic parameter K/V/T/... to an actual Kotlin class */
     val parameterToValue by lazy { clazz.typeParameters.zip(genericArguments).toMap() }
-
-    companion object {
-        inline fun <reified T> create(): ClassType {
-            return ClassType(typeOf<T>().genericArguments, T::class)
-        }
-
-        fun create(clazz: KClass<*>): ClassType {
-            return ClassType(listOf(), clazz)
-        }
-    }
 
     /** Create a new ClassType for a member of the current `ClassType.clazz` */
     @OptIn(ExperimentalStdlibApi::class)
@@ -84,7 +77,8 @@ class ClassType(val genericArguments: List<KClass<*>>, val clazz: KClass<*>) {
                     "Property ${property.name} is a generic parameter of ${clazz.simpleName}"
                     "If newClazz is generic some values might be missing"
                 }
-                ClassType(listOf(), newClazz)
+                // ClassType(listOf(), newClazz)
+                return newClazz
             }
             // The return type is a parameterized type which takes one of the generic parameters
             in resolvedParameterizedValue -> {
@@ -92,12 +86,15 @@ class ClassType(val genericArguments: List<KClass<*>>, val clazz: KClass<*>) {
             }
             // The return type is a non-generic class
             else -> {
-                val genericArgs = if (property.returnType.javaType is ParameterizedType) {
-                    (property.returnType.javaType as ParameterizedType).actualTypeArguments.map { (it as Class<*>).kotlin }
-                } else {
-                    listOf()
-                }
-                ClassType(genericArgs, property.returnType.classifier as KClass<*>)
+                val genericArgs =
+                    if (property.returnType.javaType is ParameterizedType) {
+                        (property.returnType.javaType as ParameterizedType).actualTypeArguments.map {
+                            (it as Class<*>).kotlin
+                        }
+                    } else {
+                        listOf()
+                    }
+                wrap(property.returnType.classifier as KClass<*>, genericArgs)
             }
         }
     }
