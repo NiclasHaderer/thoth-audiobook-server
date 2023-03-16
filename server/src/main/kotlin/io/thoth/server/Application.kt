@@ -105,7 +105,6 @@ fun Application.server() {
         jwksPath = "/api/.well-known/jwks.json"
         keyPairPath = "${config.configDirectory}/jwt.pem"
     }
-
     routing {
         // Authentication
         authRoutes(authRoutes)
