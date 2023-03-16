@@ -11,12 +11,14 @@ import io.swagger.v3.oas.models.media.NumberSchema
 import io.swagger.v3.oas.models.media.ObjectSchema
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.media.StringSchema
-import io.thoth.common.extensions.fields
-import io.thoth.common.extensions.optional
+import io.thoth.openapi.responses.BinaryResponse
+import io.thoth.openapi.responses.FileResponse
+import io.thoth.openapi.responses.RedirectResponse
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.reflect.full.declaredMemberProperties
 import mu.KotlinLogging.logger
 
 fun ClassType.generateSchema(): Pair<Schema<*>, Map<String, Schema<*>>> {
@@ -44,7 +46,7 @@ private object SchemaCreator {
 
     fun createSchemaForClassType(
         classType: ClassType,
-        namedSideProducts: MutableMap<String, Schema<*>>
+        namedSideSchemas: MutableMap<String, Schema<*>>
     ): Pair<SchemaName, Schema<*>> {
         if (classType.isEnum) {
             val schema = StringSchema()
@@ -56,6 +58,9 @@ private object SchemaCreator {
         }
 
         when (classType.clazz) {
+            RedirectResponse::class -> return null to StringSchema()
+            BinaryResponse::class -> return null to StringSchema().format("binary")
+            FileResponse::class -> return null to StringSchema().format("binary")
             ByteArray::class -> return null to StringSchema().format("binary")
             String::class -> return null to StringSchema()
             Int::class -> return null to IntegerSchema()
@@ -71,10 +76,10 @@ private object SchemaCreator {
                             var (schemaName, schema) =
                                 createSchemaForClassType(
                                     classType.genericArguments[0],
-                                    namedSideProducts,
+                                    namedSideSchemas,
                                 )
                             if (schemaName != null) {
-                                namedSideProducts[schemaName] = schema
+                                namedSideSchemas[schemaName] = schema
                                 schema = createRef(schemaName)
                             }
                             it.items = schema
@@ -89,10 +94,10 @@ private object SchemaCreator {
                             var (schemaName, schema) =
                                 createSchemaForClassType(
                                     classType.genericArguments[1],
-                                    namedSideProducts,
+                                    namedSideSchemas,
                                 )
                             if (schemaName != null) {
-                                namedSideProducts[schemaName] = schema
+                                namedSideSchemas[schemaName] = schema
                                 schema = createRef(schemaName)
                             }
                             it.items = schema
@@ -108,12 +113,13 @@ private object SchemaCreator {
             UUID::class -> return null to StringSchema()
             else -> {
                 val objectSchema = ObjectSchema()
-                objectSchema.required = classType.clazz.fields.filter { !it.optional }.map { it.name }
+                objectSchema.required =
+                    classType.clazz.declaredMemberProperties.filter { !it.returnType.isMarkedNullable }.map { it.name }
                 objectSchema.properties =
-                    classType.clazz.fields.associate {
-                        var (schemaName, schema) = createSchemaForClassType(classType.fromMember(it), namedSideProducts)
+                    classType.clazz.declaredMemberProperties.associate {
+                        var (schemaName, schema) = createSchemaForClassType(classType.fromMember(it), namedSideSchemas)
                         if (schemaName != null) {
-                            namedSideProducts[schemaName] = schema
+                            namedSideSchemas[schemaName] = schema
                             schema = createRef(schemaName)
                         }
 

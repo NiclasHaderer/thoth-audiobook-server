@@ -36,7 +36,7 @@ fun Routing.seriesRouting() {
         }
     }
 
-    get<Api.Libraries.Id.Series.Sorting, List<UUID>>("sorting") { (limit, offset) ->
+    get<Api.Libraries.Id.Series.Sorting, List<UUID>> { (limit, offset) ->
         transaction { Series.getMultiple(limit, offset) }.map { it.id }
     }
 
@@ -50,7 +50,7 @@ fun Routing.seriesRouting() {
         transaction { Series.getDetailedById(id) } ?: serverError(HttpStatusCode.NotFound, "Could not find series")
     }
 
-    get<Api.Libraries.Id.Series.Autocomplete, List<TitledId>>("autocomplete") { (q) ->
+    get<Api.Libraries.Id.Series.Autocomplete, List<TitledId>> { (q) ->
         transaction {
             Series.find { TSeries.title like "%$q%" }
                 .orderBy(TSeries.title to SortOrder.ASC)

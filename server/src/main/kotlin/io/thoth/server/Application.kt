@@ -22,7 +22,6 @@ import io.thoth.server.api.imageRouting
 import io.thoth.server.api.libraryRouting
 import io.thoth.server.api.metadataRouting
 import io.thoth.server.api.pingRouting
-import io.thoth.server.api.searchRouting
 import io.thoth.server.api.seriesRouting
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
@@ -124,6 +123,5 @@ fun Application.server() {
         // Routes for checking if the server is available
         pingRouting()
         // Searching through all libraries
-        searchRouting()
     }
 }

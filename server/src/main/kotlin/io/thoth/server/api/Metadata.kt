@@ -14,7 +14,7 @@ import org.koin.ktor.ext.inject
 fun Routing.metadataRouting() {
     val metadataProvider by inject<MetadataProvider>()
 
-    get<Api.Metadata.Search, List<MetadataSearchBook>>("search") { params ->
+    get<Api.Metadata.Search, List<MetadataSearchBook>> { params ->
         metadataProvider.search(
             params.keywords,
             params.title,
@@ -33,9 +33,7 @@ fun Routing.metadataRouting() {
             )
     }
 
-    get<Api.Metadata.Author.Search, List<MetadataAuthor>>("search") { params ->
-        metadataProvider.getAuthorByName(params.q)
-    }
+    get<Api.Metadata.Author.Search, List<MetadataAuthor>> { params -> metadataProvider.getAuthorByName(params.q) }
 
     get<Api.Metadata.Book.Id, MetadataBook> { id ->
         metadataProvider.getBookByID(id.provider, id.id)
@@ -45,7 +43,7 @@ fun Routing.metadataRouting() {
             )
     }
 
-    get<Api.Metadata.Book.Search, List<MetadataBook>>("search") { params ->
+    get<Api.Metadata.Book.Search, List<MetadataBook>> { params ->
         metadataProvider.getBookByName(params.q, params.authorName)
     }
 
@@ -56,7 +54,7 @@ fun Routing.metadataRouting() {
                 "Series with id ${id.id} and provider ${id.provider}was not found",
             )
     }
-    get<Api.Metadata.Series.Search, List<MetadataSeries>>("search") { params ->
+    get<Api.Metadata.Series.Search, List<MetadataSeries>> { params ->
         metadataProvider.getSeriesByName(params.q, params.authorName)
     }
 }

@@ -10,8 +10,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import io.thoth.openapi.SchemaHolder
+import io.thoth.openapi.Secured
+import io.thoth.openapi.findNearestAnnotation
 import io.thoth.openapi.responses.BaseResponse
-import io.thoth.openapi.security.extractSecured
 import io.thoth.openapi.serverError
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
@@ -74,7 +75,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
 ) {
     SchemaHolder.addRouteToApi<PARAMS, BODY, RESPONSE>(fullPath(PARAMS::class), method)
 
-    val secured = extractSecured(PARAMS::class)
+    val secured = PARAMS::class.findNearestAnnotation<Secured>()
     if (secured != null) {
         authenticate(secured.name) {
             if (PARAMS::class == Unit::class) {
@@ -102,40 +103,10 @@ inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.get(
     wrapRequest(HttpMethod.Get, callback)
 }
 
-inline fun <reified RESPONSE> Route.get(noinline callback: suspend RouteHandler.() -> RESPONSE) {
-    wrapRequest<Unit, RESPONSE>(HttpMethod.Get) { callback() }
-}
-
-inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.get(
-    path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
-) {
-    route(path) { wrapRequest(HttpMethod.Get, callback) }
-}
-
-inline fun <reified RESPONSE : Any> Route.get(path: String, noinline callback: suspend RouteHandler.() -> RESPONSE) {
-    route(path) { wrapRequest<Unit, RESPONSE>(HttpMethod.Get) { callback() } }
-}
-
 inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.head(
     noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
 ) {
     wrapRequest(HttpMethod.Head, callback)
-}
-
-inline fun <reified RESPONSE : Any> Route.head(noinline callback: suspend RouteHandler.() -> RESPONSE) {
-    wrapRequest<Unit, RESPONSE>(HttpMethod.Head) { callback() }
-}
-
-inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.head(
-    path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
-) {
-    route(path) { wrapRequest(HttpMethod.Head, callback) }
-}
-
-inline fun <reified RESPONSE : Any> Route.head(path: String, noinline callback: suspend RouteHandler.() -> RESPONSE) {
-    route(path) { wrapRequest<Unit, RESPONSE>(HttpMethod.Head) { callback() } }
 }
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.post(
@@ -144,50 +115,10 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Ro
     wrapRequest(HttpMethod.Post, callback)
 }
 
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.post(
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Post) { _, body -> callback(body) }
-}
-
-inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.post(
-    path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest(HttpMethod.Post, callback) }
-}
-
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.post(
-    path: String,
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Post) { _, body -> callback(body) } }
-}
-
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.put(
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
     wrapRequest(HttpMethod.Put, callback)
-}
-
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.put(
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Put) { _, body -> callback(body) }
-}
-
-inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.put(
-    path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest(HttpMethod.Put, callback) }
-}
-
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.put(
-    path: String,
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Put) { _, body -> callback(body) } }
 }
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.delete(
@@ -196,74 +127,14 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Ro
     wrapRequest(HttpMethod.Delete, callback)
 }
 
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.delete(
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Delete) { _, body -> callback(body) }
-}
-
-inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.delete(
-    path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest(HttpMethod.Delete, callback) }
-}
-
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.delete(
-    path: String,
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Delete) { _, body -> callback(body) } }
-}
-
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.options(
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
     wrapRequest(HttpMethod.Options, callback)
 }
 
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.options(
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Options) { _, body -> callback(body) }
-}
-
-inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.options(
-    path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest(HttpMethod.Options, callback) }
-}
-
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.options(
-    path: String,
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Options) { _, body -> callback(body) } }
-}
-
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.patch(
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
     wrapRequest(HttpMethod.Patch, callback)
-}
-
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.patch(
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Patch) { _, body -> callback(body) }
-}
-
-inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.patch(
-    path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest(HttpMethod.Patch, callback) }
-}
-
-inline fun <reified BODY : Any, reified RESPONSE : Any> Route.patch(
-    path: String,
-    noinline callback: suspend RouteHandler.(body: BODY) -> RESPONSE
-) {
-    route(path) { wrapRequest<Unit, BODY, RESPONSE>(HttpMethod.Patch) { _, body -> callback(body) } }
 }
