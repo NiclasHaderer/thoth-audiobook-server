@@ -2,7 +2,6 @@ package io.thoth.common.extensions
 
 import kotlin.reflect.*
 import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.starProjectedType
 
 val <T, V> KProperty1<T, V>.optional: Boolean
     get() = returnType.isMarkedNullable
