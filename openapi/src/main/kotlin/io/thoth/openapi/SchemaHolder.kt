@@ -13,8 +13,9 @@ import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
 import io.thoth.openapi.schema.ClassType
 import io.thoth.openapi.schema.ContentTypeLookup
+import io.thoth.openapi.schema.PathParameters
+import io.thoth.openapi.schema.QueryParameters
 import io.thoth.openapi.schema.generateSchema
-import io.thoth.openapi.schema.getPathParameters
 import kotlin.reflect.full.findAnnotation
 
 object SchemaHolder {
@@ -69,14 +70,24 @@ object SchemaHolder {
     }
 
     private fun addPathAndQueryParameters(operation: Operation, pathParams: ClassType) {
-        val extractedParams = getPathParameters(pathParams.clazz)
-        for (param in extractedParams) {
+        val extractedPathParams = PathParameters.extractAll(pathParams.clazz)
+        for (param in extractedPathParams) {
             operation.addParametersItem(
                 Parameter().also {
                     it.`in` = "path"
                     it.name = param.name
                     it.schema = ClassType.wrap(param.type).generateSchema(false).first
                 },
+            )
+        }
+        val extractedQueryParameters = QueryParameters.extractAll(pathParams.clazz)
+        for (param in extractedQueryParameters) {
+            operation.addParametersItem(
+                Parameter().also {
+                    it.`in` = "query"
+                    it.name = param.name
+                    it.schema = ClassType.wrap(param.type).generateSchema(false).first
+                }
             )
         }
     }
