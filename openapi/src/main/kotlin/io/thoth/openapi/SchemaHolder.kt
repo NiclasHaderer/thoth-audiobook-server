@@ -11,11 +11,7 @@ import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
-import io.thoth.openapi.schema.ClassType
-import io.thoth.openapi.schema.ContentTypeLookup
-import io.thoth.openapi.schema.PathParameters
-import io.thoth.openapi.schema.QueryParameters
-import io.thoth.openapi.schema.generateSchema
+import io.thoth.openapi.schema.*
 import kotlin.reflect.full.findAnnotation
 
 object SchemaHolder {
@@ -87,7 +83,7 @@ object SchemaHolder {
                     it.`in` = "query"
                     it.name = param.name
                     it.schema = ClassType.wrap(param.type).generateSchema(false).first
-                }
+                },
             )
         }
     }
