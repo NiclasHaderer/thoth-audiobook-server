@@ -1,9 +1,9 @@
 package io.thoth.openapi.schema
 
 import io.ktor.util.reflect.*
+import io.thoth.openapi.properties
 import java.lang.reflect.ParameterizedType
 import kotlin.reflect.*
-import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.starProjectedType
 
 class ClassType private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>) {
@@ -43,7 +43,7 @@ class ClassType private constructor(val genericArguments: List<ClassType>, val c
     val resolvedParameterizedValue: Map<KProperty1<*, *>, ClassType> by lazy {
         val typeParameterMap = clazz.typeParameters.associateBy { it.starProjectedType }
 
-        clazz.declaredMemberProperties
+        clazz.properties
             .filter { member -> member.returnType.arguments.any { typeParameterMap.containsKey(it.type) } }
             .mapNotNull { property ->
                 val typeParameters = property.returnType.arguments.mapNotNull { typeParameterMap[it.type] }
@@ -57,7 +57,7 @@ class ClassType private constructor(val genericArguments: List<ClassType>, val c
 
     /** This is a list with the property of the class as key and the value (of the generic) as a value */
     val resolvedGenericValues: Map<KProperty1<*, *>, ClassType> by lazy {
-        clazz.declaredMemberProperties
+        clazz.properties
             .mapNotNull { property ->
                 val param = clazz.typeParameters.find { it == property.returnType.classifier } ?: return@mapNotNull null
                 property to parameterToValue[param]!!

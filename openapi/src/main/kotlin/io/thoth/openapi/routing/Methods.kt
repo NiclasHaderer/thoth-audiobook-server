@@ -14,10 +14,10 @@ import io.thoth.openapi.ErrorResponse
 import io.thoth.openapi.SchemaHolder
 import io.thoth.openapi.Secured
 import io.thoth.openapi.findAnnotationUp
+import io.thoth.openapi.properties
 import io.thoth.openapi.responses.BaseResponse
 import io.thoth.openapi.schema.parent
 import kotlin.reflect.KClass
-import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
@@ -71,7 +71,7 @@ fun assertParamsHierarchy(params: KClass<*>) {
         // ktor routing will not
         //    work as one would think
         val hasDeclaredParent =
-            params.declaredMemberProperties.map { it.returnType.classifier as KClass<*> }.any { it == parentClass }
+            params.properties.map { it.returnType.classifier as KClass<*> }.any { it == parentClass }
         if (!hasDeclaredParent) {
             throw IllegalStateException(
                 "Class ${params.qualifiedName} has no property of type ${parentClass.qualifiedName}." +

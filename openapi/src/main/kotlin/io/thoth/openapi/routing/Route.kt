@@ -13,7 +13,12 @@ fun resolveResourcePath(resourceClassParam: KClass<*>?): String? {
     while (resourceClass != null) {
         val resource = resourceClass.findAnnotation<Resource>()
         if (resource != null && resource.path.isNotBlank()) {
-            resourcePath = "${resource.path}/$resourcePath"
+            resourcePath =
+                if (resourcePath.isNotBlank()) {
+                    "${resource.path}/$resourcePath"
+                } else {
+                    resource.path
+                }
         }
         resourceClass = resourceClass.parent
     }

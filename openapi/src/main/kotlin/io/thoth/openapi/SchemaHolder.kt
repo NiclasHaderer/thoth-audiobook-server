@@ -82,6 +82,7 @@ object SchemaHolder {
                 Parameter().also {
                     it.`in` = "query"
                     it.name = param.name
+                    it.required = !param.optional
                     it.schema = ClassType.wrap(param.type).generateSchema(false).first
                 },
             )
