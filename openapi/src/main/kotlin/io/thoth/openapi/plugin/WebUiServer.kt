@@ -9,11 +9,18 @@ import io.thoth.openapi.SchemaHolder
 import java.net.URL
 
 internal class WebUiServer(private val config: WebUiConfig) {
-    private val notFound = mutableListOf<String>()
+    private val notFound = mutableSetOf<String>()
     private val content = mutableMapOf<String, WebUiResource>()
 
     suspend fun interceptCall(call: ApplicationCall) {
-        redirectToRightURL(call)
+        if (!call.request.uri.startsWith(config.webUiPath)) {
+            return
+        }
+
+        if (config.webUiPath == call.request.path()) {
+            call.respondRedirect("${config.webUiPath}/")
+            return
+        }
 
         if (isSchemaRequest(call)) {
             respondWithSchema(call)
@@ -39,29 +46,19 @@ internal class WebUiServer(private val config: WebUiConfig) {
         return callPath == schemaPath
     }
 
-    private suspend fun redirectToRightURL(call: ApplicationCall) {
-        val callPath = call.request.path()
-        val isDocs = callPath.trimEnd('/') == config.webUiPath.trimEnd('/')
-        if (isDocs && callPath.last() != '/') {
-            call.respondRedirect("$callPath/")
-        }
-    }
-
     private suspend fun respondWithStatic(call: ApplicationCall) {
         val fileName = getStaticFileName(call)
-        val file = content[fileName]
-        if (file != null) {
-            call.respond(file)
-        }
+        call.respond(content[fileName]!!)
     }
 
     private fun isStaticRequest(call: ApplicationCall): Boolean {
-        val callPath = call.request.path()
-        if (config.webUiPath !in callPath) return false
-
         val webUiVersion = config.webUiVersion
         return when (val fileName = getStaticFileName(call)) {
             in notFound -> false
+            "index.html" -> {
+                content[fileName] = WebUiResource.index(config.schemaPath)
+                return true
+            }
             else -> {
                 val resource =
                     this::class.java.getResource("/META-INF/resources/webjars/swagger-ui/$webUiVersion/$fileName")
@@ -69,7 +66,7 @@ internal class WebUiServer(private val config: WebUiConfig) {
                     notFound.add(fileName)
                     false
                 } else {
-                    content[fileName] = WebUiResource(resource, config.schemaPath)
+                    content[fileName] = WebUiResource(resource)
                     true
                 }
             }
@@ -80,43 +77,82 @@ internal class WebUiServer(private val config: WebUiConfig) {
         val callPath = call.request.path()
         val fileName = callPath.removePrefix(config.webUiPath).trimEnd('/')
 
-        return if (fileName == "") {
+        return fileName
+            .ifEmpty {
                 return "index.html"
-            } else {
-                fileName
             }
             .trimStart('/')
     }
 }
 
-private val extensionToContentType =
-    mapOf(
-        "html" to ContentType.Text.Html,
-        "css" to ContentType.Text.CSS,
-        "js" to ContentType.Text.JavaScript,
-        "json" to ContentType.Application.Json,
-        "png" to ContentType.Image.PNG,
+internal class WebUiResource(private val bytes: ByteArray, override val contentType: ContentType) :
+    OutgoingContent.ByteArrayContent() {
+
+    constructor(
+        url: URL
+    ) : this(
+        url.readBytes(),
+        url.run {
+            val extension = file.substring(file.lastIndexOf(".") + 1)
+            extensionToContentType[extension] ?: ContentType.Text.Html
+        },
     )
 
-internal class WebUiResource(
-    private val url: URL,
-    private val schemaURL: String,
-) : OutgoingContent.ByteArrayContent() {
+    companion object {
+        private val extensionToContentType =
+            mapOf(
+                "html" to ContentType.Text.Html,
+                "css" to ContentType.Text.CSS,
+                "js" to ContentType.Text.JavaScript,
+                "json" to ContentType.Application.Json,
+                "png" to ContentType.Image.PNG,
+            )
 
-    private val bytes by lazy {
-        if (contentType == ContentType.Text.Html) {
-            url.readText().replace("https://petstore.swagger.io/v2/swagger.json", schemaURL).toByteArray()
-        } else {
-            url.readBytes()
+        fun index(openapiURL: String): WebUiResource {
+            return WebUiResource(
+                // language=HTML
+                """
+                <!-- HTML for static distribution bundle build -->
+                <!DOCTYPE html>
+                <html lang="en">
+                  <head>
+                    <meta charset="UTF-8">
+                    <title>Swagger UI</title>
+                    <link rel="stylesheet" type="text/css" href="./swagger-ui.css" />
+                    <link rel="stylesheet" type="text/css" href="index.css" />
+                    <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
+                    <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
+                  </head>
+                  <body>
+                    <div id="swagger-ui"></div>
+                    <script src="./swagger-ui-bundle.js" charset="UTF-8"> </script>
+                    <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
+                    <script type="text/javascript">
+                    SwaggerUIBundle({
+                        url: "$openapiURL",
+                        dom_id: '#swagger-ui',
+                        deepLinking: true,
+                        presets: [
+                          SwaggerUIBundle.presets.apis,
+                          SwaggerUIStandalonePreset
+                        ],
+                        plugins: [
+                          SwaggerUIBundle.plugins.DownloadUrl
+                        ],
+                        layout: "StandaloneLayout"
+                      });
+                    </script>
+                  </body>
+                </html>
+            """
+                    .trimIndent()
+                    .toByteArray(),
+                ContentType.Text.Html,
+            )
         }
     }
 
-    override val contentType: ContentType by lazy {
-        val extension = url.file.substring(url.file.lastIndexOf(".") + 1)
-        extensionToContentType[extension] ?: ContentType.Text.Html
-    }
-
-    override val contentLength: Long? by lazy { bytes.size.toLong() }
+    override val contentLength: Long by lazy { bytes.size.toLong() }
 
     override fun bytes() = bytes
 }

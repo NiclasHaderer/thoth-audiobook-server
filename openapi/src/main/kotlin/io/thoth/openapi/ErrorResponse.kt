@@ -12,12 +12,15 @@ fun Application.configureStatusPages() {
     val logger = logger {}
     install(StatusPages) {
         exception<ErrorResponse> { call, cause ->
+            if (call.response.isSent) return@exception
             call.respond(
                 cause.status,
                 hashMapOf("error" to cause.message, "status" to cause.status.value, "details" to cause.details),
             )
         }
         exception<Throwable> { call, cause ->
+            if (call.response.isSent) return@exception
+
             call.respond(
                 HttpStatusCode.InternalServerError,
                 hashMapOf(

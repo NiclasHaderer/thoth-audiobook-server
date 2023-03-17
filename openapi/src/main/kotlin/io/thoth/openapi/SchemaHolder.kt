@@ -3,20 +3,18 @@ package io.thoth.openapi
 import io.ktor.http.*
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.core.util.Yaml
-import io.swagger.v3.oas.models.Components
-import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.Operation
-import io.swagger.v3.oas.models.PathItem
-import io.swagger.v3.oas.models.Paths
+import io.swagger.v3.oas.models.*
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.media.MediaType
+import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
 import io.thoth.openapi.schema.ClassType
 import io.thoth.openapi.schema.ContentTypeLookup
 import io.thoth.openapi.schema.generateSchema
+import io.thoth.openapi.schema.getPathParameters
 import kotlin.reflect.full.findAnnotation
 
 object SchemaHolder {
@@ -57,6 +55,7 @@ object SchemaHolder {
         responseBody: ClassType,
     ) {
         val operation = getPath(url, method, requestParams)
+        addPathAndQueryParameters(operation, requestParams)
         if (
             method != HttpMethod.Get &&
                 method != HttpMethod.Head &&
@@ -67,6 +66,19 @@ object SchemaHolder {
         }
         val statusCode = getStatusCode(method, responseBody)
         addResponse(responseBody, statusCode, operation)
+    }
+
+    private fun addPathAndQueryParameters(operation: Operation, pathParams: ClassType) {
+        val extractedParams = getPathParameters(pathParams.clazz)
+        for (param in extractedParams) {
+            operation.addParametersItem(
+                Parameter().also {
+                    it.`in` = "path"
+                    it.name = param.name
+                    it.schema = ClassType.wrap(param.type).generateSchema(false).first
+                },
+            )
+        }
     }
 
     private fun getStatusCode(method: HttpMethod, responseBody: ClassType): HttpStatusCode {
@@ -89,7 +101,7 @@ object SchemaHolder {
                     ApiResponse()
                         .also {
                             val description = response.clazz.findAnnotation<Description>()
-                            it.description(description?.description)
+                            it.description(description?.description ?: "")
                         }
                         .content(
                             Content()
