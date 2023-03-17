@@ -12,10 +12,10 @@ import kotlin.reflect.full.findAnnotations
 
 @Target(AnnotationTarget.CLASS) annotation class Summary(val summary: String)
 
-inline fun <reified T : Annotation> KClass<*>.findNearestAnnotations(): List<T> {
+inline fun <reified T : Annotation> KClass<*>.findAnnotationsFirstUp(): List<T> {
     var root: KClass<*>? = this
     var annotations = this.findAnnotations<T>()
-    while (root != null && annotations.isEmpty() && root != Any::class) {
+    while (root != null && annotations.isEmpty()) {
         annotations = root.findAnnotations()
         root = root.parent
     }
@@ -23,6 +23,17 @@ inline fun <reified T : Annotation> KClass<*>.findNearestAnnotations(): List<T> 
     return annotations
 }
 
-inline fun <reified T : Annotation> KClass<*>.findNearestAnnotation(): T? {
-    return findNearestAnnotations<T>().firstOrNull()
+inline fun <reified T : Annotation> KClass<*>.findAnnotationsUp(): List<T> {
+    var root: KClass<*>? = this
+    var annotations = this.findAnnotations<T>()
+    while (root != null) {
+        annotations = root.findAnnotations()
+        root = root.parent
+    }
+
+    return annotations
+}
+
+inline fun <reified T : Annotation> KClass<*>.findAnnotationUp(): T? {
+    return findAnnotationsFirstUp<T>().firstOrNull()
 }

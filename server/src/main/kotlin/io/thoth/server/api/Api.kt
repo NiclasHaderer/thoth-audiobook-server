@@ -55,19 +55,19 @@ class Api {
 
         @Resource("rescan") data class Rescan(private val parent: Libraries)
 
-        @Resource("{id}")
-        data class Id(val id: UUID_S, private val parent: Libraries) {
+        @Resource("{libraryId}")
+        data class Id(val libraryId: UUID_S, private val parent: Libraries) {
             @Resource("rescan")
             data class Rescan(private val parent: Id) {
                 val libraryId
-                    get() = parent.id
+                    get() = parent.libraryId
             }
 
             @Resource("books")
             @Tagged("Books")
             data class Books(private val parent: Libraries.Id) {
                 val libraryId
-                    get() = parent.id
+                    get() = parent.libraryId
 
                 @Resource("")
                 data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Books) {
@@ -87,8 +87,8 @@ class Api {
                         get() = parent.libraryId
                 }
 
-                @Resource("{id}")
-                data class Id(val id: UUID_S, private val parent: Books) {
+                @Resource("{bookId}")
+                data class Id(val bookId: UUID_S, private val parent: Books) {
                     val libraryId
                         get() = parent.libraryId
 
@@ -97,7 +97,7 @@ class Api {
                         val libraryId
                             get() = parent.libraryId
                         val id
-                            get() = parent.id
+                            get() = parent.bookId
                     }
                 }
             }
@@ -106,7 +106,7 @@ class Api {
             @Tagged("Authors")
             data class Authors(private val parent: Libraries.Id) {
                 val libraryId
-                    get() = parent.id
+                    get() = parent.libraryId
 
                 @Resource("")
                 data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
@@ -126,8 +126,8 @@ class Api {
                         get() = parent.libraryId
                 }
 
-                @Resource("{id}")
-                data class Id(val id: UUID_S, private val parent: Authors) {
+                @Resource("{authorId}")
+                data class Id(val authorId: UUID_S, private val parent: Authors) {
                     val libraryId
                         get() = parent.libraryId
 
@@ -136,7 +136,7 @@ class Api {
                         val libraryId
                             get() = parent.libraryId
                         val id
-                            get() = parent.id
+                            get() = parent.authorId
                     }
                 }
             }
@@ -145,7 +145,7 @@ class Api {
             @Tagged("Series")
             data class Series(private val parent: Libraries.Id) {
                 val libraryId
-                    get() = parent.id
+                    get() = parent.libraryId
 
                 @Resource("")
                 data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Series) {
@@ -165,8 +165,8 @@ class Api {
                         get() = parent.libraryId
                 }
 
-                @Resource("{id}")
-                data class Id(val id: UUID_S, private val parent: Series) {
+                @Resource("{seriesId}")
+                data class Id(val seriesId: UUID_S, private val parent: Series) {
                     val libraryId
                         get() = parent.libraryId
 
@@ -175,7 +175,7 @@ class Api {
                         val libraryId
                             get() = parent.libraryId
                         val id
-                            get() = parent.id
+                            get() = parent.seriesId
                     }
                 }
             }

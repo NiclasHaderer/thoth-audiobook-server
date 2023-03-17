@@ -61,7 +61,8 @@ fun Routing.seriesRouting() {
 
     patch<Api.Libraries.Id.Series.Id, PatchSeries, SeriesModel> { seriesId, patchSeries ->
         transaction {
-            val series = Series.findById(seriesId.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+            val series =
+                Series.findById(seriesId.seriesId) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
 
             series.apply {
                 title = patchSeries.title ?: title
@@ -93,7 +94,8 @@ fun Routing.seriesRouting() {
 
     put<Api.Libraries.Id.Series.Id, PutSeries, SeriesModel> { seriesId, putSeries ->
         transaction {
-            val series = Series.findById(seriesId.id) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
+            val series =
+                Series.findById(seriesId.seriesId) ?: serverError(HttpStatusCode.NotFound, "Could not find series")
 
             series.apply {
                 title = putSeries.title

@@ -15,8 +15,5 @@ val OpenAPIRouting =
         // Ensure that the dataconversion plugin is installed
         application.plugin(DataConversion)
         application.plugin(Resources)
-        application.environment.monitor.subscribe(ApplicationStarted) {
-            val t = SchemaHolder.json()
-            println(t)
-        }
+        // application.environment.monitor.subscribe(ApplicationStarted)
     }

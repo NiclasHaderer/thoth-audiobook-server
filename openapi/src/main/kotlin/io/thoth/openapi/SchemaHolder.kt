@@ -106,7 +106,7 @@ object SchemaHolder {
 
     private fun getPath(url: String, method: HttpMethod, requestParams: ClassType): Operation {
         val pathItem = _api.paths.getOrPut(url) { PathItem() }
-        val tags = requestParams.clazz.findNearestAnnotations<Tagged>().map { it.name }
+        val tags = requestParams.clazz.findAnnotationsFirstUp<Tagged>().map { it.name }
 
         val operation = Operation().tags(tags)
         operation.description(requestParams.clazz.findAnnotation<Description>()?.description)
