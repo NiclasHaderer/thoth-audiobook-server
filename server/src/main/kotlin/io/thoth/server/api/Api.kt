@@ -32,7 +32,7 @@ class Api {
         }
     }
 
-    @Resource("ping") data class Ping(private val parent: Api)
+    @Tagged("Server") @Resource("ping") data class Ping(private val parent: Api)
 
     @Resource("libraries")
     @Tagged("Library")

@@ -2,6 +2,8 @@ package io.thoth.openapi.schema
 
 import io.swagger.v3.core.util.RefUtils
 import io.swagger.v3.oas.models.media.*
+import io.thoth.openapi.nullable
+import io.thoth.openapi.properties
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
@@ -10,7 +12,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KVisibility
-import kotlin.reflect.full.declaredMemberProperties
 import mu.KotlinLogging.logger
 
 fun ClassType.generateSchema(embedSchemas: Boolean = true): Pair<Schema<*>, Map<String, Schema<*>>> {
@@ -51,29 +52,34 @@ private object SchemaCreator {
         }
 
         when (classType.clazz) {
+            // Custom responses
             RedirectResponse::class -> return null to StringSchema()
             BinaryResponse::class -> return null to StringSchema().format("binary")
             FileResponse::class -> return null to StringSchema().format("binary")
+            // Basic types
             ByteArray::class -> return null to StringSchema().format("binary")
-            String::class -> return null to StringSchema()
-            Int::class -> return null to IntegerSchema()
-            Long::class -> return null to IntegerSchema()
-            Double::class -> return null to NumberSchema()
-            Float::class -> return null to NumberSchema()
-            Boolean::class -> return null to BooleanSchema()
-            ULong::class -> return null to IntegerSchema()
             Unit::class -> return null to StringSchema().maxLength(0)
+            String::class -> return null to StringSchema()
+            Any::class -> return null to ObjectSchema()
+            // Numbers
+            Int::class -> return null to IntegerSchema().format("int32")
+            Long::class -> return null to IntegerSchema().format("int64")
+            Double::class -> return null to NumberSchema().format("double")
+            Float::class -> return null to NumberSchema().format("float")
+            Boolean::class -> return null to BooleanSchema()
+            ULong::class -> return null to IntegerSchema().format("int64").minimum(BigDecimal(0))
+            BigDecimal::class -> return null to IntegerSchema().format("int64")
+            // Date
             Date::class -> return null to DateTimeSchema()
             LocalDate::class -> return null to DateSchema()
             LocalDateTime::class -> return null to DateTimeSchema()
-            BigDecimal::class -> return null to IntegerSchema()
+            // Complex types
             UUID::class ->
-                return "UUID".takeIf { embedSchemas } to
-                    StringSchema().also {
-                        it.pattern = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-                        it.minLength = 36
-                        it.maxLength = 36
-                    }
+                return classType.clazz.qualifiedName.takeIf { embedSchemas } to
+                    StringSchema()
+                        .pattern("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+                        .minLength(36)
+                        .maxLength(36)
             List::class ->
                 return null to
                     ArraySchema().also {
@@ -96,7 +102,7 @@ private object SchemaCreator {
             Map::class ->
                 return null to
                     MapSchema().also {
-                        if (classType.genericArguments.size != 2) {
+                        if (classType.genericArguments.size == 2) {
                             var (schemaName, schema) =
                                 createSchemaForClassType(
                                     classType.genericArguments[1],
@@ -113,14 +119,20 @@ private object SchemaCreator {
                         }
                     }
             else -> {
+
+                if (classType.clazz == Any::class) {
+                    println("hello")
+                }
+
                 val objectSchema = ObjectSchema()
                 objectSchema.required =
-                    classType.clazz.declaredMemberProperties
+                    classType.clazz.properties
                         .filter { it.visibility == KVisibility.PUBLIC }
-                        .filter { !it.returnType.isMarkedNullable }
+                        .filter { !it.nullable }
                         .map { it.name }
+
                 objectSchema.properties =
-                    classType.clazz.declaredMemberProperties
+                    classType.clazz.properties
                         .filter { it.visibility == KVisibility.PUBLIC }
                         .associate {
                             var (schemaName, schema) =

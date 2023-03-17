@@ -1,10 +1,10 @@
 package io.thoth.openapi.schema
 
+import io.thoth.openapi.optional
+import io.thoth.openapi.properties
 import kotlin.reflect.KClass
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.javaField
 
-class QueryParameter(val name: String, val type: KClass<*>, val origin: KClass<*>)
+data class QueryParameter(val name: String, val type: KClass<*>, val origin: KClass<*>, val optional: Boolean)
 
 object QueryParameters {
     fun extractAll(resource: KClass<*>): List<QueryParameter> {
@@ -18,11 +18,7 @@ object QueryParameters {
 
         val pathParams = PathParameters.extractForClass(resource).map { it.name }.toSet()
         val queryParams =
-            resource.declaredMemberProperties
-                .filter {
-                    // checks if the property is a getter
-                    it.javaField != null
-                }
+            resource.properties
                 .filter {
                     // Remove path parameters
                     it.name !in pathParams
@@ -31,7 +27,14 @@ object QueryParameters {
                     // Remove injected parent
                     it.returnType.classifier != resource.parent
                 }
-                .map { QueryParameter(it.name, it.returnType.classifier as KClass<*>, resource) }
+                .map {
+                    QueryParameter(
+                        name = it.name,
+                        type = it.returnType.classifier as KClass<*>,
+                        origin = resource,
+                        optional = it.optional,
+                    )
+                }
 
         for (param in queryParams) {
             if (param.name in result) {

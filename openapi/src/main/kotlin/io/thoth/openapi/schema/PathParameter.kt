@@ -1,11 +1,11 @@
 package io.thoth.openapi.schema
 
 import io.ktor.resources.*
+import io.thoth.openapi.properties
 import kotlin.reflect.KClass
-import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
 
-class PathParameter(val name: String, val type: KClass<*>, val origin: KClass<*>)
+data class PathParameter(val name: String, val type: KClass<*>, val origin: KClass<*>)
 
 object PathParameters {
 
@@ -42,7 +42,7 @@ object PathParameters {
             val varName = match.groupValues[1]
             // Check if the variable name is a valid kotlin variable name
             val varMember =
-                params.declaredMemberProperties.find { it.name == varName }
+                params.properties.find { it.name == varName }
                     ?: throw IllegalStateException(
                         "Class ${params.qualifiedName} has a path parameter $varName which is not declared as a member. " +
                             "You have to create a property with the name $varName",
