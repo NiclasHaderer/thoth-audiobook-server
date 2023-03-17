@@ -83,35 +83,6 @@ fun assertParamsHierarchy(params: KClass<*>) {
     }
 }
 
-fun assertNoDuplicatePathNames(params: KClass<*>, takenParameters: MutableMap<String, String> = mutableMapOf()) {
-    val resourcePath = params.findAnnotation<Resource>()!!.path
-    val matches = "\\{((?:[a-z]|[A-Z]|_)+)}".toRegex().findAll(resourcePath)
-    for (match in matches) {
-        val varName = match.groupValues[1]
-        // Check if the variable name is already taken
-        if (takenParameters.containsKey(varName)) {
-            throw IllegalStateException(
-                "Class ${params.qualifiedName} has a duplicate path parameter name $varName. " +
-                    "The parameter is already taken by ${takenParameters[varName]}",
-            )
-        }
-
-        // Check if the variable name is a valid kotlin variable name
-        val hasAMemberWithName = params.declaredMemberProperties.any { it.name == varName }
-        if (!hasAMemberWithName) {
-            throw IllegalStateException(
-                "Class ${params.qualifiedName} has a path parameter $varName which is not declared as a member. " +
-                    "You have to create a property with the name $varName",
-            )
-        }
-
-        takenParameters[varName] = params.qualifiedName!!
-    }
-
-    // Go up and check the parent
-    params.parent?.java?.kotlin?.run { assertNoDuplicatePathNames(this, takenParameters) }
-}
-
 inline fun <reified PARAMS : Any, reified RESPONSE> Route.wrapRequest(
     method: HttpMethod,
     noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
@@ -123,7 +94,6 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
 ) {
     // Check if the params route hierarchy is OK
     assertParamsHierarchy(PARAMS::class)
-    assertNoDuplicatePathNames(PARAMS::class)
 
     // Add the route to the openapi schema
     SchemaHolder.addRouteToApi<PARAMS, BODY, RESPONSE>(fullPath(PARAMS::class), method)

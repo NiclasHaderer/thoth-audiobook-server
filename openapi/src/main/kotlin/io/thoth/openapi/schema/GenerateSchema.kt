@@ -18,12 +18,13 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.reflect.KVisibility
 import kotlin.reflect.full.declaredMemberProperties
 import mu.KotlinLogging.logger
 
-fun ClassType.generateSchema(): Pair<Schema<*>, Map<String, Schema<*>>> {
+fun ClassType.generateSchema(embedSchemas: Boolean = true): Pair<Schema<*>, Map<String, Schema<*>>> {
     val namedSchemas = mutableMapOf<String, Schema<*>>()
-    var (schemaName, schema) = SchemaCreator.createSchemaForClassType(this, namedSchemas)
+    var (schemaName, schema) = SchemaCreator.createSchemaForClassType(this, embedSchemas, namedSchemas)
     if (schemaName != null) {
         namedSchemas[schemaName] = schema
         schema = SchemaCreator.createRef(schemaName)
@@ -46,6 +47,7 @@ private object SchemaCreator {
 
     fun createSchemaForClassType(
         classType: ClassType,
+        embedSchemas: Boolean,
         namedSideSchemas: MutableMap<String, Schema<*>>
     ): Pair<SchemaName, Schema<*>> {
         if (classType.isEnum) {
@@ -54,7 +56,7 @@ private object SchemaCreator {
             for (enumVal in values) {
                 schema.addEnumItem(enumVal.toString())
             }
-            return classType.clazz.qualifiedName to schema
+            return classType.clazz.qualifiedName.takeIf { embedSchemas } to schema
         }
 
         when (classType.clazz) {
@@ -69,6 +71,12 @@ private object SchemaCreator {
             Float::class -> return null to NumberSchema()
             Boolean::class -> return null to BooleanSchema()
             ULong::class -> return null to IntegerSchema()
+            Unit::class -> return null to StringSchema().maxLength(0)
+            Date::class -> return null to DateTimeSchema()
+            LocalDate::class -> return null to DateSchema()
+            LocalDateTime::class -> return null to DateTimeSchema()
+            BigDecimal::class -> return null to IntegerSchema()
+            UUID::class -> return null to StringSchema().type("uuid")
             List::class ->
                 return null to
                     ArraySchema().also {
@@ -76,6 +84,7 @@ private object SchemaCreator {
                             var (schemaName, schema) =
                                 createSchemaForClassType(
                                     classType.genericArguments[0],
+                                    embedSchemas,
                                     namedSideSchemas,
                                 )
                             if (schemaName != null) {
@@ -94,6 +103,7 @@ private object SchemaCreator {
                             var (schemaName, schema) =
                                 createSchemaForClassType(
                                     classType.genericArguments[1],
+                                    embedSchemas,
                                     namedSideSchemas,
                                 )
                             if (schemaName != null) {
@@ -105,27 +115,31 @@ private object SchemaCreator {
                             log.warn { "Could not resolve generic argument for map" }
                         }
                     }
-            Unit::class -> return null to StringSchema().maxLength(0)
-            Date::class -> return null to DateTimeSchema()
-            LocalDate::class -> return null to DateSchema()
-            LocalDateTime::class -> return null to DateTimeSchema()
-            BigDecimal::class -> return null to IntegerSchema()
-            UUID::class -> return null to StringSchema()
             else -> {
                 val objectSchema = ObjectSchema()
                 objectSchema.required =
-                    classType.clazz.declaredMemberProperties.filter { !it.returnType.isMarkedNullable }.map { it.name }
+                    classType.clazz.declaredMemberProperties
+                        .filter { it.visibility == KVisibility.PUBLIC }
+                        .filter { !it.returnType.isMarkedNullable }
+                        .map { it.name }
                 objectSchema.properties =
-                    classType.clazz.declaredMemberProperties.associate {
-                        var (schemaName, schema) = createSchemaForClassType(classType.fromMember(it), namedSideSchemas)
-                        if (schemaName != null) {
-                            namedSideSchemas[schemaName] = schema
-                            schema = createRef(schemaName)
-                        }
+                    classType.clazz.declaredMemberProperties
+                        .filter { it.visibility == KVisibility.PUBLIC }
+                        .associate {
+                            var (schemaName, schema) =
+                                createSchemaForClassType(
+                                    classType.fromMember(it),
+                                    embedSchemas,
+                                    namedSideSchemas,
+                                )
+                            if (schemaName != null) {
+                                namedSideSchemas[schemaName] = schema
+                                schema = createRef(schemaName)
+                            }
 
-                        it.name to schema
-                    }
-                return classType.clazz.qualifiedName to objectSchema
+                            it.name to schema
+                        }
+                return classType.clazz.qualifiedName.takeIf { embedSchemas } to objectSchema
             }
         }
     }
