@@ -59,7 +59,7 @@ fun Routing.authorRouting() {
 
     patch<Api.Libraries.Id.Authors.Id, PatchAuthor, AuthorModel> { id, patchAuthor ->
         transaction {
-            val author = Author.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Author not found")
+            val author = Author.findById(id.authorId) ?: serverError(HttpStatusCode.NotFound, "Author not found")
             author
                 .apply {
                     name = patchAuthor.name ?: author.name
@@ -78,7 +78,7 @@ fun Routing.authorRouting() {
 
     put<Api.Libraries.Id.Authors.Id, PutAuthor, AuthorModel> { id, postAuthor ->
         transaction {
-            val author = Author.findById(id.id) ?: serverError(HttpStatusCode.NotFound, "Author not found")
+            val author = Author.findById(id.authorId) ?: serverError(HttpStatusCode.NotFound, "Author not found")
             author
                 .apply {
                     name = postAuthor.name

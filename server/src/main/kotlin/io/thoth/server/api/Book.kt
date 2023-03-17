@@ -52,7 +52,7 @@ fun Routing.bookRouting() {
     }
 
     get<Api.Libraries.Id.Books.Id, DetailedBookModel> { route ->
-        bookService.book(id = route.id, libraryId = route.libraryId)
+        bookService.book(id = route.bookId, libraryId = route.libraryId)
     }
 
     get<Api.Libraries.Id.Books.Autocomplete, List<TitledId>> { route ->
@@ -60,10 +60,10 @@ fun Routing.bookRouting() {
     }
 
     patch<Api.Libraries.Id.Books.Id, PartialBookApiModel, BookModel> { route, patch ->
-        bookService.patchBook(route.id, route.libraryId, patch)
+        bookService.patchBook(route.bookId, route.libraryId, patch)
     }
 
     put<Api.Libraries.Id.Books.Id, BookApiModel, BookModel> { id, putBook ->
-        bookService.replaceBook(id.id, id.libraryId, putBook)
+        bookService.replaceBook(id.bookId, id.libraryId, putBook)
     }
 }
