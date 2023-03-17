@@ -1,16 +1,7 @@
 package io.thoth.openapi.schema
 
 import io.swagger.v3.core.util.RefUtils
-import io.swagger.v3.oas.models.media.ArraySchema
-import io.swagger.v3.oas.models.media.BooleanSchema
-import io.swagger.v3.oas.models.media.DateSchema
-import io.swagger.v3.oas.models.media.DateTimeSchema
-import io.swagger.v3.oas.models.media.IntegerSchema
-import io.swagger.v3.oas.models.media.MapSchema
-import io.swagger.v3.oas.models.media.NumberSchema
-import io.swagger.v3.oas.models.media.ObjectSchema
-import io.swagger.v3.oas.models.media.Schema
-import io.swagger.v3.oas.models.media.StringSchema
+import io.swagger.v3.oas.models.media.*
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
@@ -76,7 +67,13 @@ private object SchemaCreator {
             LocalDate::class -> return null to DateSchema()
             LocalDateTime::class -> return null to DateTimeSchema()
             BigDecimal::class -> return null to IntegerSchema()
-            UUID::class -> return null to StringSchema().type("uuid")
+            UUID::class ->
+                return "UUID".takeIf { embedSchemas } to
+                    StringSchema().also {
+                        it.pattern = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                        it.minLength = 36
+                        it.maxLength = 36
+                    }
             List::class ->
                 return null to
                     ArraySchema().also {
