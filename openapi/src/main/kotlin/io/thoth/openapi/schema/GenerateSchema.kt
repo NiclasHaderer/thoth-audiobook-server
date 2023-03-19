@@ -1,7 +1,15 @@
 package io.thoth.openapi.schema
 
 import io.swagger.v3.core.util.RefUtils
-import io.swagger.v3.oas.models.media.*
+import io.swagger.v3.oas.models.media.ArraySchema
+import io.swagger.v3.oas.models.media.BooleanSchema
+import io.swagger.v3.oas.models.media.DateSchema
+import io.swagger.v3.oas.models.media.DateTimeSchema
+import io.swagger.v3.oas.models.media.IntegerSchema
+import io.swagger.v3.oas.models.media.NumberSchema
+import io.swagger.v3.oas.models.media.ObjectSchema
+import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.StringSchema
 import io.thoth.openapi.nullable
 import io.thoth.openapi.properties
 import io.thoth.openapi.responses.BinaryResponse
@@ -101,7 +109,7 @@ private object SchemaCreator {
                     }
             Map::class ->
                 return null to
-                    MapSchema().also {
+                    ObjectSchema().also {
                         if (classType.genericArguments.size == 2) {
                             var (schemaName, schema) =
                                 createSchemaForClassType(
@@ -113,7 +121,7 @@ private object SchemaCreator {
                                 namedSideSchemas[schemaName] = schema
                                 schema = createRef(schemaName)
                             }
-                            it.items = schema
+                            it.additionalProperties = schema
                         } else {
                             log.warn { "Could not resolve generic argument for map" }
                         }

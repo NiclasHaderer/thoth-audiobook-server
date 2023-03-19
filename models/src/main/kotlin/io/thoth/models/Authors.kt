@@ -2,54 +2,48 @@ package io.thoth.models
 
 import io.thoth.common.serializion.kotlin.LocalDate_S
 import io.thoth.common.serializion.kotlin.UUID_S
-import java.time.LocalDate
-import java.util.*
-import kotlinx.serialization.Serializable
 
-interface IAuthorModel {
-    val id: UUID
-    val name: String
-    val provider: String?
-    val providerID: String?
-    val biography: String?
-    val imageID: UUID?
-    val website: String?
-    val bornIn: String?
-    val birthDate: LocalDate?
-    val deathDate: LocalDate?
-}
+open class AuthorModel(
+    val id: UUID_S,
+    val name: String,
+    val provider: String?,
+    val providerID: String?,
+    val biography: String?,
+    val imageID: UUID_S?,
+    val website: String?,
+    val bornIn: String?,
+    val birthDate: LocalDate_S?,
+    val deathDate: LocalDate_S?
+)
 
-@Serializable
-data class AuthorModel(
-    override val id: UUID_S,
-    override val name: String,
-    override val provider: String?,
-    override val providerID: String?,
-    override val biography: String?,
-    override val imageID: UUID_S?,
-    override val website: String?,
-    override val bornIn: String?,
-    override val birthDate: LocalDate_S?,
-    override val deathDate: LocalDate_S?
-) : IAuthorModel
-
-@Serializable
-data class DetailedAuthorModel(
-    override val id: UUID_S,
-    override val name: String,
-    override val provider: String?,
-    override val providerID: String?,
-    override val biography: String?,
-    override val imageID: UUID_S?,
-    override val website: String?,
-    override val bornIn: String?,
-    override val birthDate: LocalDate_S?,
-    override val deathDate: LocalDate_S?,
-    val books: List<IBookModel>,
-    val series: List<ISeriesModel>,
-) : IAuthorModel {
+class DetailedAuthorModel(
+    id: UUID_S,
+    name: String,
+    provider: String?,
+    providerID: String?,
+    biography: String?,
+    imageID: UUID_S?,
+    website: String?,
+    bornIn: String?,
+    birthDate: LocalDate_S?,
+    deathDate: LocalDate_S?,
+    val books: List<BookModel>,
+    val series: List<SeriesModel>,
+) :
+    AuthorModel(
+        id = id,
+        name = name,
+        provider = provider,
+        providerID = providerID,
+        biography = biography,
+        imageID = imageID,
+        website = website,
+        bornIn = bornIn,
+        birthDate = birthDate,
+        deathDate = deathDate,
+    ) {
     companion object {
-        fun fromModel(author: IAuthorModel, books: List<IBookModel>, series: List<ISeriesModel>) =
+        fun fromModel(author: AuthorModel, books: List<BookModel>, series: List<SeriesModel>) =
             DetailedAuthorModel(
                 id = author.id,
                 name = author.name,

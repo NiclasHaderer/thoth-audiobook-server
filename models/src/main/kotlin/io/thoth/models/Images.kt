@@ -1,9 +1,7 @@
 package io.thoth.models
 
 import io.thoth.common.serializion.kotlin.UUID_S
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class ImageModel(
     val id: UUID_S,
     val blob: ByteArray,

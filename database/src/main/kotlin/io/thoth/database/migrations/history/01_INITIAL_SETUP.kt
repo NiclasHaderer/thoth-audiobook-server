@@ -1,7 +1,18 @@
 package io.thoth.database.migrations.history
 
 import io.thoth.database.migrations.migrator.Migration
-import io.thoth.database.tables.*
+import io.thoth.database.tables.TAuthorBookMapping
+import io.thoth.database.tables.TAuthors
+import io.thoth.database.tables.TBooks
+import io.thoth.database.tables.TGenreBookMapping
+import io.thoth.database.tables.TGenreSeriesMapping
+import io.thoth.database.tables.TGenres
+import io.thoth.database.tables.TImages
+import io.thoth.database.tables.TSeries
+import io.thoth.database.tables.TSeriesAuthorMapping
+import io.thoth.database.tables.TSeriesBookMapping
+import io.thoth.database.tables.TTracks
+import io.thoth.database.tables.TUsers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.insert
@@ -16,21 +27,20 @@ class `01_Create_Tables` : Migration() {
                 TImages,
                 TSeries,
                 TGenres,
-                TKeyValueSettings,
                 TTracks,
                 TUsers,
                 TAuthorBookMapping,
                 TGenreBookMapping,
                 TGenreSeriesMapping,
                 TSeriesBookMapping,
-                TSeriesAuthorMapping
+                TSeriesAuthorMapping,
             )
             .toTypedArray()
 
     override fun migrate(db: Database) {
         transaction {
             SchemaUtils.create(*tables)
-            val encoder = Argon2PasswordEncoder()
+            val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
             TUsers.insert {
                 it[username] = "admin"
                 it[passwordHash] = encoder.encode("admin")

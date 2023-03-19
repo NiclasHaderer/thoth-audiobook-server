@@ -2,9 +2,7 @@ package io.thoth.models
 
 import io.thoth.common.serializion.kotlin.LocalDateTime_S
 import io.thoth.common.serializion.kotlin.UUID_S
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class TrackModel(
     val id: UUID_S,
     val title: String,
