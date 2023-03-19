@@ -127,36 +127,41 @@ private object SchemaCreator {
                         }
                     }
             else -> {
+                val objectSchema =
+                    ObjectSchema().also { schema ->
+                        schema.required =
+                            classType.clazz.properties
+                                .filter { it.visibility == KVisibility.PUBLIC }
+                                .filter { !it.nullable }
+                                .map { it.name }
+                        schema.properties =
+                            classType.clazz.properties
+                                .filter { it.visibility == KVisibility.PUBLIC }
+                                .associate {
+                                    var (schemaName, propSchema) =
+                                        createSchemaForClassType(
+                                            classType.fromMember(it),
+                                            embedSchemas,
+                                            namedSideSchemas,
+                                        )
+                                    if (schemaName != null) {
+                                        namedSideSchemas[schemaName] = propSchema
+                                        propSchema = createRef(schemaName)
+                                    }
 
-                if (classType.clazz == Any::class) {
-                    println("hello")
+                                    it.name to propSchema
+                                }
+                    }
+
+                var schemaName = classType.clazz.qualifiedName
+                if (classType.genericArguments.isNotEmpty()) {
+                    schemaName +=
+                        classType.genericArguments.joinToString(prefix = "<", postfix = ">") {
+                            it.clazz.qualifiedName!!
+                        }
                 }
 
-                val objectSchema = ObjectSchema()
-                objectSchema.required =
-                    classType.clazz.properties
-                        .filter { it.visibility == KVisibility.PUBLIC }
-                        .filter { !it.nullable }
-                        .map { it.name }
-
-                objectSchema.properties =
-                    classType.clazz.properties
-                        .filter { it.visibility == KVisibility.PUBLIC }
-                        .associate {
-                            var (schemaName, schema) =
-                                createSchemaForClassType(
-                                    classType.fromMember(it),
-                                    embedSchemas,
-                                    namedSideSchemas,
-                                )
-                            if (schemaName != null) {
-                                namedSideSchemas[schemaName] = schema
-                                schema = createRef(schemaName)
-                            }
-
-                            it.name to schema
-                        }
-                return classType.clazz.qualifiedName.takeIf { embedSchemas } to objectSchema
+                return schemaName.takeIf { embedSchemas } to objectSchema
             }
         }
     }
