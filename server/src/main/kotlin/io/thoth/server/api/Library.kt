@@ -56,6 +56,8 @@ fun Routing.libraryRouting() {
                     icon = postLibrary.icon
                     folders = postLibrary.folders
                     preferEmbeddedMetadata = postLibrary.preferEmbeddedMetadata
+                    metadataScanners = postLibrary.metadataScanners
+                    fileScanners = postLibrary.fileScanners
                 }
             }
             .also {
@@ -77,10 +79,16 @@ fun Routing.libraryRouting() {
                     icon = patchLibrary.icon ?: icon
                     folders = patchLibrary.folders ?: folders
                     preferEmbeddedMetadata = patchLibrary.preferEmbeddedMetadata ?: preferEmbeddedMetadata
+                    metadataScanners = patchLibrary.metadataScanners ?: metadataScanners
+                    fileScanners = patchLibrary.fileScanners ?: fileScanners
                 }
             }
             .also {
-                if (patchLibrary.folders != null) {
+                if (
+                    patchLibrary.folders != null ||
+                        patchLibrary.metadataScanners != null ||
+                        patchLibrary.fileScanners != null
+                ) {
                     scheduler.dispatch(schedules.scanLibrary.build(it))
                     launch { fileWatcher.watch(Library.allFolders()) }
                 }

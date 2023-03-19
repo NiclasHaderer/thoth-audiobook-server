@@ -3,7 +3,11 @@ package io.thoth.openapi
 import io.ktor.http.*
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.core.util.Yaml
-import io.swagger.v3.oas.models.*
+import io.swagger.v3.oas.models.Components
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.Operation
+import io.swagger.v3.oas.models.PathItem
+import io.swagger.v3.oas.models.Paths
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.media.MediaType
@@ -11,7 +15,12 @@ import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
-import io.thoth.openapi.schema.*
+import io.swagger.v3.oas.models.security.SecurityRequirement
+import io.thoth.openapi.schema.ClassType
+import io.thoth.openapi.schema.ContentTypeLookup
+import io.thoth.openapi.schema.PathParameters
+import io.thoth.openapi.schema.QueryParameters
+import io.thoth.openapi.schema.generateSchema
 import kotlin.reflect.full.findAnnotation
 
 object SchemaHolder {
@@ -126,11 +135,16 @@ object SchemaHolder {
 
     private fun getPath(url: String, method: HttpMethod, requestParams: ClassType): Operation {
         val pathItem = _api.paths.getOrPut(url) { PathItem() }
-        val tags = requestParams.clazz.findAnnotationsFirstUp<Tagged>().map { it.name }
 
+        // Apply tags
+        val tags = requestParams.clazz.findAnnotationsFirstUp<Tagged>().map { it.name }
         val operation = Operation().tags(tags)
+
+        // Apply description and summary
         operation.description(requestParams.clazz.findAnnotation<Description>()?.description)
         operation.summary(requestParams.clazz.findAnnotation<Summary>()?.summary)
+
+        // Map method to operation
         when (method) {
             HttpMethod.Get -> pathItem.get = operation
             HttpMethod.Post -> pathItem.post = operation
@@ -141,6 +155,22 @@ object SchemaHolder {
             HttpMethod.Options -> pathItem.options = operation
             else -> throw Error("Unsupported method")
         }
+
+        // Apply security
+        val security = requestParams.clazz.findAnnotationUp<Secured>()
+        if (security != null) {
+
+            // Check if security scheme is already defined
+            if (!_api.components.securitySchemes.containsKey(security.name)) {
+                throw IllegalStateException("Security scheme ${security.name} is not defined")
+            }
+
+            operation.security =
+                mutableListOf(
+                    SecurityRequirement().also { it.addList(security.name) },
+                )
+        }
+
         return operation
     }
 

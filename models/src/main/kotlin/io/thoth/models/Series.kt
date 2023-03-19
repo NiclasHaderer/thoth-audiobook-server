@@ -1,57 +1,51 @@
 package io.thoth.models
 
 import io.thoth.common.serializion.kotlin.UUID_S
-import java.util.*
-import kotlinx.serialization.Serializable
 
-interface ISeriesModel {
-    val id: UUID
-    val authors: List<NamedId>
-    val title: String
-    val provider: String?
-    val providerID: String?
-    val totalBooks: Int?
-    val primaryWorks: Int?
-    val coverID: UUID?
+open class SeriesModel(
+    val id: UUID_S,
+    val authors: List<NamedId>,
+    val title: String,
+    val provider: String?,
+    val providerID: String?,
+    val totalBooks: Int?,
+    val primaryWorks: Int?,
+    val coverID: UUID_S?,
     val description: String?
-}
+)
 
-@Serializable
-data class SeriesModel(
-    override val id: UUID_S,
-    override val authors: List<NamedId>,
-    override val title: String,
-    override val provider: String?,
-    override val providerID: String?,
-    override val totalBooks: Int?,
-    override val primaryWorks: Int?,
-    override val coverID: UUID_S?,
-    override val description: String?
-) : ISeriesModel
-
-@Serializable
 data class YearRange(
     val start: Int,
     val end: Int,
 )
 
-@Serializable
-data class DetailedSeriesModel(
-    override val id: UUID_S,
-    override val authors: List<NamedId>,
-    override val title: String,
-    override val provider: String?,
-    override val providerID: String?,
-    override val totalBooks: Int?,
-    override val primaryWorks: Int?,
-    override val coverID: UUID_S?,
-    override val description: String?,
+class DetailedSeriesModel(
+    id: UUID_S,
+    authors: List<NamedId>,
+    title: String,
+    provider: String?,
+    providerID: String?,
+    totalBooks: Int?,
+    primaryWorks: Int?,
+    coverID: UUID_S?,
+    description: String?,
     val yearRange: YearRange?,
     val narrators: List<String>,
-    val books: List<IBookModel>,
-) : ISeriesModel {
+    val books: List<BookModel>,
+) :
+    SeriesModel(
+        id = id,
+        title = title,
+        authors = authors,
+        provider = provider,
+        providerID = providerID,
+        totalBooks = totalBooks,
+        primaryWorks = primaryWorks,
+        coverID = coverID,
+        description = description,
+    ) {
     companion object {
-        fun fromModel(series: ISeriesModel, books: List<IBookModel>): DetailedSeriesModel {
+        fun fromModel(series: SeriesModel, books: List<BookModel>): DetailedSeriesModel {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
             val years = books.mapNotNull { it.releaseDate }
             val startDate = years.minOrNull()

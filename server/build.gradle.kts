@@ -13,6 +13,7 @@ val slf4jVersion: String by project
 val kotlinxSerializationVersion: String by project
 val jAudioTaggerVersion: String by project
 val cronUtilsVersion: String by project
+val openApiVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -87,6 +88,8 @@ dependencies {
     implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
+    // Openapi
+    implementation("io.swagger.core.v3:swagger-models:$openApiVersion")
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
