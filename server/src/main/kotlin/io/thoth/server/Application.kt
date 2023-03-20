@@ -122,6 +122,5 @@ fun Application.server() {
 
         // Routes for checking if the server is available
         pingRouting()
-        // Searching through all libraries
     }
 }

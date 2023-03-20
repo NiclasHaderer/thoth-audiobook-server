@@ -2,17 +2,14 @@ package io.thoth.server.services
 
 import io.ktor.http.*
 import io.thoth.common.extensions.toSizedIterable
+import io.thoth.common.utils.take
 import io.thoth.database.access.getNewImage
 import io.thoth.database.access.toModel
-import io.thoth.database.tables.Author
-import io.thoth.database.tables.Book
-import io.thoth.database.tables.Image
-import io.thoth.database.tables.Series
-import io.thoth.database.tables.TBooks
-import io.thoth.database.tables.TTracks
-import io.thoth.database.tables.Track
+import io.thoth.database.tables.*
 import io.thoth.models.BookModel
 import io.thoth.models.DetailedBookModel
+import io.thoth.models.NamedId
+import io.thoth.models.TitledId
 import io.thoth.openapi.ErrorResponse
 import io.thoth.server.api.BookApiModel
 import io.thoth.server.api.PartialBookApiModel
@@ -32,6 +29,9 @@ interface BookService {
     fun search(query: String): List<BookModel>
     fun patchBook(id: UUID, libraryId: UUID, partialBook: PartialBookApiModel): BookModel
     fun replaceBook(id: UUID, libraryId: UUID, partialBook: BookApiModel): BookModel
+
+    fun toModel(book: Book, order: SortOrder = SortOrder.ASC): BookModel
+
     val total: Long
 }
 
@@ -40,6 +40,34 @@ class BookServiceImpl : BookService {
 
     override val total: Long
         get() = transaction { Book.count() }
+
+    override fun toModel(book: Book, order: SortOrder): BookModel = transaction {
+        val preferEmbedded = book.library.preferEmbeddedMetadata
+        BookModel(
+            id = book.id.value,
+            authors =
+                book.authors
+                    .sortedBy { it.name.lowercase() }
+                    .map { NamedId(it.id.value, it.name) }
+                    .let { if (order == SortOrder.DESC) it.reversed() else it },
+            series =
+                book.series
+                    .sortedBy { it.title.lowercase() }
+                    .map { TitledId(it.id.value, it.title) }
+                    .let { if (order == SortOrder.DESC) it.reversed() else it },
+            title = book.title.take(preferEmbedded, book.meta.title),
+            providerID = book.meta.providerID,
+            providerRating = book.meta.providerRating,
+            provider = book.meta.provider,
+            releaseDate = book.releaseDate.take(preferEmbedded, book.meta.releaseDate),
+            publisher = book.publisher.take(preferEmbedded, book.meta.publisher),
+            language = book.language.take(preferEmbedded, book.meta.language),
+            description = book.description.take(preferEmbedded, book.meta.description),
+            narrator = book.narrator.take(preferEmbedded, book.meta.narrator),
+            isbn = book.narrator.take(preferEmbedded, book.meta.isbn),
+            coverID = book.coverID?.value.take(preferEmbedded, book.meta.coverID?.value),
+        )
+    }
 
     override fun books(libraryId: UUID, order: SortOrder, limit: Int, offset: Long): List<BookModel> = transaction {
         Book.find { TBooks.library eq libraryId }
