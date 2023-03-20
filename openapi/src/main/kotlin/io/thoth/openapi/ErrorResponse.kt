@@ -26,10 +26,17 @@ fun Application.configureStatusPages() {
                 hashMapOf(
                     "error" to cause.message,
                     "status" to HttpStatusCode.InternalServerError.value,
-                    "trace" to cause.stackTrace,
+                    "details" to cause.stackTrace,
                 ),
             )
             logger.error("Unhandled exception", cause)
+        }
+        status(*HttpStatusCode.allStatusCodes.filter { !it.isSuccess() }.toTypedArray()) { call, statusCode ->
+            if (call.response.isSent) return@status
+            call.respond(
+                statusCode,
+                hashMapOf("error" to statusCode.description, "status" to statusCode.value, "details" to null),
+            )
         }
     }
 }
