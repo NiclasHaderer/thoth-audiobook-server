@@ -39,5 +39,5 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id) {
     var authors by Author via TSeriesAuthorMapping
     var books by Book via TSeriesBookMapping
     var genres by Genre via TGenreSeriesMapping
-    val library by Library referencedOn TSeries.library
+    var library by Library referencedOn TSeries.library
 }

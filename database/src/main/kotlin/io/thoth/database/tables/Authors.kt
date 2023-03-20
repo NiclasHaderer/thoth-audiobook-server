@@ -39,5 +39,5 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id) {
     // Relations
     var books by Book via TAuthorBookMapping
     var series by Series via TSeriesAuthorMapping
-    val library by Library referencedOn TAuthors.library
+    var library by Library referencedOn TAuthors.library
 }

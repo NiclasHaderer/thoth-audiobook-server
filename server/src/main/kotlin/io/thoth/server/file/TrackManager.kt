@@ -7,10 +7,10 @@ import io.thoth.database.access.getByPath
 import io.thoth.database.tables.Author
 import io.thoth.database.tables.Book
 import io.thoth.database.tables.Image
+import io.thoth.database.tables.Library
 import io.thoth.database.tables.Series
 import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
-import io.thoth.models.LibraryModel
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.services.BookService
@@ -25,8 +25,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 
 interface TrackManager {
-    suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: LibraryModel)
-    suspend fun addPath(path: Path, library: LibraryModel)
+    suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: Library)
+    suspend fun addPath(path: Path, library: Library)
     fun removePath(path: Path)
 }
 
@@ -35,7 +35,7 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
     private val semaphore = Semaphore(1)
     private val log = logger {}
 
-    override suspend fun addPath(path: Path, library: LibraryModel) {
+    override suspend fun addPath(path: Path, library: Library) {
         if (path.isDirectory()) {
             log.warn { "Skipped ${path.absolute()} because it is a directory" }
             return
@@ -50,7 +50,7 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
         insertScanResult(result, path, library)
     }
 
-    override suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: LibraryModel) {
+    override suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: Library) {
         this.semaphore.acquire()
         try {
             transaction { insertOrUpdateTrack(scan, library) }
@@ -63,7 +63,7 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
         Track.find { TTracks.path like "${path.absolute()}%" }.forEach { it.delete() }
     }
 
-    private fun insertOrUpdateTrack(scan: AudioFileAnalysisResult, library: LibraryModel): Track {
+    private fun insertOrUpdateTrack(scan: AudioFileAnalysisResult, library: Library): Track {
         val track = Track.getByPath(scan.path)
         return if (track != null) {
             updateTrack(track, scan, library)
@@ -72,8 +72,8 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
         }
     }
 
-    private fun createTrack(scan: AudioFileAnalysisResult, library: LibraryModel): Track {
-        val dbBook = getOrCreateBook(scan)
+    private fun createTrack(scan: AudioFileAnalysisResult, libraryModel: Library): Track {
+        val dbBook = getOrCreateBook(scan, libraryModel)
         return Track.new {
             title = scan.title
             duration = scan.duration
@@ -81,12 +81,12 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
             path = scan.path
             book = dbBook
             trackNr = scan.trackNr
-            scanIndex = library.scanIndex
+            scanIndex = libraryModel.scanIndex
         }
     }
 
-    private fun updateTrack(track: Track, scan: AudioFileAnalysisResult, library: LibraryModel): Track {
-        val dbBook = getOrCreateBook(scan)
+    private fun updateTrack(track: Track, scan: AudioFileAnalysisResult, libraryModel: Library): Track {
+        val dbBook = getOrCreateBook(scan, libraryModel)
         return track.apply {
             title = scan.title
             duration = scan.duration
@@ -94,23 +94,24 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
             path = scan.path
             book = dbBook
             trackNr = scan.trackNr
-            scanIndex = library.scanIndex
+            scanIndex = libraryModel.scanIndex
         }
     }
 
-    private fun getOrCreateBook(scan: AudioFileAnalysisResult): Book {
-        val author = getOrCreateAuthor(scan)
-        val book = bookService.findByName(scan.book, author)
+    private fun getOrCreateBook(scan: AudioFileAnalysisResult, libraryModel: Library): Book {
+        val author = getOrCreateAuthor(scan, libraryModel)
+        val book =
+            bookService.findByName(bookTitle = scan.book, authorId = author.id.value, libraryId = libraryModel.id.value)
         return if (book != null) {
-            updateBook(book, scan, author)
+            updateBook(book, scan, author, libraryModel)
         } else {
             log.info("Created new book: ${scan.book}")
-            createBook(scan, author)
+            createBook(scan, author, libraryModel)
         }
     }
 
-    private fun updateBook(book: Book, scan: AudioFileAnalysisResult, dbAuthor: Author): Book {
-        val dbSeries = if (scan.series != null) getOrCreateSeries(scan, dbAuthor) else null
+    private fun updateBook(book: Book, scan: AudioFileAnalysisResult, dbAuthor: Author, libraryModel: Library): Book {
+        val dbSeries = if (scan.series != null) getOrCreateSeries(scan, dbAuthor, libraryModel) else null
         val dbImage = if (scan.cover != null && book.coverID == null) Image.create(scan.cover!!).id else book.coverID
 
         return book.apply {
@@ -124,8 +125,8 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
         }
     }
 
-    private fun createBook(scan: AudioFileAnalysisResult, dbAuthor: Author): Book {
-        val dbSeries = if (scan.series != null) getOrCreateSeries(scan, dbAuthor) else null
+    private fun createBook(scan: AudioFileAnalysisResult, dbAuthor: Author, libraryModel: Library): Book {
+        val dbSeries = if (scan.series != null) getOrCreateSeries(scan, dbAuthor, libraryModel) else null
         val dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
         val dbSeriesList = if (dbSeries != null) listOf(dbSeries) else listOf()
 
@@ -137,10 +138,11 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
             narrator = scan.narrator
             series = SizedCollection(dbSeriesList)
             coverID = dbImage?.id
+            library = libraryModel
         }
     }
 
-    private fun getOrCreateSeries(scan: AudioFileAnalysisResult, dbAuthor: Author): Series {
+    private fun getOrCreateSeries(scan: AudioFileAnalysisResult, dbAuthor: Author, libraryModel: Library): Series {
         val series = Series.findByName(scan.series!!)
 
         return if (series != null) {
@@ -151,15 +153,19 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
             Series.new {
                 title = scan.series!!
                 authors = SizedCollection(dbAuthor)
+                library = libraryModel
             }
         }
     }
 
-    private fun getOrCreateAuthor(scan: AudioFileAnalysisResult): Author {
+    private fun getOrCreateAuthor(scan: AudioFileAnalysisResult, libraryModel: Library): Author {
         return Author.findByName(scan.author)
             ?: run {
                 log.info("Created author: ${scan.author}")
-                Author.new { name = scan.author }
+                Author.new {
+                    name = scan.author
+                    library = libraryModel
+                }
             }
     }
 }
