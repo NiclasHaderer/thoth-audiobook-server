@@ -17,7 +17,8 @@ open class BookModel(
     val description: String?,
     val narrator: String?,
     val isbn: String?,
-    val coverID: UUID_S?
+    val coverID: UUID_S?,
+    val genres: List<NamedId>,
 )
 
 class DetailedBookModel(
@@ -35,6 +36,7 @@ class DetailedBookModel(
     narrator: String?,
     isbn: String?,
     coverID: UUID_S?,
+    genres: List<NamedId>,
     val tracks: List<TrackModel>,
 ) :
     BookModel(
@@ -52,6 +54,7 @@ class DetailedBookModel(
         providerID = providerID,
         providerRating = providerRating,
         publisher = publisher,
+        genres = genres,
     ) {
     companion object {
         fun fromModel(book: BookModel, tracks: List<TrackModel>): DetailedBookModel {
@@ -79,6 +82,7 @@ class DetailedBookModel(
                 providerID = book.providerID,
                 providerRating = book.providerRating,
                 publisher = book.publisher,
+                genres = book.genres,
             )
         }
     }

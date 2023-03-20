@@ -2,22 +2,16 @@ package io.thoth.server.services
 
 import io.ktor.http.*
 import io.thoth.common.extensions.toSizedIterable
-import io.thoth.common.utils.take
 import io.thoth.database.access.getNewImage
 import io.thoth.database.access.toModel
 import io.thoth.database.tables.*
 import io.thoth.models.BookModel
 import io.thoth.models.DetailedBookModel
-import io.thoth.models.NamedId
-import io.thoth.models.TitledId
 import io.thoth.openapi.ErrorResponse
 import io.thoth.server.api.BookApiModel
 import io.thoth.server.api.PartialBookApiModel
 import java.util.*
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 interface BookService {
@@ -25,11 +19,11 @@ interface BookService {
     fun book(id: UUID, libraryId: UUID): DetailedBookModel
     fun bookPosition(libraryId: UUID, id: UUID, order: SortOrder): Long
     fun booksSorting(libraryId: UUID, order: SortOrder, limit: Int = 20, offset: Long = 0L): List<UUID>
+    fun findByName(bookTitle: String, author: Author): Book?
     fun search(query: String, libraryId: UUID): List<BookModel>
     fun search(query: String): List<BookModel>
     fun patchBook(id: UUID, libraryId: UUID, partialBook: PartialBookApiModel): BookModel
     fun replaceBook(id: UUID, libraryId: UUID, partialBook: BookApiModel): BookModel
-
     fun toModel(book: Book, order: SortOrder = SortOrder.ASC): BookModel
 
     val total: Long
@@ -41,39 +35,25 @@ class BookServiceImpl : BookService {
     override val total: Long
         get() = transaction { Book.count() }
 
-    override fun toModel(book: Book, order: SortOrder): BookModel = transaction {
-        val preferEmbedded = book.library.preferEmbeddedMetadata
-        BookModel(
-            id = book.id.value,
-            authors =
-                book.authors
-                    .sortedBy { it.name.lowercase() }
-                    .map { NamedId(it.id.value, it.name) }
-                    .let { if (order == SortOrder.DESC) it.reversed() else it },
-            series =
-                book.series
-                    .sortedBy { it.title.lowercase() }
-                    .map { TitledId(it.id.value, it.title) }
-                    .let { if (order == SortOrder.DESC) it.reversed() else it },
-            title = book.title.take(preferEmbedded, book.meta.title),
-            providerID = book.meta.providerID,
-            providerRating = book.meta.providerRating,
-            provider = book.meta.provider,
-            releaseDate = book.releaseDate.take(preferEmbedded, book.meta.releaseDate),
-            publisher = book.publisher.take(preferEmbedded, book.meta.publisher),
-            language = book.language.take(preferEmbedded, book.meta.language),
-            description = book.description.take(preferEmbedded, book.meta.description),
-            narrator = book.narrator.take(preferEmbedded, book.meta.narrator),
-            isbn = book.narrator.take(preferEmbedded, book.meta.isbn),
-            coverID = book.coverID?.value.take(preferEmbedded, book.meta.coverID?.value),
-        )
-    }
-
     override fun books(libraryId: UUID, order: SortOrder, limit: Int, offset: Long): List<BookModel> = transaction {
         Book.find { TBooks.library eq libraryId }
             .orderBy(TBooks.title.lowerCase() to order)
             .limit(limit, offset)
             .map { it.toModel() }
+    }
+
+    override fun toModel(book: Book, order: SortOrder): BookModel {
+        return book.toModel()
+    }
+
+    override fun findByName(bookTitle: String, author: Author): Book? = transaction {
+        val rawBook =
+            TBooks.join(TAuthorBookMapping, JoinType.INNER, TBooks.id, TAuthorBookMapping.book)
+                .join(TAuthors, JoinType.INNER, TAuthorBookMapping.author, TAuthors.id)
+                .select { (TBooks.title like bookTitle) and (TAuthorBookMapping.author eq author.id) }
+                .firstOrNull()
+                ?: return@transaction null
+        Book.wrap(rawBook[TBooks.id], rawBook)
     }
 
     override fun book(id: UUID, libraryId: UUID): DetailedBookModel = transaction {

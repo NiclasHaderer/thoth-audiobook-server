@@ -50,8 +50,13 @@ class OpenApiRoute(
         }
     }
 
-    var queryParameters: List<QueryParameter>
-    val pathParameters: List<PathParameter>
+    val queryParameters by lazy {
+        extractAllQueryParams(requestParamsType.clazz).map { it to ClassType.wrap(it.type).generateSchema(false).first }
+    }
+
+    val pathParameters by lazy {
+        extractAllPathParams(requestParamsType.clazz).map { it to ClassType.wrap(it.type).generateSchema(false).first }
+    }
     val resourcePath by lazy {
         var resourcePath = ""
         var resourceClass: KClass<*>? = this.requestParamsType.clazz
@@ -81,7 +86,7 @@ class OpenApiRoute(
 
     val responseBody by lazy { responseBodyType.generateSchema() }
 
-    val responseDescription by lazy { responseBodyType.clazz.findAnnotation<Description>()?.description ?: "" }
+    val responseDescription by lazy { responseBodyType.clazz.findAnnotation<Description>() }
 
     val bodyDescription by lazy { requestBodyType.clazz.findAnnotation<Description>() }
 
@@ -111,8 +116,6 @@ class OpenApiRoute(
 
     init {
         assertParamsHierarchy()
-        pathParameters = extractAllPathParams(requestParamsType.clazz)
-        queryParameters = extractAllQueryParams(requestParamsType.clazz)
     }
 
     private fun assertParamsHierarchy(paramsClazz: KClass<*> = requestParamsType.clazz) {

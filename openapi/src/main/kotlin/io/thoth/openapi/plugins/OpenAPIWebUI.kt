@@ -29,13 +29,10 @@ class WebUiConfig internal constructor() {
 
 val OpenAPIWebUI =
     createApplicationPlugin("OpenAPIWebUI", createConfiguration = { WebUiConfig() }) {
-        // Ensure the OpenAPIRouting plugins is installed
-        application.plugin(OpenAPIRouting)
-
-        val webUiServer = WebUiServer(pluginConfig)
-
         application.environment.monitor.subscribe(ApplicationStarted) {
             OpenApiRouteCollector.forEach { SchemaHolder.addRouteToApi(it) }
         }
+
+        val webUiServer = WebUiServer(pluginConfig)
         this.onCall { call -> webUiServer.interceptCall(call) }
     }

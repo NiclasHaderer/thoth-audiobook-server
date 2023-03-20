@@ -39,7 +39,7 @@ fun setupDependencyInjection() = startKoin {
             single { Scheduler() }
             single<BookService> { BookServiceImpl() }
             single { ThothSchedules() }
-            single<TrackManager> { TrackManagerImpl() }
+            single<TrackManager> { TrackManagerImpl(get(), get()) }
         },
     )
     slf4jLogger()

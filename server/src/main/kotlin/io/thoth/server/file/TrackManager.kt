@@ -13,6 +13,7 @@ import io.thoth.database.tables.Track
 import io.thoth.models.LibraryModel
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
+import io.thoth.server.services.BookService
 import java.nio.file.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.isDirectory
@@ -22,7 +23,6 @@ import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 interface TrackManager {
     suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: LibraryModel)
@@ -30,8 +30,8 @@ interface TrackManager {
     fun removePath(path: Path)
 }
 
-internal class TrackManagerImpl : TrackManager, KoinComponent {
-    private val analyzer by inject<AudioFileAnalyzerWrapper>()
+internal class TrackManagerImpl(private val bookService: BookService, private val analyzer: AudioFileAnalyzerWrapper) :
+    TrackManager, KoinComponent {
     private val semaphore = Semaphore(1)
     private val log = logger {}
 
@@ -100,7 +100,7 @@ internal class TrackManagerImpl : TrackManager, KoinComponent {
 
     private fun getOrCreateBook(scan: AudioFileAnalysisResult): Book {
         val author = getOrCreateAuthor(scan)
-        val book = Book.findByName(scan.book, author)
+        val book = bookService.findByName(scan.book, author)
         return if (book != null) {
             updateBook(book, scan, author)
         } else {

@@ -12,8 +12,6 @@ import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
 import io.swagger.v3.oas.models.security.SecurityRequirement
-import io.thoth.openapi.schema.ClassType
-import io.thoth.openapi.schema.generateSchema
 
 object SchemaHolder {
     private val _api: OpenAPI =
@@ -51,25 +49,14 @@ object SchemaHolder {
     }
 
     private fun addPathAndQueryParameters(operation: Operation, route: OpenApiRoute) {
-        val extractedPathParams = route.pathParameters
-        for (param in extractedPathParams) {
+        for ((param, schema) in route.pathParameters) {
             operation.addParametersItem(
-                Parameter().also {
-                    it.`in` = "path"
-                    it.name = param.name
-                    it.schema = ClassType.wrap(param.type).generateSchema(false).first
-                },
+                Parameter().`in`("path").name(param.name).schema(schema),
             )
         }
-        val extractedQueryParameters = route.queryParameters
-        for (param in extractedQueryParameters) {
+        for ((param, schema) in route.queryParameters) {
             operation.addParametersItem(
-                Parameter().also {
-                    it.`in` = "query"
-                    it.name = param.name
-                    it.required = !param.optional
-                    it.schema = ClassType.wrap(param.type).generateSchema(false).first
-                },
+                Parameter().`in`("query").name(param.name).schema(schema).required(!param.optional),
             )
         }
     }
@@ -82,7 +69,7 @@ object SchemaHolder {
                 .addApiResponse(
                     route.responseStatusCode.value.toString(),
                     ApiResponse()
-                        .also { it.description(route.responseDescription) }
+                        .description(route.responseDescription?.description ?: "")
                         .content(
                             Content()
                                 .addMediaType(
@@ -120,16 +107,11 @@ object SchemaHolder {
 
         // Apply security
         if (route.secured != null) {
-
             // Check if security scheme is already defined
             if (!_api.components.securitySchemes.containsKey(route.secured!!.name)) {
                 throw IllegalStateException("Security scheme ${route.secured!!.name} is not defined")
             }
-
-            operation.security =
-                mutableListOf(
-                    SecurityRequirement().also { it.addList(route.secured!!.name) },
-                )
+            operation.addSecurityItem(SecurityRequirement().addList(route.secured!!.name))
         }
 
         return operation
@@ -140,7 +122,7 @@ object SchemaHolder {
         _api.components.schemas.putAll(bodyNamedSchemas)
         operation.requestBody(
             RequestBody()
-                .also { it.description(route.bodyDescription?.description) }
+                .description(route.bodyDescription?.description)
                 .content(
                     Content()
                         .addMediaType(
