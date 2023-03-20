@@ -10,10 +10,10 @@ import io.thoth.auth.routes.PasswordChange
 import io.thoth.auth.routes.RegisterUser
 import io.thoth.auth.routes.UsernameChange
 import io.thoth.models.UserModel
-import io.thoth.openapi.routing.delete
-import io.thoth.openapi.routing.get
-import io.thoth.openapi.routing.post
-import io.thoth.openapi.routing.put
+import io.thoth.openapi.delete
+import io.thoth.openapi.get
+import io.thoth.openapi.post
+import io.thoth.openapi.put
 
 fun Routing.authRoutes(routes: AuthRoutes) {
     post<Api.Auth.Login, LoginUser, JwtPair> { _, loginUser -> routes.login.invoke(this, loginUser) }

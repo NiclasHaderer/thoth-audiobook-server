@@ -3,11 +3,7 @@ package io.thoth.openapi
 import io.ktor.http.*
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.core.util.Yaml
-import io.swagger.v3.oas.models.Components
-import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.Operation
-import io.swagger.v3.oas.models.PathItem
-import io.swagger.v3.oas.models.Paths
+import io.swagger.v3.oas.models.*
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.media.MediaType
@@ -17,11 +13,7 @@ import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.thoth.openapi.schema.ClassType
-import io.thoth.openapi.schema.ContentTypeLookup
-import io.thoth.openapi.schema.PathParameters
-import io.thoth.openapi.schema.QueryParameters
 import io.thoth.openapi.schema.generateSchema
-import kotlin.reflect.full.findAnnotation
 
 object SchemaHolder {
     private val _api: OpenAPI =
@@ -43,39 +35,23 @@ object SchemaHolder {
         return Yaml.mapper().writeValueAsString(this._api)
     }
 
-    inline fun <reified PARAMS, reified BODY, reified RESPONSE> addRouteToApi(
-        url: String,
-        method: HttpMethod,
-    ) {
-        val body = ClassType.create<BODY>()
-        val params = ClassType.create<PARAMS>()
-        val response = ClassType.create<RESPONSE>()
-        addRouteToApi(url, method, params, body, response)
-    }
-
-    fun addRouteToApi(
-        url: String,
-        method: HttpMethod,
-        requestParams: ClassType,
-        requestBody: ClassType,
-        responseBody: ClassType,
-    ) {
-        val operation = getPath(url, method, requestParams)
-        addPathAndQueryParameters(operation, requestParams)
+    fun addRouteToApi(route: OpenApiRoute) {
+        val operation = getOperation(route)
+        addPathAndQueryParameters(operation, route)
+        val method = route.method
         if (
             method != HttpMethod.Get &&
                 method != HttpMethod.Head &&
                 method != HttpMethod.Delete &&
                 method != HttpMethod.Options
         ) {
-            addRequest(requestBody, operation)
+            addRequestBody(route, operation)
         }
-        val statusCode = getStatusCode(method, responseBody)
-        addResponse(responseBody, statusCode, operation)
+        addResponse(route, operation)
     }
 
-    private fun addPathAndQueryParameters(operation: Operation, pathParams: ClassType) {
-        val extractedPathParams = PathParameters.extractAll(pathParams.clazz)
+    private fun addPathAndQueryParameters(operation: Operation, route: OpenApiRoute) {
+        val extractedPathParams = route.pathParameters
         for (param in extractedPathParams) {
             operation.addParametersItem(
                 Parameter().also {
@@ -85,7 +61,7 @@ object SchemaHolder {
                 },
             )
         }
-        val extractedQueryParameters = QueryParameters.extractAll(pathParams.clazz)
+        val extractedQueryParameters = route.queryParameters
         for (param in extractedQueryParameters) {
             operation.addParametersItem(
                 Parameter().also {
@@ -98,32 +74,19 @@ object SchemaHolder {
         }
     }
 
-    private fun getStatusCode(method: HttpMethod, responseBody: ClassType): HttpStatusCode {
-        return if (responseBody.clazz == Unit::class) {
-            HttpStatusCode.NoContent
-        } else if (method == HttpMethod.Post) {
-            HttpStatusCode.Created
-        } else {
-            HttpStatusCode.OK
-        }
-    }
-
-    private fun addResponse(response: ClassType, statusCode: HttpStatusCode, operation: Operation) {
-        val (responseSchema, responseNamedSchemas) = response.generateSchema()
+    private fun addResponse(route: OpenApiRoute, operation: Operation) {
+        val (responseSchema, responseNamedSchemas) = route.responseBody
         _api.components.schemas.putAll(responseNamedSchemas)
         operation.responses =
             ApiResponses()
                 .addApiResponse(
-                    statusCode.value.toString(),
+                    route.responseStatusCode.value.toString(),
                     ApiResponse()
-                        .also {
-                            val description = response.clazz.findAnnotation<Description>()
-                            it.description(description?.description ?: "")
-                        }
+                        .also { it.description(route.responseDescription) }
                         .content(
                             Content()
                                 .addMediaType(
-                                    ContentTypeLookup.forClassType(response),
+                                    route.responseContentType,
                                     MediaType()
                                         .schema(
                                             responseSchema,
@@ -133,19 +96,18 @@ object SchemaHolder {
                 )
     }
 
-    private fun getPath(url: String, method: HttpMethod, requestParams: ClassType): Operation {
-        val pathItem = _api.paths.getOrPut(url) { PathItem() }
+    private fun getOperation(route: OpenApiRoute): Operation {
+        val pathItem = _api.paths.getOrPut(route.fullPath) { PathItem() }
 
         // Apply tags
-        val tags = requestParams.clazz.findAnnotationsFirstUp<Tagged>().map { it.name }
-        val operation = Operation().tags(tags)
+        val operation = Operation().tags(route.tags)
 
         // Apply description and summary
-        operation.description(requestParams.clazz.findAnnotation<Description>()?.description)
-        operation.summary(requestParams.clazz.findAnnotation<Summary>()?.summary)
+        operation.description(route.description)
+        operation.summary(route.summary)
 
         // Map method to operation
-        when (method) {
+        when (route.method) {
             HttpMethod.Get -> pathItem.get = operation
             HttpMethod.Post -> pathItem.post = operation
             HttpMethod.Put -> pathItem.put = operation
@@ -157,36 +119,32 @@ object SchemaHolder {
         }
 
         // Apply security
-        val security = requestParams.clazz.findAnnotationUp<Secured>()
-        if (security != null) {
+        if (route.secured != null) {
 
             // Check if security scheme is already defined
-            if (!_api.components.securitySchemes.containsKey(security.name)) {
-                throw IllegalStateException("Security scheme ${security.name} is not defined")
+            if (!_api.components.securitySchemes.containsKey(route.secured!!.name)) {
+                throw IllegalStateException("Security scheme ${route.secured!!.name} is not defined")
             }
 
             operation.security =
                 mutableListOf(
-                    SecurityRequirement().also { it.addList(security.name) },
+                    SecurityRequirement().also { it.addList(route.secured!!.name) },
                 )
         }
 
         return operation
     }
 
-    private fun addRequest(body: ClassType, operation: Operation) {
-        val (bodySchema, bodyNamedSchemas) = body.generateSchema()
+    private fun addRequestBody(route: OpenApiRoute, operation: Operation) {
+        val (bodySchema, bodyNamedSchemas) = route.requestBody
         _api.components.schemas.putAll(bodyNamedSchemas)
         operation.requestBody(
             RequestBody()
-                .also {
-                    val description = body.clazz.findAnnotation<Description>()
-                    it.description(description?.description)
-                }
+                .also { it.description(route.bodyDescription?.description) }
                 .content(
                     Content()
                         .addMediaType(
-                            ContentTypeLookup.forClassType(body),
+                            route.requestContentType,
                             MediaType()
                                 .schema(
                                     bodySchema,

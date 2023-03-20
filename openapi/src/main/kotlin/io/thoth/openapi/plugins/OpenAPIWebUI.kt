@@ -1,6 +1,8 @@
-package io.thoth.openapi.plugin
+package io.thoth.openapi.plugins
 
 import io.ktor.server.application.*
+import io.thoth.openapi.OpenApiRouteCollector
+import io.thoth.openapi.SchemaHolder
 
 enum class OpenAPISchemaType {
     JSON,
@@ -27,10 +29,13 @@ class WebUiConfig internal constructor() {
 
 val OpenAPIWebUI =
     createApplicationPlugin("OpenAPIWebUI", createConfiguration = { WebUiConfig() }) {
-        // Ensure the OpenAPIRouting plugin is installed
+        // Ensure the OpenAPIRouting plugins is installed
         application.plugin(OpenAPIRouting)
 
         val webUiServer = WebUiServer(pluginConfig)
 
+        application.environment.monitor.subscribe(ApplicationStarted) {
+            OpenApiRouteCollector.forEach { SchemaHolder.addRouteToApi(it) }
+        }
         this.onCall { call -> webUiServer.interceptCall(call) }
     }

@@ -1,4 +1,4 @@
-package io.thoth.openapi.plugin
+package io.thoth.openapi.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.dataconversion.*
@@ -12,8 +12,7 @@ val OpenAPIRouting =
         createConfiguration = { OpenAPIContext.generate(SchemaHolder.api) },
     ) {
 
-        // Ensure that the dataconversion plugin is installed
+        // Ensure that the dataconversion plugins is installed
         application.plugin(DataConversion)
         application.plugin(Resources)
-        // application.environment.monitor.subscribe(ApplicationStarted)
     }
