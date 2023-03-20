@@ -18,9 +18,9 @@ import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.SeriesModel
 import io.thoth.models.TitledId
-import io.thoth.openapi.routing.get
-import io.thoth.openapi.routing.patch
-import io.thoth.openapi.routing.put
+import io.thoth.openapi.get
+import io.thoth.openapi.patch
+import io.thoth.openapi.put
 import io.thoth.openapi.serverError
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder

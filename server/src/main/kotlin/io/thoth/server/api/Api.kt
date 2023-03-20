@@ -225,7 +225,7 @@ class Api {
             data class Search(val q: String, val authorName: String? = null, private val parent: Book)
         }
 
-        @Resource("book")
+        @Resource("series")
         data class Series(private val parent: Metadata) {
             @Resource("{id}") data class Id(val id: String, val provider: String, private val parent: Series)
 

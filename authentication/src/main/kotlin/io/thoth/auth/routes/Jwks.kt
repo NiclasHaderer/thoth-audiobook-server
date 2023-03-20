@@ -3,7 +3,7 @@ package io.thoth.auth.routes
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import io.thoth.auth.AuthConfigImpl
-import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.RouteHandler
 import java.security.interfaces.RSAPublicKey
 
 typealias KeyId = String

@@ -4,7 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.thoth.openapi.ErrorResponse
-import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.RouteHandler
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
