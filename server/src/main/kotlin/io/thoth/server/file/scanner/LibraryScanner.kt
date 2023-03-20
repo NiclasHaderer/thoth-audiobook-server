@@ -25,12 +25,12 @@ interface LibraryScanner {
     fun fullScan()
     fun scanLibrary(library: LibraryModel)
     fun scanLibrary(library: Library)
-    fun scanFolder(folder: Path, library: LibraryModel?)
+    fun scanFolder(folder: Path, library: Library?)
     fun unIgnoreFolder(folder: Path)
     fun ignoreFolder(folder: Path)
     fun removePath(path: Path)
     fun isIgnored(folder: Path): Boolean
-    suspend fun addOrUpdatePath(path: Path, library: LibraryModel?)
+    suspend fun addOrUpdatePath(path: Path, library: Library?)
 }
 
 class LibraryScannerImpl : LibraryScanner, KoinComponent {
@@ -81,15 +81,10 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
 
     override fun scanLibrary(library: Library) {
         log.info { "Scanning library ${library.name}" }
-        val selectedLibrary = transaction {
-            Library[library.id].let {
-                it.scanIndex += 1u
-                it.toModel()
-            }
-        }
+        transaction { library.scanIndex += 1u }
 
         for (folder in library.folders.map { Paths.get(it) }) {
-            scanFolder(folder, selectedLibrary)
+            scanFolder(folder, library)
         }
     }
 
@@ -98,14 +93,13 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         scanLibrary(dbLib)
     }
 
-    override fun scanFolder(folder: Path, library: LibraryModel?) {
+    override fun scanFolder(folder: Path, library: Library?) {
         if (isIgnored(folder)) {
             log.info { "Skipping $folder because it is ignored" }
             return
         }
 
-        val selectedLibrary = library ?: transaction { Library.getMatching(folder)?.toModel() }
-
+        val selectedLibrary = library ?: transaction { Library.getMatching(folder) }
         if (selectedLibrary == null) {
             log.error { "No library found for folder $folder. Ignoring folder!" }
             return
@@ -122,12 +116,12 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         )
     }
 
-    override suspend fun addOrUpdatePath(path: Path, library: LibraryModel?) {
+    override suspend fun addOrUpdatePath(path: Path, library: Library?) {
         if (isIgnored(path)) {
             log.info { "Skipping $path because it is in a folder that is ignored" }
             return
         }
-        val selectedLibrary = library ?: transaction { Library.getMatching(path)?.toModel() }
+        val selectedLibrary = library ?: transaction { Library.getMatching(path) }
         if (selectedLibrary == null) {
             log.error { "No library found for path $path. Ignoring path!" }
             return

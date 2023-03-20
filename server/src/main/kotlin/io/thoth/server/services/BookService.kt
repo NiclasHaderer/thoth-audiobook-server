@@ -1,6 +1,5 @@
 package io.thoth.server.services
 
-import io.ktor.http.*
 import io.thoth.common.extensions.toSizedIterable
 import io.thoth.database.access.getNewImage
 import io.thoth.database.access.toModel
@@ -17,15 +16,13 @@ import org.jetbrains.exposed.sql.transactions.transaction
 interface BookService {
     fun books(libraryId: UUID, order: SortOrder, limit: Int = 20, offset: Long = 0L): List<BookModel>
     fun book(id: UUID, libraryId: UUID): DetailedBookModel
-    fun bookPosition(libraryId: UUID, id: UUID, order: SortOrder): Long
+    fun bookPosition(id: UUID, libraryId: UUID, order: SortOrder): Long
     fun booksSorting(libraryId: UUID, order: SortOrder, limit: Int = 20, offset: Long = 0L): List<UUID>
-    fun findByName(bookTitle: String, author: Author): Book?
+    fun findByName(bookTitle: String, authorId: UUID, libraryId: UUID): Book?
     fun search(query: String, libraryId: UUID): List<BookModel>
     fun search(query: String): List<BookModel>
     fun patchBook(id: UUID, libraryId: UUID, partialBook: PartialBookApiModel): BookModel
     fun replaceBook(id: UUID, libraryId: UUID, partialBook: BookApiModel): BookModel
-    fun toModel(book: Book, order: SortOrder = SortOrder.ASC): BookModel
-
     val total: Long
 }
 
@@ -42,39 +39,39 @@ class BookServiceImpl : BookService {
             .map { it.toModel() }
     }
 
-    override fun toModel(book: Book, order: SortOrder): BookModel {
-        return book.toModel()
-    }
-
-    override fun findByName(bookTitle: String, author: Author): Book? = transaction {
+    override fun findByName(bookTitle: String, authorId: UUID, libraryId: UUID): Book? = transaction {
         val rawBook =
             TBooks.join(TAuthorBookMapping, JoinType.INNER, TBooks.id, TAuthorBookMapping.book)
                 .join(TAuthors, JoinType.INNER, TAuthorBookMapping.author, TAuthors.id)
-                .select { (TBooks.title like bookTitle) and (TAuthorBookMapping.author eq author.id) }
+                .select {
+                    (TBooks.title like bookTitle) and
+                        (TAuthorBookMapping.author eq authorId) and
+                        (TBooks.library eq libraryId)
+                }
                 .firstOrNull()
                 ?: return@transaction null
         Book.wrap(rawBook[TBooks.id], rawBook)
     }
 
     override fun book(id: UUID, libraryId: UUID): DetailedBookModel = transaction {
-        val book = Book.findById(id) ?: throw ErrorResponse(HttpStatusCode.NotFound, "Could not find book")
-        if (book.library.id.value != libraryId) throw ErrorResponse(HttpStatusCode.NotFound, "Could not find book")
+        val book = Book.findById(id) ?: throw ErrorResponse.notFound("Book", id)
+        if (book.library.id.value != libraryId) throw ErrorResponse.notFound("Book", id, "Book is not in that library")
         val tracks = Track.find { TTracks.book eq id }.orderBy(TTracks.trackNr to SortOrder.ASC).map { it.toModel() }
         DetailedBookModel.fromModel(book.toModel(), tracks)
     }
 
-    override fun bookPosition(libraryId: UUID, id: UUID, order: SortOrder): Long = transaction {
+    override fun bookPosition(id: UUID, libraryId: UUID, order: SortOrder): Long = transaction {
         val book = book(id, libraryId)
-        TBooks.select { TBooks.title.lowerCase() less book.title.lowercase() }
+        TBooks.select { TBooks.title.lowerCase() less book.title.lowercase() and (TBooks.library eq libraryId) }
             .orderBy(TBooks.title.lowerCase() to order)
             .count()
     }
 
     override fun booksSorting(libraryId: UUID, order: SortOrder, limit: Int, offset: Long): List<UUID> = transaction {
-        Book.find { TBooks.library eq libraryId }
+        TBooks.select { TBooks.library eq libraryId }
             .orderBy(TBooks.title.lowerCase() to order)
             .limit(limit, offset)
-            .map { it.id.value }
+            .map { it[TBooks.id].value }
     }
 
     override fun search(query: String, libraryId: UUID): List<BookModel> = transaction {
@@ -89,7 +86,7 @@ class BookServiceImpl : BookService {
 
     override fun patchBook(id: UUID, libraryId: UUID, partialBook: PartialBookApiModel): BookModel = transaction {
         val book = Book.findById(id) ?: throw ErrorResponse.notFound("Book", id)
-        if (book.library.id.value != libraryId) throw ErrorResponse.notFound("Book", id)
+        if (book.library.id.value != libraryId) throw ErrorResponse.notFound("Book", id, "Book is not in that library")
         book.apply {
             title = partialBook.title ?: title
             provider = partialBook.provider ?: provider
@@ -120,6 +117,7 @@ class BookServiceImpl : BookService {
 
     override fun replaceBook(id: UUID, libraryId: UUID, partialBook: BookApiModel): BookModel = transaction {
         val book = Book.findById(id) ?: throw ErrorResponse.notFound("Book", id)
+        if (book.library.id.value != libraryId) throw ErrorResponse.notFound("Book", id, "Book is not in that library")
         book.apply {
             title = partialBook.title
             provider = partialBook.provider
