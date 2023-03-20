@@ -5,7 +5,7 @@ import io.thoth.database.access.getByName
 import io.thoth.database.access.toModel
 import io.thoth.database.tables.User
 import io.thoth.models.UserModel
-import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.RouteHandler
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 

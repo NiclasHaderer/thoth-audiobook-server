@@ -9,10 +9,10 @@ import io.thoth.database.access.toModel
 import io.thoth.database.tables.Library
 import io.thoth.models.LibraryModel
 import io.thoth.models.SearchModel
-import io.thoth.openapi.routing.RouteHandler
-import io.thoth.openapi.routing.get
-import io.thoth.openapi.routing.patch
-import io.thoth.openapi.routing.post
+import io.thoth.openapi.RouteHandler
+import io.thoth.openapi.get
+import io.thoth.openapi.patch
+import io.thoth.openapi.post
 import io.thoth.openapi.serverError
 import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.schedules.ThothSchedules

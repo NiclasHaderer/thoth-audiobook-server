@@ -5,7 +5,7 @@ import io.thoth.auth.thothPrincipal
 import io.thoth.database.access.getById
 import io.thoth.database.tables.User
 import io.thoth.models.UserModel
-import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.RouteHandler
 import io.thoth.openapi.serverError
 
 internal fun RouteHandler.getUser(): UserModel {

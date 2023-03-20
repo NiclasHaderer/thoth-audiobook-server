@@ -1,7 +1,6 @@
-package io.thoth.openapi.routing
+package io.thoth.openapi
 
 import io.ktor.http.*
-import io.ktor.resources.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -10,15 +9,7 @@ import io.ktor.server.resources.handle as resourceHandle
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
-import io.thoth.openapi.ErrorResponse
-import io.thoth.openapi.SchemaHolder
-import io.thoth.openapi.Secured
-import io.thoth.openapi.findAnnotationUp
-import io.thoth.openapi.properties
 import io.thoth.openapi.responses.BaseResponse
-import io.thoth.openapi.schema.parent
-import kotlin.reflect.KClass
-import kotlin.reflect.full.findAnnotation
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
 
@@ -57,32 +48,6 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
     }
 }
 
-fun assertParamsHierarchy(params: KClass<*>) {
-    if (params::class == Unit::class) return
-    // There are three conditions under which the hierarchy is valid:
-
-    // 1. Every class over params is decorated as @Resource
-    params.findAnnotation<Resource>()
-        ?: throw IllegalStateException("Class ${params.qualifiedName} is not decorated as a resource")
-
-    if (params.parent != null) {
-        val parentClass = params.parent!!.java.kotlin
-        // 2. Every class has a field which references the parent class name, because otherwise the
-        // ktor routing will not
-        //    work as one would think
-        val hasDeclaredParent =
-            params.properties.map { it.returnType.classifier as KClass<*> }.any { it == parentClass }
-        if (!hasDeclaredParent) {
-            throw IllegalStateException(
-                "Class ${params.qualifiedName} has no property of type ${parentClass.qualifiedName}." +
-                    "You have to create an additional property with the parent class as type",
-            )
-        }
-        // 3. Every parent fulfills requirements 1 and 2
-        assertParamsHierarchy(parentClass)
-    }
-}
-
 inline fun <reified PARAMS : Any, reified RESPONSE> Route.wrapRequest(
     method: HttpMethod,
     noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
@@ -92,11 +57,10 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     method: HttpMethod,
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
-    // Check if the params route hierarchy is OK
-    assertParamsHierarchy(PARAMS::class)
 
-    // Add the route to the openapi schema
-    SchemaHolder.addRouteToApi<PARAMS, BODY, RESPONSE>(fullPath(PARAMS::class), method)
+    OpenApiRouteCollector.addRoute(
+        OpenApiRoute.create<PARAMS, BODY, RESPONSE>(method, this),
+    )
 
     // Check if the route should be secured by ktor
     val secured = PARAMS::class.findAnnotationUp<Secured>()

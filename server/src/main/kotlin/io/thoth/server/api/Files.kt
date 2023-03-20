@@ -7,11 +7,11 @@ import io.ktor.server.routing.*
 import io.thoth.database.access.getById
 import io.thoth.database.tables.Image
 import io.thoth.database.tables.Track
+import io.thoth.openapi.get
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.binaryResponse
 import io.thoth.openapi.responses.fileResponse
-import io.thoth.openapi.routing.get
 import io.thoth.openapi.serverError
 import java.nio.file.Path
 import kotlin.io.path.exists

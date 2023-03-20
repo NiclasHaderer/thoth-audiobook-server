@@ -3,7 +3,7 @@ package io.thoth.auth.routes
 import io.thoth.auth.AuthConfigImpl
 import io.thoth.auth.JwtPair
 import io.thoth.models.UserModel
-import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.RouteHandler
 import java.util.*
 
 interface AuthRoutes {

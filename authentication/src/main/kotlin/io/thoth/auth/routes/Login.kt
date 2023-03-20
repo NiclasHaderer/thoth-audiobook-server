@@ -6,7 +6,7 @@ import io.thoth.auth.JwtPair
 import io.thoth.auth.generateJwtForUser
 import io.thoth.database.access.internalGetByName
 import io.thoth.database.tables.User
-import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.RouteHandler
 import io.thoth.openapi.serverError
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
