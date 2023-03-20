@@ -1,7 +1,7 @@
 package io.thoth.auth.routes
 
 import io.thoth.auth.thothPrincipal
-import io.thoth.openapi.routing.RouteHandler
+import io.thoth.openapi.RouteHandler
 import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
 

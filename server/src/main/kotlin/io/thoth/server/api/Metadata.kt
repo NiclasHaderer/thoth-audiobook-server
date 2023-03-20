@@ -7,7 +7,7 @@ import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
-import io.thoth.openapi.routing.get
+import io.thoth.openapi.get
 import io.thoth.openapi.serverError
 import org.koin.ktor.ext.inject
 

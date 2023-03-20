@@ -1,4 +1,4 @@
-package io.thoth.openapi.plugin
+package io.thoth.openapi.plugins
 
 import io.ktor.http.*
 import io.ktor.http.content.*
