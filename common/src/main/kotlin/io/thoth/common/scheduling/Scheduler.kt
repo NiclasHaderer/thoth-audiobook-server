@@ -54,7 +54,7 @@ open class Scheduler {
         } else {
             log.info { "Dispatched event $event to ${relevantSchedules.size} schedules" }
         }
-        reevaluateNextExecutiontime()
+        reevaluateNextExecutionTime()
     }
 
     fun <T> register(event: EventTask<T>) {
@@ -64,7 +64,7 @@ open class Scheduler {
     suspend fun schedule(schedule: ScheduleTask) {
         schedules.add(schedule)
         queueTask(schedule)
-        reevaluateNextExecutiontime()
+        reevaluateNextExecutionTime()
     }
 
     private fun queueTask(task: ScheduleTask) {
@@ -72,7 +72,7 @@ open class Scheduler {
         taskQueue.add(ScheduledCronTask(task, nextExecution))
     }
 
-    private suspend fun reevaluateNextExecutiontime() {
+    private suspend fun reevaluateNextExecutionTime() {
         currentExecution?.cancel()
         currentExecution = null
     }

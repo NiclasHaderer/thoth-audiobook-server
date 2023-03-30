@@ -4,7 +4,7 @@ import io.thoth.common.serializion.kotlin.UUID_S
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PatchSeries(
+data class PartialSeriesApiModel(
     val title: String?,
     val authors: List<UUID_S>?,
     val books: List<UUID_S>?,
@@ -22,7 +22,7 @@ data class PatchSeries(
 }
 
 @Serializable
-data class PutSeries(
+data class SeriesApiModel(
     val title: String,
     val authors: List<UUID_S>,
     val books: List<UUID_S>,

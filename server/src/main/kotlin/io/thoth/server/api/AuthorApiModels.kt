@@ -2,7 +2,7 @@ package io.thoth.server.api
 
 import java.time.LocalDate
 
-data class PatchAuthor(
+data class PartialAuthorApiModel(
     val name: String?,
     val provider: String?,
     val providerID: String?,
@@ -14,7 +14,7 @@ data class PatchAuthor(
     val deathDate: LocalDate?
 )
 
-data class PutAuthor(
+data class AuthorApiModel(
     val name: String,
     val provider: String?,
     val providerID: String?,

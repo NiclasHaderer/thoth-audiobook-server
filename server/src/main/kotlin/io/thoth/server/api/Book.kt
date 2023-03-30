@@ -9,16 +9,16 @@ import io.thoth.models.TitledId
 import io.thoth.openapi.get
 import io.thoth.openapi.patch
 import io.thoth.openapi.put
-import io.thoth.server.services.BookService
+import io.thoth.server.services.BookRepository
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.koin.ktor.ext.inject
 
 fun Routing.bookRouting() {
-    val bookService by inject<BookService>()
+    val bookRepository by inject<BookRepository>()
     get<Api.Libraries.Id.Books.All, PaginatedResponse<BookModel>> { route ->
         val books =
-            bookService.books(
+            bookRepository.getAll(
                 libraryId = route.libraryId,
                 order = SortOrder.ASC,
                 limit = route.limit,
@@ -26,14 +26,14 @@ fun Routing.bookRouting() {
             )
         PaginatedResponse(
             items = books,
-            total = bookService.total,
+            total = bookRepository.total(libraryId = route.libraryId),
             limit = route.limit,
             offset = route.offset,
         )
     }
 
     get<Api.Libraries.Id.Books.Sorting, List<UUID>> { route ->
-        bookService.booksSorting(
+        bookRepository.sorting(
             libraryId = route.libraryId,
             order = SortOrder.ASC,
             limit = route.limit,
@@ -43,7 +43,7 @@ fun Routing.bookRouting() {
 
     get<Api.Libraries.Id.Books.Id.Position, Position> { route ->
         val sortOrder =
-            bookService.bookPosition(
+            bookRepository.position(
                 libraryId = route.libraryId,
                 id = route.id,
                 order = SortOrder.ASC,
@@ -52,18 +52,18 @@ fun Routing.bookRouting() {
     }
 
     get<Api.Libraries.Id.Books.Id, DetailedBookModel> { route ->
-        bookService.book(id = route.bookId, libraryId = route.libraryId)
+        bookRepository.get(id = route.bookId, libraryId = route.libraryId)
     }
 
     get<Api.Libraries.Id.Books.Autocomplete, List<TitledId>> { route ->
-        bookService.search(route.q, route.libraryId).map { TitledId(it.id, it.title) }
+        bookRepository.search(route.q, route.libraryId).map { TitledId(it.id, it.title) }
     }
 
     patch<Api.Libraries.Id.Books.Id, PartialBookApiModel, BookModel> { route, patch ->
-        bookService.patchBook(route.bookId, route.libraryId, patch)
+        bookRepository.modify(route.bookId, route.libraryId, patch)
     }
 
     put<Api.Libraries.Id.Books.Id, BookApiModel, BookModel> { id, putBook ->
-        bookService.replaceBook(id.bookId, id.libraryId, putBook)
+        bookRepository.replace(id.bookId, id.libraryId, putBook)
     }
 }

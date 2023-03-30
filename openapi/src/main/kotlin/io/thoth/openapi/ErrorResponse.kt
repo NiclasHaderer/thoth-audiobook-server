@@ -41,14 +41,28 @@ fun Application.configureStatusPages() {
     }
 }
 
-class ErrorResponse(val status: HttpStatusCode, message: String, val details: Any? = null) : Exception(message) {
+class ErrorResponse internal constructor(val status: HttpStatusCode, message: String, val details: Any? = null) :
+    Exception(message) {
     companion object {
         fun notFound(thing: String, id: UUID, details: Any? = null): ErrorResponse {
+            return notFound(thing, id.toString(), details)
+        }
+
+        fun notFound(thing: String, id: String, details: Any? = null): ErrorResponse {
             return ErrorResponse(HttpStatusCode.NotFound, "$thing with ID:$id not found", details)
+        }
+
+        fun userError(message: String, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.BadRequest, message, details)
+        }
+
+        fun notImplemented(message: String, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.NotImplemented, message, details)
         }
     }
 }
 
+@Deprecated("Use ErrorResponse instead")
 fun PipelineContext<*, *>.serverError(status: HttpStatusCode, message: String, details: Any? = null): Nothing {
     throw ErrorResponse(status, message, details)
 }
