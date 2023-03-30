@@ -13,7 +13,6 @@ import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.binaryResponse
 import io.thoth.openapi.responses.fileResponse
-import io.thoth.openapi.serverError
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
@@ -22,7 +21,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Routing.audioRouting() {
     get<Api.Files.Audio.Id, FileResponse> { (id) ->
-        val track = transaction { Track.getById(id) } ?: serverError(HttpStatusCode.NotFound, "Track not found.")
+        val track = transaction { Track.getById(id) } ?: throw ErrorResponse.notFound("Track", id)
         val path = Path.of(track.path)
         if (!path.exists() && path.isRegularFile()) {
             throw ErrorResponse.notFound("File", path.name, "Database out of sync. Please start a rescan.")

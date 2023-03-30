@@ -126,7 +126,7 @@ class Api {
                 data class Sorting(
                     val limit: Int = 20,
                     val offset: Long = 0,
-                    val order: io.thoth.models.Position.Order = io.thoth.models.Position.Order.ASC,
+                    val order: Position.Order = io.thoth.models.Position.Order.ASC,
                     private val parent: Authors,
                 ) {
                     val libraryId

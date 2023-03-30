@@ -9,7 +9,6 @@ import org.jetbrains.exposed.sql.ReferenceOption
 
 object TSeries : UUIDTable("Series") {
     val title = varchar("title", 255)
-    val sourceTitle = varchar("sourceTitle", 255)
     val totalBooks = integer("totalBooks").nullable()
     val primaryWorks = integer("primaryWorks").nullable()
     val description = text("description").nullable()
