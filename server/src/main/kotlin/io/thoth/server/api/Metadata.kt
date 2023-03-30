@@ -1,14 +1,13 @@
 package io.thoth.server.api
 
-import io.ktor.http.*
 import io.ktor.server.routing.*
 import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
+import io.thoth.openapi.ErrorResponse
 import io.thoth.openapi.get
-import io.thoth.openapi.serverError
 import org.koin.ktor.ext.inject
 
 fun Routing.metadataRouting() {
@@ -25,11 +24,12 @@ fun Routing.metadataRouting() {
         )
     }
 
-    get<Api.Metadata.Author.Id, MetadataAuthor> { id ->
-        metadataProvider.getAuthorByID(id.provider, id.id)
-            ?: serverError(
-                HttpStatusCode.NotFound,
-                "Author with id ${id.id} and provider ${id.provider}was not found",
+    get<Api.Metadata.Author.Id, MetadataAuthor> {
+        metadataProvider.getAuthorByID(it.provider, it.id)
+            ?: throw ErrorResponse.notFound(
+                "Author",
+                it.id,
+                "Provider ${it.provider}",
             )
     }
 
@@ -37,9 +37,10 @@ fun Routing.metadataRouting() {
 
     get<Api.Metadata.Book.Id, MetadataBook> { id ->
         metadataProvider.getBookByID(id.provider, id.id)
-            ?: serverError(
-                HttpStatusCode.NotFound,
-                "Book with id ${id.id} and provider ${id.provider}was not found",
+            ?: throw ErrorResponse.notFound(
+                "Book",
+                id.id,
+                "Provider ${id.provider}",
             )
     }
 
@@ -49,9 +50,10 @@ fun Routing.metadataRouting() {
 
     get<Api.Metadata.Series.Id, MetadataSeries> { id ->
         metadataProvider.getSeriesByID(id.provider, id.id)
-            ?: serverError(
-                HttpStatusCode.NotFound,
-                "Series with id ${id.id} and provider ${id.provider}was not found",
+            ?: throw ErrorResponse.notFound(
+                "Series",
+                id.id,
+                "Provider ${id.provider}",
             )
     }
     get<Api.Metadata.Series.Search, List<MetadataSeries>> { params ->

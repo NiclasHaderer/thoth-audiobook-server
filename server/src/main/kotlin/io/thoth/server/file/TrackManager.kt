@@ -13,7 +13,7 @@ import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
-import io.thoth.server.services.BookService
+import io.thoth.server.services.BookRepository
 import java.nio.file.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.isDirectory
@@ -30,8 +30,10 @@ interface TrackManager {
     fun removePath(path: Path)
 }
 
-internal class TrackManagerImpl(private val bookService: BookService, private val analyzer: AudioFileAnalyzerWrapper) :
-    TrackManager, KoinComponent {
+internal class TrackManagerImpl(
+    private val bookRepository: BookRepository,
+    private val analyzer: AudioFileAnalyzerWrapper
+) : TrackManager, KoinComponent {
     private val semaphore = Semaphore(1)
     private val log = logger {}
 
@@ -101,7 +103,11 @@ internal class TrackManagerImpl(private val bookService: BookService, private va
     private fun getOrCreateBook(scan: AudioFileAnalysisResult, libraryModel: Library): Book {
         val author = getOrCreateAuthor(scan, libraryModel)
         val book =
-            bookService.findByName(bookTitle = scan.book, authorId = author.id.value, libraryId = libraryModel.id.value)
+            bookRepository.findByName(
+                bookTitle = scan.book,
+                authorId = author.id.value,
+                libraryId = libraryModel.id.value,
+            )
         return if (book != null) {
             updateBook(book, scan, author, libraryModel)
         } else {

@@ -1,15 +1,6 @@
 package io.thoth.server.api
 
-import io.ktor.http.*
 import io.ktor.server.routing.*
-import io.thoth.database.access.getDetailedById
-import io.thoth.database.access.getMultiple
-import io.thoth.database.access.getNewImage
-import io.thoth.database.access.positionOf
-import io.thoth.database.access.toModel
-import io.thoth.database.tables.Author
-import io.thoth.database.tables.Image
-import io.thoth.database.tables.TAuthors
 import io.thoth.models.AuthorModel
 import io.thoth.models.DetailedAuthorModel
 import io.thoth.models.NamedId
@@ -18,80 +9,44 @@ import io.thoth.models.Position
 import io.thoth.openapi.get
 import io.thoth.openapi.patch
 import io.thoth.openapi.put
-import io.thoth.openapi.serverError
+import io.thoth.server.services.AuthorRepository
 import java.util.*
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.ktor.ext.inject
 
 fun Routing.authorRouting() {
-    // TODO restrict to library
-    get<Api.Libraries.Id.Authors.All, PaginatedResponse<AuthorModel>> { (limit, offset) ->
-        transaction {
-            val books = Author.getMultiple(limit, offset)
-            val seriesCount = Author.count()
-            PaginatedResponse(books, total = seriesCount, offset = offset, limit = limit)
-        }
+    val authorService by inject<AuthorRepository>()
+
+    get<Api.Libraries.Id.Authors.All, PaginatedResponse<AuthorModel>> {
+        PaginatedResponse(
+            items = authorService.getAll(it.libraryId, it.order.toSortOrder(), it.limit, it.offset),
+            limit = it.limit,
+            offset = it.offset,
+            total = authorService.total(it.libraryId),
+        )
     }
-    get<Api.Libraries.Id.Authors.Sorting, List<UUID>> { (limit, offset) ->
-        transaction { Author.getMultiple(limit, offset).map { it.id } }
+    get<Api.Libraries.Id.Authors.Sorting, List<UUID>> {
+        authorService.sorting(it.libraryId, it.order.toSortOrder(), it.limit, it.offset)
     }
 
     get<Api.Libraries.Id.Authors.Id.Position, Position> {
-        transaction {
-            val sortOrder = Author.positionOf(it.id) ?: serverError(HttpStatusCode.NotFound, "Author was not found")
-            Position(sortIndex = sortOrder, id = it.id, order = Position.Order.ASC)
-        }
+        Position(
+            sortIndex = authorService.position(it.libraryId, it.authorId, it.order.toSortOrder()),
+            id = it.authorId,
+            order = it.order,
+        )
     }
 
-    get<Api.Libraries.Id.Authors.Id, DetailedAuthorModel> { (id) ->
-        transaction { Author.getDetailedById(id) ?: serverError(HttpStatusCode.NotFound, "Author was not found") }
+    get<Api.Libraries.Id.Authors.Id, DetailedAuthorModel> { authorService.get(it.authorId, it.libraryId) }
+
+    get<Api.Libraries.Id.Authors.Autocomplete, List<NamedId>> {
+        authorService.search(it.q, it.libraryId).map { NamedId(it.id, it.name) }
     }
 
-    get<Api.Libraries.Id.Authors.Autocomplete, List<NamedId>> { (name) ->
-        transaction {
-            Author.find { TAuthors.name like "%$name%" }
-                .orderBy(TAuthors.name.lowerCase() to SortOrder.ASC)
-                .limit(30)
-                .map { NamedId(it.id.value, it.name) }
-        }
+    patch<Api.Libraries.Id.Authors.Id, PartialAuthorApiModel, AuthorModel> { id, patchAuthor ->
+        authorService.modify(id.authorId, id.libraryId, patchAuthor)
     }
 
-    patch<Api.Libraries.Id.Authors.Id, PatchAuthor, AuthorModel> { id, patchAuthor ->
-        transaction {
-            val author = Author.findById(id.authorId) ?: serverError(HttpStatusCode.NotFound, "Author not found")
-            author
-                .apply {
-                    name = patchAuthor.name ?: author.name
-                    provider = patchAuthor.provider ?: author.provider
-                    providerID = patchAuthor.providerID ?: author.providerID
-                    biography = patchAuthor.biography ?: author.biography
-                    website = patchAuthor.website ?: author.website
-                    bornIn = patchAuthor.bornIn ?: author.bornIn
-                    birthDate = patchAuthor.birthDate ?: author.birthDate
-                    deathDate = patchAuthor.deathDate ?: author.deathDate
-                    imageID = Image.getNewImage(patchAuthor.image, currentImageID = imageID, default = imageID)
-                }
-                .toModel()
-        }
-    }
-
-    put<Api.Libraries.Id.Authors.Id, PutAuthor, AuthorModel> { id, postAuthor ->
-        transaction {
-            val author = Author.findById(id.authorId) ?: serverError(HttpStatusCode.NotFound, "Author not found")
-            author
-                .apply {
-                    name = postAuthor.name
-                    provider = postAuthor.provider
-                    providerID = postAuthor.providerID
-                    biography = postAuthor.biography
-                    website = postAuthor.website
-                    bornIn = postAuthor.bornIn
-                    birthDate = postAuthor.birthDate
-                    deathDate = postAuthor.deathDate
-                    imageID = Image.getNewImage(postAuthor.image, currentImageID = imageID, default = null)
-                }
-                .toModel()
-        }
+    put<Api.Libraries.Id.Authors.Id, AuthorApiModel, AuthorModel> { id, patchAuthor ->
+        authorService.replace(id.authorId, id.libraryId, patchAuthor)
     }
 }

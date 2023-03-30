@@ -3,7 +3,7 @@ package io.thoth.server.api
 import io.thoth.models.FileScanner
 import io.thoth.models.MetadataAgent
 
-data class PostLibrary(
+data class LibraryApiModel(
     val name: String,
     val icon: String?,
     val folders: List<String>,
@@ -18,7 +18,7 @@ data class PostLibrary(
     }
 }
 
-data class PatchLibrary(
+data class PartialLibraryApiModel(
     val name: String?,
     val icon: String?,
     val folders: List<String>?,

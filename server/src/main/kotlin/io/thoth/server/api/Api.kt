@@ -5,9 +5,12 @@ import io.thoth.auth.Guards
 import io.thoth.common.serializion.kotlin.UUID_S
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
+import io.thoth.models.Position
 import io.thoth.openapi.Secured
 import io.thoth.openapi.Tagged
 
+// TODO names of libraryID, etc should be consistent
+// TODO remove unused methods in the db access layer
 @Resource("api")
 class Api {
 
@@ -109,13 +112,23 @@ class Api {
                     get() = parent.libraryId
 
                 @Resource("")
-                data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
+                data class All(
+                    val limit: Int = 20,
+                    val offset: Long = 0,
+                    val order: Position.Order = Position.Order.ASC,
+                    private val parent: Authors
+                ) {
                     val libraryId
                         get() = parent.libraryId
                 }
 
                 @Resource("sorting")
-                data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Authors) {
+                data class Sorting(
+                    val limit: Int = 20,
+                    val offset: Long = 0,
+                    val order: io.thoth.models.Position.Order = io.thoth.models.Position.Order.ASC,
+                    private val parent: Authors,
+                ) {
                     val libraryId
                         get() = parent.libraryId
                 }
@@ -132,10 +145,13 @@ class Api {
                         get() = parent.libraryId
 
                     @Resource("position")
-                    data class Position(private val parent: Id) {
+                    data class Position(
+                        val order: io.thoth.models.Position.Order = io.thoth.models.Position.Order.ASC,
+                        private val parent: Id,
+                    ) {
                         val libraryId
                             get() = parent.libraryId
-                        val id
+                        val authorId
                             get() = parent.authorId
                     }
                 }
@@ -154,7 +170,12 @@ class Api {
                 }
 
                 @Resource("sorting")
-                data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Series) {
+                data class Sorting(
+                    val limit: Int = 20,
+                    val offset: Long = 0,
+                    val order: Position.Order = Position.Order.ASC,
+                    private val parent: Series
+                ) {
                     val libraryId
                         get() = parent.libraryId
                 }
@@ -171,7 +192,10 @@ class Api {
                         get() = parent.libraryId
 
                     @Resource("position")
-                    data class Position(private val parent: Id) {
+                    data class Position(
+                        val order: io.thoth.models.Position.Order = io.thoth.models.Position.Order.ASC,
+                        private val parent: Id
+                    ) {
                         val libraryId
                             get() = parent.libraryId
                         val id
