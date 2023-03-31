@@ -4,10 +4,9 @@ import io.thoth.openapi.OpenApiRoute
 import io.thoth.openapi.OpenApiRouteCollector
 import io.thoth.openapi.Summary
 import java.io.File
-import kotlin.collections.set
 import kotlin.reflect.full.findAnnotations
 
-fun getName(route: OpenApiRoute): String? {
+fun getRouteName(route: OpenApiRoute): String? {
     val summary =
         route.requestParamsType.clazz.findAnnotations<Summary>().firstOrNull { it.method == route.method.value }
     val summaryString = summary?.summary ?: return null
@@ -34,22 +33,8 @@ fun getParameters(route: OpenApiRoute): String {
     return listOf(pathParams, queryParams, bodyParam).filter { it.isNotBlank() }.joinToString(", ")
 }
 
-class TypescriptType(val name: String, val content: String)
-
-fun generateTypes(route: OpenApiRoute, collectedTypes: MutableMap<String, TypescriptType>) {
-    route.pathParameters.forEach {
-        collectedTypes[it.first.name] = TypescriptType(it.first.name, it.first.type.toString())
-    }
-    route.queryParameters.forEach {
-        collectedTypes[it.first.name] = TypescriptType(it.first.name, it.first.type.toString())
-    }
-    route.requestBodyType.let {
-        collectedTypes[it.clazz.qualifiedName!!] = TypescriptType(it.clazz.qualifiedName!!, it.clazz.toString())
-    }
-
-    route.responseBodyType.let {
-        collectedTypes[it.clazz.qualifiedName!!] = TypescriptType(it.clazz.qualifiedName!!, it.clazz.toString())
-    }
+fun generateTypes(): List<String> {
+    return listOf()
 }
 
 fun createUrlCreator(): String {
@@ -71,16 +56,13 @@ fun createUrlCreator(): String {
 
 fun createRequestMaker(): String {
     return """
-        const __request = <T>(route: string, method: string, body?: object): Promise<{ success: true, body: T } | {
-            success: false,
-            error: string | object
-        }> => {
+        const __request = <T>(route: string, method: string, body?: object): Promise<ApiResponse<T>> => {
             return fetch(route, {
                 method,
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(body)
+                body: body ? JSON.stringify(body) : undefined
             })
                 .then(async (response) => {
                     if (response.ok) {
@@ -91,6 +73,7 @@ fun createRequestMaker(): String {
                     } else {
                         return {
                             success: false,
+                            status: response.status,
                             error: await response.json().catch(() => response.text()).catch(() => response.statusText)
                         } as const
                     }
@@ -116,30 +99,28 @@ fun createURL(route: OpenApiRoute): String {
         .trimIndent()
 }
 
-fun generateTypescriptTypes() {
-    val collectedTypes = mutableMapOf<String, TypescriptType>()
-    val functions = mutableListOf<String>()
+fun generateApiClient(): List<String> {
+    val clientFunctions = mutableListOf<String>()
     OpenApiRouteCollector.forEach {
-        val routeName = getName(it)
+        val routeName = getRouteName(it)
         if (routeName == null) {
             println("Route ${it.method}:${it.fullPath} has no summary")
             return@forEach
         }
-        val parameters = getParameters(it)
         val function =
             """
-            $routeName($parameters) {
+            $routeName(${getParameters(it)}) {
                 ${createURL(it)}
                 return __request(__finalUrl, "${it.method.value}", ${if (it.requestBodyType.clazz != Unit::class) "body" else "undefined"});
             }
         """
                 .trimIndent()
-        functions.add(function)
-        generateTypes(it, collectedTypes)
+        clientFunctions.add(function)
     }
+    return clientFunctions
+}
 
-    // Save to file
-    val file = File("./api.ts")
+fun saveClientFunctionsToFile(functions: List<String>, file: File) {
     file.printWriter().use { out ->
         out.println(createUrlCreator())
         out.println(createRequestMaker())
@@ -152,4 +133,62 @@ fun generateTypescriptTypes() {
                 .trimIndent(),
         )
     }
+}
+
+fun saveTypesToFile(types: List<String>, typesFile: File) {
+    typesFile.printWriter().use { out ->
+        out.println(
+            """
+            export type ApiError = {
+                success: false,
+                error: string | object
+                status?: number
+            }
+            
+            export type ApiSuccess<T> = {
+                success: true,
+                body: T
+            }
+            
+            export type ApiResponse<T> = ApiError | ApiSuccess<T>
+        """
+                .trimIndent(),
+        )
+        out.println(types.joinToString("\n"))
+    }
+}
+
+fun File.prependText(content: String) {
+    val tempFile = File(this.absolutePath + ".tmp")
+    tempFile.writeText(content)
+    tempFile.appendBytes(this.readBytes())
+    this.delete()
+    tempFile.renameTo(this)
+}
+
+fun addTypeImports(types: List<String>, file: File, typesFile: File) {
+    file.prependText(
+        """
+        import { ApiResponse } from "./types";
+
+    """
+            .trimIndent(),
+    )
+    // TODO add imports for types
+    file.prependText(
+        """
+        """
+            .trimIndent(),
+    )
+}
+
+fun generateTypescriptTypes() {
+    val functions = generateApiClient()
+    val apiFile = File("./api.ts")
+    val typesFile = File("./types.ts")
+    saveClientFunctionsToFile(functions, apiFile)
+
+    val types = generateTypes()
+    addTypeImports(types, apiFile, typesFile)
+    saveTypesToFile(types, typesFile)
 }
