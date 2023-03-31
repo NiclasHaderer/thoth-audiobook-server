@@ -26,8 +26,7 @@ suspend inline fun <reified BODY : Any> ApplicationCall.parseBody(): BODY {
                 errors.add(errors.last().cause as Exception)
             }
 
-            throw ErrorResponse(
-                HttpStatusCode.BadRequest,
+            throw ErrorResponse.userError(
                 e.message ?: "body could not be parsed",
                 errors.map { it.message },
             )

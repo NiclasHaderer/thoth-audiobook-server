@@ -1,19 +1,18 @@
 package io.thoth.auth.routes
 
-import io.ktor.http.*
 import io.thoth.auth.thothPrincipal
 import io.thoth.database.access.getById
 import io.thoth.database.tables.User
 import io.thoth.models.UserModel
+import io.thoth.openapi.ErrorResponse
 import io.thoth.openapi.RouteHandler
-import io.thoth.openapi.serverError
 
 internal fun RouteHandler.getUser(): UserModel {
     val principal = thothPrincipal()
-    return User.getById(principal.userId) ?: serverError(HttpStatusCode.NotFound, "Could not find user")
+    return User.getById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
 }
 
 internal fun RouteHandler.deleteUser() {
     val principal = thothPrincipal()
-    User.findById(principal.userId)?.delete() ?: serverError(HttpStatusCode.NotFound, "Could not find user")
+    User.findById(principal.userId)?.delete() ?: throw ErrorResponse.notFound("User", principal.userId)
 }

@@ -1,6 +1,5 @@
 package io.thoth.database.access
 
-import io.ktor.http.*
 import io.thoth.common.extensions.isUUID
 import io.thoth.common.extensions.syncUriToFile
 import io.thoth.database.tables.Image
@@ -35,8 +34,7 @@ fun Image.Companion.getNewImage(
     if (newImage.isUUID()) {
         val newImageUUID = UUID.fromString(newImage)
 
-        return Image.findById(newImageUUID)?.id
-            ?: throw ErrorResponse(HttpStatusCode.BadRequest, "Image with id $newImageUUID does not exist")
+        return Image.findById(newImageUUID)?.id ?: throw ErrorResponse.notFound("Image", newImageUUID)
     }
 
     val originalImage = if (currentImageID != null) Image.findById(currentImageID) else null

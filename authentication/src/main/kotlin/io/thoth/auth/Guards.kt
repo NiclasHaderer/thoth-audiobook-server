@@ -1,10 +1,9 @@
 package io.thoth.auth
 
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.util.pipeline.*
-import io.thoth.openapi.serverError
+import io.thoth.openapi.ErrorResponse
 
 object Guards {
     const val Normal = "user-jwt"
@@ -14,7 +13,7 @@ object Guards {
 
 fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipal {
     return thothPrincipalOrNull()
-        ?: serverError(HttpStatusCode.InternalServerError, "Call has to be surrounded with a jwt login")
+        ?: throw ErrorResponse.internalError("Could not get principal. Route has to be guarded with one of the Guards")
 }
 
 fun PipelineContext<Unit, ApplicationCall>.thothPrincipalOrNull(): ThothPrincipal? = call.principal()

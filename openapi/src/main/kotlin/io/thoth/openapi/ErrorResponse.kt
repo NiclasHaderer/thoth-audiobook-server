@@ -4,7 +4,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
-import io.ktor.util.pipeline.*
 import java.util.*
 import mu.KotlinLogging.logger
 
@@ -56,13 +55,16 @@ class ErrorResponse internal constructor(val status: HttpStatusCode, message: St
             return ErrorResponse(HttpStatusCode.BadRequest, message, details)
         }
 
+        fun unauthorized(resource: String, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.Unauthorized, "Unauthorized to access $resource", details)
+        }
+
         fun notImplemented(message: String, details: Any? = null): ErrorResponse {
             return ErrorResponse(HttpStatusCode.NotImplemented, message, details)
         }
-    }
-}
 
-@Deprecated("Use ErrorResponse instead")
-fun PipelineContext<*, *>.serverError(status: HttpStatusCode, message: String, details: Any? = null): Nothing {
-    throw ErrorResponse(status, message, details)
+        fun internalError(message: String, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.InternalServerError, message, details)
+        }
+    }
 }
