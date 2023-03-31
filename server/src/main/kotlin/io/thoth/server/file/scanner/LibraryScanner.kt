@@ -1,7 +1,6 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.common.extensions.findOne
-import io.thoth.database.access.getMatching
 import io.thoth.database.access.hasBeenUpdated
 import io.thoth.database.access.markAsTouched
 import io.thoth.database.access.toModel
@@ -10,6 +9,7 @@ import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
 import io.thoth.models.LibraryModel
 import io.thoth.server.file.TrackManager
+import io.thoth.server.services.LibraryRepository
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicBoolean
@@ -35,6 +35,7 @@ interface LibraryScanner {
 
 class LibraryScannerImpl : LibraryScanner, KoinComponent {
     private val trackManager: TrackManager by inject()
+    private val libraryRepository: LibraryRepository by inject()
     // TODO if there should be a lock on scanning a library/folder/everything
 
     companion object {
@@ -99,7 +100,7 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
             return
         }
 
-        val selectedLibrary = library ?: transaction { Library.getMatching(folder) }
+        val selectedLibrary = library ?: transaction { libraryRepository.getMatching(folder) }
         if (selectedLibrary == null) {
             log.error { "No library found for folder $folder. Ignoring folder!" }
             return
@@ -112,7 +113,7 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
                 trackManager.removePath(it)
             },
             shouldUpdateFile = { path -> shouldUpdate(path) },
-            addOrUpdate = { path, attrs -> runBlocking { addOrUpdatePath(path, selectedLibrary) } },
+            addOrUpdate = { path, _ -> runBlocking { addOrUpdatePath(path, selectedLibrary) } },
         )
     }
 
@@ -121,7 +122,7 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
             log.info { "Skipping $path because it is in a folder that is ignored" }
             return
         }
-        val selectedLibrary = library ?: transaction { Library.getMatching(path) }
+        val selectedLibrary = library ?: transaction { libraryRepository.getMatching(path) }
         if (selectedLibrary == null) {
             log.error { "No library found for path $path. Ignoring path!" }
             return

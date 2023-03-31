@@ -37,6 +37,7 @@ dependencies {
     implementation(project(":authentication"))
     implementation(project(":common"))
     implementation(project(":models"))
+    implementation(project(":generators"))
     implementation(project(":openapi"))
     implementation(project(":database"))
     implementation(project(":metadata"))

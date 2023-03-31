@@ -18,12 +18,18 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 
 interface SeriesRepository :
-    Repository<Series, SeriesModel, DetailedSeriesModel, PartialSeriesApiModel, SeriesApiModel>
+    Repository<Series, SeriesModel, DetailedSeriesModel, PartialSeriesApiModel, SeriesApiModel> {
+    fun findByName(seriesTitle: String, libraryId: UUID): Series?
+}
 
 class SeriesRepositoryImpl(
     private val authorRepository: AuthorRepository,
     private val bookRepository: BookRepository,
 ) : SeriesRepository {
+    override fun findByName(seriesTitle: String, libraryId: UUID): Series? = transaction {
+        Series.find { TSeries.title eq seriesTitle and (TSeries.library eq libraryId) }.firstOrNull()
+    }
+
     override fun raw(id: UUID, libraryId: UUID): Series = transaction {
         Series.find { TSeries.id eq id and (TSeries.library eq libraryId) }.firstOrNull()
             ?: throw ErrorResponse.notFound("Series", id)

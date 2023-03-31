@@ -1,10 +1,13 @@
 package io.thoth.openapi.schema
 
-import io.ktor.util.reflect.*
 import io.thoth.openapi.properties
 import java.lang.reflect.ParameterizedType
-import kotlin.reflect.*
+import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
+import kotlin.reflect.KType
 import kotlin.reflect.full.starProjectedType
+import kotlin.reflect.javaType
+import kotlin.reflect.typeOf
 
 class ClassType private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>) {
     val isEnum: Boolean

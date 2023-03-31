@@ -19,9 +19,9 @@ import kotlin.reflect.full.findAnnotation
 class OpenApiRoute(
     val method: HttpMethod,
     val basePath: String,
-    private val requestParamsType: ClassType,
-    private val requestBodyType: ClassType,
-    private val responseBodyType: ClassType
+    val requestParamsType: ClassType,
+    val requestBodyType: ClassType,
+    val responseBodyType: ClassType
 ) {
 
     constructor(
@@ -224,6 +224,7 @@ class OpenApiRoute(
                 }
         return queryParams
     }
+
     private fun getContentType(classType: ClassType): String {
         if (classType.isEnum) return "text/plain"
         return when (classType.clazz) {

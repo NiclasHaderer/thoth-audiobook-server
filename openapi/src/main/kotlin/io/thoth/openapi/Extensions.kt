@@ -25,7 +25,7 @@ internal val KClass<*>.properties: Collection<KProperty1<out Any, *>>
     get() =
         this.memberProperties.filter {
             // checks if the property is a getter
-            it.javaField != null
+            it.javaField != null || isInterface
         }
 
 internal val KProperty1<*, *>.nullable: Boolean
@@ -43,3 +43,5 @@ internal val KProperty1<*, *>.optional: Boolean
         val parameter = constructor.parameters.find { it.name == this.name } ?: return false
         return parameter.isOptional
     }
+val KClass<*>.isInterface
+    get() = java.isInterface

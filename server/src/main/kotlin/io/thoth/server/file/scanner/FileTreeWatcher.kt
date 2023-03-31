@@ -10,16 +10,14 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 interface FileTreeWatcher {
     fun watch(folders: List<Path>)
     fun stop()
 }
 
-class FileTreeWatcherImpl : FileTreeWatcher, KoinComponent {
-    private val thothConfig: ThothConfig by inject()
-    private val libraryScanner: LibraryScanner by inject()
+class FileTreeWatcherImpl(private val thothConfig: ThothConfig, private val libraryScanner: LibraryScanner) :
+    FileTreeWatcher, KoinComponent {
 
     private var watcher: DirectoryWatcher? = null
 
