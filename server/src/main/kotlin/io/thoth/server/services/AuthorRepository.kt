@@ -19,9 +19,14 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 
 interface AuthorRepository :
-    Repository<Author, AuthorModel, DetailedAuthorModel, PartialAuthorApiModel, AuthorApiModel>
+    Repository<Author, AuthorModel, DetailedAuthorModel, PartialAuthorApiModel, AuthorApiModel> {
+    fun findByName(authorName: String, libraryId: UUID): Author?
+}
 
 class AuthorServiceImpl : AuthorRepository {
+    override fun findByName(authorName: String, libraryId: UUID): Author? = transaction {
+        Author.find { TAuthors.name like authorName and (TAuthors.library eq libraryId) }.firstOrNull()
+    }
 
     override fun raw(id: UUID, libraryId: UUID) = transaction {
         Author.find { TAuthors.id eq id and (TAuthors.library eq libraryId) }.firstOrNull()

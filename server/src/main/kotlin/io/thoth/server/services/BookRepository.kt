@@ -3,7 +3,6 @@ package io.thoth.server.services
 import io.thoth.common.extensions.toSizedIterable
 import io.thoth.database.access.getNewImage
 import io.thoth.database.access.toModel
-import io.thoth.database.tables.Author
 import io.thoth.database.tables.Book
 import io.thoth.database.tables.Image
 import io.thoth.database.tables.Series
@@ -29,7 +28,10 @@ interface BookRepository : Repository<Book, BookModel, DetailedBookModel, Partia
     fun findByName(bookTitle: String, authorId: UUID, libraryId: UUID): Book?
 }
 
-class BookRepositoryImpl : BookRepository {
+class BookRepositoryImpl(
+    private val authorRepository: AuthorRepository,
+    private val seriesRepository: SeriesRepository,
+) : BookRepository {
     override fun total(libraryId: UUID) = transaction { Book.find { TBooks.library eq libraryId }.count() }
 
     override fun getAll(libraryId: UUID, order: SortOrder, limit: Int, offset: Long): List<BookModel> = transaction {
@@ -104,16 +106,10 @@ class BookRepositoryImpl : BookRepository {
             coverID = Image.getNewImage(partial.cover, currentImageID = coverID, default = coverID)
         }
         if (partial.authors != null) {
-            book.authors =
-                partial.authors
-                    .map { Author.findById(it) ?: throw ErrorResponse.notFound("Author", id) }
-                    .toSizedIterable()
+            book.authors = partial.authors.map { authorRepository.raw(it, libraryId) }.toSizedIterable()
         }
         if (partial.series != null) {
-            book.series =
-                partial.series
-                    .map { Series.findById(it) ?: throw ErrorResponse.notFound("Series", id) }
-                    .toSizedIterable()
+            book.series = partial.series.map { seriesRepository.raw(it, libraryId) }.toSizedIterable()
         }
         book.toModel()
     }
@@ -133,14 +129,9 @@ class BookRepositoryImpl : BookRepository {
             narrator = complete.narrator
             isbn = complete.isbn
             coverID = Image.getNewImage(complete.cover, currentImageID = coverID, default = null)
-            authors =
-                complete.authors
-                    .map { Author.findById(it) ?: throw ErrorResponse.notFound("Author", id) }
-                    .toSizedIterable()
+            authors = complete.authors.map { authorRepository.raw(it, libraryId) }.toSizedIterable()
             series =
-                complete.series
-                    ?.map { Series.findById(it) ?: throw ErrorResponse.notFound("Series", id) }
-                    ?.toSizedIterable()
+                complete.series?.map { seriesRepository.raw(it, libraryId) }?.toSizedIterable()
                     ?: emptyList<Series>().toSizedIterable()
         }
         book.toModel()

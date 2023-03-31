@@ -2,7 +2,6 @@ package io.thoth.server.file
 
 import io.thoth.common.extensions.add
 import io.thoth.database.access.create
-import io.thoth.database.access.findByName
 import io.thoth.database.access.getByPath
 import io.thoth.database.tables.Author
 import io.thoth.database.tables.Book
@@ -13,7 +12,9 @@ import io.thoth.database.tables.TTracks
 import io.thoth.database.tables.Track
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
+import io.thoth.server.services.AuthorRepository
 import io.thoth.server.services.BookRepository
+import io.thoth.server.services.SeriesRepository
 import java.nio.file.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.isDirectory
@@ -32,7 +33,9 @@ interface TrackManager {
 
 internal class TrackManagerImpl(
     private val bookRepository: BookRepository,
-    private val analyzer: AudioFileAnalyzerWrapper
+    private val seriesRepository: SeriesRepository,
+    private val authorRepository: AuthorRepository,
+    private val analyzer: AudioFileAnalyzerWrapper,
 ) : TrackManager, KoinComponent {
     private val semaphore = Semaphore(1)
     private val log = logger {}
@@ -149,7 +152,7 @@ internal class TrackManagerImpl(
     }
 
     private fun getOrCreateSeries(scan: AudioFileAnalysisResult, dbAuthor: Author, libraryModel: Library): Series {
-        val series = Series.findByName(scan.series!!)
+        val series = seriesRepository.findByName(scan.series!!, libraryModel.id.value)
 
         return if (series != null) {
             series.authors = series.authors.add(dbAuthor)
@@ -165,7 +168,7 @@ internal class TrackManagerImpl(
     }
 
     private fun getOrCreateAuthor(scan: AudioFileAnalysisResult, libraryModel: Library): Author {
-        return Author.findByName(scan.author)
+        return authorRepository.findByName(scan.author, libraryModel.id.value)
             ?: run {
                 log.info("Created author: ${scan.author}")
                 Author.new {

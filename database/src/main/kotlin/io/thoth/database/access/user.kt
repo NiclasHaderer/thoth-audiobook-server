@@ -11,10 +11,6 @@ fun User.Companion.getById(uuid: UUID): UserModel? {
     return User.findById(uuid)?.toModel()
 }
 
-fun User.Companion.internalGetById(uuid: UUID): UserModel? {
-    return User.findById(uuid)?.toModel()
-}
-
 fun User.Companion.getByName(name: String): UserModel? {
     return findOne { TUsers.username like name }?.toModel()
 }

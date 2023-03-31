@@ -35,7 +35,7 @@ fun setupDependencyInjection() = startKoin {
         module {
             single { config }
             single<MetadataProvider> { MetadataWrapper(listOf(AudibleClient(get<ThothConfig>().audibleRegion))) }
-            single<FileTreeWatcher> { FileTreeWatcherImpl() }
+            single<FileTreeWatcher> { FileTreeWatcherImpl(get(), get()) }
             single<AudioFileAnalyzerWrapper> {
                 AudioFileAnalyzerWrapperImpl(
                     listOf(AudioTagScanner(), AudioFolderScanner()),
@@ -43,12 +43,12 @@ fun setupDependencyInjection() = startKoin {
             }
             single<LibraryScanner> { LibraryScannerImpl() }
             single { Scheduler() }
-            single<BookRepository> { BookRepositoryImpl() }
+            single<BookRepository> { BookRepositoryImpl(get(), get()) }
             single<AuthorRepository> { AuthorServiceImpl() }
             single<SeriesRepository> { SeriesRepositoryImpl(get(), get()) }
             single<LibraryRepository> { LibraryRepositoryImpl(get(), get(), get()) }
             single { ThothSchedules() }
-            single<TrackManager> { TrackManagerImpl(get(), get()) }
+            single<TrackManager> { TrackManagerImpl(get(), get(), get(), get()) }
         },
     )
     slf4jLogger()

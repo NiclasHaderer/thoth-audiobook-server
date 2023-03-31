@@ -10,7 +10,7 @@ import kotlin.reflect.full.findAnnotations
 
 @Target(AnnotationTarget.CLASS) annotation class Description(val description: String)
 
-@Target(AnnotationTarget.CLASS) annotation class Summary(val summary: String)
+@Target(AnnotationTarget.CLASS) @Repeatable annotation class Summary(val summary: String, val method: String)
 
 inline fun <reified T : Annotation> KClass<*>.findAnnotationsFirstUp(): List<T> {
     var root: KClass<*>? = this
