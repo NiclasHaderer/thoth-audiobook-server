@@ -1,29 +1,26 @@
 package io.thoth.auth.routes
 
 import io.thoth.auth.thothPrincipal
+import io.thoth.database.tables.User
+import io.thoth.openapi.ErrorResponse
 import io.thoth.openapi.RouteHandler
-import io.thoth.openapi.serverError
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
 class PasswordChange(val currentPassword: String, val newPassword: String)
 
 internal fun RouteHandler.changePassword(passwordChange: PasswordChange) {
     if (passwordChange.currentPassword == passwordChange.newPassword) {
-        serverError(io.ktor.http.HttpStatusCode.BadRequest, "New password is the same as the current one")
+        throw ErrorResponse.userError("New password is the same as the current one")
     }
 
     val principal = thothPrincipal()
     transaction {
-        val user =
-            io.thoth.database.tables.User.findById(principal.userId)
-                ?: serverError(
-                    io.ktor.http.HttpStatusCode.BadRequest,
-                    "Could not find user with id ${principal.userId}",
-                )
+        val user = User.findById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
 
-        val encoder = org.springframework.security.crypto.argon2.Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
+        val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
         if (!encoder.matches(passwordChange.currentPassword, user.passwordHash)) {
-            serverError(io.ktor.http.HttpStatusCode.BadRequest, "Could change password. Old password is wrong.")
+            throw ErrorResponse.userError("Old password is wrong.")
         }
         user.passwordHash = encoder.encode(passwordChange.newPassword)
     }
