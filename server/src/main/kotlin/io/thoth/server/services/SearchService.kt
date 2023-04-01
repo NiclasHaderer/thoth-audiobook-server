@@ -1,12 +1,12 @@
 package io.thoth.server.services
 
-import io.thoth.common.extensions.fuzzy
-import io.thoth.common.extensions.saveTo
-import io.thoth.database.access.toModel
-import io.thoth.database.tables.Author
-import io.thoth.database.tables.Book
-import io.thoth.database.tables.Series
 import io.thoth.models.SearchModel
+import io.thoth.server.common.extensions.fuzzy
+import io.thoth.server.common.extensions.saveTo
+import io.thoth.server.database.access.toModel
+import io.thoth.server.database.tables.Author
+import io.thoth.server.database.tables.Book
+import io.thoth.server.database.tables.Series
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object SearchService {
@@ -46,7 +46,7 @@ object SearchService {
                     listOfNotNull(
                         it.authors.joinToString(", ") { it.name },
                         it.series.joinToString(",") { it.title },
-                        it.narrator
+                        it.narrator,
                     )
                 }
                 .saveTo(limit)

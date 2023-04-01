@@ -1,13 +1,13 @@
 package io.thoth.server.file.scanner
 
-import io.thoth.common.extensions.findOne
-import io.thoth.database.access.hasBeenUpdated
-import io.thoth.database.access.markAsTouched
-import io.thoth.database.access.toModel
-import io.thoth.database.tables.Library
-import io.thoth.database.tables.TTracks
-import io.thoth.database.tables.Track
 import io.thoth.models.LibraryModel
+import io.thoth.server.common.extensions.findOne
+import io.thoth.server.database.access.hasBeenUpdated
+import io.thoth.server.database.access.markAsTouched
+import io.thoth.server.database.access.toModel
+import io.thoth.server.database.tables.Library
+import io.thoth.server.database.tables.TTracks
+import io.thoth.server.database.tables.Track
 import io.thoth.server.file.TrackManager
 import io.thoth.server.services.LibraryRepository
 import java.nio.file.Path

@@ -1,19 +1,19 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.*
-import io.thoth.auth.JwtPair
-import io.thoth.auth.routes.AuthRoutes
-import io.thoth.auth.routes.JwksResponse
-import io.thoth.auth.routes.LoginUser
-import io.thoth.auth.routes.ModifyUser
-import io.thoth.auth.routes.PasswordChange
-import io.thoth.auth.routes.RegisterUser
-import io.thoth.auth.routes.UsernameChange
 import io.thoth.models.UserModel
 import io.thoth.openapi.delete
 import io.thoth.openapi.get
 import io.thoth.openapi.post
 import io.thoth.openapi.put
+import io.thoth.server.authentication.JwtPair
+import io.thoth.server.authentication.routes.AuthRoutes
+import io.thoth.server.authentication.routes.JwksResponse
+import io.thoth.server.authentication.routes.LoginUser
+import io.thoth.server.authentication.routes.ModifyUser
+import io.thoth.server.authentication.routes.PasswordChange
+import io.thoth.server.authentication.routes.RegisterUser
+import io.thoth.server.authentication.routes.UsernameChange
 
 fun Routing.authRoutes(routes: AuthRoutes) {
     post<Api.Auth.Login, LoginUser, JwtPair> { _, loginUser -> routes.login.invoke(this, loginUser) }

@@ -1,9 +1,9 @@
 package io.thoth.metadata.audible.client
 
-import io.thoth.common.extensions.replaceAll
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
 import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.audible.models.getValue
+import io.thoth.metadata.replaceAll
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import java.time.LocalDate
@@ -57,7 +57,7 @@ private fun extractAuthorInfo(document: Document): MetadataSearchAuthorImpl? {
     return MetadataSearchAuthorImpl(
         link = link,
         name = authorLink.text(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link))
+        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
     )
 }
 

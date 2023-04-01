@@ -1,14 +1,14 @@
 package io.thoth.server.api
 
 import io.ktor.resources.*
-import io.thoth.auth.Guards
-import io.thoth.common.serializion.kotlin.UUID_S
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
 import io.thoth.openapi.Secured
 import io.thoth.openapi.Summary
 import io.thoth.openapi.Tagged
+import io.thoth.server.authentication.Guards
+import io.thoth.server.common.serializion.kotlin.UUID_S
 
 // TODO names of libraryID, etc should be consistent
 // TODO remove unused methods in the db access layer

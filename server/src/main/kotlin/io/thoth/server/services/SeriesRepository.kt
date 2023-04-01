@@ -1,16 +1,16 @@
 package io.thoth.server.services
 
-import io.thoth.common.extensions.toSizedIterable
-import io.thoth.database.access.getNewImage
-import io.thoth.database.access.toModel
-import io.thoth.database.tables.Image
-import io.thoth.database.tables.Series
-import io.thoth.database.tables.TSeries
 import io.thoth.models.DetailedSeriesModel
 import io.thoth.models.SeriesModel
 import io.thoth.openapi.ErrorResponse
 import io.thoth.server.api.PartialSeriesApiModel
 import io.thoth.server.api.SeriesApiModel
+import io.thoth.server.common.extensions.toSizedIterable
+import io.thoth.server.database.access.getNewImage
+import io.thoth.server.database.access.toModel
+import io.thoth.server.database.tables.Image
+import io.thoth.server.database.tables.Series
+import io.thoth.server.database.tables.TSeries
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and

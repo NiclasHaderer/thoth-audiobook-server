@@ -1,41 +1,41 @@
 package io.thoth.models
 
-import io.thoth.common.serializion.kotlin.LocalDate_S
-import io.thoth.common.serializion.kotlin.UUID_S
+import java.time.LocalDate
+import java.util.*
 
 open class BookModel(
-    val id: UUID_S,
+    val id: UUID,
     val authors: List<NamedId>,
     val series: List<TitledId>,
     val title: String,
     val provider: String?,
     val providerID: String?,
     val providerRating: Float?,
-    val releaseDate: LocalDate_S?,
+    val releaseDate: LocalDate?,
     val publisher: String?,
     val language: String?,
     val description: String?,
     val narrator: String?,
     val isbn: String?,
-    val coverID: UUID_S?,
+    val coverID: UUID?,
     val genres: List<NamedId>,
 )
 
 class DetailedBookModel(
-    id: UUID_S,
+    id: UUID,
     authors: List<NamedId>,
     series: List<TitledId>,
     title: String,
     provider: String?,
     providerID: String?,
     providerRating: Float?,
-    releaseDate: LocalDate_S?,
+    releaseDate: LocalDate?,
     publisher: String?,
     language: String?,
     description: String?,
     narrator: String?,
     isbn: String?,
-    coverID: UUID_S?,
+    coverID: UUID?,
     genres: List<NamedId>,
     val tracks: List<TrackModel>,
 ) :

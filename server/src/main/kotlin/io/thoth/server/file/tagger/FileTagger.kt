@@ -1,6 +1,6 @@
 package io.thoth.server.file.tagger
 
-import io.thoth.database.tables.Track
+import io.thoth.server.database.tables.Track
 import java.io.File
 import java.nio.file.Path
 import java.time.LocalDate

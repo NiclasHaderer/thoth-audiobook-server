@@ -3,8 +3,8 @@ package io.thoth.server.file.scanner
 import io.methvin.watcher.DirectoryChangeEvent
 import io.methvin.watcher.DirectoryWatcher
 import io.methvin.watcher.hashing.FileHasher
-import io.thoth.common.extensions.hasAudioExtension
-import io.thoth.config.ThothConfig
+import io.thoth.server.common.extensions.hasAudioExtension
+import io.thoth.server.config.ThothConfig
 import java.nio.file.Path
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.name

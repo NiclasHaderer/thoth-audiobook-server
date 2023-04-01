@@ -1,11 +1,11 @@
 package io.thoth.server.di
 
-import io.thoth.common.scheduling.Scheduler
-import io.thoth.config.ThothConfig
-import io.thoth.config.loadPublicConfig
 import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.metadata.audible.client.AudibleClient
+import io.thoth.server.common.scheduling.Scheduler
+import io.thoth.server.config.ThothConfig
+import io.thoth.server.config.loadPublicConfig
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.TrackManagerImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper

@@ -1,15 +1,15 @@
 package io.thoth.server.file
 
-import io.thoth.common.extensions.add
-import io.thoth.database.access.create
-import io.thoth.database.access.getByPath
-import io.thoth.database.tables.Author
-import io.thoth.database.tables.Book
-import io.thoth.database.tables.Image
-import io.thoth.database.tables.Library
-import io.thoth.database.tables.Series
-import io.thoth.database.tables.TTracks
-import io.thoth.database.tables.Track
+import io.thoth.server.common.extensions.add
+import io.thoth.server.database.access.create
+import io.thoth.server.database.access.getByPath
+import io.thoth.server.database.tables.Author
+import io.thoth.server.database.tables.Book
+import io.thoth.server.database.tables.Image
+import io.thoth.server.database.tables.Library
+import io.thoth.server.database.tables.Series
+import io.thoth.server.database.tables.TTracks
+import io.thoth.server.database.tables.Track
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.services.AuthorRepository

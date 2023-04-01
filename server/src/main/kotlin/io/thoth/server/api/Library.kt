@@ -1,7 +1,6 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.*
-import io.thoth.common.scheduling.Scheduler
 import io.thoth.models.LibraryModel
 import io.thoth.models.SearchModel
 import io.thoth.openapi.ErrorResponse
@@ -9,6 +8,7 @@ import io.thoth.openapi.get
 import io.thoth.openapi.patch
 import io.thoth.openapi.post
 import io.thoth.openapi.put
+import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.schedules.ThothSchedules
 import io.thoth.server.services.LibraryRepository
 import io.thoth.server.services.SearchService

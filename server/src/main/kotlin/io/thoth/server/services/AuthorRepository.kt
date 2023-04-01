@@ -1,17 +1,17 @@
 package io.thoth.server.services
 
-import io.thoth.database.access.getNewImage
-import io.thoth.database.access.toModel
-import io.thoth.database.tables.Author
-import io.thoth.database.tables.Image
-import io.thoth.database.tables.TAuthors
-import io.thoth.database.tables.TBooks
-import io.thoth.database.tables.TSeries
 import io.thoth.models.AuthorModel
 import io.thoth.models.DetailedAuthorModel
 import io.thoth.openapi.ErrorResponse
 import io.thoth.server.api.AuthorApiModel
 import io.thoth.server.api.PartialAuthorApiModel
+import io.thoth.server.database.access.getNewImage
+import io.thoth.server.database.access.toModel
+import io.thoth.server.database.tables.Author
+import io.thoth.server.database.tables.Image
+import io.thoth.server.database.tables.TAuthors
+import io.thoth.server.database.tables.TBooks
+import io.thoth.server.database.tables.TSeries
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and

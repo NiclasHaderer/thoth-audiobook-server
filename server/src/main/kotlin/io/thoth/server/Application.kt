@@ -5,12 +5,6 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.routing.*
-import io.thoth.auth.configureAuthentication
-import io.thoth.common.extensions.get
-import io.thoth.common.scheduling.Scheduler
-import io.thoth.config.ThothConfig
-import io.thoth.database.connectToDatabase
-import io.thoth.database.migrateDatabase
 import io.thoth.generators.generateTypescriptTypes
 import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audioRouting
@@ -22,6 +16,12 @@ import io.thoth.server.api.libraryRouting
 import io.thoth.server.api.metadataRouting
 import io.thoth.server.api.pingRouting
 import io.thoth.server.api.seriesRouting
+import io.thoth.server.authentication.configureAuthentication
+import io.thoth.server.common.extensions.get
+import io.thoth.server.common.scheduling.Scheduler
+import io.thoth.server.config.ThothConfig
+import io.thoth.server.database.connectToDatabase
+import io.thoth.server.database.migrateDatabase
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.plugins.configureCORS

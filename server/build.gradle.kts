@@ -14,6 +14,13 @@ val kotlinxSerializationVersion: String by project
 val jAudioTaggerVersion: String by project
 val cronUtilsVersion: String by project
 val openApiVersion: String by project
+val hopliteVersion: String by project
+val jwtVersion: String by project
+val springSecurityVersion: String by project
+val bouncyCastleVersion: String by project
+val joseJWTVersion: String by project
+val hikariVersion: String by project
+
 
 plugins {
     kotlin("jvm")
@@ -34,32 +41,45 @@ tasks.jar { manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt" 
 
 dependencies {
     // Other projects
-    implementation(project(":authentication"))
-    implementation(project(":common"))
     implementation(project(":models"))
     implementation(project(":generators"))
     implementation(project(":openapi"))
-    implementation(project(":database"))
     implementation(project(":metadata"))
-    implementation(project(":config"))
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    // Drivers
+    implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
+    implementation("com.h2database:h2:$h2Version")
+    implementation("com.zaxxer:HikariCP:$hikariVersion")
+    // Migration
+    implementation("org.reflections:reflections:$reflectVersion")
+
+    // JWT
+    implementation("com.auth0:java-jwt:$jwtVersion")
+    implementation("com.nimbusds:nimbus-jose-jwt:$joseJWTVersion")
+    implementation("org.springframework.security:spring-security-core:$springSecurityVersion")
+    implementation("org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion")
+    implementation("org.bouncycastle:bcpkix-jdk15on:$bouncyCastleVersion")
+
+    // Config
+    implementation("com.sksamuel.hoplite:hoplite-core:$hopliteVersion")
+    implementation("com.sksamuel.hoplite:hoplite-json:$hopliteVersion")
+    implementation("com.sksamuel.hoplite:hoplite-yaml:$hopliteVersion")
+    implementation("com.sksamuel.hoplite:hoplite-toml:$hopliteVersion")
+    implementation("com.sksamuel.hoplite:hoplite-hocon:$hopliteVersion")
 
     // Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    // Database drivers
-    implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
-    implementation("com.h2database:h2:$h2Version")
+
     // Dependency Injection
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
-    // Migration
-    implementation("org.reflections:reflections:$reflectVersion")
+
     // Audio file processing
     implementation("org.bitbucket.ijabz:jaudiotagger:$jAudioTaggerVersion")
     // Folder watching
@@ -83,6 +103,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-sessions-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-host-common-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-resources:$ktorVersion")

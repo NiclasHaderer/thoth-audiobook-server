@@ -1,11 +1,11 @@
 package io.thoth.models
 
-import io.thoth.common.serializion.kotlin.UUID_S
+import java.util.*
 
-data class UserModel(val id: UUID_S, val username: String, val admin: Boolean, val edit: Boolean)
+data class UserModel(val id: UUID, val username: String, val admin: Boolean, val edit: Boolean)
 
 data class InternalUserModel(
-    val id: UUID_S,
+    val id: UUID,
     val username: String,
     val admin: Boolean,
     val edit: Boolean,
