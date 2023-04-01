@@ -32,8 +32,8 @@ class OpenApiRoute(
         response: ClassType
     ) : this(method, route.fullPath(), params, request, response)
 
-    data class PathParameter(val name: String, val type: KClass<*>, val origin: KClass<*>)
-    data class QueryParameter(val name: String, val type: KClass<*>, val origin: KClass<*>, val optional: Boolean)
+    data class PathParameter(val name: String, val type: ClassType, val origin: ClassType)
+    data class QueryParameter(val name: String, val type: ClassType, val origin: ClassType, val optional: Boolean)
 
     companion object {
         inline fun <reified PARAMS, reified BODY, reified RESPONSE> create(
@@ -51,11 +51,11 @@ class OpenApiRoute(
     }
 
     val queryParameters by lazy {
-        extractAllQueryParams(requestParamsType.clazz).map { it to ClassType.wrap(it.type).generateSchema(false).first }
+        extractAllQueryParams(requestParamsType).map { it to it.type.generateSchema(false).first }
     }
 
     val pathParameters by lazy {
-        extractAllPathParams(requestParamsType.clazz).map { it to ClassType.wrap(it.type).generateSchema(false).first }
+        extractAllPathParams(requestParamsType).map { it to it.type.generateSchema(false).first }
     }
     val resourcePath by lazy {
         var resourcePath = ""
@@ -142,7 +142,7 @@ class OpenApiRoute(
     }
 
     private fun extractAllPathParams(
-        params: KClass<*>,
+        params: ClassType,
         takenParams: MutableMap<String, PathParameter> = mutableMapOf()
     ): List<PathParameter> {
         val pathParams = extractPathParamsForClass(params)
@@ -150,21 +150,21 @@ class OpenApiRoute(
             // Check if the variable name is already taken
             if (takenParams.containsKey(param.name)) {
                 throw IllegalStateException(
-                    "Class ${params.qualifiedName} has a duplicate path parameter name ${param.name}. " +
-                        "The parameter is already taken by ${takenParams[param.name]!!.origin.qualifiedName}",
+                    "Class ${params.clazz.qualifiedName} has a duplicate path parameter name ${param.name}. " +
+                        "The parameter is already taken by ${takenParams[param.name]!!.origin.clazz.qualifiedName}",
                 )
             }
         }
         takenParams.putAll(pathParams.associateBy { it.name })
 
         // Go up and check the parent
-        params.parent?.java?.kotlin?.run { extractAllPathParams(this, takenParams) }
+        params.clazz.parent?.java?.kotlin?.run { extractAllPathParams(ClassType.wrap(this), takenParams) }
         return takenParams.values.toList()
     }
 
-    private fun extractPathParamsForClass(params: KClass<*>): List<PathParameter> {
+    private fun extractPathParamsForClass(params: ClassType): List<PathParameter> {
         val pathParams = mutableListOf<PathParameter>()
-        val resourcePath = params.findAnnotation<Resource>()!!.path
+        val resourcePath = params.clazz.findAnnotation<Resource>()!!.path
         val matches = "\\{((?:[a-z]|[A-Z]|_)+)}".toRegex().findAll(resourcePath)
         for (match in matches) {
             val varName = match.groupValues[1]
@@ -172,37 +172,37 @@ class OpenApiRoute(
             val varMember =
                 params.properties.find { it.name == varName }
                     ?: throw IllegalStateException(
-                        "Class ${params.qualifiedName} has a path parameter $varName which is not declared as a member. " +
+                        "Class ${params.clazz.qualifiedName} has a path parameter $varName which is not declared as a member. " +
                             "You have to create a property with the name $varName",
                     )
             pathParams.add(
-                PathParameter(name = varName, type = varMember.returnType.classifier as KClass<*>, origin = params),
+                PathParameter(name = varName, type = params.fromMember(varMember), origin = params),
             )
         }
         return pathParams
     }
 
     private fun extractAllQueryParams(
-        params: KClass<*>,
+        params: ClassType,
         takenParams: MutableMap<String, QueryParameter> = mutableMapOf()
     ): List<QueryParameter> {
         val queryParams = extractQueryParamsForClass(params)
         for (param in queryParams) {
             if (param.name in takenParams) {
                 throw IllegalStateException(
-                    "Class ${params.qualifiedName} has a query parameter " +
-                        "called ${param.name} which is also used in ${takenParams[param.name]!!.origin.qualifiedName}. " +
+                    "Class ${params.clazz.qualifiedName} has a query parameter " +
+                        "called ${param.name} which is also used in ${takenParams[param.name]!!.origin.clazz.qualifiedName}. " +
                         "Do not used duplicate parameters",
                 )
             }
         }
 
         takenParams.putAll(queryParams.associateBy { it.name })
-        params.parent?.run { extractAllQueryParams(this, takenParams) }
+        params.clazz.parent?.run { extractAllQueryParams(ClassType.wrap(this), takenParams) }
         return takenParams.values.toList()
     }
 
-    private fun extractQueryParamsForClass(params: KClass<*>): List<QueryParameter> {
+    private fun extractQueryParamsForClass(params: ClassType): List<QueryParameter> {
         val pathParams = extractPathParamsForClass(params).map { it.name }.toSet()
         val queryParams =
             params.properties
@@ -212,12 +212,12 @@ class OpenApiRoute(
                 }
                 .filter {
                     // Remove injected parent
-                    it.returnType.classifier != params.parent
+                    it.returnType.classifier != params.clazz.parent
                 }
                 .map {
                     QueryParameter(
                         name = it.name,
-                        type = it.returnType.classifier as KClass<*>,
+                        type = params.fromMember(it),
                         origin = params,
                         optional = it.optional,
                     )

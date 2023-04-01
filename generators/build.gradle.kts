@@ -1,5 +1,6 @@
 val tsGeneratorVersion: String by project
 val ktorVersion: String by project
+val kotlinLoggingVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -9,6 +10,5 @@ plugins {
 dependencies {
     implementation(project(":openapi"))
     implementation("io.ktor:ktor-server-core:$ktorVersion")
-    // Typescript code generation
-    implementation("com.github.ntrrgc:ts-generator:$tsGeneratorVersion")
+    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
 }
