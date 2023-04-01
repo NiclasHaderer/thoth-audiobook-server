@@ -20,4 +20,6 @@ object OpenApiRouteCollector {
     fun forEach(action: (OpenApiRoute) -> Unit) {
         routes.values.forEach { it.forEach(action) }
     }
+
+    fun values() = routes.values.flatten()
 }

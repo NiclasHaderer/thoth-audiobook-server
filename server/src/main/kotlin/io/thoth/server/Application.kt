@@ -5,7 +5,8 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.routing.*
-import io.thoth.generators.generateTypescriptTypes
+import io.thoth.generators.TsClientCreator
+import io.thoth.openapi.OpenApiRouteCollector
 import io.thoth.openapi.configureStatusPages
 import io.thoth.server.api.audioRouting
 import io.thoth.server.api.authRoutes
@@ -33,6 +34,7 @@ import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
 import io.thoth.server.schedules.ThothSchedules
 import io.thoth.server.services.LibraryRepository
+import java.io.File
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -121,6 +123,14 @@ fun Application.server() {
 
         // Routes for checking if the server is available
         pingRouting()
-        generateTypescriptTypes()
+        TsClientCreator(
+                OpenApiRouteCollector.values(),
+                File("types.ts"),
+                File("client.ts"),
+            )
+            .also {
+                it.saveClient()
+                it.saveTypes()
+            }
     }
 }

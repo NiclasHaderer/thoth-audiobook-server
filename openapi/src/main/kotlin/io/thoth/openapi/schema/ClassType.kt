@@ -5,6 +5,7 @@ import java.lang.reflect.ParameterizedType
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
@@ -12,6 +13,12 @@ import kotlin.reflect.typeOf
 class ClassType private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>) {
     val isEnum: Boolean
         get() = clazz.java.enumConstants != null
+
+    fun isSubclassOf(vararg clazz: KClass<*>): Boolean {
+        return clazz.any { this.clazz.isSubclassOf(it) }
+    }
+
+    val properties by lazy { clazz.properties }
 
     companion object {
         private fun resolveArguments(kType: KType): List<ClassType> {
