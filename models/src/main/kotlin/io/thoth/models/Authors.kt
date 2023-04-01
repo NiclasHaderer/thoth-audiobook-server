@@ -1,32 +1,32 @@
 package io.thoth.models
 
-import io.thoth.common.serializion.kotlin.LocalDate_S
-import io.thoth.common.serializion.kotlin.UUID_S
+import java.time.LocalDate
+import java.util.*
 
 open class AuthorModel(
-    val id: UUID_S,
+    val id: UUID,
     val name: String,
     val provider: String?,
     val providerID: String?,
     val biography: String?,
-    val imageID: UUID_S?,
+    val imageID: UUID?,
     val website: String?,
     val bornIn: String?,
-    val birthDate: LocalDate_S?,
-    val deathDate: LocalDate_S?
+    val birthDate: LocalDate?,
+    val deathDate: LocalDate?
 )
 
 class DetailedAuthorModel(
-    id: UUID_S,
+    id: UUID,
     name: String,
     provider: String?,
     providerID: String?,
     biography: String?,
-    imageID: UUID_S?,
+    imageID: UUID?,
     website: String?,
     bornIn: String?,
-    birthDate: LocalDate_S?,
-    deathDate: LocalDate_S?,
+    birthDate: LocalDate?,
+    deathDate: LocalDate?,
     val books: List<BookModel>,
     val series: List<SeriesModel>,
 ) :

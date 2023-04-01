@@ -1,9 +1,9 @@
 package io.thoth.models
 
-import io.thoth.common.serializion.kotlin.UUID_S
+import java.util.*
 
 data class ImageModel(
-    val id: UUID_S,
+    val id: UUID,
     val blob: ByteArray,
 ) {
     override fun equals(other: Any?): Boolean {

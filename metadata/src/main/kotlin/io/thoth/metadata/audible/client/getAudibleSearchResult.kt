@@ -1,13 +1,17 @@
 package io.thoth.metadata.audible.client
 
 import io.ktor.http.*
-import io.thoth.common.extensions.appendOptional
-import io.thoth.common.extensions.replaceAll
-import io.thoth.common.extensions.saveSubList
-import io.thoth.metadata.audible.models.*
+import io.thoth.metadata.appendOptional
+import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.thoth.metadata.audible.models.AudibleRegions
+import io.thoth.metadata.audible.models.AudibleSearchAmount
+import io.thoth.metadata.audible.models.AudibleSearchLanguage
+import io.thoth.metadata.audible.models.getValue
+import io.thoth.metadata.replaceAll
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
+import io.thoth.metadata.saveSubList
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import org.jsoup.nodes.Document
@@ -115,7 +119,7 @@ internal fun extractBookSeriesInfo(element: Element): List<MetadataBookSeriesImp
             link = seriesLink,
             title = seriesTitle,
             id = AudibleProviderWithIDMetadata(audibleAsinFromLink(seriesLink)),
-            index = seriesIndex
+            index = seriesIndex,
         )
     }
 }

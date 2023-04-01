@@ -1,16 +1,16 @@
 package io.thoth.models
 
-import io.thoth.common.serializion.kotlin.UUID_S
+import java.util.*
 
 open class SeriesModel(
-    val id: UUID_S,
+    val id: UUID,
     val authors: List<NamedId>,
     val title: String,
     val provider: String?,
     val providerID: String?,
     val totalBooks: Int?,
     val primaryWorks: Int?,
-    val coverID: UUID_S?,
+    val coverID: UUID?,
     val description: String?,
     val genres: List<NamedId>
 )
@@ -21,14 +21,14 @@ data class YearRange(
 )
 
 class DetailedSeriesModel(
-    id: UUID_S,
+    id: UUID,
     authors: List<NamedId>,
     title: String,
     provider: String?,
     providerID: String?,
     totalBooks: Int?,
     primaryWorks: Int?,
-    coverID: UUID_S?,
+    coverID: UUID?,
     description: String?,
     genres: List<NamedId>,
     val yearRange: YearRange?,

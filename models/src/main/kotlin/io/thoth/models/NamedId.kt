@@ -1,7 +1,7 @@
 package io.thoth.models
 
-import io.thoth.common.serializion.kotlin.UUID_S
+import java.util.*
 
-data class NamedId(val id: UUID_S, val name: String)
+data class NamedId(val id: UUID, val name: String)
 
-data class TitledId(val id: UUID_S, val title: String)
+data class TitledId(val id: UUID, val title: String)

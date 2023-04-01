@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.thoth.common.serializion.jackson.CustomLocalDateDesSerializer
-import io.thoth.common.serializion.jackson.CustomLocalDateSerializer
-import io.thoth.common.serializion.jackson.CustomLocalDateTimeDesSerializer
-import io.thoth.common.serializion.jackson.CustomLocalDateTimeSerializer
+import io.thoth.server.common.serializion.jackson.CustomLocalDateDesSerializer
+import io.thoth.server.common.serializion.jackson.CustomLocalDateSerializer
+import io.thoth.server.common.serializion.jackson.CustomLocalDateTimeDesSerializer
+import io.thoth.server.common.serializion.jackson.CustomLocalDateTimeSerializer
 import java.time.LocalDate
 import java.time.LocalDateTime
 

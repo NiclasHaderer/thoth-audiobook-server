@@ -1,11 +1,11 @@
 package io.thoth.server.file.analyzer.impl
 
-import io.thoth.common.extensions.countParents
-import io.thoth.common.extensions.grandGrandParentName
-import io.thoth.common.extensions.grandParentName
-import io.thoth.common.extensions.parentName
-import io.thoth.common.extensions.replaceAll
-import io.thoth.common.extensions.replacePart
+import io.thoth.server.common.extensions.countParents
+import io.thoth.server.common.extensions.grandGrandParentName
+import io.thoth.server.common.extensions.grandParentName
+import io.thoth.server.common.extensions.parentName
+import io.thoth.server.common.extensions.replaceAll
+import io.thoth.server.common.extensions.replacePart
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer

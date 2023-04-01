@@ -1,8 +1,8 @@
 package io.thoth.server.schedules
 
-import io.thoth.common.scheduling.ScheduleCollection
-import io.thoth.config.ThothConfig
-import io.thoth.database.tables.Library
+import io.thoth.server.common.scheduling.ScheduleCollection
+import io.thoth.server.config.ThothConfig
+import io.thoth.server.database.tables.Library
 import io.thoth.server.file.scanner.LibraryScanner
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

@@ -1,7 +1,7 @@
 package io.thoth.server.file.scanner
 
-import io.thoth.common.extensions.isAudioFile
-import io.thoth.config.ThothConfig
+import io.thoth.server.common.extensions.isAudioFile
+import io.thoth.server.config.ThothConfig
 import java.io.IOException
 import java.nio.file.FileSystems
 import java.nio.file.FileVisitResult

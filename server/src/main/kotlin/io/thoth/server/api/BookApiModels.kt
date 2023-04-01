@@ -1,6 +1,6 @@
 package io.thoth.server.api
 
-import io.thoth.common.serializion.kotlin.UUID_S
+import io.thoth.server.common.serializion.kotlin.UUID_S
 import java.time.LocalDate
 
 class PartialBookApiModel(

@@ -13,8 +13,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":common"))
-
     // Audible scraping
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
