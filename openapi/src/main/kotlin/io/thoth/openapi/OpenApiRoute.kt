@@ -32,8 +32,27 @@ class OpenApiRoute(
         response: ClassType
     ) : this(method, route.fullPath(), params, request, response)
 
-    data class PathParameter(val name: String, val type: ClassType, val origin: ClassType)
-    data class QueryParameter(val name: String, val type: ClassType, val origin: ClassType, val optional: Boolean)
+    interface Parameter {
+        val name: String
+        val type: ClassType
+        val origin: ClassType
+        val optional: Boolean
+    }
+
+    data class PathParameter(
+        override val name: String,
+        override val type: ClassType,
+        override val origin: ClassType,
+    ) : Parameter {
+        override val optional = false
+    }
+
+    data class QueryParameter(
+        override val name: String,
+        override val type: ClassType,
+        override val origin: ClassType,
+        override val optional: Boolean
+    ) : Parameter
 
     companion object {
         inline fun <reified PARAMS, reified BODY, reified RESPONSE> create(

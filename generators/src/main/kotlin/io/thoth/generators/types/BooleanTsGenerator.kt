@@ -7,6 +7,8 @@ class BooleanTsGenerator : TsGenerator() {
         return "boolean"
     }
 
+    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
+
     override fun shouldInline(classType: ClassType): Boolean = true
 
     override fun generateName(classType: ClassType): String = "boolean"

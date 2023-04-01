@@ -6,23 +6,28 @@ typealias GenerateType = (classType: ClassType) -> TsGenerator.Type
 
 abstract class TsGenerator {
     class Type
-    internal constructor(
-        val name: String,
-        val content: String,
-        val inline: Boolean,
-    ) {
+    internal constructor(val name: String, val content: String, val inline: Boolean, val parser: ParseMethod) {
         fun reference(): String = if (inline) content else name
 
         override fun toString(): String = content
     }
 
+    enum class ParseMethod(val methodName: String) {
+        BLOB("blob"),
+        JSON("json"),
+        TEXT("text"),
+    }
+
     abstract fun generateContent(classType: ClassType, generateSubType: (classType: ClassType) -> Type): String
+
+    abstract fun parseMethod(classType: ClassType): ParseMethod
 
     fun createType(classType: ClassType, generateSubType: (classType: ClassType) -> Type): Type {
         return Type(
             name = generateName(classType),
             content = generateContent(classType, generateSubType),
             inline = shouldInline(classType),
+            parser = parseMethod(classType),
         )
     }
 
@@ -38,25 +43,29 @@ abstract class TsGenerator {
 val tsGenerators: List<TsGenerator> =
     listOf(
         ArrayTsGenerator(),
+        BinaryTsGenerator(),
+        BooleanTsGenerator(),
+        ByteArrayTsGenerator(),
         DateTsGenerator(),
+        EnumTsGenerator(),
         InterfaceTsGenerator(),
         NumberTsGenerator(),
+        PairTsGenerator(),
         RecordTsGenerator(),
+        RedirectTsGenerator(),
         StringTsGenerator(),
         UUIDTsGenerator(),
-        ByteArrayTsGenerator(),
-        BooleanTsGenerator(),
     )
 
-fun generateTypes(classType: ClassType): List<TsGenerator.Type> {
+fun generateTypes(classType: ClassType): Pair<TsGenerator.Type, MutableList<TsGenerator.Type>> {
     val generator = tsGenerators.filter { it.canGenerate(classType) }.maxBy { it.priority(classType) }
     val generatedSubTypes = mutableListOf<TsGenerator.Type>()
     val type =
         generator.createType(classType) { subType ->
-            val generatedSubType = generateTypes(subType)
+            val (actual, generatedSubType) = generateTypes(subType)
             generatedSubTypes.addAll(generatedSubType)
-            generatedSubType.last()
+            actual
         }
     generatedSubTypes.add(type)
-    return generatedSubTypes
+    return type to generatedSubTypes
 }

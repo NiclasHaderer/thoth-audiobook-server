@@ -3,7 +3,7 @@ package io.thoth.generators.types
 import io.thoth.openapi.schema.ClassType
 import mu.KotlinLogging
 
-class TsEnumGenerator : TsGenerator() {
+class EnumTsGenerator : TsGenerator() {
     private val log = KotlinLogging.logger {}
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
@@ -13,8 +13,10 @@ class TsEnumGenerator : TsGenerator() {
             return "unknown"
         }
 
-        return "${generateName(classType)} = ${enumValues.joinToString(" | ") { "'$it'" }}"
+        return "type ${generateName(classType)} = ${enumValues.joinToString(" | ") { "'$it'" }}"
     }
+
+    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
     override fun shouldInline(classType: ClassType): Boolean = false
     override fun generateName(classType: ClassType): String = classType.clazz.simpleName!!

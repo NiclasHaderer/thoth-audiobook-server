@@ -6,13 +6,24 @@ class InterfaceTsGenerator : TsGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         val properties = classType.properties
         val name = generateName(classType)
-        val tsProperties = properties.map { "${it.name}: ${generateSubType(classType.fromMember(it)).reference()};" }
+        val tsProperties =
+            properties.map {
+                "${it.name}${
+                if (it.returnType.isMarkedNullable) {
+                    "?"
+                } else {
+                    ""
+                }
+            }: ${generateSubType(classType.fromMember(it)).reference()};"
+            }
         val interfaceStart = "interface $name {\n"
         val interfaceContent = tsProperties.joinToString("\n") { "  $it" }
         val interfaceEnd = "\n}"
 
         return interfaceStart + interfaceContent + interfaceEnd
     }
+
+    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
     override fun shouldInline(classType: ClassType): Boolean = false
 

@@ -8,6 +8,8 @@ class UUIDTsGenerator : TsGenerator() {
         return "type UUID = `\${string}-\${string}-\${string}-\${string}-\${string}`"
     }
 
+    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
+
     override fun shouldInline(classType: ClassType): Boolean = false
 
     override fun generateName(classType: ClassType): String = "UUID"

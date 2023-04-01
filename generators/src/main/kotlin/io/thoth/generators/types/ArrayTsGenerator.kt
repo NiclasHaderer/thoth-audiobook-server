@@ -12,9 +12,18 @@ class ArrayTsGenerator : TsGenerator() {
             return "unknown[]"
         }
 
-        val subType = generateSubType(classType.genericArguments.first())
-        return "(${subType.reference()})[]"
+        val genericArg = classType.genericArguments.first()
+        val subType = generateSubType(genericArg)
+        return "(${subType.reference()}${
+            if (genericArg.isNullable) {
+                " | undefined"
+            } else {
+                ""
+            }
+        })[]"
     }
+
+    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
     override fun shouldInline(classType: ClassType): Boolean = true
 
