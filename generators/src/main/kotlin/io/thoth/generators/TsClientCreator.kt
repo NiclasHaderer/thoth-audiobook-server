@@ -16,9 +16,7 @@ class TsClientCreator(
     private val clientFunctions = mutableListOf<String>()
     // TODO: optional query types
     // TODO optional path types
-    // TODO optional properties in interfaces
     // TODO interface inheritance
-    // TODO correct api response type
     // TODO ignore private parameters in route definitions
     // TODO extract types from route definitions
 
@@ -31,15 +29,16 @@ class TsClientCreator(
         fun createUrlCreator(): String {
             return """
         const __createUrl = (route: string, params: Record<string, string | number | boolean | undefined | null>): string => {
-            const __urlParams = new URLSearchParams(params);
-            [...__urlParams].forEach(([key, value]) => {
-                if (value === "undefined" || value === "null" || value === "") {
-                    __urlParams.delete(key)
+            const cleanedParams = Object.entries(params).reduce((acc, [key, value]) => {
+                if (value !== undefined && value !== null && value !== "") {
+                    if (!(key in acc)) acc[key] = [];
+                    acc[key].push(value.toString());
                 }
-            });
+                return acc;
+            }, {} as Record<string, string[]>);
             
-            const __finalUrlParams = __urlParams.toString();
-            return __finalUrlParams ? route + "?" + __finalUrlParams : route;
+            const __finalUrlParams = new URLSearchParams(cleanedParams).toString();
+            return __finalUrlParams ? `\$\{route}?\$\{__finalUrlParams}` : route;
         };
     """
                 .trimIndent() + "\n"
@@ -47,19 +46,43 @@ class TsClientCreator(
 
         fun createRequestMaker(): String {
             return """
-        const __request = <T>(route: string, method: string, body?: object): Promise<ApiResponse<T>> => {
-            return fetch(route, {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: body ? JSON.stringify(body) : undefined
-            })
+        const __request = <T>(
+                route: string, 
+                method: string, 
+                bodyParseMethod: "text" | "json" | "blob", 
+                _headers: HeadersInit,
+                body?: object, 
+                interceptors?: ApiInterceptor[]
+            ): Promise<ApiResponse<T>> => {
+            
+            const headers = new Headers(_headers);
+            if(!headers.has("Content-Type")) {
+                headers.set("Content-Type", "application/json");
+            }
+            let apiCallData: ApiCallData = {
+                route, 
+                method, 
+                body, 
+                headers, 
+                bodySerializer: (body?: object) => body ? JSON.stringify(body) : undefined,
+                executor: (route: string, method: string, headers: Headers, body: string | undefined) => fetch(route, {method, headers, body})
+            };
+            if (interceptors) {
+                for (const interceptor of interceptors) {
+                    apiCallData = interceptor(apiCallData);
+                }
+            }
+                    
+            return apiCallData.executor(apiCallData.route, apiCallData.method, apiCallData.headers, apiCallData.bodySerializer(apiCallData.body))
                 .then(async (response) => {
+                    if(!(response instanceof Response)) {
+                        return response;
+                    }
+                
                     if (response.ok) {
                         return {
                             success: true,
-                            body: await response.json()
+                            body: await response[bodyParseMethod]()
                         } as const
                     } else {
                         return {
@@ -98,24 +121,45 @@ class TsClientCreator(
 
     private fun getParameters(route: OpenApiRoute): String {
         val pathParams =
-            route.pathParameters.joinToString(", ") {
-                val tsType = generateTypes(it.first.origin)
-                typeDefinitions.putAll(tsType.associateBy { it.name })
-                "${it.first.name}: ${tsType.last().reference()}"
+            route.pathParameters.joinToString(", ") { (param) ->
+                val (actual, all) = generateTypes(param.type)
+                typeDefinitions.putAll(all.associateBy { it.name })
+                "${param.name}: ${actual.reference()}"
             }
-        val queryParams =
-            route.queryParameters.joinToString(", ") {
-                val tsType = generateTypes(it.first.origin)
-                typeDefinitions.putAll(tsType.associateBy { it.name })
-                "${it.first.name}: ${tsType.last().reference()}"
-            }
+        val requiredQueryParams =
+            route.queryParameters
+                .filter { !it.first.optional }
+                .joinToString(", ") { (param) ->
+                    val (actual, all) = generateTypes(param.type)
+                    typeDefinitions.putAll(all.associateBy { it.name })
+                    "${param.name}${if (param.optional) "?" else ""}: ${actual.reference()}"
+                }
         val bodyParam =
             if (route.requestBodyType.clazz != Unit::class) {
-                val tsTypes = generateTypes(route.requestBodyType)
-                typeDefinitions.putAll(tsTypes.associateBy { it.name })
-                "body: ${tsTypes.last().reference()}"
+                val (actual, all) = generateTypes(route.requestBodyType)
+                typeDefinitions.putAll(all.associateBy { it.name })
+                "body: ${actual.reference()}"
             } else ""
-        return listOf(pathParams, queryParams, bodyParam).filter { it.isNotBlank() }.joinToString(", ")
+
+        val optionalQueryParams =
+            route.queryParameters
+                .filter { it.first.optional }
+                .joinToString(", ") { (param) ->
+                    val (actual, all) = generateTypes(param.type)
+                    typeDefinitions.putAll(all.associateBy { it.name })
+                    "${param.name}?: ${actual.reference()}"
+                }
+
+        val customHeaders =
+            listOf(pathParams, requiredQueryParams, bodyParam, optionalQueryParams)
+                .filter { it.isNotBlank() }
+                .joinToString(", ")
+
+        return if (customHeaders.isNotBlank()) {
+            "$customHeaders, headers: HeadersInit = {}, interceptors?: ApiInterceptor[]"
+        } else {
+            "headers: HeadersInit, interceptors?: ApiInterceptor[]"
+        }
     }
 
     private fun createURL(route: OpenApiRoute): String {
@@ -140,32 +184,34 @@ class TsClientCreator(
                 println("Route ${it.method}:${it.fullPath} has no summary")
                 return@forEach
             }
+            val responseBody = generateTypes(it.responseBodyType).first
             val function =
                 """
-            $routeName(${getParameters(it)}) {
+            $routeName(${getParameters(it)}): Promise<ApiResponse<${responseBody.reference()}>> {
                 ${createURL(it)}
-                return __request(__finalUrl, "${it.method.value}", ${if (it.requestBodyType.clazz != Unit::class) "body" else "undefined"});
+                return __request(__finalUrl, "${it.method.value}", "${responseBody.parser.methodName}", headers, ${if (it.requestBodyType.clazz != Unit::class) "body" else "undefined"}, interceptors);
             }
         """
                     .trimIndent()
             clientFunctions.add(function)
 
             val responseInterfaces = generateTypes(it.responseBodyType)
-            typeDefinitions.putAll(responseInterfaces.associateBy { it.name })
+            typeDefinitions.putAll(responseInterfaces.second.associateBy { it.name })
         }
     }
 
     private fun createTypeImports(): String {
-        return "import {${
-            typeDefinitions.values.filter { !it.inline }.joinToString(", ") { it.reference() } + ", ApiResponse"
-        }} from \"${this.typesFile.nameWithoutExtension}\";\n"
+        return "import type {${
+            typeDefinitions.values.filter { !it.inline }
+                .joinToString(", ") { it.reference() } + ", ApiResponse, ApiInterceptor, ApiCallData"
+        }} from \"./${this.typesFile.nameWithoutExtension}\";\n"
     }
 
     fun getClientFunctions(): String {
         return createTypeImports() +
             createUrlCreator() +
             createRequestMaker() +
-            "export const api = {" +
+            "export const api = {\n" +
             clientFunctions.joinToString(
                 ",\n",
             ) {
@@ -187,8 +233,19 @@ class TsClientCreator(
                 success: true,
                 body: T
             }
-            
+
             export type ApiResponse<T> = ApiError | ApiSuccess<T>
+            
+            export type ApiCallData = {
+                route: string,
+                method: string,
+                body?: object,
+                headers: Headers,
+                bodySerializer: (body: object?) => string | undefined,
+                executor: (route: string, method: string, headers: Headers, body: string | undefined) => Promise<Response | ApiResponse<any>> 
+            }
+            
+            export type ApiInterceptor = (param: ApiCallData) => ApiCallData
         """
                 .trimIndent() + "\n"
         return internalTypes +

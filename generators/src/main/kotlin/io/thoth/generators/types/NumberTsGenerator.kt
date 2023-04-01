@@ -9,6 +9,8 @@ class NumberTsGenerator : TsGenerator() {
         return "number"
     }
 
+    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
+
     override fun shouldInline(classType: ClassType): Boolean = true
 
     override fun generateName(classType: ClassType): String = "number"
@@ -24,6 +26,10 @@ class NumberTsGenerator : TsGenerator() {
             Byte::class,
             BigDecimal::class,
             BigInteger::class,
+            UInt::class,
+            ULong::class,
+            UShort::class,
+            UByte::class,
         )
     }
 }

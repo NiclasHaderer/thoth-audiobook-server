@@ -10,7 +10,8 @@ import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
-class ClassType private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>) {
+class ClassType
+private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>, val isNullable: Boolean) {
     val isEnum: Boolean
         get() = clazz.java.enumConstants != null
 
@@ -34,7 +35,7 @@ class ClassType private constructor(val genericArguments: List<ClassType>, val c
 
         fun create(type: KType): ClassType {
             val resolvedArgs = resolveArguments(type)
-            return ClassType(resolvedArgs, type.classifier as KClass<*>)
+            return ClassType(resolvedArgs, type.classifier as KClass<*>, type.isMarkedNullable)
         }
 
         inline fun <reified T> create(): ClassType {
@@ -42,7 +43,7 @@ class ClassType private constructor(val genericArguments: List<ClassType>, val c
         }
 
         fun wrap(clazz: KClass<*>, args: List<KClass<*>> = listOf()): ClassType {
-            return ClassType(args.map { wrap(it) }, clazz)
+            return ClassType(args.map { wrap(it) }, clazz, false)
         }
     }
 
@@ -61,7 +62,12 @@ class ClassType private constructor(val genericArguments: List<ClassType>, val c
                 else null
             }
             .associate { (property, genericArguments) ->
-                property to ClassType(genericArguments, property.returnType.classifier as KClass<*>)
+                property to
+                    ClassType(
+                        genericArguments,
+                        property.returnType.classifier as KClass<*>,
+                        property.returnType.isMarkedNullable,
+                    )
             }
     }
 

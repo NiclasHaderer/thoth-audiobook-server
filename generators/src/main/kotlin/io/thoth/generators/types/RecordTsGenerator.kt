@@ -12,11 +12,21 @@ class RecordTsGenerator : TsGenerator() {
             return "Record<unknown, unknown>"
         }
 
-        val keyType = generateSubType(classType.genericArguments[0])
-        val valueType = generateSubType(classType.genericArguments[1])
+        val keyClassType = classType.genericArguments[0]
+        val keyType = generateSubType(keyClassType)
+        val valueClassType = classType.genericArguments[1]
+        val valueType = generateSubType(valueClassType)
 
-        return "Record<${keyType.reference()}, ${valueType.reference()}>"
+        return "Record<${keyType.reference()} ${
+            if (keyClassType.isNullable) {
+                " | undefined"
+            } else {
+                ""
+            }
+        }, ${valueType.reference()}>"
     }
+
+    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
     override fun shouldInline(classType: ClassType): Boolean = true
 

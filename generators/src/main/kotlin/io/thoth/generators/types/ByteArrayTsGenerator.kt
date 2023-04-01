@@ -7,6 +7,8 @@ class ByteArrayTsGenerator : TsGenerator() {
         return "Uint8Array"
     }
 
+    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.BLOB
+
     override fun shouldInline(classType: ClassType): Boolean = true
 
     override fun generateName(classType: ClassType): String = "Uint8Array"
