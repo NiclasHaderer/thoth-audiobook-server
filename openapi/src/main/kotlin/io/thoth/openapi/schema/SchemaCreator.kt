@@ -11,7 +11,6 @@ import io.swagger.v3.oas.models.media.ObjectSchema
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.media.StringSchema
 import io.thoth.openapi.nullable
-import io.thoth.openapi.properties
 import io.thoth.openapi.responses.BinaryResponse
 import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
@@ -130,12 +129,12 @@ private object SchemaCreator {
                 val objectSchema =
                     ObjectSchema().also { schema ->
                         schema.required =
-                            classType.clazz.properties
+                            classType.properties
                                 .filter { it.visibility == KVisibility.PUBLIC }
                                 .filter { !it.nullable }
                                 .map { it.name }
                         schema.properties =
-                            classType.clazz.properties
+                            classType.properties
                                 .filter { it.visibility == KVisibility.PUBLIC }
                                 .associate {
                                     var (schemaName, propSchema) =

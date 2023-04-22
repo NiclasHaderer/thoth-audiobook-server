@@ -14,8 +14,6 @@ class TsClientCreator(
 ) {
     private val typeDefinitions = mutableMapOf<String, TsGenerator.Type>()
     private val clientFunctions = mutableListOf<String>()
-    // TODO: optional query types
-    // TODO optional path types
     // TODO interface inheritance
     // TODO ignore private parameters in route definitions
     // TODO extract types from route definitions
