@@ -1,26 +1,20 @@
 package io.thoth.openapi.schema
 
-import io.thoth.openapi.properties
 import java.lang.reflect.ParameterizedType
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.KType
+import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.javaType
+import kotlin.reflect.jvm.javaField
 import kotlin.reflect.typeOf
 
 class ClassType
-private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>, val isNullable: Boolean) {
-    val isEnum: Boolean
-        get() = clazz.java.enumConstants != null
-
-    fun isSubclassOf(vararg clazz: KClass<*>): Boolean {
-        return clazz.any { this.clazz.isSubclassOf(it) }
-    }
-
-    val properties by lazy { clazz.properties }
-
+private constructor(val genericArguments: List<ClassType>, private val _clazz: KClass<*>, val isNullable: Boolean) {
     companion object {
         private fun resolveArguments(kType: KType): List<ClassType> {
             val classTypes = mutableListOf<ClassType>()
@@ -47,14 +41,55 @@ private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>,
         }
     }
 
+    @Deprecated("No longer exposed")
+    val clazz: KClass<*>
+        get() = _clazz
+
+    val isEnum: Boolean
+        get() = _clazz.java.enumConstants != null
+
+    val isPrimitive: Boolean
+        get() =
+            isSubclassOf(
+                Int::class,
+                Long::class,
+                Short::class,
+                Byte::class,
+                Float::class,
+                Double::class,
+                Boolean::class,
+                Char::class,
+                String::class,
+                UInt::class,
+                ULong::class,
+                UShort::class,
+                UByte::class,
+                BigInteger::class,
+                BigDecimal::class,
+            )
+
+    fun isSubclassOf(vararg clazz: KClass<*>): Boolean {
+        return clazz.any { this._clazz.isSubclassOf(it) }
+    }
+
+    val memberProperties
+        get() = _clazz.declaredMemberProperties
+
+    val properties by lazy {
+        memberProperties.filter {
+            // checks if the property is a getter
+            it.javaField != null || _clazz.java.isInterface
+        }
+    }
+
     /**
      * Same structure as `ClassType.parameterizedValues` but the values are already resolved to the next ClassType,
      * because the property return type is parameterized and has a generic as parameter
      */
     val resolvedParameterizedValue: Map<KProperty1<*, *>, ClassType> by lazy {
-        val typeParameterMap = clazz.typeParameters.associateBy { it.starProjectedType }
+        val typeParameterMap = _clazz.typeParameters.associateBy { it.starProjectedType }
 
-        clazz.properties
+        properties
             .filter { member -> member.returnType.arguments.any { typeParameterMap.containsKey(it.type) } }
             .mapNotNull { property ->
                 val typeParameters = property.returnType.arguments.mapNotNull { typeParameterMap[it.type] }
@@ -73,16 +108,17 @@ private constructor(val genericArguments: List<ClassType>, val clazz: KClass<*>,
 
     /** This is a list with the property of the class as key and the value (of the generic) as a value */
     val resolvedGenericValues: Map<KProperty1<*, *>, ClassType> by lazy {
-        clazz.properties
+        properties
             .mapNotNull { property ->
-                val param = clazz.typeParameters.find { it == property.returnType.classifier } ?: return@mapNotNull null
+                val param =
+                    _clazz.typeParameters.find { it == property.returnType.classifier } ?: return@mapNotNull null
                 property to parameterToValue[param]!!
             }
             .toMap()
     }
 
     /** This resolves the generic parameter K/V/T/... to an actual Kotlin class */
-    val parameterToValue by lazy { clazz.typeParameters.zip(genericArguments).toMap() }
+    val parameterToValue by lazy { _clazz.typeParameters.zip(genericArguments).toMap() }
 
     /** Create a new ClassType for a member of the current `ClassType.clazz` */
     @OptIn(ExperimentalStdlibApi::class)
