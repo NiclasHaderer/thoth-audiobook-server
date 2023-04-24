@@ -34,9 +34,9 @@ class PairTsGenerator : TsGenerator() {
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
-    override fun shouldInline(classType: ClassType): Boolean = true
+    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
-    override fun generateName(classType: ClassType): String = "pair"
+    override fun generateName(classType: ClassType, generateSubType: GenerateType): String = "pair"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

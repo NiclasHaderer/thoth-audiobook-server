@@ -16,7 +16,7 @@ class ArrayTsGenerator : TsGenerator() {
         val subType = generateSubType(genericArg)
         return "(${subType.reference()}${
             if (genericArg.isNullable) {
-                " | undefined"
+                " | null"
             } else {
                 ""
             }
@@ -25,9 +25,9 @@ class ArrayTsGenerator : TsGenerator() {
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
-    override fun shouldInline(classType: ClassType): Boolean = true
+    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
-    override fun generateName(classType: ClassType): String = "array"
+    override fun generateName(classType: ClassType, generateSubType: GenerateType): String = "array"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

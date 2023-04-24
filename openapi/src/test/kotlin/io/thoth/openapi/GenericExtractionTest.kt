@@ -20,7 +20,7 @@ class GenericExtractionTest {
     @Test
     fun testClassType() {
         val type = ClassType.create<TwoListWrapper<InnerType, SecondInnerType>>()
-        val listWrapper = type.fromMember(TwoListWrapper<*, *>::listWrapper)
+        val listWrapper = type.forMember(TwoListWrapper<*, *>::listWrapper)
         val parameterizedOuter = listWrapper.resolvedParameterizedValue.mapValues { it.value.clazz }
         assertEquals(
             mapOf<KProperty1<*, *>, KClass<*>>(
@@ -59,18 +59,29 @@ class GenericExtractionTest {
 
         val classType = ClassType.create<HardToResolve<List<Unique>>>()
 
-        val aMember = classType.fromMember(HardToResolve<*>::a)
+        val aMember = classType.forMember(HardToResolve<*>::a)
         expect(aMember.clazz) { List::class }
         expect(aMember.genericArguments.map { it.clazz }) { listOf(Unique::class) }
 
-        val bMember = classType.fromMember(HardToResolve<*>::b)
+        val bMember = classType.forMember(HardToResolve<*>::b)
         expect(bMember.clazz) { List::class }
         bMember.genericArguments.forEach {
             expect(it.clazz) { List::class }
             it.genericArguments.forEach { expect(it.clazz) { Unique::class } }
         }
 
-        val cMember = classType.fromMember(HardToResolve<*>::c)
+        val cMember = classType.forMember(HardToResolve<*>::c)
         expect(cMember.clazz) { String::class }
+    }
+
+    @Test
+    fun testMissingParametersAndInlineGenerics() {
+        class TestClass<T>(val b: Map<String, T>)
+
+        val classType = ClassType.create<TestClass<Int>>()
+
+        val bMember = classType.forMember(TestClass<*>::b)
+        expect(Map::class) { bMember.clazz }
+        expect(listOf(String::class, Int::class)) { bMember.genericArguments.map { it.clazz } }
     }
 }

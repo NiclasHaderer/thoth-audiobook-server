@@ -49,7 +49,7 @@ private object SchemaCreator {
         embedSchemas: Boolean,
         namedSideSchemas: MutableMap<String, Schema<*>>
     ): Pair<SchemaName, Schema<*>> {
-        if (classType.isEnum) {
+        if (classType.isEnum()) {
             val schema = StringSchema()
             val values = classType.clazz.java.enumConstants
             for (enumVal in values) {
@@ -139,7 +139,7 @@ private object SchemaCreator {
                                 .associate {
                                     var (schemaName, propSchema) =
                                         createSchemaForClassType(
-                                            classType.fromMember(it),
+                                            classType.forMember(it),
                                             embedSchemas,
                                             namedSideSchemas,
                                         )

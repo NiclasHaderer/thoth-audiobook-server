@@ -9,9 +9,9 @@ class ByteArrayTsGenerator : TsGenerator() {
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.BLOB
 
-    override fun shouldInline(classType: ClassType): Boolean = true
+    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
-    override fun generateName(classType: ClassType): String = "Uint8Array"
+    override fun generateName(classType: ClassType, generateSubType: GenerateType): String = "Uint8Array"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(ByteArray::class)
