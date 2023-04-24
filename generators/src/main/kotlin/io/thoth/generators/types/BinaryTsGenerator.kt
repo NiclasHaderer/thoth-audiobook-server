@@ -11,9 +11,9 @@ class BinaryTsGenerator : TsGenerator() {
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.BLOB
 
-    override fun shouldInline(classType: ClassType): Boolean = true
+    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
-    override fun generateName(classType: ClassType): String = "blob"
+    override fun generateName(classType: ClassType, generateSubType: GenerateType): String = "blob"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

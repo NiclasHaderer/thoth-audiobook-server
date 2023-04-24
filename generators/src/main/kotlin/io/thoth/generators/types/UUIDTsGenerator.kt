@@ -10,9 +10,9 @@ class UUIDTsGenerator : TsGenerator() {
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
-    override fun shouldInline(classType: ClassType): Boolean = false
+    override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE
 
-    override fun generateName(classType: ClassType): String = "UUID"
+    override fun generateName(classType: ClassType, generateSubType: GenerateType): String = "UUID"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(UUID::class)

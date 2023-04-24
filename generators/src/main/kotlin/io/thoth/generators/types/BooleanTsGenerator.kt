@@ -9,9 +9,9 @@ class BooleanTsGenerator : TsGenerator() {
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
-    override fun shouldInline(classType: ClassType): Boolean = true
+    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
-    override fun generateName(classType: ClassType): String = "boolean"
+    override fun generateName(classType: ClassType, generateSubType: GenerateType): String = "boolean"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(Boolean::class)

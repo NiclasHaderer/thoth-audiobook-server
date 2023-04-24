@@ -8,6 +8,7 @@ import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
 import io.thoth.openapi.schema.ClassType
 import io.thoth.openapi.schema.generateSchema
+import io.thoth.openapi.schema.isEnum
 import io.thoth.openapi.schema.parent
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -195,7 +196,7 @@ class OpenApiRoute(
                             "You have to create a property with the name $varName",
                     )
             pathParams.add(
-                PathParameter(name = varName, type = params.fromMember(varMember), origin = params),
+                PathParameter(name = varName, type = params.forMember(varMember), origin = params),
             )
         }
         return pathParams
@@ -236,7 +237,7 @@ class OpenApiRoute(
                 .map {
                     QueryParameter(
                         name = it.name,
-                        type = params.fromMember(it),
+                        type = params.forMember(it),
                         origin = params,
                         optional = it.optional,
                     )
@@ -245,7 +246,7 @@ class OpenApiRoute(
     }
 
     private fun getContentType(classType: ClassType): String {
-        if (classType.isEnum) return "text/plain"
+        if (classType.isEnum()) return "text/plain"
         return when (classType.clazz) {
             // Binary
             BinaryResponse::class -> "application/octet-stream"

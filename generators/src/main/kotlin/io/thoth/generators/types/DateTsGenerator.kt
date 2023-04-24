@@ -12,9 +12,9 @@ class DateTsGenerator : TsGenerator() {
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
-    override fun shouldInline(classType: ClassType): Boolean = true
+    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
-    override fun generateName(classType: ClassType): String = "string"
+    override fun generateName(classType: ClassType, generateSubType: GenerateType): String = "string"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

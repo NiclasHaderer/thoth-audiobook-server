@@ -11,9 +11,9 @@ class NumberTsGenerator : TsGenerator() {
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
-    override fun shouldInline(classType: ClassType): Boolean = true
+    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
-    override fun generateName(classType: ClassType): String = "number"
+    override fun generateName(classType: ClassType, generateSubType: GenerateType): String = "number"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
