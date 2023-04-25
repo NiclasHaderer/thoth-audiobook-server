@@ -1,7 +1,7 @@
 package io.thoth.server.services
 
+import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.models.LibraryModel
-import io.thoth.openapi.ErrorResponse
 import io.thoth.server.api.LibraryApiModel
 import io.thoth.server.api.PartialLibraryApiModel
 import io.thoth.server.common.scheduling.Scheduler

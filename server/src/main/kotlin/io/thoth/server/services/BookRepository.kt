@@ -1,8 +1,8 @@
 package io.thoth.server.services
 
+import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.models.BookModel
 import io.thoth.models.DetailedBookModel
-import io.thoth.openapi.ErrorResponse
 import io.thoth.server.api.BookApiModel
 import io.thoth.server.api.PartialBookApiModel
 import io.thoth.server.common.extensions.toSizedIterable

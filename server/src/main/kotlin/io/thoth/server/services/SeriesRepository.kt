@@ -1,8 +1,8 @@
 package io.thoth.server.services
 
+import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.models.DetailedSeriesModel
 import io.thoth.models.SeriesModel
-import io.thoth.openapi.ErrorResponse
 import io.thoth.server.api.PartialSeriesApiModel
 import io.thoth.server.api.SeriesApiModel
 import io.thoth.server.common.extensions.toSizedIterable

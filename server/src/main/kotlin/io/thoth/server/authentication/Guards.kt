@@ -3,7 +3,7 @@ package io.thoth.server.authentication
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.util.pipeline.*
-import io.thoth.openapi.ErrorResponse
+import io.thoth.generators.openapi.errors.ErrorResponse
 
 object Guards {
     const val Normal = "user-jwt"

@@ -43,7 +43,6 @@ dependencies {
     // Other projects
     implementation(project(":models"))
     implementation(project(":generators"))
-    implementation(project(":openapi"))
     implementation(project(":metadata"))
 
     // Database

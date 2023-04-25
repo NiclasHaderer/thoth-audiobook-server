@@ -1,11 +1,11 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.*
+import io.thoth.generators.openapi.delete
+import io.thoth.generators.openapi.get
+import io.thoth.generators.openapi.post
+import io.thoth.generators.openapi.put
 import io.thoth.models.UserModel
-import io.thoth.openapi.delete
-import io.thoth.openapi.get
-import io.thoth.openapi.post
-import io.thoth.openapi.put
 import io.thoth.server.authentication.JwtPair
 import io.thoth.server.authentication.routes.AuthRoutes
 import io.thoth.server.authentication.routes.JwksResponse
