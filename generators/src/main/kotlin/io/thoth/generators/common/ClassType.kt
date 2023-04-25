@@ -74,6 +74,16 @@ private constructor(
     val clazz: KClass<*>
         get() = type.classifier as KClass<*>
 
+    inline fun <reified T : Annotation> findAnnotation(): T? = this.clazz.findAnnotation<T>()
+
+    inline fun <reified T : Annotation> findAnnotationsFirstUp(): List<T> {
+        return clazz.findAnnotationsFirstUp<T>()
+    }
+
+    inline fun <reified T : Annotation> findAnnotationUp(): T? {
+        return clazz.findAnnotationUp()
+    }
+
     fun isSubclassOf(vararg clazz: KClass<*>): Boolean = clazz.any { this.clazz.isSubclassOf(it) }
     val declaredMemberProperties: Collection<KProperty1<*, *>>
         get() = clazz.declaredMemberProperties

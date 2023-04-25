@@ -1,5 +1,6 @@
-package io.thoth.generators.openapi.schemata
+package io.thoth.generators.openapi.schema
 
+import io.ktor.http.*
 import io.swagger.v3.oas.models.media.ArraySchema
 import io.swagger.v3.oas.models.media.ObjectSchema
 import io.swagger.v3.oas.models.media.Schema
@@ -29,5 +30,9 @@ class ListSchemaGenerator : SchemaGenerator() {
             LinkedHashSet::class,
             Set::class,
         )
+    }
+
+    override fun generateContentType(classType: ClassType): ContentType {
+        return ContentType.Application.Json
     }
 }

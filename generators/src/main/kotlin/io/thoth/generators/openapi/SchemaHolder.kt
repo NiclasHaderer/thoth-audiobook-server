@@ -56,13 +56,13 @@ object SchemaHolder {
         for ((param, schema) in route.pathParameters) {
             _api.components.schemas.putAll(schema.second)
             operation.addParametersItem(
-                Parameter().`in`("path").name(param.name).schema(schema.first),
+                Parameter().`in`("path").name(param.name).schema(schema.first.reference()),
             )
         }
         for ((param, schema) in route.queryParameters) {
             _api.components.schemas.putAll(schema.second)
             operation.addParametersItem(
-                Parameter().`in`("query").name(param.name).schema(schema.first).required(!param.optional),
+                Parameter().`in`("query").name(param.name).schema(schema.first.reference()).required(!param.optional),
             )
         }
     }
@@ -79,10 +79,10 @@ object SchemaHolder {
                         .content(
                             Content()
                                 .addMediaType(
-                                    route.responseContentType,
+                                    route.responseContentType.contentType,
                                     MediaType()
                                         .schema(
-                                            responseSchema,
+                                            responseSchema.reference(),
                                         ),
                                 ),
                         ),
@@ -132,10 +132,10 @@ object SchemaHolder {
                 .content(
                     Content()
                         .addMediaType(
-                            route.requestContentType,
+                            route.requestContentType.contentType,
                             MediaType()
                                 .schema(
-                                    bodySchema,
+                                    bodySchema.reference(),
                                 ),
                         ),
                 ),

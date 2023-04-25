@@ -1,5 +1,6 @@
-package io.thoth.generators.openapi.schemata
+package io.thoth.generators.openapi.schema
 
+import io.ktor.http.*
 import io.swagger.v3.oas.models.media.ObjectSchema
 import io.swagger.v3.oas.models.media.Schema
 import io.thoth.generators.common.ClassType
@@ -37,6 +38,10 @@ class ObjectSchemaGenerator : SchemaGenerator() {
             schemaName += classType.genericArguments.joinToString(prefix = "<", postfix = ">") { it.simpleName }
         }
         return schemaName
+    }
+
+    override fun generateContentType(classType: ClassType): ContentType {
+        return ContentType.Application.Json
     }
 
     override fun canGenerate(classType: ClassType): Boolean = true

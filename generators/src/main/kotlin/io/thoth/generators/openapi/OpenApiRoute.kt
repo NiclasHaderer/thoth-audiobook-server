@@ -4,21 +4,12 @@ import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.routing.*
 import io.thoth.generators.common.ClassType
-import io.thoth.generators.common.findAnnotationUp
 import io.thoth.generators.common.findAnnotations
-import io.thoth.generators.common.findAnnotationsFirstUp
 import io.thoth.generators.common.fullPath
 import io.thoth.generators.common.optional
 import io.thoth.generators.common.parent
-import io.thoth.generators.openapi.responses.BinaryResponse
-import io.thoth.generators.openapi.responses.FileResponse
-import io.thoth.generators.openapi.responses.RedirectResponse
-import io.thoth.generators.openapi.schemata.generateSchemas
-import io.thoth.generators.openapi.schemata.toNamed
-import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
+import io.thoth.generators.openapi.schema.generateSchemas
+import io.thoth.generators.openapi.schema.toNamed
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 
@@ -101,25 +92,25 @@ class OpenApiRoute(
         resourcePath.ifBlank { null }
     }
 
-    val description by lazy { requestParamsType.clazz.findAnnotation<Description>()?.description }
+    val description by lazy { requestParamsType.findAnnotation<Description>()?.description }
 
     val summary by lazy {
         requestParamsType.findAnnotations<Summary>().firstOrNull { it.method == this.method.value }?.summary
     }
 
-    val secured by lazy { requestParamsType.clazz.findAnnotationUp<Secured>() }
+    val secured by lazy { requestParamsType.findAnnotationUp<Secured>() }
 
     val requestBody by lazy { generateSchemas(requestBodyType).toNamed() }
 
     val responseBody by lazy { generateSchemas(responseBodyType).toNamed() }
 
-    val responseDescription by lazy { responseBodyType.clazz.findAnnotation<Description>() }
+    val responseDescription by lazy { responseBodyType.findAnnotation<Description>() }
 
-    val bodyDescription by lazy { requestBodyType.clazz.findAnnotation<Description>() }
+    val bodyDescription by lazy { requestBodyType.findAnnotation<Description>() }
 
-    val responseContentType by lazy { getContentType(requestBodyType) }
+    val responseContentType by lazy { responseBody.first.contentType }
 
-    val requestContentType by lazy { getContentType(requestBodyType) }
+    val requestContentType by lazy { requestBody.first.contentType }
 
     val responseStatusCode by lazy {
         if (responseBodyType.clazz == Unit::class) {
@@ -139,7 +130,7 @@ class OpenApiRoute(
         fullPath.replace("/+".toRegex(), "/")
     }
 
-    val tags by lazy { requestParamsType.clazz.findAnnotationsFirstUp<Tagged>().map { it.name } }
+    val tags by lazy { requestParamsType.findAnnotationsFirstUp<Tagged>().map { it.name } }
 
     init {
         assertParamsHierarchy()
@@ -150,10 +141,9 @@ class OpenApiRoute(
         // There are three conditions under which the hierarchy is valid:
         // 1. Every class over params is decorated as @Resource
         paramsClazz.findAnnotation<Resource>()
-            ?: throw IllegalStateException("Class ${paramsClazz.qualifiedName} is not decorated as a resource")
+            ?: throw IllegalStateException("Class ${paramsClassType.simpleName} is not decorated as a resource")
 
-        if (paramsClazz.parent == null) return
-
+        if (paramsClassType.parent == null) return
         val parentClassType = paramsClassType.parent!!
 
         // 2. Every class has a field which references the parent class name, because otherwise the
@@ -179,8 +169,8 @@ class OpenApiRoute(
             // Check if the variable name is already taken
             if (takenParams.containsKey(param.name)) {
                 throw IllegalStateException(
-                    "Class ${params.clazz.qualifiedName} has a duplicate path parameter name ${param.name}. " +
-                        "The parameter is already taken by ${takenParams[param.name]!!.origin.clazz.qualifiedName}",
+                    "Class ${params.simpleName} has a duplicate path parameter name ${param.name}. " +
+                        "The parameter is already taken by ${takenParams[param.name]!!.origin.simpleName}",
                 )
             }
         }
@@ -193,7 +183,7 @@ class OpenApiRoute(
 
     private fun extractPathParamsForClass(params: ClassType): List<PathParameter> {
         val pathParams = mutableListOf<PathParameter>()
-        val resourcePath = params.clazz.findAnnotation<Resource>()!!.path
+        val resourcePath = params.findAnnotation<Resource>()!!.path
         val matches = "\\{((?:[a-z]|[A-Z]|_)+)}".toRegex().findAll(resourcePath)
         for (match in matches) {
             val varName = match.groupValues[1]
@@ -201,7 +191,7 @@ class OpenApiRoute(
             val varMember =
                 params.properties.find { it.name == varName }
                     ?: throw IllegalStateException(
-                        "Class ${params.clazz.qualifiedName} has a path parameter $varName which is not declared as a member. " +
+                        "Class ${params.simpleName} has a path parameter $varName which is not declared as a member. " +
                             "You have to create a property with the name $varName",
                     )
             pathParams.add(
@@ -219,8 +209,8 @@ class OpenApiRoute(
         for (param in queryParams) {
             if (param.name in takenParams) {
                 throw IllegalStateException(
-                    "Class ${params.clazz.qualifiedName} has a query parameter " +
-                        "called ${param.name} which is also used in ${takenParams[param.name]!!.origin.clazz.qualifiedName}. " +
+                    "Class ${params.simpleName} has a query parameter " +
+                        "called ${param.name} which is also used in ${takenParams[param.name]!!.origin.simpleName}. " +
                         "Do not used duplicate parameters",
                 )
             }
@@ -241,7 +231,7 @@ class OpenApiRoute(
                 }
                 .filter {
                     // Remove injected parent
-                    it.returnType.classifier != params.clazz.parent
+                    it.returnType.classifier != params.parent?.clazz
                 }
                 .map {
                     QueryParameter(
@@ -252,35 +242,5 @@ class OpenApiRoute(
                     )
                 }
         return queryParams
-    }
-
-    private fun getContentType(classType: ClassType): String {
-        if (classType.isEnum()) return "text/plain"
-        return when (classType.clazz) {
-            // Binary
-            BinaryResponse::class -> "application/octet-stream"
-            ByteArray::class -> "application/octet-stream"
-            FileResponse::class -> "application/octet-stream"
-            // Redirect
-            RedirectResponse::class -> "text/plain"
-            // Primitives
-            String::class -> "text/plain"
-            Int::class -> "text/plain"
-            Long::class -> "text/plain"
-            Double::class -> "text/plain"
-            Float::class -> "text/plain"
-            Boolean::class -> "text/plain"
-            ULong::class -> "text/plain"
-            List::class -> "text/plain"
-            Date::class -> "text/plain"
-            LocalDate::class -> "text/plain"
-            LocalDateTime::class -> "text/plain"
-            BigDecimal::class -> "text/plain"
-            UUID::class -> "text/plain"
-            // Complex
-            Map::class -> "application/json"
-            Unit::class -> "application/json"
-            else -> "application/json"
-        }
     }
 }

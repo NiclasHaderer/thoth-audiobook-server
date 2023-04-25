@@ -1,5 +1,6 @@
-package io.thoth.generators.openapi.schemata
+package io.thoth.generators.openapi.schema
 
+import io.ktor.http.*
 import io.swagger.v3.oas.models.media.NumberSchema
 import io.swagger.v3.oas.models.media.Schema
 import io.thoth.generators.common.ClassType
@@ -41,5 +42,9 @@ class NumberSchemaGenerator : SchemaGenerator() {
             Float::class,
             Number::class,
         )
+    }
+
+    override fun generateContentType(classType: ClassType): ContentType {
+        return ContentType.Text.Plain
     }
 }

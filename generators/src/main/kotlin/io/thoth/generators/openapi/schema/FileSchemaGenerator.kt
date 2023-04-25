@@ -1,5 +1,6 @@
-package io.thoth.generators.openapi.schemata
+package io.thoth.generators.openapi.schema
 
+import io.ktor.http.*
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.media.StringSchema
 import io.thoth.generators.common.ClassType
@@ -17,5 +18,9 @@ class FileSchemaGenerator : SchemaGenerator() {
             BinaryResponse::class,
             ByteArray::class,
         )
+    }
+
+    override fun generateContentType(classType: ClassType): ContentType {
+        return ContentType.Application.OctetStream
     }
 }
