@@ -177,9 +177,7 @@ class OpenApiRoute(
         takenParams.putAll(pathParams.associateBy { it.name })
 
         // Go up and check the parent
-        // TODO uncomment
-        //        params.clazz.parent?.java?.kotlin?.run {
-        // extractAllPathParams(ClassType.wrap(this), takenParams) }
+        params.parent?.run { extractAllPathParams(this, takenParams) }
         return takenParams.values.toList()
     }
 
@@ -219,9 +217,7 @@ class OpenApiRoute(
         }
 
         takenParams.putAll(queryParams.associateBy { it.name })
-        // TODO uncomment
-        //        params.clazz.parent?.run { extractAllQueryParams(ClassType.wrap(this),
-        // takenParams) }
+        params.parent?.run { extractAllQueryParams(this, takenParams) }
         return takenParams.values.toList()
     }
 
