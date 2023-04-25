@@ -3,7 +3,11 @@ package io.thoth.generators.openapi
 import io.ktor.http.*
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.core.util.Yaml
-import io.swagger.v3.oas.models.*
+import io.swagger.v3.oas.models.Components
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.oas.models.Operation
+import io.swagger.v3.oas.models.PathItem
+import io.swagger.v3.oas.models.Paths
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.media.MediaType
@@ -50,13 +54,15 @@ object SchemaHolder {
 
     private fun addPathAndQueryParameters(operation: Operation, route: OpenApiRoute) {
         for ((param, schema) in route.pathParameters) {
+            _api.components.schemas.putAll(schema.second)
             operation.addParametersItem(
-                Parameter().`in`("path").name(param.name).schema(schema),
+                Parameter().`in`("path").name(param.name).schema(schema.first),
             )
         }
         for ((param, schema) in route.queryParameters) {
+            _api.components.schemas.putAll(schema.second)
             operation.addParametersItem(
-                Parameter().`in`("query").name(param.name).schema(schema).required(!param.optional),
+                Parameter().`in`("query").name(param.name).schema(schema.first).required(!param.optional),
             )
         }
     }

@@ -9,7 +9,7 @@ import java.util.*
 interface AuthRoutes {
     val login: RouteHandler.(user: LoginUser) -> JwtPair
     val register: RouteHandler.(RegisterUser) -> UserModel
-    val jwks: RouteHandler.() -> JwksResponse
+    val jwks: RouteHandler.() -> JWKsResponse
     val modify: RouteHandler.(UUID, ModifyUser) -> UserModel
     val getUser: RouteHandler.() -> UserModel
     val delete: RouteHandler.() -> Unit

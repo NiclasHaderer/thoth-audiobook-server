@@ -11,6 +11,7 @@ import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.superclasses
 import kotlin.reflect.javaType
 import kotlin.reflect.jvm.javaField
@@ -76,6 +77,8 @@ private constructor(
     fun isSubclassOf(vararg clazz: KClass<*>): Boolean = clazz.any { this.clazz.isSubclassOf(it) }
     val declaredMemberProperties: Collection<KProperty1<*, *>>
         get() = clazz.declaredMemberProperties
+    val memberProperties: Collection<KProperty1<*, *>>
+        get() = clazz.memberProperties
 
     val properties: List<KProperty1<*, *>>
         get() {

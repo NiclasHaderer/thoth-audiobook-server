@@ -19,6 +19,7 @@ class BinaryTsGenerator : TsGenerator() {
         return classType.isSubclassOf(
             BinaryResponse::class,
             FileResponse::class,
+            ByteArray::class,
         )
     }
 }
