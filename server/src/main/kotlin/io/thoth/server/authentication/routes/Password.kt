@@ -1,7 +1,7 @@
 package io.thoth.server.authentication.routes
 
-import io.thoth.openapi.ErrorResponse
-import io.thoth.openapi.RouteHandler
+import io.thoth.generators.openapi.RouteHandler
+import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.server.authentication.thothPrincipal
 import io.thoth.server.database.tables.User
 import org.jetbrains.exposed.sql.transactions.transaction

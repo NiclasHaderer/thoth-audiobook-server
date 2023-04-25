@@ -1,13 +1,13 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.*
+import io.thoth.generators.openapi.errors.ErrorResponse
+import io.thoth.generators.openapi.get
 import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
-import io.thoth.openapi.ErrorResponse
-import io.thoth.openapi.get
 import org.koin.ktor.ext.inject
 
 fun Routing.metadataRouting() {

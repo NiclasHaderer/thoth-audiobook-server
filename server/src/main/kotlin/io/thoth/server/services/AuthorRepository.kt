@@ -1,8 +1,8 @@
 package io.thoth.server.services
 
+import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.models.AuthorModel
 import io.thoth.models.DetailedAuthorModel
-import io.thoth.openapi.ErrorResponse
 import io.thoth.server.api.AuthorApiModel
 import io.thoth.server.api.PartialAuthorApiModel
 import io.thoth.server.database.access.getNewImage

@@ -1,12 +1,12 @@
 package io.thoth.server.api
 
 import io.ktor.resources.*
+import io.thoth.generators.openapi.Secured
+import io.thoth.generators.openapi.Summary
+import io.thoth.generators.openapi.Tagged
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
-import io.thoth.openapi.Secured
-import io.thoth.openapi.Summary
-import io.thoth.openapi.Tagged
 import io.thoth.server.authentication.Guards
 import io.thoth.server.common.serializion.kotlin.UUID_S
 

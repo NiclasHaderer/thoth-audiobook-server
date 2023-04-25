@@ -1,0 +1,40 @@
+package io.thoth.generators.openapi.errors
+
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
+import mu.KotlinLogging
+
+fun Application.configureStatusPages() {
+    val logger = KotlinLogging.logger {}
+    install(StatusPages) {
+        exception<ErrorResponse> { call, cause ->
+            if (call.response.isSent) return@exception
+            call.respond(
+                cause.status,
+                hashMapOf("error" to cause.message, "status" to cause.status.value, "details" to cause.details),
+            )
+        }
+        exception<Throwable> { call, cause ->
+            if (call.response.isSent) return@exception
+
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                hashMapOf(
+                    "error" to cause.message,
+                    "status" to HttpStatusCode.InternalServerError.value,
+                    "details" to cause.stackTrace,
+                ),
+            )
+            logger.error("Unhandled exception", cause)
+        }
+        status(*HttpStatusCode.allStatusCodes.filter { !it.isSuccess() }.toTypedArray()) { call, statusCode ->
+            if (call.response.isSent) return@status
+            call.respond(
+                statusCode,
+                hashMapOf("error" to statusCode.description, "status" to statusCode.value, "details" to null),
+            )
+        }
+    }
+}

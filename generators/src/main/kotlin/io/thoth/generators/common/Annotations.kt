@@ -1,0 +1,30 @@
+package io.thoth.generators.common
+
+import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotations
+
+inline fun <reified T : Annotation> KClass<*>.findAnnotationsFirstUp(): List<T> {
+    var root: KClass<*>? = this
+    var annotations = this.findAnnotations<T>()
+    while (root != null && annotations.isEmpty()) {
+        annotations = root.findAnnotations()
+        root = root.parent
+    }
+
+    return annotations
+}
+
+inline fun <reified T : Annotation> KClass<*>.findAnnotationsUp(): List<T> {
+    var root: KClass<*>? = this
+    var annotations = this.findAnnotations<T>()
+    while (root != null) {
+        annotations = root.findAnnotations()
+        root = root.parent
+    }
+
+    return annotations
+}
+
+inline fun <reified T : Annotation> KClass<*>.findAnnotationUp(): T? {
+    return findAnnotationsFirstUp<T>().firstOrNull()
+}

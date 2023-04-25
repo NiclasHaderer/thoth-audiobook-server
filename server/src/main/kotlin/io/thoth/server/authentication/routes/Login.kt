@@ -1,7 +1,7 @@
 package io.thoth.server.authentication.routes
 
-import io.thoth.openapi.ErrorResponse
-import io.thoth.openapi.RouteHandler
+import io.thoth.generators.openapi.RouteHandler
+import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.server.authentication.AuthConfigImpl
 import io.thoth.server.authentication.JwtPair
 import io.thoth.server.authentication.generateJwtForUser

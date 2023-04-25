@@ -2,7 +2,7 @@ package io.thoth.server.authentication.routes
 
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
-import io.thoth.openapi.RouteHandler
+import io.thoth.generators.openapi.RouteHandler
 import io.thoth.server.authentication.AuthConfigImpl
 import java.security.interfaces.RSAPublicKey
 

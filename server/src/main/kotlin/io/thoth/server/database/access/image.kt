@@ -1,7 +1,7 @@
 package io.thoth.server.database.access
 
+import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.models.ImageModel
-import io.thoth.openapi.ErrorResponse
 import io.thoth.server.common.extensions.isUUID
 import io.thoth.server.common.extensions.syncUriToFile
 import io.thoth.server.database.tables.Image

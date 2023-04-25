@@ -4,7 +4,6 @@ include(
     "generators",
     "metadata",
     "models",
-    "openapi",
     "server",
 )
 

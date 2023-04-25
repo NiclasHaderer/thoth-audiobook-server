@@ -2,8 +2,8 @@ package io.thoth.server.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.dataconversion.*
-import io.thoth.openapi.plugins.OpenAPIRouting
-import io.thoth.openapi.plugins.OpenAPIWebUI
+import io.thoth.generators.openapi.plugins.OpenAPIRouting
+import io.thoth.generators.openapi.plugins.OpenAPIWebUI
 import io.thoth.server.authentication.Guards
 
 fun Application.configureOpenApi() {
