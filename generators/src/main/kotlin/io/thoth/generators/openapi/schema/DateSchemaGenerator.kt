@@ -1,5 +1,6 @@
-package io.thoth.generators.openapi.schemata
+package io.thoth.generators.openapi.schema
 
+import io.ktor.http.*
 import io.swagger.v3.oas.models.media.DateSchema
 import io.swagger.v3.oas.models.media.DateTimeSchema
 import io.swagger.v3.oas.models.media.NumberSchema
@@ -25,5 +26,9 @@ class DateSchemaGenerator : SchemaGenerator() {
             LocalDate::class,
             LocalDateTime::class,
         )
+    }
+
+    override fun generateContentType(classType: ClassType): ContentType {
+        return ContentType.Text.Plain
     }
 }
