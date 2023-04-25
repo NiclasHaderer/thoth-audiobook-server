@@ -43,7 +43,7 @@ private constructor(
     val parent: ClassType?
         get() {
             // Get the parent class
-            val parentType = type.jvmErasure.parent?.java?.kotlin ?: return null
+            val parentType = type.jvmErasure.parent ?: return null
 
             // Get the number of generic arguments the generic class has
             val argCount = parentType.typeParameters.size
@@ -82,6 +82,10 @@ private constructor(
 
     inline fun <reified T : Annotation> findAnnotationUp(): T? {
         return clazz.findAnnotationUp()
+    }
+
+    inline fun <reified T : Annotation> findAnnotations(): List<T> {
+        return clazz.findAnnotations<T>()
     }
 
     fun isSubclassOf(vararg clazz: KClass<*>): Boolean = clazz.any { this.clazz.isSubclassOf(it) }
@@ -148,15 +152,4 @@ private constructor(
         val newType = memberType.jvmErasure.createType(memberParameters)
         return create(newType)
     }
-}
-
-val KClass<*>.parent: KClass<*>?
-    get() = this.java.enclosingClass?.kotlin
-
-inline fun <reified T : Annotation> ClassType.findAnnotation(): T? {
-    return this.clazz.findAnnotation<T>()
-}
-
-inline fun <reified T : Annotation> ClassType.findAnnotations(): List<T> {
-    return this.clazz.findAnnotations<T>()
 }

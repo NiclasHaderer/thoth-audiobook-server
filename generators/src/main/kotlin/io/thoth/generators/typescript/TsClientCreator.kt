@@ -1,6 +1,5 @@
 package io.thoth.generators.typescript
 
-import io.thoth.generators.common.findAnnotations
 import io.thoth.generators.openapi.OpenApiRoute
 import io.thoth.generators.openapi.Summary
 import io.thoth.generators.typescript.types.TsGenerator

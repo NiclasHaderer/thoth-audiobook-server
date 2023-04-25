@@ -35,5 +35,6 @@ internal val KProperty1<*, *>.optional: Boolean
         val parameter = constructor.parameters.find { it.name == this.name } ?: return false
         return parameter.isOptional
     }
-val KClass<*>.isInterface
-    get() = java.isInterface
+
+val KClass<*>.parent: KClass<*>?
+    get() = this.java.enclosingClass?.kotlin
