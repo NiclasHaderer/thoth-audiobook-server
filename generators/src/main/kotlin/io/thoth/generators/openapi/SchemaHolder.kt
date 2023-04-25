@@ -79,7 +79,7 @@ object SchemaHolder {
                         .content(
                             Content()
                                 .addMediaType(
-                                    route.responseContentType.contentType,
+                                    route.responseContentType.toString(),
                                     MediaType()
                                         .schema(
                                             responseSchema.reference(),
@@ -132,7 +132,7 @@ object SchemaHolder {
                 .content(
                     Content()
                         .addMediaType(
-                            route.requestContentType.contentType,
+                            route.requestContentType.toString(),
                             MediaType()
                                 .schema(
                                     bodySchema.reference(),
