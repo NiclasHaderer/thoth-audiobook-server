@@ -4,7 +4,6 @@ import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.routing.*
 import io.thoth.generators.common.ClassType
-import io.thoth.generators.common.findAnnotations
 import io.thoth.generators.common.fullPath
 import io.thoth.generators.common.optional
 import io.thoth.generators.common.parent
