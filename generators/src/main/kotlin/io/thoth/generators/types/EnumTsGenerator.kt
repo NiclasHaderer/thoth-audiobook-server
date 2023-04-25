@@ -1,9 +1,6 @@
 package io.thoth.generators.types
 
 import io.thoth.openapi.schema.ClassType
-import io.thoth.openapi.schema.enumValues
-import io.thoth.openapi.schema.isEnum
-import io.thoth.openapi.schema.simpleName
 import mu.KotlinLogging
 
 class EnumTsGenerator : TsGenerator() {

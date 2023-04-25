@@ -9,20 +9,20 @@ class InterfaceTsGenerator : TsGenerator() {
         val tsProperties =
             properties.map {
                 "${it.name}${
-                if (it.returnType.isMarkedNullable) {
-                    "?"
-                } else {
-                    ""
-                }
-            }: ${
-                if (classType.isGenericProperty(it)) {
-                    "${it.returnType}"
-                } else if (classType.isParameterizedProperty(it)) {
-                    ""
-                } else {
-                    generateSubType(classType.forMember(it)).reference()
-                }
-            };"
+                    if (it.returnType.isMarkedNullable) {
+                        "?"
+                    } else {
+                        ""
+                    }
+                }: ${
+                    if (classType.isGenericProperty(it)) {
+                        "${it.returnType}"
+                    } else if (classType.isParameterizedProperty(it)) {
+                        ""
+                    } else {
+                        generateSubType(classType.forMember(it)).reference()
+                    }
+                };"
             }
 
         val interfaceStart = "interface ${generateName(classType, false, null)} {\n"
@@ -44,7 +44,7 @@ class InterfaceTsGenerator : TsGenerator() {
         val typeParamsString =
             typeParams.joinToString(", ") {
                 if (resolveGeneric) {
-                    val typePar = classType.resolveTypeParameter(it)!!
+                    val typePar = classType.resolveTypeParameter(it)
                     val subType = generateSubType?.invoke(typePar)
                     subType?.reference() ?: "unknown"
                 } else {

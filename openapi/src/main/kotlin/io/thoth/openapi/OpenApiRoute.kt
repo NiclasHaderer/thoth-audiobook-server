@@ -8,7 +8,6 @@ import io.thoth.openapi.responses.FileResponse
 import io.thoth.openapi.responses.RedirectResponse
 import io.thoth.openapi.schema.ClassType
 import io.thoth.openapi.schema.generateSchema
-import io.thoth.openapi.schema.isEnum
 import io.thoth.openapi.schema.parent
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -178,7 +177,9 @@ class OpenApiRoute(
         takenParams.putAll(pathParams.associateBy { it.name })
 
         // Go up and check the parent
-        params.clazz.parent?.java?.kotlin?.run { extractAllPathParams(ClassType.wrap(this), takenParams) }
+        // TODO uncomment
+        //        params.clazz.parent?.java?.kotlin?.run {
+        // extractAllPathParams(ClassType.wrap(this), takenParams) }
         return takenParams.values.toList()
     }
 
@@ -218,7 +219,9 @@ class OpenApiRoute(
         }
 
         takenParams.putAll(queryParams.associateBy { it.name })
-        params.clazz.parent?.run { extractAllQueryParams(ClassType.wrap(this), takenParams) }
+        // TODO uncomment
+        //        params.clazz.parent?.run { extractAllQueryParams(ClassType.wrap(this),
+        // takenParams) }
         return takenParams.values.toList()
     }
 

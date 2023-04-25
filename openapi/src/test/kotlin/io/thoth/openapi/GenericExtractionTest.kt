@@ -1,9 +1,7 @@
 package io.thoth.openapi
 
 import io.thoth.openapi.schema.ClassType
-import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
-import kotlin.test.assertEquals
+import java.math.BigInteger
 import kotlin.test.expect
 import org.junit.Test
 
@@ -11,45 +9,43 @@ class InnerType
 
 class SecondInnerType
 
-data class ListWrapper<T, V>(val noListGeneric: T, val listGeneric: List<V>)
+data class ListWrapper<D, E>(val noListGeneric: D, val listGeneric: List<E>)
 
-data class TwoListWrapper<T, V>(val listWrapper: ListWrapper<T, V>, val list: List<V>, val notGeneric: String)
+data class TwoListWrapper<A, B, C>(
+    val listWrapper: ListWrapper<A, B>,
+    val list: List<B>,
+    val simpleGeneric: C,
+    val notGeneric: String
+)
+
+class Outer<H>(val a: Map<BigInteger, H>) {
+    class InnerTwo<F, G>(val b: Map<F, G>)
+}
 
 class GenericExtractionTest {
 
     @Test
     fun testClassType() {
-        val type = ClassType.create<TwoListWrapper<InnerType, SecondInnerType>>()
-        val listWrapper = type.forMember(TwoListWrapper<*, *>::listWrapper)
-        val parameterizedOuter = listWrapper.resolvedParameterizedValue.mapValues { it.value.clazz }
-        assertEquals(
-            mapOf<KProperty1<*, *>, KClass<*>>(
-                ListWrapper<*, *>::listGeneric to List::class,
-            ),
-            parameterizedOuter,
-        )
+        val type = ClassType.create<TwoListWrapper<InnerType, SecondInnerType, String>>()
+        val listWrapper = type.forMember(TwoListWrapper<*, *, *>::listWrapper)
 
-        val generic = listWrapper.resolvedGenericValues.mapValues { it.value.clazz }
-        assertEquals(
-            mapOf<KProperty1<*, *>, KClass<*>>(
-                ListWrapper<*, *>::noListGeneric to InnerType::class,
-            ),
-            generic,
-        )
+        expect(ListWrapper::class) { listWrapper.clazz }
+        expect(InnerType::class) { listWrapper.forMember(ListWrapper<*, *>::noListGeneric).clazz }
+        expect(SecondInnerType::class) {
+            listWrapper.forMember(ListWrapper<*, *>::listGeneric).genericArguments[0].clazz
+        }
 
-        val parameterizedInner =
-            listWrapper.resolvedParameterizedValue.mapValues {
-                Pair(
-                    it.value.clazz,
-                    it.value.genericArguments.map { it.clazz },
-                )
-            }
-        assertEquals(
-            mapOf<KProperty1<*, *>, Pair<KClass<*>, List<KClass<*>>>>(
-                ListWrapper<*, *>::listGeneric to Pair(List::class, listOf(SecondInnerType::class)),
-            ),
-            parameterizedInner,
-        )
+        val list = type.forMember(TwoListWrapper<*, *, *>::list)
+        expect(List::class) { list.clazz }
+        expect(SecondInnerType::class) { list.genericArguments[0].clazz }
+
+        // Test that we can get the type of simple generic members
+        val simpleGeneric = type.forMember(TwoListWrapper<*, *, *>::simpleGeneric)
+        expect(String::class) { simpleGeneric.clazz }
+
+        // Test that we can get the type of non-generic members
+        val notGeneric = type.forMember(TwoListWrapper<*, *, *>::notGeneric)
+        expect(String::class) { notGeneric.clazz }
     }
 
     @Test
@@ -83,5 +79,23 @@ class GenericExtractionTest {
         val bMember = classType.forMember(TestClass<*>::b)
         expect(Map::class) { bMember.clazz }
         expect(listOf(String::class, Int::class)) { bMember.genericArguments.map { it.clazz } }
+    }
+
+    @Test
+    fun testInnerClass() {
+        val classType = ClassType.create<Outer.InnerTwo<String, Int>>()
+
+        val bMember = classType.forMember(Outer.InnerTwo<*, *>::b)
+        expect(Map::class) { bMember.clazz }
+        expect(String::class) { bMember.genericArguments[0].clazz }
+        expect(Int::class) { bMember.genericArguments[1].clazz }
+
+        val parent = classType.parent
+        expect(Outer::class) { parent.clazz }
+
+        val aMember = parent.forMember(Outer<*>::a)
+        expect(Map::class) { aMember.clazz }
+        expect(BigInteger::class) { aMember.genericArguments[0].clazz }
+        expect(Any::class) { aMember.genericArguments[1].clazz }
     }
 }
