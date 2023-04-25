@@ -107,22 +107,6 @@ fun Application.server() {
     }
 
     routing {
-        bookRouting()
-
-        TsClientCreator(
-                OpenApiRouteCollector.values(),
-                File("types.ts"),
-                File("client.ts"),
-            )
-            .also {
-                it.saveClient()
-                it.saveTypes()
-            }
-    }
-
-    return
-
-    routing {
         // Authentication
         authRoutes(authRoutes)
         // Libraries and their resources

@@ -11,6 +11,7 @@ import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.findAnnotations
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.superclasses
 import kotlin.reflect.javaType
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.jvmErasure
@@ -38,10 +39,10 @@ private constructor(
     val isNullable: Boolean
         get() = type.isMarkedNullable
 
-    val parent: ClassType
+    val parent: ClassType?
         get() {
             // Get the parent class
-            val parentType = type.jvmErasure.parent?.java?.kotlin!!
+            val parentType = type.jvmErasure.parent?.java?.kotlin ?: return null
 
             // Get the number of generic arguments the generic class has
             val argCount = parentType.typeParameters.size
@@ -50,6 +51,16 @@ private constructor(
             val parentTypeArgs = List(argCount) { KTypeProjection.invariant(Any::class.createType()) }
 
             return create(parentType.createType(parentTypeArgs))
+        }
+
+    val superClasses: List<ClassType>
+        get() {
+            return clazz.superclasses
+                .filterNot { it == Any::class }
+                .map {
+                    val typeArgs = it.typeParameters.map { KTypeProjection.invariant(Any::class.createType()) }
+                    create(it.createType(typeArgs))
+                }
         }
 
     fun isEnum() = this.clazz.java.enumConstants != null
@@ -63,12 +74,12 @@ private constructor(
         get() = type.classifier as KClass<*>
 
     fun isSubclassOf(vararg clazz: KClass<*>): Boolean = clazz.any { this.clazz.isSubclassOf(it) }
-    val memberProperties: Collection<KProperty1<*, *>>
+    val declaredMemberProperties: Collection<KProperty1<*, *>>
         get() = clazz.declaredMemberProperties
 
     val properties: List<KProperty1<*, *>>
         get() {
-            return memberProperties.filter {
+            return declaredMemberProperties.filter {
                 // checks if the property is a getter
                 it.javaField != null || this.clazz.java.isInterface
             }

@@ -22,6 +22,10 @@ class Outer<H>(val a: Map<BigInteger, H>) {
     class InnerTwo<F, G>(val b: Map<F, G>)
 }
 
+abstract class SomeInterface<I>(val i: I)
+
+class FinalType : SomeInterface<String>("")
+
 class GenericExtractionTest {
 
     @Test
@@ -97,5 +101,14 @@ class GenericExtractionTest {
         expect(Map::class) { aMember.clazz }
         expect(BigInteger::class) { aMember.genericArguments[0].clazz }
         expect(Any::class) { aMember.genericArguments[1].clazz }
+    }
+
+    @Test
+    fun testsSuperClasses() {
+        val classType = ClassType.create<FinalType>()
+        val superClasses = classType.superClasses
+        expect(1) { superClasses.size }
+        expect(SomeInterface::class) { superClasses[0].clazz }
+        expect(Any::class) { superClasses[0].genericArguments[0].clazz }
     }
 }
