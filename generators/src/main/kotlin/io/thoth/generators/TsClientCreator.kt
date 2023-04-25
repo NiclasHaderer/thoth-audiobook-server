@@ -5,7 +5,6 @@ import io.thoth.generators.types.generateTypes
 import io.thoth.openapi.OpenApiRoute
 import io.thoth.openapi.Summary
 import io.thoth.openapi.schema.findAnnotations
-import io.thoth.openapi.schema.isUnit
 import java.io.File
 
 class TsClientCreator(
@@ -133,7 +132,7 @@ class TsClientCreator(
                     "${param.name}${if (param.optional) "?" else ""}: ${actual.reference()}"
                 }
         val bodyParam =
-            if (!route.requestBodyType.isUnit()) {
+            if (route.requestBodyType.clazz != Unit::class) {
                 val (actual, all) = generateTypes(route.requestBodyType)
                 typeDefinitions.putAll(all.associateBy { it.name })
                 "body: ${actual.reference()}"
@@ -187,7 +186,7 @@ class TsClientCreator(
                 """
             $routeName(${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> {
                 ${createURL(route)}
-                return __request(__finalUrl, "${route.method.value}", "${responseBody.parser.methodName}", headers, ${if (!route.requestBodyType.isUnit()) "body" else "undefined"}, interceptors);
+                return __request(__finalUrl, "${route.method.value}", "${responseBody.parser.methodName}", headers, ${if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"}, interceptors);
             }
         """
                     .trimIndent()
