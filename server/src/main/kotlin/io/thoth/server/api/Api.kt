@@ -15,6 +15,11 @@ import io.thoth.server.common.serializion.kotlin.UUID_S
 @Resource("api")
 class Api {
 
+    @Resource("fs")
+    @Summary("List folders at a certain path", method = "GET")
+    @Tagged("Filesystem")
+    data class FileSystem(val path: String, private val parent: Api)
+
     @Resource("auth")
     @Tagged("Auth")
     data class Auth(private val parent: Api) {

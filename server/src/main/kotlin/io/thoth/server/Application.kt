@@ -12,6 +12,7 @@ import io.thoth.server.api.audioRouting
 import io.thoth.server.api.authRoutes
 import io.thoth.server.api.authorRouting
 import io.thoth.server.api.bookRouting
+import io.thoth.server.api.fileSystemRouting
 import io.thoth.server.api.imageRouting
 import io.thoth.server.api.libraryRouting
 import io.thoth.server.api.metadataRouting
@@ -109,6 +110,10 @@ fun Application.server() {
     routing {
         // Authentication
         authRoutes(authRoutes)
+
+        // List directories
+        fileSystemRouting()
+
         // Libraries and their resources
         libraryRouting()
         bookRouting()
@@ -124,14 +129,17 @@ fun Application.server() {
 
         // Routes for checking if the server is available
         pingRouting()
-        TsClientCreator(
-                OpenApiRouteCollector.values(),
-                File("types.ts"),
-                File("client.ts"),
-            )
-            .also {
-                it.saveClient()
-                it.saveTypes()
-            }
+
+        if (!config.production) {
+            TsClientCreator(
+                    OpenApiRouteCollector.values(),
+                    File("types.ts"),
+                    File("client.ts"),
+                )
+                .also {
+                    it.saveClient()
+                    it.saveTypes()
+                }
+        }
     }
 }
