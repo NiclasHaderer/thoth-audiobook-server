@@ -7,45 +7,49 @@ class InterfaceTsGenerator : TsGenerator() {
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         val properties = classType.properties
-        val superClasses = classType.superClasses.map { generateSubType(it) }
+        val superClasses =
+            classType.superClasses
+                .filter { it.memberProperties.isNotEmpty() }
+                .filterNot { it.clazz == Enum::class }
+                .map { generateSubType(it) }
 
         val tsProperties =
             properties.map { property ->
                 "${property.name}${
-                if (property.returnType.isMarkedNullable) {
-                    "?"
-                } else {
-                    ""
-                }
-            }: ${
-                if (classType.isGenericProperty(property)) {
-                    "${property.returnType}"
-                } else if (classType.isParameterizedProperty(property)) {
-                    val typeArgs = property.returnType.arguments.map {
-                        val argClassifier = it.type!!.classifier
-                        if (argClassifier is KTypeParameter) {
-                            argClassifier.name
-                        } else {
-                            generateSubType(ClassType.create(it.type!!)).name
-                        }
+                    if (property.returnType.isMarkedNullable) {
+                        "?"
+                    } else {
+                        ""
                     }
-                    val parameterizedType = generateSubType(classType.forMember(property))
+                }: ${
+                    if (classType.isGenericProperty(property)) {
+                        "${property.returnType}"
+                    } else if (classType.isParameterizedProperty(property)) {
+                        val typeArgs = property.returnType.arguments.map {
+                            val argClassifier = it.type!!.classifier
+                            if (argClassifier is KTypeParameter) {
+                                argClassifier.name
+                            } else {
+                                generateSubType(ClassType.create(it.type!!)).name
+                            }
+                        }
+                        val parameterizedType = generateSubType(classType.forMember(property))
 
-                    "${parameterizedType.name}<${typeArgs.joinToString(", ")}>"
-                } else {
-                    generateSubType(classType.forMember(property)).reference()
-                }
-            };"
+                        "${parameterizedType.name}<${typeArgs.joinToString(", ")}>"
+                    } else {
+                        generateSubType(classType.forMember(property)).reference()
+                    }
+                };"
             }
 
         val interfaceStart =
             "interface ${generateName(classType, false, null)} ${
-            if (superClasses.isNotEmpty()) {
-                "extends ${superClasses.joinToString(", ") { it.name }} "
-            } else {
-                ""
-            }
-        } {\n"
+                if (superClasses.isNotEmpty()) {
+                    "extends ${superClasses.joinToString(", ") { it.name }} "
+                } else {
+                    ""
+                }
+            } {\n"
 
         val interfaceContent = tsProperties.joinToString("\n") { "  $it" }
         val interfaceEnd = "\n}"

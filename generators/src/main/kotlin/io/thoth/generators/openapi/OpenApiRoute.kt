@@ -5,15 +5,16 @@ import io.ktor.resources.*
 import io.ktor.server.routing.*
 import io.thoth.generators.common.ClassType
 import io.thoth.generators.common.findAnnotationUp
+import io.thoth.generators.common.findAnnotations
 import io.thoth.generators.common.findAnnotationsFirstUp
 import io.thoth.generators.common.fullPath
 import io.thoth.generators.common.optional
 import io.thoth.generators.common.parent
-import io.thoth.generators.common.properties
 import io.thoth.generators.openapi.responses.BinaryResponse
 import io.thoth.generators.openapi.responses.FileResponse
 import io.thoth.generators.openapi.responses.RedirectResponse
-import io.thoth.generators.openapi.schemata.generateSchema
+import io.thoth.generators.openapi.schemata.generateSchemas
+import io.thoth.generators.openapi.schemata.toNamed
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -75,11 +76,11 @@ class OpenApiRoute(
     }
 
     val queryParameters by lazy {
-        extractAllQueryParams(requestParamsType).map { it to it.type.generateSchema(false).first }
+        extractAllQueryParams(requestParamsType).map { it to generateSchemas(it.type).toNamed() }
     }
 
     val pathParameters by lazy {
-        extractAllPathParams(requestParamsType).map { it to it.type.generateSchema(false).first }
+        extractAllPathParams(requestParamsType).map { it to generateSchemas(it.type).toNamed() }
     }
     val resourcePath by lazy {
         var resourcePath = ""
@@ -102,13 +103,15 @@ class OpenApiRoute(
 
     val description by lazy { requestParamsType.clazz.findAnnotation<Description>()?.description }
 
-    val summary by lazy { requestParamsType.clazz.findAnnotation<Summary>()?.summary }
+    val summary by lazy {
+        requestParamsType.findAnnotations<Summary>().firstOrNull { it.method == this.method.value }?.summary
+    }
 
     val secured by lazy { requestParamsType.clazz.findAnnotationUp<Secured>() }
 
-    val requestBody by lazy { requestBodyType.generateSchema() }
+    val requestBody by lazy { generateSchemas(requestBodyType).toNamed() }
 
-    val responseBody by lazy { responseBodyType.generateSchema() }
+    val responseBody by lazy { generateSchemas(responseBodyType).toNamed() }
 
     val responseDescription by lazy { responseBodyType.clazz.findAnnotation<Description>() }
 
@@ -142,7 +145,8 @@ class OpenApiRoute(
         assertParamsHierarchy()
     }
 
-    private fun assertParamsHierarchy(paramsClazz: KClass<*> = requestParamsType.clazz) {
+    private fun assertParamsHierarchy(paramsClassType: ClassType = requestParamsType) {
+        val paramsClazz = paramsClassType.clazz
         // There are three conditions under which the hierarchy is valid:
         // 1. Every class over params is decorated as @Resource
         paramsClazz.findAnnotation<Resource>()
@@ -150,19 +154,20 @@ class OpenApiRoute(
 
         if (paramsClazz.parent == null) return
 
-        val parentClass = paramsClazz.parent!!.java.kotlin
+        val parentClassType = paramsClassType.parent!!
+
         // 2. Every class has a field which references the parent class name, because otherwise the
         // ktor routing will not work as one would think
         val hasDeclaredParent =
-            paramsClazz.properties.map { it.returnType.classifier as KClass<*> }.any { it == parentClass }
+            paramsClassType.properties.map { it.returnType.classifier as KClass<*> }.any { it == parentClassType.clazz }
         if (!hasDeclaredParent) {
             throw IllegalStateException(
-                "Class ${paramsClazz.qualifiedName} has no property of type ${parentClass.qualifiedName}." +
+                "Class ${paramsClazz.qualifiedName} has no property of type ${parentClassType.simpleName}." +
                     "You have to create an additional property with the parent class as type",
             )
         }
         // 3. Every parent fulfills requirements 1 and 2
-        assertParamsHierarchy(parentClass)
+        assertParamsHierarchy(parentClassType)
     }
 
     private fun extractAllPathParams(

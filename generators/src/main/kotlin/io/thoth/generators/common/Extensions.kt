@@ -4,7 +4,6 @@ import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.javaField
 
@@ -20,13 +19,6 @@ internal fun Route.fullPath(): String {
 
     return fullPath.replace("/+".toRegex(), "/")
 }
-
-internal val KClass<*>.properties: Collection<KProperty1<out Any, *>>
-    get() =
-        this.memberProperties.filter {
-            // checks if the property is a getter
-            it.javaField != null || isInterface
-        }
 
 internal val KProperty1<*, *>.nullable: Boolean
     get() = this.returnType.isMarkedNullable
