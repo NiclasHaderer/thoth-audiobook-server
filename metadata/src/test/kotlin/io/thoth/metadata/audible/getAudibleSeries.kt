@@ -2,7 +2,6 @@ package io.thoth.metadata.audible
 
 import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
-import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
@@ -15,7 +14,7 @@ import org.junit.Test
 
 class AudibleSeriesTest {
 
-    private val client = AudibleClient(AudibleRegions.us)
+    private val client = AudibleClient()
     private val expectedSeries =
         MetadataSeriesImpl(
             id = AudibleProviderWithIDMetadata(itemID = "B0182NWM9I"),
@@ -35,7 +34,7 @@ class AudibleSeriesTest {
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
+                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
                             ),
                         series =
                             listOf(
@@ -43,13 +42,13 @@ class AudibleSeriesTest {
                                     id = AudibleProviderWithIDMetadata(itemID = "B0182NWM9I"),
                                     title = "Harry Potter",
                                     link = "https://audible.com/series/B0182NWM9I",
-                                    index = 1f
-                                )
+                                    index = 1f,
+                                ),
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/51xJbFMRsxL._SL500_.jpg",
                         releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
-                        language = "English"
+                        language = "English",
                     ),
                     MetadataSearchBookImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B017V4IWVG"),
@@ -60,7 +59,7 @@ class AudibleSeriesTest {
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
+                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
                             ),
                         series =
                             listOf(
@@ -68,13 +67,13 @@ class AudibleSeriesTest {
                                     id = AudibleProviderWithIDMetadata(itemID = "B0182NWM9I"),
                                     title = "Harry Potter",
                                     link = "https://audible.com/series/B0182NWM9I",
-                                    index = 2f
-                                )
+                                    index = 2f,
+                                ),
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/61fmfnA-uCL._SL500_.jpg",
                         releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
-                        language = "English"
+                        language = "English",
                     ),
                     MetadataSearchBookImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B017V4JA2Q"),
@@ -85,7 +84,7 @@ class AudibleSeriesTest {
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
+                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
                             ),
                         series =
                             listOf(
@@ -93,13 +92,13 @@ class AudibleSeriesTest {
                                     id = AudibleProviderWithIDMetadata(itemID = "B0182NWM9I"),
                                     title = "Harry Potter",
                                     link = "https://audible.com/series/B0182NWM9I",
-                                    index = 3f
-                                )
+                                    index = 3f,
+                                ),
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/51O29wSqEsL._SL500_.jpg",
                         releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
-                        language = "English"
+                        language = "English",
                     ),
                     MetadataSearchBookImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B017V4NUPO"),
@@ -109,7 +108,7 @@ class AudibleSeriesTest {
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
+                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
                             ),
                         series =
                             listOf(
@@ -117,13 +116,13 @@ class AudibleSeriesTest {
                                     id = AudibleProviderWithIDMetadata(itemID = "B0182NWM9I"),
                                     title = "Harry Potter",
                                     link = "https://audible.com/series/B0182NWM9I",
-                                    index = 4f
-                                )
+                                    index = 4f,
+                                ),
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/61m99NmM4jL._SL500_.jpg",
                         releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
-                        language = "English"
+                        language = "English",
                     ),
                     MetadataSearchBookImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B017V4NMX4"),
@@ -134,7 +133,7 @@ class AudibleSeriesTest {
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
+                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
                             ),
                         series =
                             listOf(
@@ -142,13 +141,13 @@ class AudibleSeriesTest {
                                     id = AudibleProviderWithIDMetadata(itemID = "B0182NWM9I"),
                                     title = "Harry Potter",
                                     link = "https://audible.com/series/B0182NWM9I",
-                                    index = 5f
-                                )
+                                    index = 5f,
+                                ),
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/51KHVovUpGL._SL500_.jpg",
                         releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
-                        language = "English"
+                        language = "English",
                     ),
                     MetadataSearchBookImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B017V4NOZ0"),
@@ -159,7 +158,7 @@ class AudibleSeriesTest {
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
+                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
                             ),
                         series =
                             listOf(
@@ -167,13 +166,13 @@ class AudibleSeriesTest {
                                     id = AudibleProviderWithIDMetadata(itemID = "B0182NWM9I"),
                                     title = "Harry Potter",
                                     link = "https://audible.com/series/B0182NWM9I",
-                                    index = 6f
-                                )
+                                    index = 6f,
+                                ),
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/51sImF7gqML._SL500_.jpg",
                         releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
-                        language = "English"
+                        language = "English",
                     ),
                     MetadataSearchBookImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B017WJ5ZK6"),
@@ -184,7 +183,7 @@ class AudibleSeriesTest {
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
+                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
                             ),
                         series =
                             listOf(
@@ -192,23 +191,23 @@ class AudibleSeriesTest {
                                     id = AudibleProviderWithIDMetadata(itemID = "B0182NWM9I"),
                                     title = "Harry Potter",
                                     link = "https://audible.com/series/B0182NWM9I",
-                                    index = 7f
-                                )
+                                    index = 7f,
+                                ),
                             ),
                         coverURL = "https://m.media-amazon.com/images/I/61yMjtQzKcL._SL500_.jpg",
                         releaseDate = LocalDate.parse("2015-11-20", DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                         narrator = "Jim Dale",
-                        language = "English"
-                    )
+                        language = "English",
+                    ),
                 ),
             author = "J.K. Rowling",
             coverURL = null,
-            primaryWorks = 7
+            primaryWorks = 7,
         )
 
     @Test
     fun testAudibleSeries() = runBlocking {
-        val series = client.getSeriesByID(client.uniqueName,, "B0182NWM9I")
+        val series = client.getSeriesByID(client.uniqueName, "us", "B0182NWM9I")
 
         assertEquals(
             expectedSeries,
@@ -218,7 +217,7 @@ class AudibleSeriesTest {
 
     @Test
     fun testFindAudibleSeries() = runBlocking {
-        val series = client.getSeriesByName("Harry Potter",, "J.K. Rowling").firstOrNull()
+        val series = client.getSeriesByName("Harry Potter", "us", "J.K. Rowling").firstOrNull()
 
         assertEquals(
             expectedSeries,
