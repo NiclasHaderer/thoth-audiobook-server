@@ -23,13 +23,9 @@ class Api {
     @Resource("auth")
     @Tagged("Auth")
     data class Auth(private val parent: Api) {
-        @Summary("Login user", method = "POST")
-        @Resource("login")
-        data class Login(private val parent: Auth)
+        @Summary("Login user", method = "POST") @Resource("login") data class Login(private val parent: Auth)
 
-        @Summary("Register user", method = "POST")
-        @Resource("register")
-        data class Register(private val parent: Auth)
+        @Summary("Register user", method = "POST") @Resource("register") data class Register(private val parent: Auth)
 
         @Summary("Retrieve Jwks", method = "GET")
         @Resource(".well-known/jwks.json")
@@ -68,9 +64,9 @@ class Api {
     @Resource("scanners")
     data class Scanners(private val parent: Api)
 
-    @Summary("List metadata scanners", method = "GET")
+    @Summary("List metadata agents", method = "GET")
     @Tagged("Scanner")
-    @Resource("metadata-scanners")
+    @Resource("metadata-agents")
     data class MetadataScanners(private val parent: Api)
 
     @Summary("List libraries", method = "GET")

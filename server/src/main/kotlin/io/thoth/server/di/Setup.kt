@@ -34,13 +34,15 @@ fun setupDependencyInjection() = startKoin {
     modules(
         module {
             single { config }
-            single<List<MetadataProvider>> { listOf(AudibleClient()) }
-            single<MetadataWrapper> { MetadataWrapper(get()) }
+            single<MetadataProviders> { MetadataProviders(listOf(AudibleClient())) }
+            single<MetadataWrapper> { MetadataWrapper(getAll()) }
             single<FileTreeWatcher> { FileTreeWatcherImpl(get(), get()) }
-            single<List<AudioFileAnalyzer>> {
-                listOf(
-                    AudioFolderScanner(),
-                    AudioTagScanner(),
+            single<AudioFileAnalyzers> {
+                AudioFileAnalyzers(
+                    listOf(
+                        AudioTagScanner(),
+                        AudioFolderScanner(),
+                    ),
                 )
             }
             single<AudioFileAnalyzerWrapper> { AudioFileAnalyzerWrapperImpl(get()) }
@@ -56,3 +58,7 @@ fun setupDependencyInjection() = startKoin {
     )
     slf4jLogger()
 }
+
+class AudioFileAnalyzers(private val items: List<AudioFileAnalyzer>) : List<AudioFileAnalyzer> by items
+
+class MetadataProviders(private val items: List<MetadataProvider>) : List<MetadataProvider> by items

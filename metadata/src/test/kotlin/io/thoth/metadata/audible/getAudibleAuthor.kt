@@ -2,7 +2,6 @@ package io.thoth.metadata.audible
 
 import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
-import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
@@ -10,11 +9,11 @@ import org.junit.Test
 
 class AudibleAuthorTest {
 
-    private val client = AudibleClient(AudibleRegions.us)
+    private val client = AudibleClient()
 
     @Test
     fun testAudibleAuthor() = runBlocking {
-        val author = client.getAuthorByID(client.uniqueName, "B000AP9A6K")
+        val author = client.getAuthorByID(client.uniqueName, "B000AP9A6K", "us")
 
         assertEquals(
             author,
@@ -36,7 +35,7 @@ class AudibleAuthorTest {
 
     @Test
     fun testFindAudibleAuthor() = runBlocking {
-        val author = client.getAuthorByName("J.K. Rowling").firstOrNull()
+        val author = client.getAuthorByName("J.K. Rowling", "us").firstOrNull()
 
         assertEquals(
             author,

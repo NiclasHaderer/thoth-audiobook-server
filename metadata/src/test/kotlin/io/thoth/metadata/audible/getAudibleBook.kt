@@ -2,7 +2,6 @@ package io.thoth.metadata.audible
 
 import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
-import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
@@ -14,11 +13,11 @@ import org.junit.Test
 
 class AudibleBookTest {
 
-    private val client = AudibleClient(AudibleRegions.us)
+    private val client = AudibleClient()
 
     @Test
     fun testAudibleBook() = runBlocking {
-        val book = client.getBookByID(client.uniqueName, "B017V54W6O",)
+        val book = client.getBookByID(client.uniqueName, "B017V54W6O", "us")
 
         assertEquals(
             MetadataBookImpl(
@@ -31,7 +30,7 @@ class AudibleBookTest {
                     MetadataSearchAuthorImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                         name = "J.K. Rowling",
-                        link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
+                        link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
                     ),
                 series =
                     listOf(
@@ -39,13 +38,13 @@ class AudibleBookTest {
                             id = AudibleProviderWithIDMetadata(itemID = "B0182T24GS"),
                             title = "Harry Potter",
                             index = 1.0f,
-                            link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS"
+                            link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS",
                         ),
                         MetadataBookSeriesImpl(
                             id = AudibleProviderWithIDMetadata(itemID = "B07CM7WPFV"),
                             title = "Wizarding World",
                             link = "https://audible.com/series/Wizarding-World-Audiobooks/B07CM7WPFV",
-                            index = 1.0f
+                            index = 1.0f,
                         ),
                     ),
                 coverURL = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
@@ -54,7 +53,7 @@ class AudibleBookTest {
                 isbn = null,
                 language = null,
                 providerRating = 4.9f,
-                publisher = null
+                publisher = null,
             ),
             book,
         )
@@ -62,7 +61,7 @@ class AudibleBookTest {
 
     @Test
     fun testFindAudibleBook() = runBlocking {
-        val book = client.getBookByName("Harry Potter and the Philosopher's Stone",, "J.K. Rowling").firstOrNull()
+        val book = client.getBookByName("Harry Potter and the Philosopher's Stone", "us", "J.K. Rowling").firstOrNull()
 
         assertEquals(
             MetadataBookImpl(
@@ -75,7 +74,7 @@ class AudibleBookTest {
                     MetadataSearchAuthorImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                         name = "J.K. Rowling",
-                        link = "https://audible.com/author/JK-Rowling/B000AP9A6K"
+                        link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
                     ),
                 series =
                     listOf(
@@ -83,13 +82,13 @@ class AudibleBookTest {
                             id = AudibleProviderWithIDMetadata(itemID = "B0182T24GS"),
                             title = "Harry Potter",
                             index = 1.0f,
-                            link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS"
+                            link = "https://audible.com/series/Harry-Potter-Audiobooks/B0182T24GS",
                         ),
                         MetadataBookSeriesImpl(
                             id = AudibleProviderWithIDMetadata(itemID = "B07CM7WPFV"),
                             title = "Wizarding World",
                             link = "https://audible.com/series/Wizarding-World-Audiobooks/B07CM7WPFV",
-                            index = 1.0f
+                            index = 1.0f,
                         ),
                     ),
                 coverURL = "https://m.media-amazon.com/images/I/51DoG9xDIKL._SL500_.jpg",
@@ -98,7 +97,7 @@ class AudibleBookTest {
                 isbn = null,
                 language = null,
                 providerRating = 4.9f,
-                publisher = null
+                publisher = null,
             ),
             book,
         )
