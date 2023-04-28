@@ -23,9 +23,13 @@ class Api {
     @Resource("auth")
     @Tagged("Auth")
     data class Auth(private val parent: Api) {
-        @Summary("Login user", method = "POST") @Resource("login") data class Login(private val parent: Auth)
+        @Summary("Login user", method = "POST")
+        @Resource("login")
+        data class Login(private val parent: Auth)
 
-        @Summary("Register user", method = "POST") @Resource("register") data class Register(private val parent: Auth)
+        @Summary("Register user", method = "POST")
+        @Resource("register")
+        data class Register(private val parent: Auth)
 
         @Summary("Retrieve Jwks", method = "GET")
         @Resource(".well-known/jwks.json")
@@ -58,6 +62,16 @@ class Api {
     @Tagged("Server")
     @Resource("ping")
     data class Ping(private val parent: Api)
+
+    @Summary("List file scanners", method = "GET")
+    @Tagged("Scanner")
+    @Resource("scanners")
+    data class Scanners(private val parent: Api)
+
+    @Summary("List metadata scanners", method = "GET")
+    @Tagged("Scanner")
+    @Resource("metadata-scanners")
+    data class MetadataScanners(private val parent: Api)
 
     @Summary("List libraries", method = "GET")
     @Summary("Create library", method = "POST")
@@ -283,6 +297,7 @@ class Api {
         @Summary("Search metadata", method = "GET")
         @Resource("search")
         data class Search(
+            val region: String,
             val keywords: String? = null,
             val title: String? = null,
             val author: String? = null,
@@ -297,33 +312,43 @@ class Api {
         data class Author(private val parent: Metadata) {
             @Summary("Get author metadata", method = "GET")
             @Resource("{id}")
-            data class Id(val id: String, val provider: String, private val parent: Author)
+            data class Id(val id: String, val region: String, val provider: String, private val parent: Author)
 
             @Summary("Search author metadata", method = "GET")
             @Resource("search")
-            data class Search(val q: String, private val parent: Author)
+            data class Search(val q: String, val region: String, private val parent: Author)
         }
 
         @Resource("book")
         data class Book(private val parent: Metadata) {
             @Summary("Get book metadata", method = "GET")
             @Resource("{id}")
-            data class Id(val id: String, val provider: String, private val parent: Book)
+            data class Id(val id: String, val region: String, val provider: String, private val parent: Book)
 
             @Summary("Search book metadata", method = "GET")
             @Resource("search")
-            data class Search(val q: String, val authorName: String? = null, private val parent: Book)
+            data class Search(
+                val q: String,
+                val region: String,
+                val authorName: String? = null,
+                private val parent: Book
+            )
         }
 
         @Resource("series")
         data class Series(private val parent: Metadata) {
             @Summary("Get series metadata", method = "GET")
             @Resource("{id}")
-            data class Id(val id: String, val provider: String, private val parent: Series)
+            data class Id(val id: String, val region: String, val provider: String, private val parent: Series)
 
             @Summary("Search series metadata", method = "GET")
             @Resource("search")
-            data class Search(val q: String, val authorName: String? = null, private val parent: Series)
+            data class Search(
+                val q: String,
+                val region: String,
+                val authorName: String? = null,
+                private val parent: Series
+            )
         }
     }
 }

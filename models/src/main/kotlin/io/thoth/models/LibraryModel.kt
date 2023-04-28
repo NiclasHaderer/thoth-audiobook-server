@@ -2,7 +2,7 @@ package io.thoth.models
 
 import java.util.*
 
-data class MetadataAgent(var name: String, var countryCode: String)
+data class MetadataAgent(var name: String)
 
 data class FileScanner(var name: String)
 
@@ -14,5 +14,6 @@ data class LibraryModel(
     val preferEmbeddedMetadata: Boolean,
     val folders: List<String>,
     val metadataScanners: List<MetadataAgent>,
-    val fileScanners: List<FileScanner>
+    val fileScanners: List<FileScanner>,
+    var language: String
 )

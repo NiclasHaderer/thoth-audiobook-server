@@ -25,20 +25,24 @@ class TsClientCreator(
 
         private fun createUrlCreator(): String {
             return """
-        const __createUrl = (route: string, params: Record<string, string | number | boolean | undefined | null>): string => {
-            const cleanedParams = Object.entries(params).reduce((acc, [key, value]) => {
-                if (value !== undefined && value !== null && value !== "") {
-                    if (!(key in acc)) acc[key] = [];
-                    acc[key].push(value.toString());
-                }
-                return acc;
-            }, {} as Record<string, string[]>);
-            
-            const __finalUrlParams = new URLSearchParams(cleanedParams).toString();
-            return __finalUrlParams ? `\$\{route}?\$\{__finalUrlParams}` : route;
+        type ArrayIsch<T> = T | T[]
+        const __createUrl = (route: string, params: Record<string, ArrayIsch<string | number | boolean | undefined | null>>): string => {
+          const finalUrlParams = new URLSearchParams()
+          for (let [key, value] of Object.entries(params)) {
+            if (Array.isArray(value)) {
+              const newValue = value.filter(i => i !== "" && i !== undefined && i !== null) as (string | number | boolean)[]
+              newValue.forEach(v => finalUrlParams.append(key, v.toString()))
+            } else {
+              if (value !== null && value !== undefined) {
+                finalUrlParams.append(key, value.toString())
+              }
+            }
+          }
+          return finalUrlParams ? `$ {route}?$ {finalUrlParams.toString()}` : route
         };
     """
-                .trimIndent() + "\n"
+                .trimIndent()
+                .replace("$ ", "$") + "\n"
         }
 
         private fun createRequestMaker(): String {
@@ -154,7 +158,7 @@ class TsClientCreator(
         return if (customHeaders.isNotBlank()) {
             "$customHeaders, headers: HeadersInit = {}, interceptors?: ApiInterceptor[]"
         } else {
-            "headers: HeadersInit, interceptors?: ApiInterceptor[]"
+            "headers: HeadersInit = {}, interceptors?: ApiInterceptor[]"
         }
     }
 

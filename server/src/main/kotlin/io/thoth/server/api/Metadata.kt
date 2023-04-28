@@ -15,17 +15,18 @@ fun Routing.metadataRouting() {
 
     get<Api.Metadata.Search, List<MetadataSearchBook>> { params ->
         metadataProvider.search(
-            params.keywords,
-            params.title,
-            params.author,
-            params.narrator,
-            params.language,
-            params.pageSize,
+            region = params.region,
+            keywords = params.keywords,
+            title = params.title,
+            author = params.author,
+            narrator = params.narrator,
+            language = params.language,
+            pageSize = params.pageSize,
         )
     }
 
     get<Api.Metadata.Author.Id, MetadataAuthor> {
-        metadataProvider.getAuthorByID(it.provider, it.id)
+        metadataProvider.getAuthorByID(providerId = it.provider, authorId = it.id, region = it.region)
             ?: throw ErrorResponse.notFound(
                 "Author",
                 it.id,
@@ -33,30 +34,35 @@ fun Routing.metadataRouting() {
             )
     }
 
-    get<Api.Metadata.Author.Search, List<MetadataAuthor>> { params -> metadataProvider.getAuthorByName(params.q) }
+    get<Api.Metadata.Author.Search, List<MetadataAuthor>> {
+        metadataProvider.getAuthorByName(
+            authorName = it.q,
+            region = it.region,
+        )
+    }
 
-    get<Api.Metadata.Book.Id, MetadataBook> { id ->
-        metadataProvider.getBookByID(id.provider, id.id)
+    get<Api.Metadata.Book.Id, MetadataBook> {
+        metadataProvider.getBookByID(providerId = it.provider, region = it.region, bookId = it.id)
             ?: throw ErrorResponse.notFound(
                 "Book",
-                id.id,
-                "Provider ${id.provider}",
+                it.id,
+                "Provider ${it.provider}",
             )
     }
 
-    get<Api.Metadata.Book.Search, List<MetadataBook>> { params ->
-        metadataProvider.getBookByName(params.q, params.authorName)
+    get<Api.Metadata.Book.Search, List<MetadataBook>> {
+        metadataProvider.getBookByName(bookName = it.q, region = it.region, authorName = it.authorName)
     }
 
-    get<Api.Metadata.Series.Id, MetadataSeries> { id ->
-        metadataProvider.getSeriesByID(id.provider, id.id)
+    get<Api.Metadata.Series.Id, MetadataSeries> {
+        metadataProvider.getSeriesByID(providerId = it.provider, region = it.region, seriesId = it.id)
             ?: throw ErrorResponse.notFound(
                 "Series",
-                id.id,
-                "Provider ${id.provider}",
+                it.id,
+                "Provider ${it.provider}",
             )
     }
-    get<Api.Metadata.Series.Search, List<MetadataSeries>> { params ->
-        metadataProvider.getSeriesByName(params.q, params.authorName)
+    get<Api.Metadata.Series.Search, List<MetadataSeries>> {
+        metadataProvider.getSeriesByName(seriesName = it.q, region = it.region, authorName = it.authorName)
     }
 }

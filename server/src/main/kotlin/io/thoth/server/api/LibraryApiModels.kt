@@ -9,7 +9,8 @@ data class LibraryApiModel(
     val folders: List<String>,
     val preferEmbeddedMetadata: Boolean,
     val metadataScanners: List<MetadataAgent>,
-    val fileScanners: List<FileScanner>
+    val fileScanners: List<FileScanner>,
+    var language: String
 ) {
     init {
         require(folders.isNotEmpty())

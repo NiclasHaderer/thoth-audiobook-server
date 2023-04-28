@@ -4,10 +4,10 @@ import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.server.common.scheduling.Scheduler
-import io.thoth.server.config.ThothConfig
 import io.thoth.server.config.loadPublicConfig
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.TrackManagerImpl
+import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
 import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapperImpl
 import io.thoth.server.file.analyzer.impl.AudioFolderScanner
@@ -34,21 +34,24 @@ fun setupDependencyInjection() = startKoin {
     modules(
         module {
             single { config }
-            single<MetadataProvider> { MetadataWrapper(listOf(AudibleClient(get<ThothConfig>().audibleRegion))) }
+            single<List<MetadataProvider>> { listOf(AudibleClient()) }
+            single<MetadataWrapper> { MetadataWrapper(get()) }
             single<FileTreeWatcher> { FileTreeWatcherImpl(get(), get()) }
-            single<AudioFileAnalyzerWrapper> {
-                AudioFileAnalyzerWrapperImpl(
-                    listOf(AudioTagScanner(), AudioFolderScanner()),
+            single<List<AudioFileAnalyzer>> {
+                listOf(
+                    AudioFolderScanner(),
+                    AudioTagScanner(),
                 )
             }
+            single<AudioFileAnalyzerWrapper> { AudioFileAnalyzerWrapperImpl(get()) }
             single<LibraryScanner> { LibraryScannerImpl() }
-            single { Scheduler() }
             single<BookRepository> { BookRepositoryImpl(get(), get()) }
             single<AuthorRepository> { AuthorServiceImpl() }
             single<SeriesRepository> { SeriesRepositoryImpl(get(), get()) }
             single<LibraryRepository> { LibraryRepositoryImpl(get(), get(), get()) }
-            single { ThothSchedules() }
             single<TrackManager> { TrackManagerImpl(get(), get(), get(), get()) }
+            single { Scheduler() }
+            single { ThothSchedules() }
         },
     )
     slf4jLogger()

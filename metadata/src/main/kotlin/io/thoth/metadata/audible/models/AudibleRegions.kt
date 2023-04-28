@@ -10,7 +10,13 @@ enum class AudibleRegions {
     it,
     jp,
     us,
-    uk
+    uk;
+
+    companion object {
+        fun from(region: String): AudibleRegions {
+            return values().firstOrNull { it.name == region } ?: us
+        }
+    }
 }
 
 class AudibleRegionValue(

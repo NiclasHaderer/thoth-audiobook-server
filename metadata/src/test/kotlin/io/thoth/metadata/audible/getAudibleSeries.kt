@@ -208,7 +208,7 @@ class AudibleSeriesTest {
 
     @Test
     fun testAudibleSeries() = runBlocking {
-        val series = client.getSeriesByID(client.uniqueName, "B0182NWM9I")
+        val series = client.getSeriesByID(client.uniqueName,, "B0182NWM9I")
 
         assertEquals(
             expectedSeries,
@@ -218,7 +218,7 @@ class AudibleSeriesTest {
 
     @Test
     fun testFindAudibleSeries() = runBlocking {
-        val series = client.getSeriesByName("Harry Potter", "J.K. Rowling").firstOrNull()
+        val series = client.getSeriesByName("Harry Potter",, "J.K. Rowling").firstOrNull()
 
         assertEquals(
             expectedSeries,
