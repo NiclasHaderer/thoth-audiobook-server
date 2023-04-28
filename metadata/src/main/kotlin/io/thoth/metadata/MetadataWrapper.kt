@@ -2,16 +2,28 @@ package io.thoth.metadata
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import io.thoth.metadata.responses.*
+import io.thoth.metadata.responses.MetadataAuthor
+import io.thoth.metadata.responses.MetadataBook
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataSearchBook
+import io.thoth.metadata.responses.MetadataSearchCount
+import io.thoth.metadata.responses.MetadataSeries
 import java.util.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.withContext
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
-class MetadataWrapper
-constructor(
+class MetadataWrapper(
     private val providerList: List<MetadataProvider>,
 ) : MetadataProvider {
     override var uniqueName = "MetadataWrapper"
+
+    override val supportedCountryCodes: List<String>
+        get() = providerList.flatMap { it.supportedCountryCodes }.distinct()
+
     private val separator = "--thṓth--"
 
     private val providerMap by lazy { providerList.associateBy { it.uniqueName } }
@@ -24,6 +36,7 @@ constructor(
     private val bookIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataBook>>()
 
     override suspend fun search(
+        region: String,
         keywords: String?,
         title: String?,
         author: String?,
@@ -31,54 +44,66 @@ constructor(
         language: MetadataLanguage?,
         pageSize: MetadataSearchCount?,
     ): List<MetadataSearchBook> {
-        val cacheKey = getKey(keywords, title, author, narrator, language, pageSize)
+        val cacheKey = getKey(keywords, title, author, narrator, language, pageSize, region)
 
         return getOrSetCache(searchCache, cacheKey) {
             providerList
-                .map { async { it.search(keywords, title, author, narrator, language, pageSize) } }
+                .map {
+                    async {
+                        it.search(
+                            region = region,
+                            keywords = keywords,
+                            title = title,
+                            author = author,
+                            narrator = narrator,
+                            language = language,
+                            pageSize = pageSize,
+                        )
+                    }
+                }
                 .awaitAll()
                 .flatten()
         }
     }
 
-    override suspend fun getAuthorByID(providerId: String, authorId: String): MetadataAuthor? {
-        val cacheKey = getKey(authorId, providerId)
+    override suspend fun getAuthorByID(providerId: String, authorId: String, region: String): MetadataAuthor? {
+        val cacheKey = getKey(authorId, providerId, region)
 
         return getOrSetCache(authorIdCache, cacheKey) {
                 val provider = getProvider(authorId) ?: return@getOrSetCache Optional.ofNullable(null)
-                val value = provider.getAuthorByID(providerId, authorId)
+                val value = provider.getAuthorByID(providerId = providerId, region = region, authorId = authorId)
                 Optional.ofNullable(value)
             }
             .orElse(null)
     }
 
-    override suspend fun getBookByID(providerId: String, bookId: String): MetadataBook? {
-        val cacheKey = getKey(bookId, providerId)
+    override suspend fun getBookByID(providerId: String, bookId: String, region: String): MetadataBook? {
+        val cacheKey = getKey(bookId, providerId, region)
         return getOrSetCache(bookIdCache, cacheKey) {
                 val provider = getProvider(bookId) ?: return@getOrSetCache Optional.ofNullable(null)
-                val value = provider.getBookByID(providerId, bookId)
+                val value = provider.getBookByID(providerId = providerId, region = region, bookId = bookId)
                 Optional.ofNullable(value)
             }
             .orElse(null)
     }
 
-    override suspend fun getSeriesByID(providerId: String, seriesId: String): MetadataSeries? {
-        val cacheKey = getKey(seriesId, providerId)
+    override suspend fun getSeriesByID(providerId: String, region: String, seriesId: String): MetadataSeries? {
+        val cacheKey = getKey(seriesId, providerId, region)
         return getOrSetCache(seriesIdCache, cacheKey) {
                 val provider = getProvider(seriesId) ?: return@getOrSetCache Optional.ofNullable(null)
-                val value = provider.getSeriesByID(providerId, seriesId)
+                val value = provider.getSeriesByID(providerId = providerId, region = region, seriesId = seriesId)
                 Optional.ofNullable(value)
             }
             .orElse(null)
     }
 
-    override suspend fun getAuthorByName(authorName: String): List<MetadataAuthor> {
-        val cacheKey = getKey(authorName)
+    override suspend fun getAuthorByName(authorName: String, region: String): List<MetadataAuthor> {
+        val cacheKey = getKey(authorName, region)
 
         return getOrSetCache(authorNameCache, cacheKey) {
             val authors =
                 providerList
-                    .map { async { it.getAuthorByName(authorName) } }
+                    .map { async { it.getAuthorByName(authorName = authorName, region = region) } }
                     .awaitAll()
                     .flatten()
                     .filter { it.name != null }
@@ -86,12 +111,12 @@ constructor(
         }
     }
 
-    override suspend fun getBookByName(bookName: String, authorName: String?): List<MetadataBook> {
-        val cacheKey = getKey(bookName, authorName)
+    override suspend fun getBookByName(bookName: String, region: String, authorName: String?): List<MetadataBook> {
+        val cacheKey = getKey(bookName, authorName, region)
         return getOrSetCache(bookNameCache, cacheKey) {
             val books =
                 providerList
-                    .map { async { it.getBookByName(bookName, authorName) } }
+                    .map { async { it.getBookByName(bookName = bookName, region = region, authorName = authorName) } }
                     .awaitAll()
                     .flatten()
                     .filter { it.title != null }
@@ -99,12 +124,24 @@ constructor(
         }
     }
 
-    override suspend fun getSeriesByName(seriesName: String, authorName: String?): List<MetadataSeries> {
-        val cacheKey = getKey(seriesName, authorName)
+    override suspend fun getSeriesByName(
+        seriesName: String,
+        region: String,
+        authorName: String?
+    ): List<MetadataSeries> {
+        val cacheKey = getKey(seriesName, authorName, region)
         return getOrSetCache(seriesNameCache, cacheKey) {
             val series =
                 providerList
-                    .map { async { it.getSeriesByName(seriesName, authorName) } }
+                    .map {
+                        async {
+                            it.getSeriesByName(
+                                seriesName = seriesName,
+                                region = region,
+                                authorName = authorName,
+                            )
+                        }
+                    }
                     .awaitAll()
                     .flatten()
                     .filter { it.title != null }

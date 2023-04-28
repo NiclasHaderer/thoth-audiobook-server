@@ -15,6 +15,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.absolutePathString
 
 class AudioFolderScanner : AudioFileAnalyzer {
+    override val name = "AudioFolderScanner"
     private val bookPrefixes = listOf("^((Book|Volume|Vol) ?)?\\d\\d? ?[.\\-: ]+ ?".toRegex(), "^\\d\\d? - ".toRegex())
 
     override fun analyze(

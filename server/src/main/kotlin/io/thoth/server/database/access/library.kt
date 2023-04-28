@@ -13,5 +13,6 @@ fun Library.toModel(): LibraryModel {
         folders = folders,
         metadataScanners = metadataScanners,
         fileScanners = fileScanners,
+        language = language,
     )
 }

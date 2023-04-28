@@ -3,11 +3,11 @@ package io.thoth.server.database.tables
 import io.thoth.models.FileScanner
 import io.thoth.models.MetadataAgent
 import io.thoth.server.database.extensions.json
-import java.util.*
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import java.util.*
 
 @OptIn(ExperimentalUnsignedTypes::class)
 object TLibraries : UUIDTable("Libraries") {
@@ -18,6 +18,7 @@ object TLibraries : UUIDTable("Libraries") {
     val folders = json<List<String>>("folders") { require(it.isNotEmpty()) }
     val metadataScanners = json<List<MetadataAgent>>("metadataScanners") { require(it.isNotEmpty()) }
     val fileScanners = json<List<FileScanner>>("fileScanners") { require(it.isNotEmpty()) }
+    val language = varchar("language", 255).default("en")
 }
 
 class Library(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -30,4 +31,5 @@ class Library(id: EntityID<UUID>) : UUIDEntity(id) {
     var preferEmbeddedMetadata by TLibraries.preferEmbeddedMetadata
     var metadataScanners by TLibraries.metadataScanners
     var fileScanners by TLibraries.fileScanners
+    var language by TLibraries.language
 }

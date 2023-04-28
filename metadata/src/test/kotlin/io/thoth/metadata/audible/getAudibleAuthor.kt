@@ -30,7 +30,7 @@ class AudibleAuthorTest {
                 deathDate = null,
                 bornIn = null,
                 website = null,
-            )
+            ),
         )
     }
 
@@ -52,7 +52,7 @@ class AudibleAuthorTest {
                 deathDate = null,
                 bornIn = null,
                 website = null,
-            )
+            ),
         )
     }
 }

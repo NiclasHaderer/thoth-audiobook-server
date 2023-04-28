@@ -5,6 +5,7 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
 interface AudioFileAnalyzer {
+    val name: String
     fun analyze(
         filePath: Path,
         attrs: BasicFileAttributes,
