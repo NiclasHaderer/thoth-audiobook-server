@@ -56,6 +56,7 @@ val schemaGenerators: List<SchemaGenerator> =
         StringSchemaGenerator(),
         UnitSchemaGenerator(),
         UUIDSchemaGenerator(),
+        BooleanSchemaGenerator()
     )
 
 fun Pair<SchemaGenerator.WrappedSchema, List<SchemaGenerator.WrappedSchema>>.toNamed():
