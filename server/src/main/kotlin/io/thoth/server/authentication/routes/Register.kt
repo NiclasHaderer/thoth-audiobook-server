@@ -16,7 +16,8 @@ class RegisterUser(
     var edit: Boolean,
 )
 
-internal fun RouteHandler.register(user: RegisterUser): UserModel {
+internal fun RouteHandler.register(user: RegisterUser): UserModel = transaction {
+    // TODO fix that every user can simply register as admin
     val dbUser = User.getByName(user.username)
     if (dbUser != null) {
         throw ErrorResponse.userError("User with name ${user.username} already exists")
@@ -25,13 +26,12 @@ internal fun RouteHandler.register(user: RegisterUser): UserModel {
     val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
     val encodedPassword = encoder.encode(user.password)
 
-    return transaction {
-        User.new {
-                username = user.username
-                passwordHash = encodedPassword
-                admin = user.admin
-                edit = user.edit
-            }
-            .toModel()
-    }
+    User.new {
+            username = user.username
+            passwordHash = encodedPassword
+            admin = user.admin
+            edit = user.edit
+            changePassword = false
+        }
+        .toModel()
 }
