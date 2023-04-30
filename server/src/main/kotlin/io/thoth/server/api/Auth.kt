@@ -24,15 +24,19 @@ import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
 fun Routing.authRoutes(config: AuthConfigImpl) {
     post<Api.Auth.Login, LoginUser, JwtPair> { _, user ->
-        val userModel = User.internalGetByName(user.username) ?: throw ErrorResponse.userError("Could not login user")
+        transaction {
+            val userModel =
+                User.internalGetByName(user.username) ?: throw ErrorResponse.userError("Could not login user")
 
-        val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
-        if (!encoder.matches(user.password, userModel.passwordHash)) {
-            throw ErrorResponse.userError("Could not login user")
+            val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
+            if (!encoder.matches(user.password, userModel.passwordHash)) {
+                throw ErrorResponse.userError("Could not login user")
+            }
+
+            generateJwtForUser(config.issuer, userModel, config)
         }
-
-        generateJwtForUser(config.issuer, userModel, config)
     }
+
     post<Api.Auth.Register, RegisterUser, UserModel> { _, user ->
         transaction {
             val dbUser = User.getByName(user.username)
@@ -55,6 +59,7 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
                 .toModel()
         }
     }
+
     get<Api.Auth.Jwks, JWKs> {
         val keyPair = config.keyPair
         val jwk = RSAKey.Builder(keyPair.public as RSAPublicKey).keyUse(KeyUse.SIGNATURE).keyID(config.keyId).build()
@@ -71,6 +76,7 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
             ),
         )
     }
+
     put<Api.Auth.User.Id, ModifyUser, UserModel> { route, modifyUser ->
         val userID = route.id
         val principal = thothPrincipal()
@@ -107,15 +113,18 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
             }
             .toModel()
     }
+
     get<Api.Auth.User, UserModel> {
         val principal = thothPrincipal()
         User.getById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
     }
+
     delete<Api.Auth.User, Unit, Unit> { _, _,
         ->
         val principal = thothPrincipal()
         User.findById(principal.userId)?.delete() ?: throw ErrorResponse.notFound("User", principal.userId)
     }
+
     post<Api.Auth.User.Username, UsernameChange, UserModel> { _, usernameChange ->
         val principal = thothPrincipal()
 
@@ -129,6 +138,7 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
             user.toModel()
         }
     }
+
     post<Api.Auth.User.Password, PasswordChange, Unit> { _, passwordChange ->
         if (passwordChange.currentPassword == passwordChange.newPassword) {
             throw ErrorResponse.userError("New password is the same as the current one")

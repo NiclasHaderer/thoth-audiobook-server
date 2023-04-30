@@ -120,7 +120,9 @@ fun Application.configureAuthentication(configFactory: (AuthConfig.() -> Unit)? 
             if (configImpl.realm != null) {
                 realm = configImpl.realm
             }
+
             verifier(jwkProvider, configImpl.issuer) { acceptLeeway(3) }
+
             validate { jwtCredential ->
                 val principal = jwtToPrincipal(jwtCredential) ?: return@validate null
                 if (principal.type == JwtType.Access && principal.edit) principal else null
@@ -134,7 +136,9 @@ fun Application.configureAuthentication(configFactory: (AuthConfig.() -> Unit)? 
             if (configImpl.realm != null) {
                 realm = configImpl.realm
             }
+
             verifier(jwkProvider, configImpl.issuer) { acceptLeeway(3) }
+
             validate { jwtCredential ->
                 val principal = jwtToPrincipal(jwtCredential) ?: return@validate null
                 if (principal.type == JwtType.Access && principal.edit && principal.admin) principal else null
