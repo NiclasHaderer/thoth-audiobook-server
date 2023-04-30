@@ -3,11 +3,11 @@ package io.thoth.server.database.tables
 import io.thoth.models.FileScanner
 import io.thoth.models.MetadataAgent
 import io.thoth.server.database.extensions.json
+import java.util.*
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
-import java.util.*
 
 @OptIn(ExperimentalUnsignedTypes::class)
 object TLibraries : UUIDTable("Libraries") {
