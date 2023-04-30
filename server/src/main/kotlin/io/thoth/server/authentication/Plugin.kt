@@ -6,8 +6,6 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
-import io.thoth.server.authentication.routes.AuthRoutes
-import io.thoth.server.authentication.routes.authRoutes
 import java.io.File
 import java.io.FileReader
 import java.nio.file.Path
@@ -31,7 +29,7 @@ interface AuthConfig {
     var realm: String?
 }
 
-internal class AuthConfigImpl(
+class AuthConfigImpl(
     val keyPair: KeyPair,
     val keyId: String,
     val issuer: String,
@@ -61,7 +59,7 @@ private fun getOrCreateKeyPair(path: Path): KeyPair {
     }
 }
 
-fun Application.configureAuthentication(configFactory: (AuthConfig.() -> Unit)? = null): AuthRoutes {
+fun Application.configureAuthentication(configFactory: (AuthConfig.() -> Unit)? = null): AuthConfigImpl {
     val config =
         object : AuthConfig {
             override var keyPairPath: String? = null
@@ -146,5 +144,6 @@ fun Application.configureAuthentication(configFactory: (AuthConfig.() -> Unit)? 
             }
         }
     }
-    return authRoutes(configImpl)
+
+    return configImpl
 }

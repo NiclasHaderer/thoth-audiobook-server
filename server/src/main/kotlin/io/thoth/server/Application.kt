@@ -102,7 +102,7 @@ fun Application.server() {
     configureSerialization()
 
     // Authentication
-    val authRoutes = configureAuthentication {
+    val authConfig = configureAuthentication {
         domain = "127.0.0.1:${config.port}"
         protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
         jwksPath = "/api/.well-known/jwks.json"
@@ -111,7 +111,7 @@ fun Application.server() {
 
     routing {
         // Authentication
-        authRoutes(authRoutes)
+        authRoutes(authConfig)
 
         // List directories
         fileSystemRouting()
