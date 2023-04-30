@@ -15,9 +15,7 @@ import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.TUsers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
 class `01_Create_Tables` : Migration() {
     private val tables =
@@ -38,24 +36,7 @@ class `01_Create_Tables` : Migration() {
             .toTypedArray()
 
     override fun migrate(db: Database) {
-        transaction {
-            SchemaUtils.create(*tables)
-            val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
-            TUsers.insert {
-                it[username] = "admin"
-                it[passwordHash] = encoder.encode("admin")
-                it[admin] = true
-                it[edit] = true
-                it[changePassword] = true
-            }
-            TUsers.insert {
-                it[username] = "guest"
-                it[passwordHash] = encoder.encode("guest")
-                it[admin] = true
-                it[edit] = true
-                it[changePassword] = true
-            }
-        }
+        transaction { SchemaUtils.create(*tables) }
     }
 
     override fun generateRollbackStatements(db: Database): List<String> {
