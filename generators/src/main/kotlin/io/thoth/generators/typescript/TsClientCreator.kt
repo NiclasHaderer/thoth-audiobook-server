@@ -13,9 +13,6 @@ class TsClientCreator(
 ) {
     private val typeDefinitions = mutableMapOf<String, TsGenerator.Type>()
     private val clientFunctions = mutableListOf<String>()
-    // TODO interface inheritance
-    // TODO ignore private parameters in route definitions
-    // TODO extract types from route definitions
 
     init {
         generateApiClient()
@@ -202,11 +199,15 @@ class TsClientCreator(
 
     private fun createTypeImports(): String {
         return "import type {${
-            typeDefinitions.values.filter { it.inlineMode == TsGenerator.InsertionMode.REFERENCE }
+            typeDefinitions.values
+                .asSequence()
+                .filter { it.inlineMode == TsGenerator.InsertionMode.REFERENCE }
                 .map {
                     // Replace the generic <> with nothing to not break the import
                     it.name.replace("<.*>".toRegex(), "")
-                }.distinct().joinToString(", ") + ", ApiResponse, ApiInterceptor, ApiCallData"
+                }.distinct()
+                .sorted()
+                .joinToString(", ") + ", ApiResponse, ApiInterceptor, ApiCallData"
         }} from \"./${this.typesFile.nameWithoutExtension}\";\n"
     }
 

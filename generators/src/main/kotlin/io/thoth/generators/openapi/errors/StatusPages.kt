@@ -36,8 +36,8 @@ fun Application.configureStatusPages() {
 
         exception<Throwable>(formatException(HttpStatusCode.InternalServerError) { logger.error(it) })
 
-        exception<BadRequestException>(formatException(HttpStatusCode.BadRequest) { logger.error(it) })
-        exception<MissingRequestParameterException>(formatException(HttpStatusCode.BadRequest) { logger.error(it) })
+        exception<BadRequestException>(formatException(HttpStatusCode.BadRequest))
+        exception<MissingRequestParameterException>(formatException(HttpStatusCode.BadRequest))
 
         status(*HttpStatusCode.allStatusCodes.filter { !it.isSuccess() }.toTypedArray()) { call, statusCode ->
             if (call.response.isSent) return@status
