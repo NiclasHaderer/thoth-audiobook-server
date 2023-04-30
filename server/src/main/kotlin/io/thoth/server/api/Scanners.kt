@@ -8,6 +8,5 @@ import org.koin.ktor.ext.inject
 
 fun Routing.scannerRouting() {
     val scanners by inject<AudioFileAnalyzers>()
-    scanners.forEach { println(it.name) }
     get<Api.Scanners, List<FileScanner>> { scanners.map { FileScanner(it.name) } }
 }
