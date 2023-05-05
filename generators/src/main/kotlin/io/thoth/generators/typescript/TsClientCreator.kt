@@ -48,30 +48,31 @@ class TsClientCreator(
                 route: string, 
                 method: string, 
                 bodyParseMethod: "text" | "json" | "blob", 
-                _headers: HeadersInit,
-                body?: object, 
-                interceptors?: ApiInterceptor[]
+                headers: Headers,
+                body: object | undefined,
+                interceptors: ApiInterceptor[],
+                executor: ApiCallData["executor"],
+                requiresAuth: boolean,
             ): Promise<ApiResponse<T>> => {
-            
-            const headers = new Headers(_headers);
             if(!headers.has("Content-Type")) {
                 headers.set("Content-Type", "application/json");
             }
             let apiCallData: ApiCallData = {
-                route, 
+                route,
                 method, 
                 body, 
                 headers, 
                 bodySerializer: (body?: object) => body ? JSON.stringify(body) : undefined,
-                executor: (route: string, method: string, headers: Headers, body: string | undefined) => fetch(route, {method, headers, body})
+                executor,
+                requiresAuth,
             };
-            if (interceptors) {
+            if (interceptors.length > 0) {
                 for (const interceptor of interceptors) {
                     apiCallData = interceptor(apiCallData);
                 }
             }
                     
-            return apiCallData.executor(apiCallData.route, apiCallData.method, apiCallData.headers, apiCallData.bodySerializer(apiCallData.body))
+            return apiCallData.executor(apiCallData)
                 .then(async (response) => {
                     if(!(response instanceof Response)) {
                         return response;
@@ -153,9 +154,9 @@ class TsClientCreator(
                 .joinToString(", ")
 
         return if (customHeaders.isNotBlank()) {
-            "$customHeaders, headers: HeadersInit = {}, interceptors?: ApiInterceptor[]"
+            "$customHeaders, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []"
         } else {
-            "headers: HeadersInit = {}, interceptors?: ApiInterceptor[]"
+            "headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []"
         }
     }
 
@@ -165,9 +166,9 @@ class TsClientCreator(
         return """
         ${
             if (route.queryParameters.isEmpty()) {
-                "const __finalUrl = `$finalPath`;"
+                "`$finalPath`"
             } else {
-                "const __finalUrl = __createUrl(`$finalPath`, {${route.queryParameters.joinToString(", ") { it.first.name }}});"
+                "__createUrl(`$finalPath`, {${route.queryParameters.joinToString(", ") { it.first.name }}})"
             }
         }
     """
@@ -185,8 +186,17 @@ class TsClientCreator(
             val function =
                 """
             $routeName(${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> {
-                ${createURL(route)}
-                return __request(__finalUrl, "${route.method.value}", "${responseBody.parser.methodName}", headers, ${if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"}, interceptors);
+                const headersImpl = new Headers(headers)
+                defaultHeadersImpl.forEach((value, key) => headersImpl.append(key, value))
+                return __request(${createURL(route)}, "${route.method.value}", "${
+                    responseBody.parser.methodName
+                }", headersImpl, ${
+                    if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"
+                }, interceptors, 
+                executor,
+                ${
+                    route.secured != null
+                });
             }
         """
                     .trimIndent()
@@ -211,17 +221,30 @@ class TsClientCreator(
         }} from \"./${this.typesFile.nameWithoutExtension}\";\n"
     }
 
-    public fun getClientFunctions(): String {
+    public fun generateClientFactory(): String {
         return createTypeImports() +
             createUrlCreator() +
             createRequestMaker() +
-            "export const api = {\n" +
+            """
+            export const createApi = (
+              defaultHeaders: HeadersInit = {},
+              defaultInterceptors: ApiInterceptor[] = [],
+              executor = (callData: ApiCallData) => fetch(callData.route, {method: callData.method, headers: callData.headers, body: callData.bodySerializer(callData.body)})
+            ) => {
+              const defaultHeadersImpl = new Headers(defaultHeaders)
+              return {
+            """
+                .trimIndent() +
             clientFunctions.joinToString(
                 ",\n",
             ) {
                 "  $it"
             } +
-            "} as const;"
+            """
+              } as const;
+            }
+            """
+                .trimIndent()
     }
 
     public fun getClientTypes(): String {
@@ -241,12 +264,13 @@ class TsClientCreator(
             export type ApiResponse<T> = ApiError | ApiSuccess<T>
             
             export type ApiCallData = {
+                requiresAuth: boolean,
                 route: string,
                 method: string,
                 body?: object,
                 headers: Headers,
                 bodySerializer: (body?: object) => string | undefined,
-                executor: (route: string, method: string, headers: Headers, body: string | undefined) => Promise<Response | ApiResponse<any>> 
+                executor: (callData: ApiCallData) => Promise<Response | ApiResponse<any>>,
             }
             
             export type ApiInterceptor = (param: ApiCallData) => ApiCallData
@@ -261,6 +285,6 @@ class TsClientCreator(
     }
 
     fun saveClient() {
-        clientFile.writeText(getClientFunctions())
+        clientFile.writeText(generateClientFactory())
     }
 }

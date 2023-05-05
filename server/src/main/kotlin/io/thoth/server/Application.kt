@@ -137,7 +137,7 @@ fun Application.server() {
         if (!config.production) {
             TsClientCreator(
                     OpenApiRouteCollector.values(),
-                    File("types.ts"),
+                    File("models.ts"),
                     File("client.ts"),
                 )
                 .also {
