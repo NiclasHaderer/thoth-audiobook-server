@@ -65,6 +65,7 @@ val tsGenerators: List<TsGenerator> =
         RedirectTsGenerator(),
         StringTsGenerator(),
         UUIDTsGenerator(),
+        UnitTsGenerator()
     )
 
 fun generateTypes(classType: ClassType): Pair<TsGenerator.Type, List<TsGenerator.Type>> {
