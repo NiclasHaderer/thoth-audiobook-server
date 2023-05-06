@@ -1,15 +1,15 @@
 package io.thoth.server.database.extensions
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import kotlin.reflect.KClass
 import org.h2.jdbc.JdbcClob
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.TextColumnType
 
 class JsonColumnType<T : Any>(
-    private val mapperClass: KClass<T>,
+    private val mapperClass: TypeReference<T>,
     private val validate: (T) -> Unit = {},
     collate: String? = null,
     eagerLoading: Boolean = false,
@@ -20,8 +20,8 @@ class JsonColumnType<T : Any>(
 
     override fun valueFromDB(value: Any): Any =
         when (value) {
-            is String -> mapper.readValue(value, mapperClass.java)
-            is JdbcClob -> mapper.readValue(value.characterStream, mapperClass.java)
+            is String -> mapper.readValue(value, mapperClass)
+            is JdbcClob -> mapper.readValue(value.characterStream, mapperClass)
             else -> value
         }
 
@@ -41,5 +41,5 @@ inline fun <reified T : Any> Table.json(
     eagerLoading: Boolean = false,
     noinline validate: (T) -> Unit = {},
 ): Column<T> {
-    return registerColumn(name, JsonColumnType(T::class, validate, collate, eagerLoading))
+    return registerColumn(name, JsonColumnType(object : TypeReference<T>() {}, validate, collate, eagerLoading))
 }

@@ -121,7 +121,7 @@ class LibraryRepositoryImpl(
         val allFolders = Library.find { TLibraries.id neq id }.flatMap { it.folders }.map { Path.of(it) }
         val overlaps = newFolders.filter { newFolder -> allFolders.any { it.contains(newFolder) } }
 
-        Pair(overlaps.isEmpty(), overlaps)
+        Pair(overlaps.isNotEmpty(), overlaps)
     }
 
     override fun allFolders(): List<Path> = transaction { Library.all().flatMap { it.folders }.map { Path.of(it) } }
