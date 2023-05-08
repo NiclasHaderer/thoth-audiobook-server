@@ -103,7 +103,6 @@ fun Application.server() {
     val authConfig = configureAuthentication {
         domain = "127.0.0.1:${config.port}"
         protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
-        jwksPath = "/api/.well-known/jwks.json"
         keyPairPath = "${config.configDirectory}/jwt.pem"
     }
 
@@ -133,8 +132,9 @@ fun Application.server() {
 
         // Routes for checking if the server is available
         pingRouting()
-
-        if (!config.production) {
+    }
+    if (!config.production) {
+        launch {
             TsClientCreator(
                     OpenApiRouteCollector.values(),
                     File("models.ts"),

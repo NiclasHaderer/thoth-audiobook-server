@@ -33,3 +33,9 @@ object TSeriesAuthorMapping : Table("SeriesAuthorMapping") {
     val author = reference("author", TAuthors, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(series, author)
 }
+
+object TLibraryUserMapping : Table("LibraryUserMapping") {
+    val library = reference("library", TLibraries, onDelete = ReferenceOption.CASCADE)
+    val user = reference("user", TUsers, onDelete = ReferenceOption.CASCADE)
+    override val primaryKey = PrimaryKey(library, user)
+}

@@ -11,8 +11,6 @@ object TUsers : UUIDTable("Users") {
     val passwordHash = char("passwordHash", 512)
     val admin = bool("admin")
     val edit = bool("edit")
-    val changePassword = bool("changePassword")
-    val enabled = bool("enabled").default(true)
 }
 
 class User(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -22,6 +20,5 @@ class User(id: EntityID<UUID>) : UUIDEntity(id) {
     var passwordHash by TUsers.passwordHash
     var admin by TUsers.admin
     var edit by TUsers.edit
-    var changePassword by TUsers.changePassword
-    var enabled by TUsers.enabled
+    var libraries by Library via TLibraryUserMapping
 }

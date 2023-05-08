@@ -19,6 +19,14 @@ fun User.Companion.internalGetByName(name: String): InternalUserModel? {
 }
 
 fun User.toInternalModel() =
-    InternalUserModel(id = id.value, username = username, admin = admin, edit = edit, passwordHash = passwordHash)
+    InternalUserModel(
+        id = id.value,
+        username = username,
+        admin = admin,
+        edit = edit,
+        passwordHash = passwordHash,
+        libraries = libraries.map { it.id.value },
+    )
 
-fun User.toModel(): UserModel = UserModel(id = id.value, username = username, admin = admin, edit = edit)
+fun User.toModel(): UserModel =
+    UserModel(id = id.value, username = username, admin = admin, edit = edit, libraries = libraries.map { it.id.value })

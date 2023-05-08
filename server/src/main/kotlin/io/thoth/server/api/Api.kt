@@ -31,12 +31,17 @@ class Api {
         @Resource(".well-known/jwks.json")
         data class Jwks(private val parent: Auth)
 
-        @Summary("List users", method = "GET")
+        @Summary("Get current user", method = "GET")
         @Summary("Create user", method = "POST")
         @Summary("Delete user", method = "DELETE")
         @Secured(Guards.Normal)
         @Resource("user")
         data class User(private val parent: Auth) {
+
+            @Summary("List users", method = "GET")
+            @Secured(Guards.Admin)
+            @Resource("all")
+            data class All(private val parent: User)
 
             @Summary("Retrieve user", method = "GET")
             @Summary("Update user", method = "PUT")

@@ -20,6 +20,4 @@ data class ModifyUser(
     val password: String?,
     var admin: Boolean?,
     var edit: Boolean?,
-    val enabled: Boolean?,
-    val changePassword: Boolean?
 )

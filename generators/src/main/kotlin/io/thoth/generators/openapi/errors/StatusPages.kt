@@ -38,13 +38,5 @@ fun Application.configureStatusPages() {
 
         exception<BadRequestException>(formatException(HttpStatusCode.BadRequest))
         exception<MissingRequestParameterException>(formatException(HttpStatusCode.BadRequest))
-
-        status(*HttpStatusCode.allStatusCodes.filter { !it.isSuccess() }.toTypedArray()) { call, statusCode ->
-            if (call.response.isSent) return@status
-            call.respond(
-                statusCode,
-                hashMapOf("error" to statusCode.description, "status" to statusCode.value, "details" to null),
-            )
-        }
     }
 }

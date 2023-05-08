@@ -192,7 +192,7 @@ class TsClientCreator(
                     responseBody.parser.methodName
                 }", headersImpl, ${
                     if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"
-                }, interceptors, 
+                }, [...defaultInterceptors, ...interceptors], 
                 executor,
                 ${
                     route.secured != null
