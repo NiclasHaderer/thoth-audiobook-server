@@ -23,5 +23,4 @@
     <logger name="org.reflections" level="WARN"/>
     <!-- DB connector -->
     <logger name="Exposed" level="INFO"/>
-
 </configuration>

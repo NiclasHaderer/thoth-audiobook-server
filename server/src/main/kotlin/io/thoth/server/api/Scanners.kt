@@ -3,7 +3,7 @@ package io.thoth.server.api
 import io.ktor.server.routing.*
 import io.thoth.generators.openapi.get
 import io.thoth.models.FileScanner
-import io.thoth.server.di.AudioFileAnalyzers
+import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import org.koin.ktor.ext.inject
 
 fun Routing.scannerRouting() {

@@ -9,14 +9,26 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging.logger
 
-open class Scheduler {
+abstract class TaskQueueHolder {
+    private val _taskQueue = mutableListOf<ScheduledTask>()
+
+    internal val taskQueue: List<ScheduledTask>
+        get() = modifyQueue { toList() }
+
+    internal fun <T> modifyQueue(action: MutableList<ScheduledTask>.() -> T): T {
+        synchronized(_taskQueue) {
+            return _taskQueue.action()
+        }
+    }
+}
+
+open class Scheduler : TaskQueueHolder() {
     data class QueuedTask(val name: String, val executeAt: LocalDateTime, val type: TaskType)
 
     private var currentExecution: DelayedExecution? = null
     private val schedules = mutableListOf<Task>()
     private val log = logger {}
     private val started = AtomicBoolean(false)
-    private val taskQueue = mutableListOf<ScheduledTask>()
 
     val queue: List<QueuedTask>
         get() = taskQueue.map { QueuedTask(it.task.name, it.executeAt, it.task.type) }
@@ -32,7 +44,7 @@ open class Scheduler {
     fun launchScheduledJob(schedule: ScheduleTask) {
         val relevantSchedules = schedules.filterIsInstance<ScheduleTask>().filter { it == schedule }
         relevantSchedules.forEach { task ->
-            taskQueue.add(ScheduledCronTask(task, LocalDateTime.now(), "Launched manually"))
+            modifyQueue { add(ScheduledCronTask(task, LocalDateTime.now(), "Launched manually")) }
         }
         if (relevantSchedules.isEmpty()) {
             log.warn { "No schedules for scheduleName ${schedule.name}" }
@@ -48,7 +60,7 @@ open class Scheduler {
 
         val relevantSchedules = schedules.filterIsInstance<EventTask<T>>().filter { it == event.origin }
 
-        relevantSchedules.forEach { task -> taskQueue.add(ScheduledEventTask(task, event)) }
+        relevantSchedules.forEach { task -> modifyQueue { add(ScheduledEventTask(task, event)) } }
         if (relevantSchedules.isEmpty()) {
             log.warn { "No schedules for event $event" }
         } else {
@@ -69,7 +81,7 @@ open class Scheduler {
 
     private fun queueTask(task: ScheduleTask) {
         val nextExecution = task.cron.nextExecution()
-        taskQueue.add(ScheduledCronTask(task, nextExecution))
+        modifyQueue { add(ScheduledCronTask(task, nextExecution)) }
     }
 
     private suspend fun reevaluateNextExecutionTime() {
@@ -110,7 +122,7 @@ open class Scheduler {
                 // Task has been executed successfully
                 // Task can therefore be removed from the queue
                 log.debug { "Scheduled task '${scheduledTask.task.name}' was executed successfully" }
-                taskQueue.filter { it == scheduledTask }.forEach { taskQueue.remove(it) }
+                modifyQueue { filter { it == scheduledTask }.forEach { remove(it) } }
                 // If the task was a cron task, it should be rescheduled
                 if (scheduledTask is ScheduledCronTask) {
                     queueTask(scheduledTask.task)

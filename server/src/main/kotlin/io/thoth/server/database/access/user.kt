@@ -1,6 +1,7 @@
 package io.thoth.server.database.access
 
 import io.thoth.models.InternalUserModel
+import io.thoth.models.NamedId
 import io.thoth.models.UserModel
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.tables.User
@@ -25,8 +26,26 @@ fun User.toInternalModel() =
         admin = admin,
         edit = edit,
         passwordHash = passwordHash,
-        libraries = libraries.map { it.id.value },
+        libraries =
+            libraries.map {
+                NamedId(
+                    id = it.id.value,
+                    name = it.name,
+                )
+            },
     )
 
 fun User.toModel(): UserModel =
-    UserModel(id = id.value, username = username, admin = admin, edit = edit, libraries = libraries.map { it.id.value })
+    UserModel(
+        id = id.value,
+        username = username,
+        admin = admin,
+        edit = edit,
+        libraries =
+            libraries.map {
+                NamedId(
+                    id = it.id.value,
+                    name = it.name,
+                )
+            },
+    )

@@ -45,7 +45,7 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
     }
 
     override fun isIgnored(folder: Path): Boolean {
-        return foldersToIgnore.any { it.contains(folder) }
+        return foldersToIgnore.any { it.startsWith(folder) }
     }
 
     override fun unIgnoreFolder(folder: Path) {

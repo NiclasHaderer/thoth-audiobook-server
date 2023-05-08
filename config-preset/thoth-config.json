@@ -14,10 +14,10 @@
   "configDirectory": "config-preset",
   "preferEmbeddedMetadata": true,
   "database": {
-    "driverClassName": "org.h2.Driver",
-    "jdbcUrl": "jdbc:h2:mem:regular",
-    "maximumPoolSize": 100,
+    "driverClassName": "org.sqlite.JDBC",
+    "jdbcUrl": "jdbc:sqlite:thoth.db",
+    "maximumPoolSize": 1,
     "autoCommit": false,
-    "transactionIsolation": "TRANSACTION_REPEATABLE_READ"
+    "transactionIsolation": "TRANSACTION_SERIALIZABLE"
   }
 }

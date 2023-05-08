@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 interface LibraryRepository {
     fun raw(id: UUID): Library
@@ -33,11 +35,10 @@ interface LibraryRepository {
     fun getMatching(path: Path): Library?
 }
 
-class LibraryRepositoryImpl(
-    private val fileWatcher: FileTreeWatcher,
-    private val scheduler: Scheduler,
-    private val schedules: ThothSchedules
-) : LibraryRepository {
+class LibraryRepositoryImpl() : LibraryRepository, KoinComponent {
+    private val fileWatcher by inject<FileTreeWatcher>()
+    private val scheduler by inject<Scheduler>()
+    private val schedules by inject<ThothSchedules>()
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private val log = logger {}
 
@@ -119,7 +120,7 @@ class LibraryRepositoryImpl(
     override fun overlappingFolders(id: UUID?, folders: List<String>): Pair<Boolean, List<Path>> = transaction {
         val newFolders = folders.map { Path.of(it) }
         val allFolders = Library.find { TLibraries.id neq id }.flatMap { it.folders }.map { Path.of(it) }
-        val overlaps = newFolders.filter { newFolder -> allFolders.any { it.contains(newFolder) } }
+        val overlaps = newFolders.filter { newFolder -> allFolders.any { newFolder.startsWith(it) } }
 
         Pair(overlaps.isNotEmpty(), overlaps)
     }
@@ -128,7 +129,7 @@ class LibraryRepositoryImpl(
 
     override fun getMatching(path: Path): Library? = transaction {
         val potentialLibraries =
-            Library.all().filter { lib -> lib.folders.map { Path.of(it) }.any { path.contains(it) } }
+            Library.all().filter { lib -> lib.folders.map { Path.of(it) }.any { path.startsWith(it) } }
         if (potentialLibraries.isEmpty()) return@transaction null
         if (potentialLibraries.size == 1) return@transaction potentialLibraries.first()
         log.error { "Multiple libraries match path $path" }

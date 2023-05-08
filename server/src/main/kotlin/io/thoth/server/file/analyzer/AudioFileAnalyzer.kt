@@ -14,6 +14,8 @@ interface AudioFileAnalyzer {
     ): AudioFileAnalysisResult?
 }
 
+class AudioFileAnalyzers(private val items: List<AudioFileAnalyzer>) : List<AudioFileAnalyzer> by items
+
 interface AudioFileAnalyzerWrapper {
     fun analyze(filePath: Path, attrs: BasicFileAttributes, libraryPath: Path): AudioFileAnalysisResult?
 }

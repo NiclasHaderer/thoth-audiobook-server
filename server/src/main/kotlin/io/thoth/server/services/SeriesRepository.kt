@@ -16,16 +16,17 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 interface SeriesRepository :
     Repository<Series, SeriesModel, DetailedSeriesModel, PartialSeriesApiModel, SeriesApiModel> {
     fun findByName(seriesTitle: String, libraryId: UUID): Series?
 }
 
-class SeriesRepositoryImpl(
-    private val authorRepository: AuthorRepository,
-    private val bookRepository: BookRepository,
-) : SeriesRepository {
+class SeriesRepositoryImpl() : SeriesRepository, KoinComponent {
+    private val authorRepository by inject<AuthorRepository>()
+    private val bookRepository by inject<BookRepository>()
     override fun findByName(seriesTitle: String, libraryId: UUID): Series? = transaction {
         Series.find { TSeries.title eq seriesTitle and (TSeries.library eq libraryId) }.firstOrNull()
     }

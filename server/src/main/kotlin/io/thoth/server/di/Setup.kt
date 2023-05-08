@@ -1,14 +1,14 @@
 package io.thoth.server.di
 
-import io.thoth.metadata.MetadataProvider
+import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.loadPublicConfig
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.TrackManagerImpl
-import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
+import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapperImpl
 import io.thoth.server.file.analyzer.impl.AudioFolderScanner
 import io.thoth.server.file.analyzer.impl.AudioTagScanner
@@ -35,8 +35,8 @@ fun setupDependencyInjection() = startKoin {
         module {
             single { config }
             single<MetadataProviders> { MetadataProviders(listOf(AudibleClient())) }
-            single<MetadataWrapper> { MetadataWrapper(getAll()) }
-            single<FileTreeWatcher> { FileTreeWatcherImpl(get(), get()) }
+            single<MetadataWrapper> { MetadataWrapper(get<MetadataProviders>()) }
+            single<FileTreeWatcher> { FileTreeWatcherImpl() }
             single<AudioFileAnalyzers> {
                 AudioFileAnalyzers(
                     listOf(
@@ -45,20 +45,16 @@ fun setupDependencyInjection() = startKoin {
                     ),
                 )
             }
-            single<AudioFileAnalyzerWrapper> { AudioFileAnalyzerWrapperImpl(get()) }
+            single<AudioFileAnalyzerWrapper> { AudioFileAnalyzerWrapperImpl() }
             single<LibraryScanner> { LibraryScannerImpl() }
-            single<BookRepository> { BookRepositoryImpl(get(), get()) }
+            single<BookRepository> { BookRepositoryImpl() }
             single<AuthorRepository> { AuthorServiceImpl() }
-            single<SeriesRepository> { SeriesRepositoryImpl(get(), get()) }
-            single<LibraryRepository> { LibraryRepositoryImpl(get(), get(), get()) }
-            single<TrackManager> { TrackManagerImpl(get(), get(), get(), get()) }
+            single<SeriesRepository> { SeriesRepositoryImpl() }
+            single<LibraryRepository> { LibraryRepositoryImpl() }
+            single<TrackManager> { TrackManagerImpl() }
             single { Scheduler() }
             single { ThothSchedules() }
         },
     )
     slf4jLogger()
 }
-
-class AudioFileAnalyzers(private val items: List<AudioFileAnalyzer>) : List<AudioFileAnalyzer> by items
-
-class MetadataProviders(private val items: List<MetadataProvider>) : List<MetadataProvider> by items
