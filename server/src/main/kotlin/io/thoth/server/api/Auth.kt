@@ -54,7 +54,6 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
                     passwordHash = encodedPassword
                     admin = firstUser
                     edit = firstUser
-                    changePassword = false
                 }
                 .toModel()
         }
@@ -95,7 +94,6 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
 
                 user.username = modifyUser.username ?: user.username
                 user.edit = modifyUser.edit ?: user.edit
-                user.changePassword = modifyUser.changePassword ?: user.changePassword
 
                 if (modifyUser.password != null) {
                     val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
@@ -103,10 +101,9 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
                     user.passwordHash = encodedPassword
                 }
 
-                // Only admins can change admin status and enabled status
+                // Only admins can change admin status
                 if (editUserIsAdmin) {
                     user.admin = modifyUser.admin ?: user.admin
-                    user.enabled = modifyUser.enabled ?: user.enabled
                 }
 
                 user
@@ -118,6 +115,8 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
         val principal = thothPrincipal()
         User.getById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
     }
+
+    get<Api.Auth.User.All, List<UserModel>> { transaction { User.all().map { it.toModel() } } }
 
     delete<Api.Auth.User, Unit, Unit> { _, _,
         ->

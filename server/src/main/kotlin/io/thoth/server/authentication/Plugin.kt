@@ -6,13 +6,12 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
-import java.io.File
-import java.io.FileReader
 import java.nio.file.Path
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.SecureRandom
 import java.util.concurrent.TimeUnit
+import kotlin.io.path.reader
 import kotlin.io.path.writer
 import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
@@ -44,13 +43,16 @@ private fun createKeyPair(jwtKeyFile: Path): KeyPair {
     kpg.initialize(2048, SecureRandom())
     val kp = kpg.generateKeyPair()
 
-    JcaPEMWriter(jwtKeyFile.writer()).use { pemWriter -> pemWriter.writeObject(kp) }
+    JcaPEMWriter(jwtKeyFile.writer()).use { pemWriter ->
+        pemWriter.writeObject(kp.private)
+        pemWriter.writeObject(kp.public)
+    }
     return kp
 }
 
 private fun getOrCreateKeyPair(path: Path): KeyPair {
     return try {
-        FileReader(File("$path/jwt.pem")).use { reader ->
+        path.reader().use { reader ->
             val parsed: PEMKeyPair = PEMParser(reader).readObject() as PEMKeyPair
             JcaPEMKeyConverter().getKeyPair(parsed)
         }
@@ -66,7 +68,7 @@ fun Application.configureAuthentication(configFactory: (AuthConfig.() -> Unit)? 
             override var keyId: String = "thoth"
             override var issuer: String = "thoth"
             override var domain: String? = null
-            override var jwksPath: String = "/api/.well-known/jwks.json"
+            override var jwksPath: String = "/api/auth/.well-known/jwks.json"
             override var protocol: URLProtocol = URLProtocol.HTTP
             override var realm: String? = null
         }
@@ -97,7 +99,7 @@ fun Application.configureAuthentication(configFactory: (AuthConfig.() -> Unit)? 
             .toURL()
 
     val jwkProvider =
-        JwkProviderBuilder(url).cached(5, 10, TimeUnit.MINUTES).rateLimited(10, 1, TimeUnit.MINUTES).build()
+        JwkProviderBuilder(url).cached(10, 24, TimeUnit.HOURS).rateLimited(10, 1, TimeUnit.MINUTES).build()
 
     install(Authentication) {
         jwt(Guards.Normal) {
@@ -143,7 +145,7 @@ fun Application.configureAuthentication(configFactory: (AuthConfig.() -> Unit)? 
                 val principal = jwtToPrincipal(jwtCredential) ?: return@validate null
                 if (principal.type == JwtType.Access && principal.edit && principal.admin) principal else null
             }
-            challenge { _, _ ->
+            challenge { a, b ->
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Token is not valid or has expired"))
             }
         }

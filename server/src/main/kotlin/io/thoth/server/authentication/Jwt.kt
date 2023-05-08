@@ -62,7 +62,7 @@ internal fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
     val enumType =
         try {
             val type = credentials.payload.getClaim("type").asString() ?: return null
-            JwtType.valueOf(type)
+            JwtType.values().first { it.type == type }
         } catch (e: Exception) {
             return null
         }
