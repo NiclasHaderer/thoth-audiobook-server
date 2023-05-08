@@ -1,15 +1,18 @@
 package io.thoth.server.file.analyzer.impl
 
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
-import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
+import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.tagger.ReadonlyFileTaggerImpl
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.absolute
 import mu.KotlinLogging.logger
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class AudioFileAnalyzerWrapperImpl(private val analyzers: List<AudioFileAnalyzer>) : AudioFileAnalyzerWrapper {
+class AudioFileAnalyzerWrapperImpl() : AudioFileAnalyzerWrapper, KoinComponent {
+    private val analyzers by inject<AudioFileAnalyzers>()
     private val log = logger {}
 
     override fun analyze(filePath: Path, attrs: BasicFileAttributes, libraryPath: Path): AudioFileAnalysisResult? {

@@ -23,15 +23,16 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 interface BookRepository : Repository<Book, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
     fun findByName(bookTitle: String, authorId: UUID, libraryId: UUID): Book?
 }
 
-class BookRepositoryImpl(
-    private val authorRepository: AuthorRepository,
-    private val seriesRepository: SeriesRepository,
-) : BookRepository {
+class BookRepositoryImpl() : BookRepository, KoinComponent {
+    private val authorRepository by inject<AuthorRepository>()
+    private val seriesRepository by inject<SeriesRepository>()
     override fun total(libraryId: UUID) = transaction { Book.find { TBooks.library eq libraryId }.count() }
 
     override fun getAll(libraryId: UUID, order: SortOrder, limit: Int, offset: Long): List<BookModel> = transaction {

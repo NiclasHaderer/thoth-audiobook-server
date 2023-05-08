@@ -33,3 +33,5 @@ interface MetadataProvider {
 
     suspend fun getSeriesByName(seriesName: String, region: String, authorName: String? = null): List<MetadataSeries>
 }
+
+class MetadataProviders(private val items: List<MetadataProvider>) : List<MetadataProvider> by items

@@ -24,6 +24,7 @@ import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 interface TrackManager {
     suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: Library)
@@ -31,12 +32,12 @@ interface TrackManager {
     fun removePath(path: Path)
 }
 
-internal class TrackManagerImpl(
-    private val bookRepository: BookRepository,
-    private val seriesRepository: SeriesRepository,
-    private val authorRepository: AuthorRepository,
-    private val analyzer: AudioFileAnalyzerWrapper,
-) : TrackManager, KoinComponent {
+internal class TrackManagerImpl() : TrackManager, KoinComponent {
+    private val bookRepository by inject<BookRepository>()
+    private val seriesRepository by inject<SeriesRepository>()
+    private val authorRepository by inject<AuthorRepository>()
+    private val analyzer by inject<AudioFileAnalyzerWrapper>()
+
     private val semaphore = Semaphore(1)
     private val log = logger {}
 
@@ -45,11 +46,12 @@ internal class TrackManagerImpl(
             log.warn { "Skipped ${path.absolute()} because it is a directory" }
             return
         }
+        val libPath = library.folders.map { Path.of(it) }.first { path.startsWith(it) }
         val result =
             analyzer.analyze(
                 path,
                 path.readAttributes(),
-                library.folders.map { Path.of(it) }.first { path.contains(it) },
+                libPath,
             )
                 ?: return log.warn { "Skipped ${path.absolute()} because it contains not enough information" }
         insertScanResult(result, path, library)
@@ -151,8 +153,8 @@ internal class TrackManagerImpl(
         }
     }
 
-    private fun getOrCreateSeries(scan: AudioFileAnalysisResult, dbAuthor: Author, libraryModel: Library): Series {
-        val series = seriesRepository.findByName(scan.series!!, libraryModel.id.value)
+    private fun getOrCreateSeries(scan: AudioFileAnalysisResult, dbAuthor: Author, dbLib: Library): Series {
+        val series = seriesRepository.findByName(scan.series!!, dbLib.id.value)
 
         return if (series != null) {
             series.authors = series.authors.add(dbAuthor)
@@ -162,7 +164,7 @@ internal class TrackManagerImpl(
             Series.new {
                 title = scan.series!!
                 authors = SizedCollection(dbAuthor)
-                library = libraryModel
+                library = Library[dbLib.id]
             }
         }
     }

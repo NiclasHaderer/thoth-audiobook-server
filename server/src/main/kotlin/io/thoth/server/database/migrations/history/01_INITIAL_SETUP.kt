@@ -8,6 +8,7 @@ import io.thoth.server.database.tables.TGenreBookMapping
 import io.thoth.server.database.tables.TGenreSeriesMapping
 import io.thoth.server.database.tables.TGenres
 import io.thoth.server.database.tables.TImages
+import io.thoth.server.database.tables.TLibraryUserMapping
 import io.thoth.server.database.tables.TSeries
 import io.thoth.server.database.tables.TSeriesAuthorMapping
 import io.thoth.server.database.tables.TSeriesBookMapping
@@ -32,6 +33,7 @@ class `01_Create_Tables` : Migration() {
                 TGenreSeriesMapping,
                 TSeriesBookMapping,
                 TSeriesAuthorMapping,
+                TLibraryUserMapping,
             )
             .toTypedArray()
 

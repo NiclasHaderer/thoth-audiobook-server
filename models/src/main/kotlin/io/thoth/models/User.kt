@@ -7,7 +7,7 @@ data class UserModel(
     val username: String,
     val admin: Boolean,
     val edit: Boolean,
-    val libraries: List<UUID>
+    val libraries: List<NamedId>
 )
 
 data class InternalUserModel(
@@ -16,5 +16,5 @@ data class InternalUserModel(
     val admin: Boolean,
     val edit: Boolean,
     val passwordHash: String,
-    val libraries: List<UUID>
+    val libraries: List<NamedId>
 )
