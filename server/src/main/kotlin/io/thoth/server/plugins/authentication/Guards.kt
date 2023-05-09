@@ -1,4 +1,4 @@
-package io.thoth.server.authentication
+package io.thoth.server.plugins.authentication
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

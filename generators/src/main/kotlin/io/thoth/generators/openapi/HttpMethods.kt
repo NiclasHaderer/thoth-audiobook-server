@@ -12,6 +12,7 @@ import io.ktor.util.pipeline.*
 import io.thoth.generators.common.findAnnotationUp
 import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.generators.openapi.responses.BaseResponse
+import kotlin.reflect.full.findAnnotation
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
 
@@ -64,8 +65,9 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     )
 
     // Check if the route should be secured by ktor
+    val ignoreSecured = PARAMS::class.findAnnotation<NotSecured>() != null
     val secured = PARAMS::class.findAnnotationUp<Secured>()
-    if (secured != null) {
+    if (secured != null && !ignoreSecured) {
         authenticate(secured.name) {
             if (PARAMS::class == Unit::class) {
                 method(method) { handle { wrapHandler(callback, Unit as PARAMS) } }

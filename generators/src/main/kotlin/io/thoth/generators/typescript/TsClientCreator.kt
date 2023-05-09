@@ -44,7 +44,7 @@ class TsClientCreator(
 
         private fun createRequestMaker(): String {
             return """
-        const __request = <T>(
+        const __request = async <T>(
                 route: string, 
                 method: string, 
                 bodyParseMethod: "text" | "json" | "blob", 
@@ -68,7 +68,7 @@ class TsClientCreator(
             };
             if (interceptors.length > 0) {
                 for (const interceptor of interceptors) {
-                    apiCallData = interceptor(apiCallData);
+                    apiCallData = await interceptor(apiCallData);
                 }
             }
                     
@@ -118,46 +118,41 @@ class TsClientCreator(
     }
 
     private fun getParameters(route: OpenApiRoute): String {
-        val pathParams =
-            route.pathParameters.joinToString(", ") { (param) ->
+        val urlParams = route.queryParameters + route.pathParameters
+        val urlParamsStr =
+            urlParams.map { (param) ->
                 val (actual, all) = generateTypes(param.type)
                 typeDefinitions.putAll(all.associateBy { it.name })
-                "${param.name}: ${actual.reference()}"
+                "${param.name}${if (param.optional) "?" else ""}: ${actual.reference()}"
             }
-        val requiredQueryParams =
-            route.queryParameters
-                .filter { !it.first.optional }
-                .joinToString(", ") { (param) ->
-                    val (actual, all) = generateTypes(param.type)
-                    typeDefinitions.putAll(all.associateBy { it.name })
-                    "${param.name}${if (param.optional) "?" else ""}: ${actual.reference()}"
-                }
-        val bodyParam =
+
+        val urlParamsDecompositionStr =
+            "{${
+            urlParams.joinToString(", ") {
+                it.first.name
+            }
+        }}"
+
+        val bodyParamString =
             if (route.requestBodyType.clazz != Unit::class) {
                 val (actual, all) = generateTypes(route.requestBodyType)
                 typeDefinitions.putAll(all.associateBy { it.name })
                 "body: ${actual.reference()}"
             } else ""
 
-        val optionalQueryParams =
-            route.queryParameters
-                .filter { it.first.optional }
-                .joinToString(", ") { (param) ->
-                    val (actual, all) = generateTypes(param.type)
-                    typeDefinitions.putAll(all.associateBy { it.name })
-                    "${param.name}?: ${actual.reference()}"
-                }
-
-        val customHeaders =
-            listOf(pathParams, requiredQueryParams, bodyParam, optionalQueryParams)
-                .filter { it.isNotBlank() }
-                .joinToString(", ")
-
-        return if (customHeaders.isNotBlank()) {
-            "$customHeaders, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []"
-        } else {
-            "headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []"
-        }
+        return "${
+            if (urlParamsStr.isEmpty()) {
+                ""
+            } else {
+                "$urlParamsDecompositionStr: {${urlParamsStr.joinToString(",") { it }}}, "
+            }
+        }${
+            if (bodyParamString.isEmpty()) ""
+            else {
+                "$bodyParamString, "
+            }
+        } headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []"
+            .trim()
     }
 
     private fun createURL(route: OpenApiRoute): String {
@@ -273,7 +268,7 @@ class TsClientCreator(
                 executor: (callData: ApiCallData) => Promise<Response | ApiResponse<any>>,
             }
             
-            export type ApiInterceptor = (param: ApiCallData) => ApiCallData
+            export type ApiInterceptor = (param: ApiCallData) => ApiCallData | Promise<ApiCallData>
         """
                 .trimIndent() + "\n"
         val referenceTypes = typeDefinitions.values.filter { it.inlineMode == TsGenerator.InsertionMode.REFERENCE }

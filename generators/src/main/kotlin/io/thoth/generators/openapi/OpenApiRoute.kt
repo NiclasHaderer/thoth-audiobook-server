@@ -97,7 +97,13 @@ class OpenApiRoute(
         requestParamsType.findAnnotations<Summary>().firstOrNull { it.method == this.method.value }?.summary
     }
 
-    val secured by lazy { requestParamsType.findAnnotationUp<Secured>() }
+    val secured by lazy {
+        if (requestParamsType.findAnnotation<NotSecured>() != null) {
+            null
+        } else {
+            requestParamsType.findAnnotationUp<Secured>()
+        }
+    }
 
     val requestBody by lazy { generateSchemas(requestBodyType).toNamed() }
 

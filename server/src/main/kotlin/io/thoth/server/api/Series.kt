@@ -37,17 +37,17 @@ fun Routing.seriesRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Series.Id, DetailedSeriesModel> { seriesRepository.get(it.libraryId, it.seriesId) }
+    get<Api.Libraries.Id.Series.Id, DetailedSeriesModel> { seriesRepository.get(it.libraryId, it.id) }
 
     get<Api.Libraries.Id.Series.Autocomplete, List<TitledId>> {
         seriesRepository.search(it.q, it.libraryId).map { series -> TitledId(series.id, series.title) }
     }
 
     patch<Api.Libraries.Id.Series.Id, PartialSeriesApiModel, SeriesModel> { id, patchSeries ->
-        seriesRepository.modify(id.seriesId, id.libraryId, patchSeries)
+        seriesRepository.modify(id.id, id.libraryId, patchSeries)
     }
 
     put<Api.Libraries.Id.Series.Id, SeriesApiModel, SeriesModel> { id, putSeries ->
-        seriesRepository.replace(id.seriesId, id.libraryId, putSeries)
+        seriesRepository.replace(id.id, id.libraryId, putSeries)
     }
 }

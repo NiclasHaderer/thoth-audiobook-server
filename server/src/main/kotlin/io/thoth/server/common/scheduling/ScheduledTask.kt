@@ -3,7 +3,7 @@ package io.thoth.server.common.scheduling
 import java.time.Duration
 import java.time.LocalDateTime
 
-internal abstract class ScheduledTask(
+abstract class ScheduledTask(
     open val task: Task,
     val executeAt: LocalDateTime,
     val cause: String,
@@ -20,7 +20,7 @@ internal abstract class ScheduledTask(
     abstract suspend fun run()
 }
 
-internal class ScheduledCronTask(
+class ScheduledCronTask(
     override val task: ScheduleTask,
     executeAt: LocalDateTime,
     cause: String = task.cron.asString()
@@ -30,7 +30,7 @@ internal class ScheduledCronTask(
     }
 }
 
-internal class ScheduledEventTask<T>(override val task: EventTask<T>, val event: EventTask.Event<T>) :
+class ScheduledEventTask<T>(override val task: EventTask<T>, val event: EventTask.Event<T>) :
     ScheduledTask(task, LocalDateTime.now(), event.name) {
     override suspend fun run() {
         task.callback(event)

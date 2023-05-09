@@ -13,19 +13,17 @@ interface Task {
     val type: TaskType
 }
 
-class EventTask<T> internal constructor(override val name: String, internal val callback: suspend (Event<T>) -> Unit) :
-    Task {
+class EventTask<T>(override val name: String, val callback: suspend (Event<T>) -> Unit) : Task {
     override val type: TaskType = TaskType.EVENT
 
-    class Event<T> internal constructor(val name: String, val data: T, internal val origin: EventTask<T>)
+    class Event<T>(val name: String, val data: T, val origin: EventTask<T>)
 
     fun build(data: T): Event<T> {
         return Event(name, data, this)
     }
 }
 
-class ScheduleTask
-internal constructor(override val name: String, val cron: Cron, internal val callback: suspend () -> Unit) : Task {
+class ScheduleTask constructor(override val name: String, val cron: Cron, val callback: suspend () -> Unit) : Task {
 
     constructor(
         name: String,

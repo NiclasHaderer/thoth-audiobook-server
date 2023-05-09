@@ -1,6 +1,5 @@
 package io.thoth.server
 
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -20,7 +19,6 @@ import io.thoth.server.api.metadataScannerRouting
 import io.thoth.server.api.pingRouting
 import io.thoth.server.api.scannerRouting
 import io.thoth.server.api.seriesRouting
-import io.thoth.server.authentication.configureAuthentication
 import io.thoth.server.common.extensions.get
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
@@ -28,6 +26,7 @@ import io.thoth.server.database.connectToDatabase
 import io.thoth.server.database.migrateDatabase
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
+import io.thoth.server.plugins.authentication.configureAuthentication
 import io.thoth.server.plugins.configureMonitoring
 import io.thoth.server.plugins.configureOpenApi
 import io.thoth.server.plugins.configurePartialContent
@@ -98,17 +97,11 @@ fun Application.server() {
     configureSockets()
     configureMonitoring()
     configureSerialization()
-
-    // Authentication
-    val authConfig = configureAuthentication {
-        domain = "127.0.0.1:${config.port}"
-        protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
-        keyPairPath = "${config.configDirectory}/jwt.pem"
-    }
+    configureAuthentication()
 
     routing {
         // Authentication
-        authRoutes(authConfig)
+        authRoutes()
 
         // List directories
         fileSystemRouting()
