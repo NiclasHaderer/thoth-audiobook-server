@@ -2,6 +2,8 @@ package io.thoth.server.api
 
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
+import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.thoth.generators.openapi.delete
 import io.thoth.generators.openapi.errors.ErrorResponse
@@ -9,21 +11,30 @@ import io.thoth.generators.openapi.get
 import io.thoth.generators.openapi.post
 import io.thoth.generators.openapi.put
 import io.thoth.models.UserModel
-import io.thoth.server.authentication.AuthConfigImpl
-import io.thoth.server.authentication.JwtPair
-import io.thoth.server.authentication.generateJwtForUser
-import io.thoth.server.authentication.thothPrincipal
+import io.thoth.server.common.extensions.asUUID
+import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.access.getById
 import io.thoth.server.database.access.getByName
 import io.thoth.server.database.access.internalGetByName
+import io.thoth.server.database.access.toInternalModel
 import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.User
+import io.thoth.server.plugins.authentication.AuthConfig
+import io.thoth.server.plugins.authentication.JwtType
+import io.thoth.server.plugins.authentication.REFRESH_TOKEN_EXPIRY_MS
+import io.thoth.server.plugins.authentication.generateAccessTokenForUser
+import io.thoth.server.plugins.authentication.generateJwtForUser
+import io.thoth.server.plugins.authentication.thothPrincipal
+import io.thoth.server.plugins.authentication.validateJwt
 import java.security.interfaces.RSAPublicKey
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.ktor.ext.inject
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 
-fun Routing.authRoutes(config: AuthConfigImpl) {
-    post<Api.Auth.Login, LoginUser, JwtPair> { _, user ->
+fun Routing.authRoutes() {
+    val authConfig by inject<AuthConfig>()
+    val config by inject<ThothConfig>()
+    post<Api.Auth.Login, LoginUser, AccessToken> { _, user ->
         transaction {
             val userModel =
                 User.internalGetByName(user.username) ?: throw ErrorResponse.userError("Could not login user")
@@ -33,7 +44,20 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
                 throw ErrorResponse.userError("Could not login user")
             }
 
-            generateJwtForUser(config.issuer, userModel, config)
+            val keyPair = generateJwtForUser(userModel, authConfig)
+
+            call.response.cookies.append(
+                Cookie(
+                    name = "refresh",
+                    value = keyPair.refresh,
+                    httpOnly = true,
+                    secure = config.TLS,
+                    extensions = mapOf("SameSite" to "Strict", "HostOnly" to "true"),
+                    maxAge = (REFRESH_TOKEN_EXPIRY_MS / 1000).toInt(),
+                ),
+            )
+
+            AccessToken(keyPair.access)
         }
     }
 
@@ -60,8 +84,9 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
     }
 
     get<Api.Auth.Jwks, JWKs> {
-        val keyPair = config.keyPair
-        val jwk = RSAKey.Builder(keyPair.public as RSAPublicKey).keyUse(KeyUse.SIGNATURE).keyID(config.keyId).build()
+        val keyPair = authConfig.keyPair
+        val jwk =
+            RSAKey.Builder(keyPair.public as RSAPublicKey).keyUse(KeyUse.SIGNATURE).keyID(authConfig.keyId).build()
 
         JWKs(
             listOf(
@@ -153,5 +178,17 @@ fun Routing.authRoutes(config: AuthConfigImpl) {
             }
             user.passwordHash = encoder.encode(passwordChange.newPassword)
         }
+    }
+    post<Api.Auth.User.Refresh, Unit, AccessToken> { _, _ ->
+        val refreshToken = call.request.cookies["refresh"] ?: throw ErrorResponse.unauthorized("No refresh token")
+
+        val decodedJwt = validateJwt(authConfig, refreshToken, JwtType.Refresh)
+        val userId = decodedJwt.getClaim("sub").asString().asUUID()
+        val user =
+            transaction { User.findById(userId)?.toInternalModel() } ?: throw ErrorResponse.notFound("User", userId)
+
+        AccessToken(
+            generateAccessTokenForUser(user, authConfig),
+        )
     }
 }

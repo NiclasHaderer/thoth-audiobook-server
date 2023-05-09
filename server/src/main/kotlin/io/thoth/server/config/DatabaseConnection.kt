@@ -1,6 +1,6 @@
 package io.thoth.server.config
 
-internal object SqLite : DatabaseConnection {
+object SqLite : DatabaseConnection {
     override val driverClassName: String by lazy { System.getenv("DB_DRIVER_CLASS_NAME") ?: "org.sqlite.JDBC" }
     val sqlitePath: String by lazy { System.getenv("SQLITE_PATH") ?: "audiobook.db" }
     override val jdbcUrl: String by lazy { System.getenv("DB_JDBC_URL") ?: "jdbc:sqlite:$sqlitePath" }

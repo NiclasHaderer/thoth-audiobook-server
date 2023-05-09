@@ -21,3 +21,5 @@ data class ModifyUser(
     var admin: Boolean?,
     var edit: Boolean?,
 )
+
+data class AccessToken(val accessToken: String)

@@ -15,7 +15,7 @@ suspend fun imgFromURL(url: String): ByteArray {
     }
 }
 
-internal fun decodeDataURL(dataUrl: String): ByteArray {
+fun decodeDataURL(dataUrl: String): ByteArray {
     val contentStartIndex: Int = dataUrl.indexOf(",") + 1
     val data = dataUrl.substring(contentStartIndex)
     return Base64.getDecoder().decode(data)

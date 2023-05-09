@@ -12,10 +12,10 @@ import mu.KotlinLogging.logger
 abstract class TaskQueueHolder {
     private val _taskQueue = mutableListOf<ScheduledTask>()
 
-    internal val taskQueue: List<ScheduledTask>
+    protected val taskQueue: List<ScheduledTask>
         get() = modifyQueue { toList() }
 
-    internal fun <T> modifyQueue(action: MutableList<ScheduledTask>.() -> T): T {
+    protected fun <T> modifyQueue(action: MutableList<ScheduledTask>.() -> T): T {
         synchronized(_taskQueue) {
             return _taskQueue.action()
         }

@@ -1,14 +1,15 @@
 package io.thoth.server.api
 
 import io.ktor.resources.*
+import io.thoth.generators.openapi.NotSecured
 import io.thoth.generators.openapi.Secured
 import io.thoth.generators.openapi.Summary
 import io.thoth.generators.openapi.Tagged
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
-import io.thoth.server.authentication.Guards
 import io.thoth.server.common.serializion.kotlin.UUID_S
+import io.thoth.server.plugins.authentication.Guards
 
 // TODO names of libraryID, etc should be consistent
 // TODO remove unused methods in the db access layer
@@ -56,6 +57,11 @@ class Api {
             @Summary("Update password", method = "POST")
             @Resource("password")
             data class Password(private val parent: User)
+
+            @NotSecured
+            @Summary("Refresh access token", method = "POST")
+            @Resource("refresh")
+            data class Refresh(private val parent: User)
         }
     }
 
@@ -143,8 +149,8 @@ class Api {
                 @Summary("Get book", method = "GET")
                 @Summary("Update book", method = "PATCH")
                 @Summary("Replace book", method = "PUT")
-                @Resource("{bookId}")
-                data class Id(val bookId: UUID_S, private val parent: Books) {
+                @Resource("{id}")
+                data class Id(val id: UUID_S, private val parent: Books) {
                     val libraryId
                         get() = parent.libraryId
 
@@ -154,7 +160,7 @@ class Api {
                         val libraryId
                             get() = parent.libraryId
                         val id
-                            get() = parent.bookId
+                            get() = parent.id
                     }
                 }
             }
@@ -199,8 +205,8 @@ class Api {
                 @Summary("Get author", method = "GET")
                 @Summary("Update author", method = "PATCH")
                 @Summary("Replace author", method = "PUT")
-                @Resource("{authorId}")
-                data class Id(val authorId: UUID_S, private val parent: Authors) {
+                @Resource("{id}")
+                data class Id(val id: UUID_S, private val parent: Authors) {
                     val libraryId
                         get() = parent.libraryId
 
@@ -212,8 +218,8 @@ class Api {
                     ) {
                         val libraryId
                             get() = parent.libraryId
-                        val authorId
-                            get() = parent.authorId
+                        val id
+                            get() = parent.id
                     }
                 }
             }
@@ -253,8 +259,8 @@ class Api {
                 @Summary("Get series", method = "GET")
                 @Summary("Update series", method = "PATCH")
                 @Summary("Replace series", method = "PUT")
-                @Resource("{seriesId}")
-                data class Id(val seriesId: UUID_S, private val parent: Series) {
+                @Resource("{id}")
+                data class Id(val id: UUID_S, private val parent: Series) {
                     val libraryId
                         get() = parent.libraryId
 
@@ -267,7 +273,7 @@ class Api {
                         val libraryId
                             get() = parent.libraryId
                         val id
-                            get() = parent.seriesId
+                            get() = parent.id
                     }
                 }
             }

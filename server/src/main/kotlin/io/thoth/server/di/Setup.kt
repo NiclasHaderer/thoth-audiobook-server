@@ -1,5 +1,6 @@
 package io.thoth.server.di
 
+import io.ktor.http.*
 import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.metadata.audible.client.AudibleClient
@@ -16,6 +17,7 @@ import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.file.scanner.FileTreeWatcherImpl
 import io.thoth.server.file.scanner.LibraryScanner
 import io.thoth.server.file.scanner.LibraryScannerImpl
+import io.thoth.server.plugins.authentication.AuthConfig
 import io.thoth.server.schedules.ThothSchedules
 import io.thoth.server.services.AuthorRepository
 import io.thoth.server.services.AuthorServiceImpl
@@ -54,6 +56,15 @@ fun setupDependencyInjection() = startKoin {
             single<TrackManager> { TrackManagerImpl() }
             single { Scheduler() }
             single { ThothSchedules() }
+            single {
+                AuthConfig.Builder()
+                    .configure {
+                        domain = "127.0.0.1:${config.port}"
+                        protocol = if (config.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
+                        keyPairPath = "${config.configDirectory}/jwt.pem"
+                    }
+                    .build()
+            }
         },
     )
     slf4jLogger()

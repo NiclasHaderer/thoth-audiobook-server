@@ -46,3 +46,5 @@ fun String.toCron(): Cron {
     val parser = CronParser(cronDefinition)
     return parser.parse(this)
 }
+
+fun String.asUUID(): UUID = UUID.fromString(this)

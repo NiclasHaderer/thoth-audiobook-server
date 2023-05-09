@@ -30,23 +30,23 @@ fun Routing.authorRouting() {
 
     get<Api.Libraries.Id.Authors.Id.Position, Position> {
         Position(
-            sortIndex = authorService.position(it.libraryId, it.authorId, it.order.toSortOrder()),
-            id = it.authorId,
+            sortIndex = authorService.position(it.libraryId, it.id, it.order.toSortOrder()),
+            id = it.id,
             order = it.order,
         )
     }
 
-    get<Api.Libraries.Id.Authors.Id, DetailedAuthorModel> { authorService.get(it.authorId, it.libraryId) }
+    get<Api.Libraries.Id.Authors.Id, DetailedAuthorModel> { authorService.get(it.id, it.libraryId) }
 
     get<Api.Libraries.Id.Authors.Autocomplete, List<NamedId>> {
         authorService.search(it.q, it.libraryId).map { NamedId(it.id, it.name) }
     }
 
     patch<Api.Libraries.Id.Authors.Id, PartialAuthorApiModel, AuthorModel> { id, patchAuthor ->
-        authorService.modify(id.authorId, id.libraryId, patchAuthor)
+        authorService.modify(id.id, id.libraryId, patchAuthor)
     }
 
     put<Api.Libraries.Id.Authors.Id, AuthorApiModel, AuthorModel> { id, patchAuthor ->
-        authorService.replace(id.authorId, id.libraryId, patchAuthor)
+        authorService.replace(id.id, id.libraryId, patchAuthor)
     }
 }

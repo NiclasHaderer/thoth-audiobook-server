@@ -2,6 +2,8 @@ package io.thoth.generators.openapi
 
 @Target(AnnotationTarget.CLASS) annotation class Secured(val name: String)
 
+@Target(AnnotationTarget.CLASS) annotation class NotSecured
+
 @Target(AnnotationTarget.CLASS) annotation class Tagged(val name: String)
 
 @Target(AnnotationTarget.CLASS) annotation class Description(val description: String)

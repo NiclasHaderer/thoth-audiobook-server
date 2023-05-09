@@ -32,7 +32,7 @@ interface TrackManager {
     fun removePath(path: Path)
 }
 
-internal class TrackManagerImpl() : TrackManager, KoinComponent {
+class TrackManagerImpl() : TrackManager, KoinComponent {
     private val bookRepository by inject<BookRepository>()
     private val seriesRepository by inject<SeriesRepository>()
     private val authorRepository by inject<AuthorRepository>()
