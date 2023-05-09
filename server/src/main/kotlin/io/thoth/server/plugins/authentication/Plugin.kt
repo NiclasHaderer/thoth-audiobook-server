@@ -43,7 +43,7 @@ fun Application.configureAuthentication() {
             }
         }
 
-        jwt(Guards.Edit) {
+        jwt(Guards.Editor) {
             if (authConfig.realm != null) {
                 realm = authConfig.realm!!
             }

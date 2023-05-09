@@ -11,11 +11,11 @@ import io.thoth.models.Position
 import io.thoth.server.common.serializion.kotlin.UUID_S
 import io.thoth.server.plugins.authentication.Guards
 
-// TODO names of libraryID, etc should be consistent
 // TODO remove unused methods in the db access layer
 @Resource("api")
 class Api {
 
+    @Secured(Guards.Normal)
     @Resource("fs")
     @Summary("List folders at a certain path", method = "GET")
     @Tagged("Filesystem")
@@ -65,21 +65,25 @@ class Api {
         }
     }
 
+    @Secured(Guards.Normal)
     @Summary("Ping server", method = "GET")
     @Tagged("Server")
     @Resource("ping")
     data class Ping(private val parent: Api)
 
+    @Secured(Guards.Normal)
     @Summary("List file scanners", method = "GET")
     @Tagged("Scanner")
     @Resource("scanners")
     data class Scanners(private val parent: Api)
 
+    @Secured(Guards.Normal)
     @Summary("List metadata agents", method = "GET")
     @Tagged("Scanner")
     @Resource("metadata-agents")
     data class MetadataScanners(private val parent: Api)
 
+    @Secured(Guards.Normal)
     @Summary("List libraries", method = "GET")
     @Summary("Create library", method = "POST")
     @Resource("libraries")
@@ -102,6 +106,7 @@ class Api {
             }
         }
 
+        @Secured(Guards.Editor)
         @Summary("Rescan all libraries", method = "POST")
         @Resource("rescan")
         data class Rescan(private val parent: Libraries)
@@ -298,6 +303,7 @@ class Api {
         }
     }
 
+    @Secured(Guards.Normal)
     @Resource("metadata")
     @Tagged("Metadata")
     data class Metadata(private val parent: Api) {
