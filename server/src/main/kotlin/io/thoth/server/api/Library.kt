@@ -9,6 +9,7 @@ import io.thoth.generators.openapi.put
 import io.thoth.models.LibraryModel
 import io.thoth.models.SearchModel
 import io.thoth.server.common.scheduling.Scheduler
+import io.thoth.server.plugins.authentication.thothPrincipal
 import io.thoth.server.schedules.ThothSchedules
 import io.thoth.server.services.LibraryRepository
 import io.thoth.server.services.SearchService
@@ -36,11 +37,16 @@ fun Routing.libraryRouting() {
 
     post<Api.Libraries, LibraryApiModel, LibraryModel> { _, postLibrary -> libraryRepository.create(postLibrary) }
 
-    post<Api.Libraries.Rescan, Unit, Unit> { _, _ -> scheduler.launchScheduledJob(schedules.fullScan) }
+    post<Api.Libraries.Rescan, Unit, Unit> { _, _ ->
+        val libsToScan = thothPrincipal().accessToLibs
+        scheduler.dispatch(schedules.scanLibraries.build(libsToScan))
+    }
 
     get<Api.Libraries.Search, SearchModel> {
+        val libsToSearch = thothPrincipal().accessToLibs
+
         if (it.q != null) {
-            return@get SearchService.everywhere(it.q)
+            return@get SearchService.everywhere(it.q, libsToSearch)
         }
 
         throw ErrorResponse.notImplemented(

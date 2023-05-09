@@ -13,7 +13,8 @@ open class AuthorModel(
     val website: String?,
     val bornIn: String?,
     val birthDate: LocalDate?,
-    val deathDate: LocalDate?
+    val deathDate: LocalDate?,
+    val library: TitledId,
 )
 
 class DetailedAuthorModel(
@@ -27,6 +28,7 @@ class DetailedAuthorModel(
     bornIn: String?,
     birthDate: LocalDate?,
     deathDate: LocalDate?,
+    library: TitledId,
     val books: List<BookModel>,
     val series: List<SeriesModel>,
 ) :
@@ -41,6 +43,7 @@ class DetailedAuthorModel(
         bornIn = bornIn,
         birthDate = birthDate,
         deathDate = deathDate,
+        library = library,
     ) {
     companion object {
         fun fromModel(author: AuthorModel, books: List<BookModel>, series: List<SeriesModel>) =
@@ -57,6 +60,7 @@ class DetailedAuthorModel(
                 series = series,
                 provider = author.provider,
                 providerID = author.providerID,
+                library = author.library,
             )
     }
 }

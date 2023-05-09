@@ -10,7 +10,6 @@ import io.thoth.generators.openapi.responses.BinaryResponse
 import io.thoth.generators.openapi.responses.FileResponse
 import io.thoth.generators.openapi.responses.binaryResponse
 import io.thoth.generators.openapi.responses.fileResponse
-import io.thoth.server.database.access.getById
 import io.thoth.server.database.tables.Image
 import io.thoth.server.database.tables.Track
 import java.nio.file.Path
@@ -21,8 +20,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Routing.audioRouting() {
     get<Api.Files.Audio.Id, FileResponse> { (id) ->
-        val track = transaction { Track.getById(id) } ?: throw ErrorResponse.notFound("Track", id)
-        val path = Path.of(track.path)
+        val track = transaction { Track.findById(id)?.path } ?: throw ErrorResponse.notFound("Track", id)
+        val path = Path.of(track)
         if (!path.exists() && path.isRegularFile()) {
             throw ErrorResponse.notFound("File", path.name, "Database out of sync. Please start a rescan.")
         }
@@ -37,8 +36,8 @@ fun Routing.audioRouting() {
 fun Routing.imageRouting() {
     get<Api.Files.Images.Id, BinaryResponse> { (id) ->
         transaction {
-            val imageBlob = Image.getById(id)?.blob ?: throw ErrorResponse.notFound("Image", id)
-            binaryResponse(imageBlob)
+            val imageBlob = Image.findById(id)?.blob ?: throw ErrorResponse.notFound("Image", id)
+            binaryResponse(imageBlob.bytes)
         }
     }
 }

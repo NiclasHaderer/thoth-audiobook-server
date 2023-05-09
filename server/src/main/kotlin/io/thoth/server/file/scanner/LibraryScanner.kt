@@ -6,12 +6,14 @@ import io.thoth.server.database.access.hasBeenUpdated
 import io.thoth.server.database.access.markAsTouched
 import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.Library
+import io.thoth.server.database.tables.TLibraries
 import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.Track
 import io.thoth.server.file.TrackManager
 import io.thoth.server.services.LibraryRepository
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.getLastModifiedTime
@@ -22,7 +24,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 interface LibraryScanner {
-    fun fullScan()
+    fun fullScan(libraryIDs: List<UUID>)
     fun scanLibrary(library: LibraryModel)
     fun scanLibrary(library: Library)
     fun scanFolder(folder: Path, library: Library?)
@@ -65,7 +67,7 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         trackManager.removePath(path)
     }
 
-    override fun fullScan() {
+    override fun fullScan(libraryIDs: List<UUID>) {
         log.info { "Starting full scan" }
         if (fullScanIsOngoing.get()) {
             log.info { "Full scan already running" }
@@ -73,7 +75,7 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         }
         fullScanIsOngoing.set(true)
         log.info { "Starting complete scan" }
-        val libraries = transaction { Library.all().map { it.toModel() } }
+        val libraries = transaction { Library.find { TLibraries.id inList libraryIDs }.map { it.toModel() } }
         libraries.forEach { library ->
             log.info { "Scanning library ${library.name}" }
             scanLibrary(library)

@@ -1,9 +1,14 @@
 package io.thoth.server.plugins.authentication
 
 import com.auth0.jwt.interfaces.Payload
+import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.util.pipeline.*
+import io.thoth.generators.openapi.errors.ErrorResponse
+import io.thoth.server.database.tables.User
 import java.util.*
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class ThothPrincipal(
     val payload: Payload,
@@ -11,14 +16,16 @@ class ThothPrincipal(
     val userId: UUID,
     val edit: Boolean,
     val admin: Boolean,
-    val type: JwtType
+    val type: JwtType,
+    val accessToLibs: List<UUID>,
 ) : Principal
 
 fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
     val username = credentials.payload.getClaim("username").asString() ?: return null
     val edit = credentials.payload.getClaim("edit").asBoolean() ?: return null
     val admin = credentials.payload.getClaim("admin").asBoolean() ?: return null
-    val userId = credentials.payload.getClaim("sub").asString() ?: return null
+    val userIdStr = credentials.payload.getClaim("sub").asString() ?: return null
+    val userId = UUID.fromString(userIdStr)
     val enumType =
         try {
             val type = credentials.payload.getClaim("type").asString() ?: return null
@@ -27,12 +34,29 @@ fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
             return null
         }
 
+    val libraries = transaction { User.findById(userId)?.libraries?.map { it.id.value } } ?: return null
+
     return ThothPrincipal(
         payload = credentials.payload,
         username = username,
-        userId = UUID.fromString(userId),
+        userId = userId,
         edit = edit,
         admin = admin,
         type = enumType,
+        accessToLibs = libraries,
     )
+}
+
+fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipal {
+    return thothPrincipalOrNull()
+        ?: throw ErrorResponse.internalError("Could not get principal. Route has to be guarded with one of the Guards")
+}
+
+fun PipelineContext<Unit, ApplicationCall>.thothPrincipalOrNull(): ThothPrincipal? = call.principal()
+
+fun PipelineContext<Unit, ApplicationCall>.assertAccess(libraryId: UUID) {
+    val principal = thothPrincipal()
+    if (!principal.accessToLibs.contains(libraryId)) {
+        throw ErrorResponse.forbidden("access", "Library $libraryId")
+    }
 }
