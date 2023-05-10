@@ -5,7 +5,7 @@ import java.util.*
 
 class UUIDTsGenerator : TsGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
-        return "type UUID = `\${string}-\${string}-\${string}-\${string}-\${string}` | string"
+        return "type UUID = `\${string}-\${string}-\${string}-\${string}-\${string}`"
     }
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT

@@ -17,7 +17,7 @@ class ThothPrincipal(
     val edit: Boolean,
     val admin: Boolean,
     val type: JwtType,
-    val accessToLibs: List<UUID>,
+    val accessToLibs: List<UUID>?,
 ) : Principal
 
 fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
@@ -43,7 +43,7 @@ fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
         edit = edit,
         admin = admin,
         type = enumType,
-        accessToLibs = libraries,
+        accessToLibs = libraries.size.takeIf { it > 0 }.let { null },
     )
 }
 
@@ -54,9 +54,13 @@ fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipal {
 
 fun PipelineContext<Unit, ApplicationCall>.thothPrincipalOrNull(): ThothPrincipal? = call.principal()
 
-fun PipelineContext<Unit, ApplicationCall>.assertAccess(libraryId: UUID) {
+fun PipelineContext<Unit, ApplicationCall>.assertAccessToLibraryId(vararg libraryIds: UUID) {
     val principal = thothPrincipal()
-    if (!principal.accessToLibs.contains(libraryId)) {
-        throw ErrorResponse.forbidden("access", "Library $libraryId")
+    if (principal.accessToLibs == null) return
+
+    libraryIds.forEach { libraryId ->
+        if (!principal.accessToLibs.contains(libraryId)) {
+            throw ErrorResponse.forbidden("access", "Library $libraryId")
+        }
     }
 }

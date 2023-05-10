@@ -41,13 +41,16 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE,
     params: PARAMS,
 ) {
+    if (params is BeforeBodyParsing) params.run { beforeBodyParsing() }
     val parsedBody: BODY = call.parseBody()
+    if (params is AfterBodyParsing) params.run { afterBodyParsing() }
     val response: RESPONSE = this.callback(params, parsedBody)
     if (response is BaseResponse) {
         response.respond(call)
     } else {
         call.respond(response ?: "")
     }
+    if (params is AfterResponse) params.run { afterResponse() }
 }
 
 inline fun <reified PARAMS : Any, reified RESPONSE> Route.wrapRequest(

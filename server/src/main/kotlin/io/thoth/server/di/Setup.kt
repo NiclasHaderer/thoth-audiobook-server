@@ -36,7 +36,12 @@ fun setupDependencyInjection() = startKoin {
     modules(
         module {
             single { config }
-            single<MetadataProviders> { MetadataProviders(listOf(AudibleClient())) }
+            single<MetadataProviders> {
+                val allProviders = listOf(AudibleClient())
+                MetadataProviders(
+                    allProviders + MetadataWrapper(allProviders),
+                )
+            }
             single<MetadataWrapper> { MetadataWrapper(get<MetadataProviders>()) }
             single<FileTreeWatcher> { FileTreeWatcherImpl() }
             single<AudioFileAnalyzers> {
