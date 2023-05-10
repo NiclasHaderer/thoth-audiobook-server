@@ -17,7 +17,7 @@ class AudibleBookTest {
 
     @Test
     fun testAudibleBook() = runBlocking {
-        val book = client.getBookByID(client.uniqueName, "B017V54W6O", "us")
+        val book = client._getBookByID(client.uniqueName, "B017V54W6O", "us")
 
         assertEquals(
             MetadataBookImpl(
@@ -61,7 +61,7 @@ class AudibleBookTest {
 
     @Test
     fun testFindAudibleBook() = runBlocking {
-        val book = client.getBookByName("Harry Potter and the Philosopher's Stone", "us", "J.K. Rowling").firstOrNull()
+        val book = client._getBookByName("Harry Potter and the Philosopher's Stone", "us", "J.K. Rowling").firstOrNull()
 
         assertEquals(
             MetadataBookImpl(
