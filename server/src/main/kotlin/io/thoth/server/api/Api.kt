@@ -1,7 +1,9 @@
 package io.thoth.server.api
 
 import io.ktor.resources.*
+import io.thoth.generators.openapi.BeforeBodyParsing
 import io.thoth.generators.openapi.NotSecured
+import io.thoth.generators.openapi.RouteHandler
 import io.thoth.generators.openapi.Secured
 import io.thoth.generators.openapi.Summary
 import io.thoth.generators.openapi.Tagged
@@ -10,6 +12,7 @@ import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
 import io.thoth.server.common.serializion.kotlin.UUID_S
 import io.thoth.server.plugins.authentication.Guards
+import io.thoth.server.plugins.authentication.assertAccessToLibraryId
 
 // TODO remove unused methods in the db access layer
 @Resource("api")
@@ -116,7 +119,11 @@ class Api {
         @Summary("Delete library", method = "DELETE")
         @Summary("Update library", method = "PATCH")
         @Summary("Get library", method = "GET")
-        data class Id(val libraryId: UUID_S, private val parent: Libraries) {
+        data class Id(val libraryId: UUID_S, private val parent: Libraries) : BeforeBodyParsing {
+            override suspend fun RouteHandler.beforeBodyParsing() {
+                assertAccessToLibraryId(libraryId)
+            }
+
             @Summary("Rescan library", method = "POST")
             @Resource("rescan")
             data class Rescan(private val parent: Id) {

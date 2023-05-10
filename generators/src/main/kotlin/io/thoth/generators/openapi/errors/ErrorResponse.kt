@@ -18,8 +18,8 @@ class ErrorResponse internal constructor(val status: HttpStatusCode, message: St
             return ErrorResponse(HttpStatusCode.BadRequest, message, details)
         }
 
-        fun unauthorized(resource: String, details: Any? = null): ErrorResponse {
-            return ErrorResponse(HttpStatusCode.Unauthorized, "Unauthorized to access $resource", details)
+        fun unauthorized(message: String, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.Unauthorized, message, details)
         }
 
         fun forbidden(
