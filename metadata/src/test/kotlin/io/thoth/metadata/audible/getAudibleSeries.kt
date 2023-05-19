@@ -200,7 +200,7 @@ class AudibleSeriesTest {
                         language = "English",
                     ),
                 ),
-            author = "J.K. Rowling",
+            authors = "J.K. Rowling",
             coverURL = null,
             primaryWorks = 7,
         )

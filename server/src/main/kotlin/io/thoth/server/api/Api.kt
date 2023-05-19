@@ -174,6 +174,16 @@ class Api {
                         val id
                             get() = parent.id
                     }
+
+                    @Summary("Auto match book", method = "POST")
+                    @Resource("automatch")
+                    data class AutoMatch(private val parent: Id) {
+                        val libraryId
+                            get() = parent.libraryId
+
+                        val id
+                            get() = parent.id
+                    }
                 }
             }
 
@@ -233,6 +243,16 @@ class Api {
                         val id
                             get() = parent.id
                     }
+
+                    @Summary("Auto match book", method = "POST")
+                    @Resource("automatch")
+                    data class AutoMatch(private val parent: Id) {
+                        val libraryId
+                            get() = parent.libraryId
+
+                        val id
+                            get() = parent.id
+                    }
                 }
             }
 
@@ -284,6 +304,16 @@ class Api {
                     ) {
                         val libraryId
                             get() = parent.libraryId
+                        val id
+                            get() = parent.id
+                    }
+
+                    @Summary("Auto match book", method = "POST")
+                    @Resource("automatch")
+                    data class AutoMatch(private val parent: Id) {
+                        val libraryId
+                            get() = parent.libraryId
+
                         val id
                             get() = parent.id
                     }

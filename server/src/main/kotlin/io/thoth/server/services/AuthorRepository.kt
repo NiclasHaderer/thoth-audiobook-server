@@ -47,6 +47,18 @@ class AuthorServiceImpl : AuthorRepository {
             .map { it.toModel() }
     }
 
+    override fun getOrCreate(authorName: String): Author {
+        TODO("Not yet implemented")
+    }
+
+    override fun create(authorName: String): Author {
+        TODO("Not yet implemented")
+    }
+
+    override fun autoMatch(id: UUID, libraryId: UUID): AuthorModel {
+        TODO("Not yet implemented")
+    }
+
     override fun getAll(libraryId: UUID, order: SortOrder, limit: Int, offset: Long): List<AuthorModel> = transaction {
         Author.find { TAuthors.library eq libraryId }
             .orderBy(TAuthors.name.lowerCase() to order)

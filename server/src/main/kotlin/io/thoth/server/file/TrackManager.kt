@@ -7,7 +7,6 @@ import io.thoth.server.database.tables.Author
 import io.thoth.server.database.tables.Book
 import io.thoth.server.database.tables.Image
 import io.thoth.server.database.tables.Library
-import io.thoth.server.database.tables.Series
 import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.Track
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
@@ -122,7 +121,9 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
     }
 
     private fun updateBook(book: Book, scan: AudioFileAnalysisResult, dbAuthor: Author, libraryModel: Library): Book {
-        val dbSeries = if (scan.series != null) getOrCreateSeries(scan, dbAuthor, libraryModel) else null
+        val dbSeries =
+            if (scan.series != null) seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthor)
+            else null
         val dbImage = if (scan.cover != null && book.coverID == null) Image.create(scan.cover!!).id else book.coverID
 
         return book.apply {
@@ -137,7 +138,9 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
     }
 
     private fun createBook(scan: AudioFileAnalysisResult, dbAuthor: Author, libraryModel: Library): Book {
-        val dbSeries = if (scan.series != null) getOrCreateSeries(scan, dbAuthor, libraryModel) else null
+        val dbSeries =
+            if (scan.series != null) seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthor)
+            else null
         val dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
         val dbSeriesList = if (dbSeries != null) listOf(dbSeries) else listOf()
 
@@ -150,22 +153,6 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
             series = SizedCollection(dbSeriesList)
             coverID = dbImage?.id
             library = libraryModel
-        }
-    }
-
-    private fun getOrCreateSeries(scan: AudioFileAnalysisResult, dbAuthor: Author, dbLib: Library): Series {
-        val series = seriesRepository.findByName(scan.series!!, dbLib.id.value)
-
-        return if (series != null) {
-            series.authors = series.authors.add(dbAuthor)
-            series
-        } else {
-            log.info("Created series: ${scan.series}")
-            Series.new {
-                title = scan.series!!
-                authors = SizedCollection(dbAuthor)
-                library = Library[dbLib.id]
-            }
         }
     }
 
