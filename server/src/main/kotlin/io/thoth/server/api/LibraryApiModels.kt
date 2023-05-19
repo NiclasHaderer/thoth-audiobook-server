@@ -16,6 +16,8 @@ data class LibraryApiModel(
         require(folders.isNotEmpty())
         require(metadataScanners.isNotEmpty())
         require(fileScanners.isNotEmpty())
+        // TODO verify that the metadataScanner exists
+        // TODO verify that the fileScanner exists
     }
 }
 
@@ -31,5 +33,7 @@ data class PartialLibraryApiModel(
         require(folders == null || folders.isNotEmpty())
         require(metadataScanners == null || metadataScanners.isNotEmpty())
         require(fileScanners == null || fileScanners.isNotEmpty())
+        // TODO verify that the metadataScanner exists
+        // TODO verify that the fileScanner exists
     }
 }

@@ -37,7 +37,7 @@ suspend fun getAudibleSeries(region: AudibleRegions, asin: String): MetadataSeri
         description = getSeriesDescription(document),
         totalBooks = getBookCount(document),
         books = seriesBooks,
-        author = seriesBooks.firstOrNull()?.author?.name,
+        authors = seriesBooks.firstOrNull()?.author?.name,
         coverURL = null,
         primaryWorks = seriesBooks.size,
     )

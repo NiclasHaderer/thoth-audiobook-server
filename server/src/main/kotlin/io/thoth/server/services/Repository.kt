@@ -16,5 +16,6 @@ interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API, COMPLETE_API> {
     fun position(id: UUID, libraryId: UUID, order: SortOrder): Long
     fun modify(id: UUID, libraryId: UUID, partial: PARTIAL_API): NORMAL
     fun replace(id: UUID, libraryId: UUID, complete: COMPLETE_API): NORMAL
+    fun autoMatch(id: UUID, libraryId: UUID): NORMAL
     fun total(libraryId: UUID): Long
 }

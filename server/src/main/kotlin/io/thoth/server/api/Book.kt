@@ -66,4 +66,6 @@ fun Routing.bookRouting() {
     put<Api.Libraries.Id.Books.Id, BookApiModel, BookModel> { id, putBook ->
         bookRepository.replace(id.id, id.libraryId, putBook)
     }
+
+    post<Api.Libraries.Id.Books.Id.AutoMatch, Unit, BookModel> { id, _ -> }
 }
