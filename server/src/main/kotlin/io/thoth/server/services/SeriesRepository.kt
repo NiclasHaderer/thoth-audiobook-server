@@ -176,7 +176,7 @@ class SeriesRepositoryImpl() : SeriesRepository, KoinComponent {
             }
                 ?: return@transaction series.toModel()
 
-        val authors = seriesMetadata.authors?.map { authorRepository.getOrCreate(it).id.value }
+        val authors = seriesMetadata.authors?.map { authorRepository.getOrCreate(it, libraryId).id.value }
 
         modify(
             id,
