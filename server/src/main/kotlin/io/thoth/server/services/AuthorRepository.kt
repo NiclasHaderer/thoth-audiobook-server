@@ -1,29 +1,35 @@
 package io.thoth.server.services
 
 import io.thoth.generators.openapi.errors.ErrorResponse
+import io.thoth.metadata.MetadataProviders
+import io.thoth.metadata.MetadataWrapper
 import io.thoth.models.AuthorModel
 import io.thoth.models.DetailedAuthorModel
 import io.thoth.server.api.AuthorApiModel
 import io.thoth.server.api.PartialAuthorApiModel
+import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.Author
-import io.thoth.server.database.tables.Image
-import io.thoth.server.database.tables.TAuthors
-import io.thoth.server.database.tables.TBooks
-import io.thoth.server.database.tables.TSeries
+import io.thoth.server.database.tables.*
 import java.util.*
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 interface AuthorRepository :
     Repository<Author, AuthorModel, DetailedAuthorModel, PartialAuthorApiModel, AuthorApiModel> {
     fun findByName(authorName: String, libraryId: UUID): Author?
+    fun getOrCreate(authorName: String, libraryId: UUID): Author
+    fun create(authorName: String, libraryId: UUID): Author
 }
 
-class AuthorServiceImpl : AuthorRepository {
+class AuthorServiceImpl : AuthorRepository, KoinComponent {
+    val metadataProviders by inject<MetadataProviders>()
+
     override fun findByName(authorName: String, libraryId: UUID): Author? = transaction {
         Author.find { TAuthors.name like authorName and (TAuthors.library eq libraryId) }.firstOrNull()
     }
@@ -47,16 +53,28 @@ class AuthorServiceImpl : AuthorRepository {
             .map { it.toModel() }
     }
 
-    override fun getOrCreate(authorName: String): Author {
-        TODO("Not yet implemented")
+    override fun getOrCreate(authorName: String, libraryId: UUID): Author {
+        return Author.findOne { TAuthors.name like authorName and (TAuthors.library eq libraryId) }
+            ?: create(
+                authorName,
+                libraryId,
+            )
     }
 
-    override fun create(authorName: String): Author {
-        TODO("Not yet implemented")
+    override fun create(authorName: String, libraryId: UUID): Author {
+        return Author.new { name = authorName }.also { it.library = Library[libraryId] }
     }
 
     override fun autoMatch(id: UUID, libraryId: UUID): AuthorModel {
-        TODO("Not yet implemented")
+        val library = Library[libraryId]
+        val author = Author[libraryId]
+        val metadataAgent = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
+        val result = runBlocking { metadataAgent.getAuthorByName(author.name, library.language).firstOrNull() }
+        return author
+            .apply {
+                // TODO
+            }
+            .toModel()
     }
 
     override fun getAll(libraryId: UUID, order: SortOrder, limit: Int, offset: Long): List<AuthorModel> = transaction {

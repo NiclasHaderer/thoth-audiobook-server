@@ -137,4 +137,8 @@ class BookRepositoryImpl() : BookRepository, KoinComponent {
         }
         book.toModel()
     }
+
+    override fun autoMatch(id: UUID, libraryId: UUID): BookModel {
+        TODO("Not yet implemented")
+    }
 }

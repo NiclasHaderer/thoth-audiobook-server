@@ -3,12 +3,9 @@ package io.thoth.server.api
 import io.ktor.server.routing.*
 import io.thoth.generators.openapi.get
 import io.thoth.generators.openapi.patch
+import io.thoth.generators.openapi.post
 import io.thoth.generators.openapi.put
-import io.thoth.models.BookModel
-import io.thoth.models.DetailedBookModel
-import io.thoth.models.PaginatedResponse
-import io.thoth.models.Position
-import io.thoth.models.TitledId
+import io.thoth.models.*
 import io.thoth.server.services.BookRepository
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
@@ -67,5 +64,7 @@ fun Routing.bookRouting() {
         bookRepository.replace(id.id, id.libraryId, putBook)
     }
 
-    post<Api.Libraries.Id.Books.Id.AutoMatch, Unit, BookModel> { id, _ -> }
+    post<Api.Libraries.Id.Books.Id.AutoMatch, Unit, BookModel> { id, _ ->
+        bookRepository.autoMatch(id.id, id.libraryId)
+    }
 }

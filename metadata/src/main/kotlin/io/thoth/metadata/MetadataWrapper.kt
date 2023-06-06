@@ -1,11 +1,7 @@
 package io.thoth.metadata
 
-import io.thoth.metadata.responses.MetadataAuthor
-import io.thoth.metadata.responses.MetadataBook
-import io.thoth.metadata.responses.MetadataLanguage
-import io.thoth.metadata.responses.MetadataSearchBook
-import io.thoth.metadata.responses.MetadataSearchCount
-import io.thoth.metadata.responses.MetadataSeries
+import io.thoth.metadata.responses.*
+import io.thoth.models.MetadataAgent
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -14,6 +10,15 @@ import me.xdrop.fuzzywuzzy.FuzzySearch
 class MetadataWrapper(
     private val providerList: List<MetadataProvider>,
 ) : MetadataProvider() {
+
+    companion object {
+        fun fromAgents(agents: List<MetadataAgent>, availableAgents: List<MetadataProvider>): MetadataProvider {
+            val agentsToUse =
+                availableAgents.filter { agentInstance -> agents.any { it.name == agentInstance.uniqueName } }
+            return MetadataWrapper(agentsToUse)
+        }
+    }
+
     override var uniqueName = "All Providers"
     override val supportedCountryCodes: List<String>
         get() = providerList.flatMap { it.supportedCountryCodes }.distinct()
