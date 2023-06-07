@@ -5,7 +5,6 @@ import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.audible.models.getValue
 import io.thoth.metadata.replaceAll
 import io.thoth.metadata.responses.MetadataBookImpl
-import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import org.json.JSONArray
@@ -50,16 +49,6 @@ private fun getPublishedDate(document: Document): LocalDate? {
 }
 
 private fun extractNarrator(document: Document) = document.selectFirst(".narratorLabel a")?.text()
-
-private fun extractAuthorInfo(document: Document): MetadataSearchAuthorImpl? {
-    val authorLink = document.selectFirst(".authorLabel a") ?: return null
-    val link = authorLink.absUrl("href").split("?").first()
-    return MetadataSearchAuthorImpl(
-        link = link,
-        name = authorLink.text(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
-    )
-}
 
 private fun getDescription(document: Document) = document.selectFirst(".productPublisherSummary span")?.text()
 

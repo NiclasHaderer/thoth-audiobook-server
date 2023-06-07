@@ -84,14 +84,19 @@ private fun extractImageUrl(element: Element): String? {
     return imageURL
 }
 
-private fun extractAuthorInfo(element: Element): MetadataSearchAuthorImpl? {
-    val authorLink = element.selectFirst(".authorLabel a") ?: return null
-    val link = authorLink.absUrl("href").split("?").first()
-    return MetadataSearchAuthorImpl(
-        link = link,
-        name = authorLink.text(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
-    )
+internal fun extractAuthorInfo(element: Element): List<MetadataSearchAuthorImpl>? {
+
+    val authorElements = element.select(".authorLabel a")
+    if (authorElements.isEmpty()) return null
+
+    return authorElements.map { authorLink ->
+        val link = authorLink.absUrl("href").split("?").first()
+        MetadataSearchAuthorImpl(
+            link = link,
+            name = authorLink.text(),
+            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
+        )
+    }
 }
 
 private fun extractTitle(element: Element, regions: AudibleRegions): String? =
