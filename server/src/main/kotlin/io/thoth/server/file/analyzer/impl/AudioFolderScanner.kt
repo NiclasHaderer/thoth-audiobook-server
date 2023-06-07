@@ -38,7 +38,7 @@ class AudioFolderScanner : AudioFileAnalyzer {
         return AudioFileAnalysisResultImpl(
             // Uses the filename as fallback
             title = tags.title,
-            authors = tags.author ?: author,
+            authors = tags.authors ?: listOf(author),
             book = tags.book ?: book,
             series = tags.series ?: series,
             description = tags.description,

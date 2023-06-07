@@ -4,9 +4,9 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 
 object TAuthorBookMapping : Table("AuthorBookMapping") {
-    val author = reference("author", TAuthors, onDelete = ReferenceOption.CASCADE)
+    val authors = reference("author", TAuthors, onDelete = ReferenceOption.CASCADE)
     val book = reference("book", TBooks, onDelete = ReferenceOption.CASCADE)
-    override val primaryKey = PrimaryKey(author, book)
+    override val primaryKey = PrimaryKey(authors, book)
 }
 
 object TGenreBookMapping : Table("GenreBookMapping") {

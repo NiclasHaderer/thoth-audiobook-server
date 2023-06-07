@@ -2,7 +2,6 @@ package io.thoth.metadata.audible.client
 
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
 import io.thoth.metadata.audible.models.AudibleRegions
-import io.thoth.metadata.packAsList
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSeriesImpl
 import org.jsoup.nodes.Element
@@ -38,7 +37,7 @@ suspend fun getAudibleSeries(region: AudibleRegions, asin: String): MetadataSeri
         description = getSeriesDescription(document),
         totalBooks = getBookCount(document),
         books = seriesBooks,
-        authors = seriesBooks.firstOrNull()?.author?.name?.packAsList(),
+        authors = seriesBooks.firstOrNull()?.authors?.mapNotNull { it.name }?.ifEmpty { null } ?: emptyList(),
         coverURL = null,
         primaryWorks = seriesBooks.size,
     )

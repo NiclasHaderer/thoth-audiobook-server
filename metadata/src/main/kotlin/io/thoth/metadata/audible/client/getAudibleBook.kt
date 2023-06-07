@@ -20,7 +20,7 @@ suspend fun getAudibleBook(region: AudibleRegions, asin: String): MetadataBookIm
         description = getDescription(document),
         title = extractTitle(document, region),
         coverURL = extractImageUrl(document),
-        author = extractAuthorInfo(document),
+        authors = extractAuthorInfo(document),
         series = extractBookSeriesInfo(document),
         narrator = extractNarrator(document),
         releaseDate = getPublishedDate(document),

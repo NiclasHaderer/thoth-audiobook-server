@@ -17,7 +17,7 @@ class AudibleBookTest {
 
     @Test
     fun testAudibleBook() = runBlocking {
-        val book = client._getBookByID(client.uniqueName, "B017V54W6O", "us")
+        val book = client.getBookByID(client.uniqueName, "B017V54W6O", "us")
 
         assertEquals(
             MetadataBookImpl(
@@ -26,7 +26,7 @@ class AudibleBookTest {
                     "\"Turning the envelope over, his hand trembling, Harry saw a purple wax seal bearing a coat of arms; a lion, an eagle, a badger and a snake surrounding a large letter 'H'.\" Harry Potter has never even heard of Hogwarts when the letters start dropping on the doormat at number four, Privet Drive. Addressed in green ink on yellowish parchment with a purple seal, they are swiftly confiscated by his grisly aunt and uncle. Then, on Harry's eleventh birthday, a great beetle-eyed giant of a man called Rubeus Hagrid bursts in with some astonishing news: Harry Potter is a wizard, and he has a place at Hogwarts School of Witchcraft and Wizardry. An incredible adventure is about to begin! Having now become classics of our time, the Harry Potter audiobooks never fail to bring comfort and escapism to listeners of all ages. With its message of hope, belonging and the enduring power of truth and love, the story of the Boy Who Lived continues to delight generations of new listeners. Theme music composed by James Hannigan.",
                 title = "Harry Potter and the Philosopher's Stone",
                 link = "https://audible.com/pd/B017V54W6O",
-                author =
+                authors =
                     MetadataSearchAuthorImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                         name = "J.K. Rowling",
@@ -61,7 +61,7 @@ class AudibleBookTest {
 
     @Test
     fun testFindAudibleBook() = runBlocking {
-        val book = client._getBookByName("Harry Potter and the Philosopher's Stone", "us", "J.K. Rowling").firstOrNull()
+        val book = client.getBookByName("Harry Potter and the Philosopher's Stone", "us", "J.K. Rowling").firstOrNull()
 
         assertEquals(
             MetadataBookImpl(
@@ -70,7 +70,7 @@ class AudibleBookTest {
                     "\"Turning the envelope over, his hand trembling, Harry saw a purple wax seal bearing a coat of arms; a lion, an eagle, a badger and a snake surrounding a large letter 'H'.\" Harry Potter has never even heard of Hogwarts when the letters start dropping on the doormat at number four, Privet Drive. Addressed in green ink on yellowish parchment with a purple seal, they are swiftly confiscated by his grisly aunt and uncle. Then, on Harry's eleventh birthday, a great beetle-eyed giant of a man called Rubeus Hagrid bursts in with some astonishing news: Harry Potter is a wizard, and he has a place at Hogwarts School of Witchcraft and Wizardry. An incredible adventure is about to begin! Having now become classics of our time, the Harry Potter audiobooks never fail to bring comfort and escapism to listeners of all ages. With its message of hope, belonging and the enduring power of truth and love, the story of the Boy Who Lived continues to delight generations of new listeners. Theme music composed by James Hannigan.",
                 title = "Harry Potter and the Philosopher's Stone",
                 link = "https://audible.com/pd/B017V54W6O",
-                author =
+                authors =
                     MetadataSearchAuthorImpl(
                         id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                         name = "J.K. Rowling",

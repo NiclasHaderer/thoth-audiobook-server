@@ -57,17 +57,23 @@ class AudibleClient(private val imageSize: Int = 500) : MetadataProvider() {
         val searchResult = _search(region, author = authorName)
 
         return coroutineScope {
-            FuzzySearch.extractSorted(authorName, searchResult) { it.author!!.name }
+            FuzzySearch.extractSorted(authorName, searchResult) { search ->
+                    search.authors!!.joinToString(", ") { it.name ?: "" }
+                }
                 .map {
                     async {
-                        _getAuthorByID(
-                            providerId = uniqueName,
-                            authorId = it.referent.author!!.id.itemID,
-                            region = region,
-                        )
+                        it.referent.authors?.map { author ->
+                            _getAuthorByID(
+                                providerId = uniqueName,
+                                authorId = author.id.itemID,
+                                region = region,
+                            )
+                        }
                     }
                 }
                 .awaitAll()
+                .filterNotNull()
+                .flatten()
                 .distinctBy { it?.id?.itemID }
                 .filterNotNull()
         }

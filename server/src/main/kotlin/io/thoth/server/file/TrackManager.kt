@@ -27,7 +27,7 @@ interface TrackManager {
     fun removePath(path: Path)
 }
 
-class TrackManagerImpl() : TrackManager, KoinComponent {
+class TrackManagerImpl : TrackManager, KoinComponent {
     private val bookRepository by inject<BookRepository>()
     private val seriesRepository by inject<SeriesRepository>()
     private val authorRepository by inject<AuthorRepository>()
@@ -42,7 +42,8 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
             return
         }
         val libPath = library.folders.map { Path.of(it) }.first { path.startsWith(it) }
-        val libAnalyzer = analyzers.filter { it.name in library.fileScanners.map { it.name } }
+        val libAnalyzer =
+            analyzers.filter { analyzer -> analyzer.name in library.fileScanners.map { libScanner -> libScanner.name } }
 
         if (libAnalyzer.isEmpty()) {
             return log.warn {
@@ -112,31 +113,36 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
     }
 
     private fun getOrCreateBook(scan: AudioFileAnalysisResult, libraryModel: Library): Book {
-        val author = getOrCreateAuthor(scan, libraryModel)
+        val authors = getOrCreateAuthors(scan, libraryModel)
         val book =
             bookRepository.findByName(
                 bookTitle = scan.book,
-                authorId = author.id.value,
+                authorIds = authors.map { it.id.value },
                 libraryId = libraryModel.id.value,
             )
         return if (book != null) {
-            updateBook(book, scan, author, libraryModel)
+            updateBook(book, scan, authors, libraryModel)
         } else {
             log.info("Created new book: ${scan.book}")
-            createBook(scan, author, libraryModel)
+            createBook(scan, authors, libraryModel)
         }
     }
 
-    private fun updateBook(book: Book, scan: AudioFileAnalysisResult, dbAuthor: Author, libraryModel: Library): Book {
+    private fun updateBook(
+        book: Book,
+        scan: AudioFileAnalysisResult,
+        dbAuthors: List<Author>,
+        libraryModel: Library
+    ): Book {
         val dbSeries =
-            if (scan.series != null) seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthor)
+            if (scan.series != null) seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthors)
             else null
         val dbImage = if (scan.cover != null && book.coverID == null) Image.create(scan.cover!!).id else book.coverID
 
         return book.apply {
             title = scan.book
             coverID = dbImage
-            authors = SizedCollection(dbAuthor)
+            authors = SizedCollection(dbAuthors)
             language = scan.language
             description = scan.description
             narrator = scan.narrator
@@ -144,7 +150,7 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
         }
     }
 
-    private fun createBook(scan: AudioFileAnalysisResult, dbAuthor: Author, libraryModel: Library): Book {
+    private fun createBook(scan: AudioFileAnalysisResult, dbAuthor: List<Author>, libraryModel: Library): Book {
         val dbSeries =
             if (scan.series != null) seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthor)
             else null
@@ -163,14 +169,16 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
         }
     }
 
-    private fun getOrCreateAuthor(scan: AudioFileAnalysisResult, libraryModel: Library): Author {
-        return authorRepository.findByName(scan.authors, libraryModel.id.value)
-            ?: run {
-                log.info("Created author: ${scan.authors}")
-                Author.new {
-                    name = scan.authors
-                    library = libraryModel
+    private fun getOrCreateAuthors(scan: AudioFileAnalysisResult, libraryModel: Library): List<Author> {
+        return scan.authors.map { author ->
+            authorRepository.findByName(author, libraryModel.id.value)
+                ?: run {
+                    log.info("Created author: ${scan.authors}")
+                    Author.new {
+                        name = author
+                        library = libraryModel
+                    }
                 }
-            }
+        }
     }
 }

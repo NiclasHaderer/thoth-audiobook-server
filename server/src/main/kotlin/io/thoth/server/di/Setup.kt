@@ -9,7 +9,6 @@ import io.thoth.server.config.loadPublicConfig
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.TrackManagerImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
-import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapper
 import io.thoth.server.file.analyzer.impl.AudioFolderScanner
 import io.thoth.server.file.analyzer.impl.AudioTagScanner
 import io.thoth.server.file.scanner.FileTreeWatcher
@@ -51,7 +50,6 @@ fun setupDependencyInjection() = startKoin {
                     ),
                 )
             }
-            single<AudioFileAnalyzerWrapper> { AudioFileAnalyzerWrapper() }
             single<LibraryScanner> { LibraryScannerImpl() }
             single<BookRepository> { BookRepositoryImpl() }
             single<AuthorRepository> { AuthorServiceImpl() }

@@ -15,10 +15,10 @@ class AudioTagScanner : AudioFileAnalyzer {
         tags: ReadonlyFileTagger,
         libraryPath: Path
     ): AudioFileAnalysisResult? {
-        if (tags.author == null || tags.book == null) return null
+        if (tags.authors == null || tags.book == null) return null
         return AudioFileAnalysisResultImpl(
             title = tags.title,
-            authors = tags.author!!,
+            authors = tags.authors!!,
             book = tags.book!!,
             description = tags.description,
             date = tags.date,

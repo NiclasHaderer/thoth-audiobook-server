@@ -19,9 +19,9 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 interface BookRepository : Repository<Book, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
-    fun findByName(bookTitle: String, authorId: UUID, libraryId: UUID): Book?
-    fun getOrCreate(bookName: String, libraryId: UUID, author: List<Author>, series: List<Series>): Book
-    fun create(bookName: String, libraryId: UUID, author: List<Author>, series: List<Series>): Book
+    fun findByName(bookTitle: String, authorIds: List<UUID>, libraryId: UUID): Book?
+    fun getOrCreate(bookName: String, libraryId: UUID, authors: List<Author>, series: List<Series>): Book
+    fun create(bookName: String, libraryId: UUID, authors: List<Author>, series: List<Series>): Book
 }
 
 class BookRepositoryImpl : BookRepository, KoinComponent {
@@ -44,13 +44,13 @@ class BookRepositoryImpl : BookRepository, KoinComponent {
             ?: throw ErrorResponse.notFound("Book", id)
     }
 
-    override fun findByName(bookTitle: String, authorId: UUID, libraryId: UUID): Book? = transaction {
+    override fun findByName(bookTitle: String, authorIds: List<UUID>, libraryId: UUID): Book? = transaction {
         val rawBook =
             TBooks.join(TAuthorBookMapping, JoinType.INNER, TBooks.id, TAuthorBookMapping.book)
-                .join(TAuthors, JoinType.INNER, TAuthorBookMapping.author, TAuthors.id)
+                .join(TAuthors, JoinType.INNER, TAuthorBookMapping.authors, TAuthors.id)
                 .select {
                     (TBooks.title like bookTitle) and
-                        (TAuthorBookMapping.author eq authorId) and
+                        (TAuthorBookMapping.authors inList authorIds) and
                         (TBooks.library eq libraryId)
                 }
                 .firstOrNull()
@@ -135,19 +135,19 @@ class BookRepositoryImpl : BookRepository, KoinComponent {
         book.toModel()
     }
 
-    override fun create(bookName: String, libraryId: UUID, author: List<Author>, series: List<Series>): Book =
+    override fun create(bookName: String, libraryId: UUID, authors: List<Author>, series: List<Series>): Book =
         transaction {
             Book.new {
                     title = bookName
-                    authors = SizedCollection(author)
+                    this.authors = SizedCollection(authors)
                     this.series = SizedCollection(series)
                 }
                 .also { it.library = libraryRepository.raw(libraryId) }
         }
 
-    override fun getOrCreate(bookName: String, libraryId: UUID, author: List<Author>, series: List<Series>): Book =
+    override fun getOrCreate(bookName: String, libraryId: UUID, authors: List<Author>, series: List<Series>): Book =
         transaction {
-            findByName(bookName, author.first().id.value, libraryId) ?: create(bookName, libraryId, author, series)
+            findByName(bookName, authors.map { it.id.value }, libraryId) ?: create(bookName, libraryId, authors, series)
         }
 
     override fun autoMatch(id: UUID, libraryId: UUID): BookModel = transaction {

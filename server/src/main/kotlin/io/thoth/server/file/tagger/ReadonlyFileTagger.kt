@@ -13,7 +13,7 @@ interface ReadonlyFileTagger {
     val title: String
     val description: String?
     val date: LocalDate?
-    val author: String?
+    val authors: List<String>?
     val book: String?
     val language: String?
     val trackNr: Int?
@@ -54,8 +54,8 @@ open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFi
             }
         }
 
-    override val author: String?
-        get() = audioFile.tag.getFirst(FieldKey.ARTIST).ifEmpty { null }
+    override val authors: List<String>?
+        get() = audioFile.tag.getFirst(FieldKey.ARTIST).split(Char.MIN_VALUE).ifEmpty { null }
 
     override val book: String?
         get() = audioFile.tag.getFirst(FieldKey.ALBUM).ifEmpty { null }
