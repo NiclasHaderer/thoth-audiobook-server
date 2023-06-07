@@ -1,6 +1,8 @@
-package io.thoth.server.services
+package io.thoth.server.repositories
 
 import io.thoth.generators.openapi.errors.ErrorResponse
+import io.thoth.metadata.MetadataProviders
+import io.thoth.metadata.MetadataWrapper
 import io.thoth.models.BookModel
 import io.thoth.models.DetailedBookModel
 import io.thoth.server.api.BookApiModel
@@ -8,31 +10,26 @@ import io.thoth.server.api.PartialBookApiModel
 import io.thoth.server.common.extensions.toSizedIterable
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.Book
-import io.thoth.server.database.tables.Image
-import io.thoth.server.database.tables.Series
-import io.thoth.server.database.tables.TAuthorBookMapping
-import io.thoth.server.database.tables.TAuthors
-import io.thoth.server.database.tables.TBooks
-import io.thoth.server.database.tables.TTracks
-import io.thoth.server.database.tables.Track
+import io.thoth.server.database.tables.*
 import java.util.*
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.select
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 interface BookRepository : Repository<Book, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
     fun findByName(bookTitle: String, authorId: UUID, libraryId: UUID): Book?
+    fun getOrCreate(bookName: String, libraryId: UUID, author: List<Author>, series: List<Series>): Book
+    fun create(bookName: String, libraryId: UUID, author: List<Author>, series: List<Series>): Book
 }
 
-class BookRepositoryImpl() : BookRepository, KoinComponent {
+class BookRepositoryImpl : BookRepository, KoinComponent {
     private val authorRepository by inject<AuthorRepository>()
     private val seriesRepository by inject<SeriesRepository>()
+    private val libraryRepository by inject<LibraryRepository>()
+    private val metadataProviders by inject<MetadataProviders>()
+
     override fun total(libraryId: UUID) = transaction { Book.find { TBooks.library eq libraryId }.count() }
 
     override fun getAll(libraryId: UUID, order: SortOrder, limit: Int, offset: Long): List<BookModel> = transaction {
@@ -94,7 +91,7 @@ class BookRepositoryImpl() : BookRepository, KoinComponent {
     override fun modify(id: UUID, libraryId: UUID, partial: PartialBookApiModel): BookModel = transaction {
         val book = raw(id, libraryId)
         book.apply {
-            title = partial.title ?: title
+            displayTitle = partial.title
             provider = partial.provider ?: provider
             providerID = partial.providerID ?: providerID
             providerRating = partial.providerRating ?: providerRating
@@ -119,7 +116,7 @@ class BookRepositoryImpl() : BookRepository, KoinComponent {
         val book = Book.findById(id) ?: throw ErrorResponse.notFound("Book", id)
         if (book.library.id.value != libraryId) throw ErrorResponse.notFound("Book", id, "Book is not in that library")
         book.apply {
-            title = complete.title
+            displayTitle = complete.title
             provider = complete.provider
             providerID = complete.providerID
             providerRating = complete.providerRating
@@ -138,7 +135,59 @@ class BookRepositoryImpl() : BookRepository, KoinComponent {
         book.toModel()
     }
 
-    override fun autoMatch(id: UUID, libraryId: UUID): BookModel {
-        TODO("Not yet implemented")
+    override fun create(bookName: String, libraryId: UUID, author: List<Author>, series: List<Series>): Book =
+        transaction {
+            Book.new {
+                    title = bookName
+                    authors = SizedCollection(author)
+                    this.series = SizedCollection(series)
+                }
+                .also { it.library = libraryRepository.raw(libraryId) }
+        }
+
+    override fun getOrCreate(bookName: String, libraryId: UUID, author: List<Author>, series: List<Series>): Book =
+        transaction {
+            findByName(bookName, author.first().id.value, libraryId) ?: create(bookName, libraryId, author, series)
+        }
+
+    override fun autoMatch(id: UUID, libraryId: UUID): BookModel = transaction {
+        val book = raw(id, libraryId)
+        val library = libraryRepository.raw(libraryId)
+
+        val metadataAgents =
+            library.metadataScanners.mapNotNull { agent -> metadataProviders.find { it.uniqueName == agent.name } }
+        val metadataWrapper = MetadataWrapper(metadataAgents)
+
+        val bookMetadata =
+            runBlocking {
+                metadataWrapper
+                    .getBookByName(
+                        bookName = book.title,
+                        region = library.language,
+                        authorName = book.authors.joinToString(", ") { it.name },
+                    )
+                    .firstOrNull()
+            }
+                ?: return@transaction book.toModel()
+
+        modify(
+            id,
+            libraryId,
+            PartialBookApiModel(
+                title = bookMetadata.title,
+                authors = null,
+                series = null,
+                provider = bookMetadata.id.provider,
+                providerID = bookMetadata.id.itemID,
+                providerRating = bookMetadata.providerRating,
+                releaseDate = bookMetadata.releaseDate,
+                publisher = bookMetadata.publisher,
+                language = bookMetadata.language,
+                description = bookMetadata.description,
+                narrator = bookMetadata.narrator,
+                isbn = bookMetadata.isbn,
+                cover = bookMetadata.coverURL,
+            ),
+        )
     }
 }

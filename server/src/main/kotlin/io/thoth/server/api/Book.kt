@@ -6,7 +6,7 @@ import io.thoth.generators.openapi.patch
 import io.thoth.generators.openapi.post
 import io.thoth.generators.openapi.put
 import io.thoth.models.*
-import io.thoth.server.services.BookRepository
+import io.thoth.server.repositories.BookRepository
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.koin.ktor.ext.inject

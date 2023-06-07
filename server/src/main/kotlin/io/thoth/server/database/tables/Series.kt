@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 
 object TSeries : UUIDTable("Series") {
     val title = varchar("title", 255)
+    val displayTitle = varchar("displayTitle", 255).nullable()
     val totalBooks = integer("totalBooks").nullable()
     val primaryWorks = integer("primaryWorks").nullable()
     val description = text("description").nullable()
@@ -26,6 +27,7 @@ class Series(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<Series>(TSeries)
 
     var title by TSeries.title
+    var displayTitle by TSeries.displayTitle
     var totalBooks by TSeries.totalBooks
     var primaryWorks by TSeries.primaryWorks
     var coverID by TSeries.coverID

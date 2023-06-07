@@ -1,4 +1,4 @@
-package io.thoth.server.services
+package io.thoth.server.repositories
 
 import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.metadata.MetadataProviders
@@ -29,6 +29,7 @@ interface AuthorRepository :
 
 class AuthorServiceImpl : AuthorRepository, KoinComponent {
     val metadataProviders by inject<MetadataProviders>()
+    val libraryRepository by inject<LibraryRepository>()
 
     override fun findByName(authorName: String, libraryId: UUID): Author? = transaction {
         Author.find { TAuthors.name like authorName and (TAuthors.library eq libraryId) }.firstOrNull()
@@ -62,12 +63,12 @@ class AuthorServiceImpl : AuthorRepository, KoinComponent {
     }
 
     override fun create(authorName: String, libraryId: UUID): Author = transaction {
-        Author.new { name = authorName }.also { it.library = Library[libraryId] }
+        Author.new { name = authorName }.also { it.library = libraryRepository.raw(libraryId) }
     }
 
     override fun autoMatch(id: UUID, libraryId: UUID): AuthorModel = transaction {
-        val library = Library[libraryId]
-        val author = Author[libraryId]
+        val library = libraryRepository.raw(libraryId)
+        val author = raw(id, libraryId)
         val metadataAgent = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
         val result = runBlocking { metadataAgent.getAuthorByName(author.name, library.language).firstOrNull() }
         author

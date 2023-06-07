@@ -9,7 +9,7 @@ import io.thoth.models.DetailedAuthorModel
 import io.thoth.models.NamedId
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
-import io.thoth.server.services.AuthorRepository
+import io.thoth.server.repositories.AuthorRepository
 import java.util.*
 import org.koin.ktor.ext.inject
 

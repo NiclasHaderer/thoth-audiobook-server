@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.javatime.datetime
 
 // TODO make sure that two libraries do not cover the same paths, otherwise the path reference will
 // not be unique
-@OptIn(ExperimentalUnsignedTypes::class)
 object TTracks : UUIDTable("Tracks") {
     val title = varchar("title", 255)
     val duration = integer("duration")

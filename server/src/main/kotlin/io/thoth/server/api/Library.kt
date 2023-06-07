@@ -11,9 +11,9 @@ import io.thoth.models.SearchModel
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.database.tables.Library
 import io.thoth.server.plugins.authentication.thothPrincipal
+import io.thoth.server.repositories.LibraryRepository
+import io.thoth.server.repositories.SearchRepository
 import io.thoth.server.schedules.ThothSchedules
-import io.thoth.server.services.LibraryRepository
-import io.thoth.server.services.SearchService
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.ktor.ext.inject
 
@@ -49,7 +49,7 @@ fun Routing.libraryRouting() {
         val libsToSearch = thothPrincipal().accessToLibs ?: transaction { Library.all().map { it.id.value } }
 
         if (it.q != null) {
-            return@get SearchService.everywhere(it.q, libsToSearch)
+            return@get SearchRepository.everywhere(it.q, libsToSearch)
         }
 
         throw ErrorResponse.notImplemented(

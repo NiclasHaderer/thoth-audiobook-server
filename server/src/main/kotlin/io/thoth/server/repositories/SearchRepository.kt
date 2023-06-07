@@ -1,4 +1,4 @@
-package io.thoth.server.services
+package io.thoth.server.repositories
 
 import io.thoth.models.SearchModel
 import io.thoth.server.common.extensions.fuzzy
@@ -13,7 +13,7 @@ import io.thoth.server.database.tables.TSeries
 import java.util.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object SearchService {
+object SearchRepository {
     fun everywhere(query: String, libsToSearch: List<UUID>, limit: Int = 5): SearchModel {
         return SearchModel(
             books = everywhereBook(query, libsToSearch, limit),

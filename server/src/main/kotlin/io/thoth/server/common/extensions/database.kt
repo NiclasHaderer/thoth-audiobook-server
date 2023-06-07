@@ -26,10 +26,15 @@ fun <T> List<T>.toSizedIterable(): SizedIterable<T> {
 }
 
 fun <T : UUIDEntity> SizedIterable<T>.add(newEntry: T?): SizedIterable<T> {
-    if (newEntry == null) {
-        return this
-    }
+    if (newEntry == null) return this
     val newCollection = this.toMutableList()
     newCollection.add(newEntry)
+    return SizedCollection(newCollection)
+}
+
+fun <T : UUIDEntity> SizedIterable<T>.add(newEntry: List<T>?): SizedIterable<T> {
+    if (newEntry == null) return this
+    val newCollection = this.toMutableList()
+    newCollection.addAll(newEntry)
     return SizedCollection(newCollection)
 }

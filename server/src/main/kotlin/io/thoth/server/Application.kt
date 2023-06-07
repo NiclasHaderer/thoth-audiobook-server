@@ -33,8 +33,8 @@ import io.thoth.server.plugins.configurePartialContent
 import io.thoth.server.plugins.configureRouting
 import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
+import io.thoth.server.repositories.LibraryRepository
 import io.thoth.server.schedules.ThothSchedules
-import io.thoth.server.services.LibraryRepository
 import java.io.File
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch

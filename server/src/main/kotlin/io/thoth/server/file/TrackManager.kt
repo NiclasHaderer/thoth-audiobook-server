@@ -3,17 +3,13 @@ package io.thoth.server.file
 import io.thoth.server.common.extensions.add
 import io.thoth.server.database.access.create
 import io.thoth.server.database.access.getByPath
-import io.thoth.server.database.tables.Author
-import io.thoth.server.database.tables.Book
-import io.thoth.server.database.tables.Image
-import io.thoth.server.database.tables.Library
-import io.thoth.server.database.tables.TTracks
-import io.thoth.server.database.tables.Track
+import io.thoth.server.database.tables.*
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
-import io.thoth.server.file.analyzer.AudioFileAnalyzerWrapper
-import io.thoth.server.services.AuthorRepository
-import io.thoth.server.services.BookRepository
-import io.thoth.server.services.SeriesRepository
+import io.thoth.server.file.analyzer.AudioFileAnalyzers
+import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapper
+import io.thoth.server.repositories.AuthorRepository
+import io.thoth.server.repositories.BookRepository
+import io.thoth.server.repositories.SeriesRepository
 import java.nio.file.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.isDirectory
@@ -35,7 +31,7 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
     private val bookRepository by inject<BookRepository>()
     private val seriesRepository by inject<SeriesRepository>()
     private val authorRepository by inject<AuthorRepository>()
-    private val analyzer by inject<AudioFileAnalyzerWrapper>()
+    private val analyzers by inject<AudioFileAnalyzers>()
 
     private val semaphore = Semaphore(1)
     private val log = logger {}
@@ -46,6 +42,17 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
             return
         }
         val libPath = library.folders.map { Path.of(it) }.first { path.startsWith(it) }
+        val libAnalyzer = analyzers.filter { it.name in library.fileScanners.map { it.name } }
+
+        if (libAnalyzer.isEmpty()) {
+            return log.warn {
+                "Skipped ${path.absolute()} because it is not supported by any scanner"
+                " (available scanners: ${analyzers.map { it.name }})"
+                " (library scanners: ${library.fileScanners.map { it.name }})"
+            }
+        }
+
+        val analyzer = AudioFileAnalyzerWrapper(libAnalyzer)
         val result =
             analyzer.analyze(
                 path,
@@ -157,11 +164,11 @@ class TrackManagerImpl() : TrackManager, KoinComponent {
     }
 
     private fun getOrCreateAuthor(scan: AudioFileAnalysisResult, libraryModel: Library): Author {
-        return authorRepository.findByName(scan.author, libraryModel.id.value)
+        return authorRepository.findByName(scan.authors, libraryModel.id.value)
             ?: run {
-                log.info("Created author: ${scan.author}")
+                log.info("Created author: ${scan.authors}")
                 Author.new {
-                    name = scan.author
+                    name = scan.authors
                     library = libraryModel
                 }
             }
