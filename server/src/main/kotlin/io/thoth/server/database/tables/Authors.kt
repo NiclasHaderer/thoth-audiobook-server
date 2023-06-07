@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.javatime.date
 
 object TAuthors : UUIDTable("Authors") {
     val name = varchar("name", 255)
+    val displayName = varchar("displayName", 255).nullable()
     val biography = text("biography").nullable()
     val website = varchar("website", 255).nullable()
     val birthDate = date("birthDate").nullable()
@@ -29,6 +30,7 @@ class Author(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<Author>(TAuthors)
 
     var name by TAuthors.name
+    var displayName by TAuthors.displayName
     var biography by TAuthors.biography
     var imageID by TAuthors.imageID
     var website by TAuthors.website
