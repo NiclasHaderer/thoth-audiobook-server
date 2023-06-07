@@ -46,7 +46,7 @@ fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<Me
     return searchResultItems.map {
         val link = extractLink(it)
         MetadataSearchBookImpl(
-            author = extractAuthorInfo(it),
+            authors = extractAuthorInfo(it),
             title = extractTitle(it, regions),
             link = link,
             series = extractBookSeriesInfo(it),

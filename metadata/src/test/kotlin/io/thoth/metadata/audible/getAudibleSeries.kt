@@ -30,7 +30,7 @@ class AudibleSeriesTest {
                         title = "Harry Potter and the Sorcerer's Stone",
                         link =
                             "https://audible.com/pd/Harry-Potter-and-the-Sorcerers-Stone-Book-1-Audiobook/B017V4IM1G",
-                        author =
+                        authors =
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
@@ -55,7 +55,7 @@ class AudibleSeriesTest {
                         title = "Harry Potter and the Chamber of Secrets",
                         link =
                             "https://audible.com/pd/Harry-Potter-and-the-Chamber-of-Secrets-Book-2-Audiobook/B017V4IWVG",
-                        author =
+                        authors =
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
@@ -80,7 +80,7 @@ class AudibleSeriesTest {
                         title = "Harry Potter and the Prisoner of Azkaban",
                         link =
                             "https://audible.com/pd/Harry-Potter-and-the-Prisoner-of-Azkaban-Book-3-Audiobook/B017V4JA2Q",
-                        author =
+                        authors =
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
@@ -104,7 +104,7 @@ class AudibleSeriesTest {
                         id = AudibleProviderWithIDMetadata(itemID = "B017V4NUPO"),
                         title = "Harry Potter and the Goblet of Fire",
                         link = "https://audible.com/pd/Harry-Potter-and-the-Goblet-of-Fire-Book-4-Audiobook/B017V4NUPO",
-                        author =
+                        authors =
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
@@ -129,7 +129,7 @@ class AudibleSeriesTest {
                         title = "Harry Potter and the Order of the Phoenix",
                         link =
                             "https://audible.com/pd/Harry-Potter-and-the-Order-of-the-Phoenix-Book-5-Audiobook/B017V4NMX4",
-                        author =
+                        authors =
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
@@ -154,7 +154,7 @@ class AudibleSeriesTest {
                         title = "Harry Potter and the Half-Blood Prince",
                         link =
                             "https://audible.com/pd/Harry-Potter-and-the-Half-Blood-Prince-Book-6-Audiobook/B017V4NOZ0",
-                        author =
+                        authors =
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
@@ -179,7 +179,7 @@ class AudibleSeriesTest {
                         title = "Harry Potter and the Deathly Hallows",
                         link =
                             "https://audible.com/pd/Harry-Potter-and-the-Deathly-Hallows-Book-7-Audiobook/B017WJ5ZK6",
-                        author =
+                        authors =
                             MetadataSearchAuthorImpl(
                                 id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
                                 name = "J.K. Rowling",
@@ -200,14 +200,14 @@ class AudibleSeriesTest {
                         language = "English",
                     ),
                 ),
-            authors = "J.K. Rowling",
+            authors = listOf("J.K. Rowling"),
             coverURL = null,
             primaryWorks = 7,
         )
 
     @Test
     fun testAudibleSeries() = runBlocking {
-        val series = client._getSeriesByID(client.uniqueName, "us", "B0182NWM9I")
+        val series = client.getSeriesByID(client.uniqueName, "us", "B0182NWM9I")
 
         assertEquals(
             expectedSeries,
@@ -217,7 +217,7 @@ class AudibleSeriesTest {
 
     @Test
     fun testFindAudibleSeries() = runBlocking {
-        val series = client._getSeriesByName("Harry Potter", "us", "J.K. Rowling").firstOrNull()
+        val series = client.getSeriesByName("Harry Potter", "us", "J.K. Rowling").firstOrNull()
 
         assertEquals(
             expectedSeries,

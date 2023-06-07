@@ -13,7 +13,7 @@ class AudibleAuthorTest {
 
     @Test
     fun testAudibleAuthor() = runBlocking {
-        val author = client._getAuthorByID(client.uniqueName, "B000AP9A6K", "us")
+        val author = client.getAuthorByID(client.uniqueName, "B000AP9A6K", "us")
 
         assertEquals(
             author,
@@ -35,7 +35,7 @@ class AudibleAuthorTest {
 
     @Test
     fun testFindAudibleAuthor() = runBlocking {
-        val author = client._getAuthorByName("J.K. Rowling", "us").firstOrNull()
+        val author = client.getAuthorByName("J.K. Rowling", "us").firstOrNull()
 
         assertEquals(
             author,

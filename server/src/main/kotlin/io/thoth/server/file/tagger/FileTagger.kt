@@ -20,7 +20,7 @@ interface FileTagger : ReadonlyFileTagger {
     override var date: LocalDate?
     override val book: String?
     override var language: String?
-    override var author: String?
+    override var authors: List<String>?
     override var trackNr: Int?
     override var narrator: String?
     override var series: String?
@@ -57,12 +57,13 @@ open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger
         get() = super.language
         set(value) = setOrDelete(FieldKey.LANGUAGE, value)
 
-    override var author: String?
-        get() = super.author
+    override var authors: List<String>?
+        get() = super.authors
         set(value) {
+            val joinedValue = value?.joinToString(Char.MIN_VALUE.toString()) { it }
             // Set both for plex
-            setOrDelete(FieldKey.ALBUM_ARTIST, value)
-            setOrDelete(FieldKey.ARTIST, value)
+            setOrDelete(FieldKey.ALBUM_ARTIST, joinedValue)
+            setOrDelete(FieldKey.ARTIST, joinedValue)
         }
 
     override var trackNr: Int?
