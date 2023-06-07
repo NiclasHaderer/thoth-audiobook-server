@@ -53,26 +53,34 @@ class AuthorServiceImpl : AuthorRepository, KoinComponent {
             .map { it.toModel() }
     }
 
-    override fun getOrCreate(authorName: String, libraryId: UUID): Author {
-        return Author.findOne { TAuthors.name like authorName and (TAuthors.library eq libraryId) }
+    override fun getOrCreate(authorName: String, libraryId: UUID): Author = transaction {
+        Author.findOne { TAuthors.name like authorName and (TAuthors.library eq libraryId) }
             ?: create(
                 authorName,
                 libraryId,
             )
     }
 
-    override fun create(authorName: String, libraryId: UUID): Author {
-        return Author.new { name = authorName }.also { it.library = Library[libraryId] }
+    override fun create(authorName: String, libraryId: UUID): Author = transaction {
+        Author.new { name = authorName }.also { it.library = Library[libraryId] }
     }
 
-    override fun autoMatch(id: UUID, libraryId: UUID): AuthorModel {
+    override fun autoMatch(id: UUID, libraryId: UUID): AuthorModel = transaction {
         val library = Library[libraryId]
         val author = Author[libraryId]
         val metadataAgent = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
         val result = runBlocking { metadataAgent.getAuthorByName(author.name, library.language).firstOrNull() }
-        return author
+        author
             .apply {
-                // TODO
+                displayName = result?.name
+                provider = result?.id?.provider ?: author.provider
+                providerID = result?.id?.itemID ?: author.providerID
+                biography = result?.biography ?: author.biography
+                website = result?.website ?: author.website
+                bornIn = result?.bornIn ?: author.bornIn
+                birthDate = result?.birthDate ?: author.birthDate
+                deathDate = result?.deathDate ?: author.deathDate
+                imageID = Image.getNewImage(result?.imageURL, currentImageID = imageID, default = imageID)
             }
             .toModel()
     }
