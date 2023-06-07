@@ -2,6 +2,7 @@ package io.thoth.metadata.audible
 
 import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.thoth.metadata.packAsList
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
@@ -28,10 +29,11 @@ class AudibleBookTest {
                 link = "https://audible.com/pd/B017V54W6O",
                 authors =
                     MetadataSearchAuthorImpl(
-                        id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
-                        name = "J.K. Rowling",
-                        link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
-                    ),
+                            id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
+                            name = "J.K. Rowling",
+                            link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
+                        )
+                        .packAsList(),
                 series =
                     listOf(
                         MetadataBookSeriesImpl(
@@ -72,10 +74,11 @@ class AudibleBookTest {
                 link = "https://audible.com/pd/B017V54W6O",
                 authors =
                     MetadataSearchAuthorImpl(
-                        id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
-                        name = "J.K. Rowling",
-                        link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
-                    ),
+                            id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
+                            name = "J.K. Rowling",
+                            link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
+                        )
+                        .packAsList(),
                 series =
                     listOf(
                         MetadataBookSeriesImpl(

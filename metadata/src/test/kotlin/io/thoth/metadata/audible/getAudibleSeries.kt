@@ -2,6 +2,7 @@ package io.thoth.metadata.audible
 
 import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.thoth.metadata.packAsList
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
@@ -32,10 +33,11 @@ class AudibleSeriesTest {
                             "https://audible.com/pd/Harry-Potter-and-the-Sorcerers-Stone-Book-1-Audiobook/B017V4IM1G",
                         authors =
                             MetadataSearchAuthorImpl(
-                                id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
-                                name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
-                            ),
+                                    id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
+                                    name = "J.K. Rowling",
+                                    link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
+                                )
+                                .packAsList(),
                         series =
                             listOf(
                                 MetadataBookSeriesImpl(
@@ -57,10 +59,11 @@ class AudibleSeriesTest {
                             "https://audible.com/pd/Harry-Potter-and-the-Chamber-of-Secrets-Book-2-Audiobook/B017V4IWVG",
                         authors =
                             MetadataSearchAuthorImpl(
-                                id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
-                                name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
-                            ),
+                                    id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
+                                    name = "J.K. Rowling",
+                                    link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
+                                )
+                                .packAsList(),
                         series =
                             listOf(
                                 MetadataBookSeriesImpl(
@@ -82,10 +85,11 @@ class AudibleSeriesTest {
                             "https://audible.com/pd/Harry-Potter-and-the-Prisoner-of-Azkaban-Book-3-Audiobook/B017V4JA2Q",
                         authors =
                             MetadataSearchAuthorImpl(
-                                id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
-                                name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
-                            ),
+                                    id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
+                                    name = "J.K. Rowling",
+                                    link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
+                                )
+                                .packAsList(),
                         series =
                             listOf(
                                 MetadataBookSeriesImpl(
@@ -106,10 +110,11 @@ class AudibleSeriesTest {
                         link = "https://audible.com/pd/Harry-Potter-and-the-Goblet-of-Fire-Book-4-Audiobook/B017V4NUPO",
                         authors =
                             MetadataSearchAuthorImpl(
-                                id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
-                                name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
-                            ),
+                                    id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
+                                    name = "J.K. Rowling",
+                                    link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
+                                )
+                                .packAsList(),
                         series =
                             listOf(
                                 MetadataBookSeriesImpl(
@@ -131,10 +136,11 @@ class AudibleSeriesTest {
                             "https://audible.com/pd/Harry-Potter-and-the-Order-of-the-Phoenix-Book-5-Audiobook/B017V4NMX4",
                         authors =
                             MetadataSearchAuthorImpl(
-                                id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
-                                name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
-                            ),
+                                    id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
+                                    name = "J.K. Rowling",
+                                    link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
+                                )
+                                .packAsList(),
                         series =
                             listOf(
                                 MetadataBookSeriesImpl(
@@ -156,10 +162,11 @@ class AudibleSeriesTest {
                             "https://audible.com/pd/Harry-Potter-and-the-Half-Blood-Prince-Book-6-Audiobook/B017V4NOZ0",
                         authors =
                             MetadataSearchAuthorImpl(
-                                id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
-                                name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
-                            ),
+                                    id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
+                                    name = "J.K. Rowling",
+                                    link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
+                                )
+                                .packAsList(),
                         series =
                             listOf(
                                 MetadataBookSeriesImpl(
@@ -181,10 +188,11 @@ class AudibleSeriesTest {
                             "https://audible.com/pd/Harry-Potter-and-the-Deathly-Hallows-Book-7-Audiobook/B017WJ5ZK6",
                         authors =
                             MetadataSearchAuthorImpl(
-                                id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
-                                name = "J.K. Rowling",
-                                link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
-                            ),
+                                    id = AudibleProviderWithIDMetadata(itemID = "B000AP9A6K"),
+                                    name = "J.K. Rowling",
+                                    link = "https://audible.com/author/JK-Rowling/B000AP9A6K",
+                                )
+                                .packAsList(),
                         series =
                             listOf(
                                 MetadataBookSeriesImpl(
