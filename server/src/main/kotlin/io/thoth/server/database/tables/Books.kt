@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.javatime.date
 
 object TBooks : UUIDTable("Books") {
     val title = varchar("title", 255)
+    val displayTitle = varchar("displayTitle", 255).nullable()
     val releaseDate = date("releaseDate").nullable()
     val publisher = varchar("publisher", 255).nullable()
     val language = varchar("language", 255).nullable()
@@ -31,6 +32,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<Book>(TBooks)
 
     var title by TBooks.title
+    var displayTitle by TBooks.displayTitle
     var description by TBooks.description
     var releaseDate by TBooks.releaseDate
     var publisher by TBooks.publisher

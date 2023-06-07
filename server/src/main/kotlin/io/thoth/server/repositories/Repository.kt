@@ -1,4 +1,4 @@
-package io.thoth.server.services
+package io.thoth.server.repositories
 
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder

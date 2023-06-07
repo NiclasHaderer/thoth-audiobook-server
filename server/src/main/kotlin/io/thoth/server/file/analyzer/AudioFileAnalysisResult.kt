@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 class AudioFileAnalysisResultImpl(
     override val title: String,
-    override val author: String,
+    override val authors: List<String>,
     override val book: String,
     override val duration: Int,
     override val path: String,
@@ -21,7 +21,7 @@ class AudioFileAnalysisResultImpl(
 
 interface AudioFileAnalysisResult {
     val title: String
-    val author: String
+    val authors: List<String>
     val book: String
     val description: String?
     val date: LocalDate?

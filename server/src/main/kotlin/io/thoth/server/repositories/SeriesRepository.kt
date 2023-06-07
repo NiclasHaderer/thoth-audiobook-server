@@ -1,4 +1,4 @@
-package io.thoth.server.services
+package io.thoth.server.repositories
 
 import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.metadata.MetadataProviders
@@ -13,7 +13,6 @@ import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.Author
 import io.thoth.server.database.tables.Image
-import io.thoth.server.database.tables.Library
 import io.thoth.server.database.tables.Series
 import io.thoth.server.database.tables.TSeries
 import java.util.*
@@ -30,8 +29,8 @@ import org.koin.core.component.inject
 interface SeriesRepository :
     Repository<Series, SeriesModel, DetailedSeriesModel, PartialSeriesApiModel, SeriesApiModel> {
     fun findByName(seriesTitle: String, libraryId: UUID): Series?
-    fun getOrCreate(seriesName: String, libraryId: UUID, dbAuthor: Author): Series
-    fun create(seriesName: String, libraryId: UUID, dbAuthor: Author): Series
+    fun getOrCreate(seriesName: String, libraryId: UUID, dbAuthor: List<Author>): Series
+    fun create(seriesName: String, libraryId: UUID, dbAuthor: List<Author>): Series
 }
 
 class SeriesRepositoryImpl() : SeriesRepository, KoinComponent {
@@ -83,7 +82,7 @@ class SeriesRepositoryImpl() : SeriesRepository, KoinComponent {
             .map { it.toModel() }
     }
 
-    override fun getOrCreate(seriesName: String, libraryId: UUID, dbAuthor: Author): Series {
+    override fun getOrCreate(seriesName: String, libraryId: UUID, dbAuthor: List<Author>): Series {
         val series = findByName(seriesName, libraryId)
         return if (series != null) {
             series.authors = series.authors.add(dbAuthor)
@@ -93,12 +92,13 @@ class SeriesRepositoryImpl() : SeriesRepository, KoinComponent {
         }
     }
 
-    override fun create(seriesName: String, libraryId: UUID, dbAuthor: Author): Series {
-        log.info("Created series: ${seriesName}")
+    override fun create(seriesName: String, libraryId: UUID, dbAuthor: List<Author>): Series {
+        log.info("Created series: $seriesName")
         return Series.new {
             title = seriesName
+            displayTitle = seriesName
             authors = SizedCollection(dbAuthor)
-            library = Library[libraryId]
+            library = libraryRepository.raw(libraryId)
         }
     }
 
@@ -120,7 +120,7 @@ class SeriesRepositoryImpl() : SeriesRepository, KoinComponent {
         val series = raw(id, libraryId)
 
         series.apply {
-            title = partial.title ?: title
+            displayTitle = partial.title
             provider = partial.provider ?: provider
             providerID = partial.providerID ?: providerID
             totalBooks = partial.totalBooks ?: totalBooks
@@ -176,14 +176,12 @@ class SeriesRepositoryImpl() : SeriesRepository, KoinComponent {
             }
                 ?: return@transaction series.toModel()
 
-        val authors = seriesMetadata.authors?.map { authorRepository.getOrCreate(it, libraryId).id.value }
-
         modify(
             id,
             libraryId,
             PartialSeriesApiModel(
                 title = seriesMetadata.title,
-                authors = authors,
+                authors = null,
                 books = null,
                 provider = seriesMetadata.id.provider,
                 providerID = seriesMetadata.id.itemID,

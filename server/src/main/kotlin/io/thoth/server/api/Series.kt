@@ -9,7 +9,7 @@ import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.SeriesModel
 import io.thoth.models.TitledId
-import io.thoth.server.services.SeriesRepository
+import io.thoth.server.repositories.SeriesRepository
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.koin.ktor.ext.inject

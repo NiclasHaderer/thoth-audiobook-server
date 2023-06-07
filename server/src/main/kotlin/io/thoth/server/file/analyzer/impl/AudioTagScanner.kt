@@ -18,7 +18,7 @@ class AudioTagScanner : AudioFileAnalyzer {
         if (tags.author == null || tags.book == null) return null
         return AudioFileAnalysisResultImpl(
             title = tags.title,
-            author = tags.author!!,
+            authors = tags.author!!,
             book = tags.book!!,
             description = tags.description,
             date = tags.date,

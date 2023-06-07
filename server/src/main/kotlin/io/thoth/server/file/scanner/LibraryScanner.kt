@@ -10,7 +10,7 @@ import io.thoth.server.database.tables.TLibraries
 import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.Track
 import io.thoth.server.file.TrackManager
-import io.thoth.server.services.LibraryRepository
+import io.thoth.server.repositories.LibraryRepository
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*

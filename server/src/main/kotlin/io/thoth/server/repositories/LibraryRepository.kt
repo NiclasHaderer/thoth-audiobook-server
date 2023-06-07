@@ -1,4 +1,4 @@
-package io.thoth.server.services
+package io.thoth.server.repositories
 
 import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.models.LibraryModel
