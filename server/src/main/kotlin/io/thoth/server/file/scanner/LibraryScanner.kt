@@ -74,7 +74,6 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
             return
         }
         fullScanIsOngoing.set(true)
-        log.info { "Starting complete scan" }
         val libraries = transaction { Library.find { TLibraries.id inList libraryIDs }.map { it.toModel() } }
         libraries.forEach { library ->
             log.info { "Scanning library ${library.name}" }

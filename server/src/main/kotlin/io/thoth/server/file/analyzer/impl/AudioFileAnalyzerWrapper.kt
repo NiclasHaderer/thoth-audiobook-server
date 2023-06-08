@@ -7,9 +7,8 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.absolute
 import mu.KotlinLogging.logger
-import org.koin.core.component.KoinComponent
 
-class AudioFileAnalyzerWrapper(private val analyzers: List<AudioFileAnalyzer>) : KoinComponent {
+class AudioFileAnalyzerWrapper(private val analyzers: List<AudioFileAnalyzer>) {
     private val log = logger {}
 
     fun analyze(filePath: Path, attrs: BasicFileAttributes, libraryPath: Path): AudioFileAnalysisResult? {
@@ -17,7 +16,9 @@ class AudioFileAnalyzerWrapper(private val analyzers: List<AudioFileAnalyzer>) :
         for (analyzer in analyzers) {
             try {
                 val result = analyzer.analyze(filePath, attrs, tags, libraryPath)
-                if (result != null) return result
+                if (result != null) {
+                    return result
+                }
             } catch (e: Exception) {
                 log.warn(e) { "Could not analyze file ${filePath.absolute()}" }
             }
