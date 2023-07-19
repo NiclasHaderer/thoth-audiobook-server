@@ -1,6 +1,6 @@
 package io.thoth.server.database.access
 
-import io.thoth.generators.openapi.errors.ErrorResponse
+import io.thoth.openapi.openapi.errors.ErrorResponse
 import io.thoth.server.common.extensions.isUUID
 import io.thoth.server.common.extensions.syncUriToFile
 import io.thoth.server.database.tables.Image

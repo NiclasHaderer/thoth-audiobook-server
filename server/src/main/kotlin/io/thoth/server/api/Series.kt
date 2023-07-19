@@ -1,14 +1,14 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.*
-import io.thoth.generators.openapi.get
-import io.thoth.generators.openapi.patch
-import io.thoth.generators.openapi.put
 import io.thoth.models.DetailedSeriesModel
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.SeriesModel
 import io.thoth.models.TitledId
+import io.thoth.openapi.openapi.get
+import io.thoth.openapi.openapi.patch
+import io.thoth.openapi.openapi.put
 import io.thoth.server.repositories.SeriesRepository
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder

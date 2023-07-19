@@ -1,10 +1,10 @@
 package io.thoth.server.repositories
 
-import io.thoth.generators.openapi.errors.ErrorResponse
 import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.models.DetailedSeriesModel
 import io.thoth.models.SeriesModel
+import io.thoth.openapi.openapi.errors.ErrorResponse
 import io.thoth.server.api.PartialSeriesApiModel
 import io.thoth.server.api.SeriesApiModel
 import io.thoth.server.common.extensions.add

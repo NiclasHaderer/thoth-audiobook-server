@@ -5,12 +5,12 @@ import com.nimbusds.jose.jwk.RSAKey
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import io.thoth.generators.openapi.delete
-import io.thoth.generators.openapi.errors.ErrorResponse
-import io.thoth.generators.openapi.get
-import io.thoth.generators.openapi.post
-import io.thoth.generators.openapi.put
 import io.thoth.models.UserModel
+import io.thoth.openapi.openapi.delete
+import io.thoth.openapi.openapi.errors.ErrorResponse
+import io.thoth.openapi.openapi.get
+import io.thoth.openapi.openapi.post
+import io.thoth.openapi.openapi.put
 import io.thoth.server.common.extensions.asUUID
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.access.getById
