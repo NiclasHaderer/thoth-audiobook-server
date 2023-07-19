@@ -1,15 +1,15 @@
 package io.thoth.server.api
 
 import io.ktor.resources.*
-import io.thoth.generators.openapi.BeforeBodyParsing
-import io.thoth.generators.openapi.NotSecured
-import io.thoth.generators.openapi.RouteHandler
-import io.thoth.generators.openapi.Secured
-import io.thoth.generators.openapi.Summary
-import io.thoth.generators.openapi.Tagged
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
+import io.thoth.openapi.openapi.BeforeBodyParsing
+import io.thoth.openapi.openapi.NotSecured
+import io.thoth.openapi.openapi.RouteHandler
+import io.thoth.openapi.openapi.Secured
+import io.thoth.openapi.openapi.Summary
+import io.thoth.openapi.openapi.Tagged
 import io.thoth.server.common.serializion.kotlin.UUID_S
 import io.thoth.server.plugins.authentication.Guards
 import io.thoth.server.plugins.authentication.assertAccessToLibraryId

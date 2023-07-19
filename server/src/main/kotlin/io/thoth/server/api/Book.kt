@@ -1,11 +1,11 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.*
-import io.thoth.generators.openapi.get
-import io.thoth.generators.openapi.patch
-import io.thoth.generators.openapi.post
-import io.thoth.generators.openapi.put
 import io.thoth.models.*
+import io.thoth.openapi.openapi.get
+import io.thoth.openapi.openapi.patch
+import io.thoth.openapi.openapi.post
+import io.thoth.openapi.openapi.put
 import io.thoth.server.repositories.BookRepository
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder

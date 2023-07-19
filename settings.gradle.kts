@@ -1,7 +1,7 @@
 rootProject.name = "thoth-audiobook-server"
 
 include(
-    "generators",
+    "openapi",
     "metadata",
     "models",
     "server",

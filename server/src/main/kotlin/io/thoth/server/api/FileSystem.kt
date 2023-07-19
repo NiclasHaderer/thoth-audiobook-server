@@ -1,8 +1,8 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.*
-import io.thoth.generators.openapi.errors.ErrorResponse
-import io.thoth.generators.openapi.get
+import io.thoth.openapi.openapi.errors.ErrorResponse
+import io.thoth.openapi.openapi.get
 import java.io.File
 
 fun Routing.fileSystemRouting() {
