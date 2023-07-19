@@ -8,6 +8,7 @@ val kotlinVersion: String by project
 plugins {
     kotlin("jvm")
     id("com.ncorti.ktfmt.gradle")
+    id("maven-publish")
 }
 
 dependencies {
@@ -27,4 +28,19 @@ dependencies {
 
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            // publish to jitpack
+            create<MavenPublication>("maven") {
+                groupId = "com.github.niclashaderer"
+                artifactId = "openapi"
+                version = tsGeneratorVersion
+
+                from(components["java"])
+            }
+        }
+    }
 }
