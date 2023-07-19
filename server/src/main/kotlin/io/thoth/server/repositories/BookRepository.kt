@@ -4,7 +4,7 @@ import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.models.BookModel
 import io.thoth.models.DetailedBookModel
-import io.thoth.openapi.openapi.errors.ErrorResponse
+import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.BookApiModel
 import io.thoth.server.api.PartialBookApiModel
 import io.thoth.server.common.extensions.toSizedIterable

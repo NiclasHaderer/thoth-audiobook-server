@@ -6,9 +6,9 @@ import io.thoth.models.DetailedAuthorModel
 import io.thoth.models.NamedId
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
-import io.thoth.openapi.openapi.get
-import io.thoth.openapi.openapi.patch
-import io.thoth.openapi.openapi.put
+import io.thoth.openapi.ktor.get
+import io.thoth.openapi.ktor.patch
+import io.thoth.openapi.ktor.put
 import io.thoth.server.repositories.AuthorRepository
 import java.util.*
 import org.koin.ktor.ext.inject

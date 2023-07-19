@@ -1,8 +1,8 @@
 package io.thoth.openapi.typescript.types
 
 import io.thoth.openapi.common.ClassType
-import io.thoth.openapi.openapi.responses.BinaryResponse
-import io.thoth.openapi.openapi.responses.FileResponse
+import io.thoth.openapi.ktor.responses.BinaryResponse
+import io.thoth.openapi.ktor.responses.FileResponse
 
 class BinaryTsGenerator : TsGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: (classType: ClassType) -> Type): String {

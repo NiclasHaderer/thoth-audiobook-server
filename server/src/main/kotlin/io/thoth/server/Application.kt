@@ -4,8 +4,8 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.routing.*
-import io.thoth.openapi.openapi.OpenApiRouteCollector
-import io.thoth.openapi.openapi.errors.configureStatusPages
+import io.thoth.openapi.ktor.OpenApiRouteCollector
+import io.thoth.openapi.ktor.errors.configureStatusPages
 import io.thoth.openapi.typescript.TsClientCreator
 import io.thoth.server.api.audioRouting
 import io.thoth.server.api.authRoutes

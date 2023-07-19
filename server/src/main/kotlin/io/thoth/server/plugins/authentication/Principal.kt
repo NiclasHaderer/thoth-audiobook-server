@@ -5,7 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.util.pipeline.*
-import io.thoth.openapi.openapi.errors.ErrorResponse
+import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.tables.User
 import java.util.*
 import org.jetbrains.exposed.sql.transactions.transaction
