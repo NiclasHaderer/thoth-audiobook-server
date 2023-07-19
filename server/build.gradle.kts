@@ -42,7 +42,7 @@ tasks.jar { manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt" 
 dependencies {
     // Other projects
     implementation(project(":models"))
-    implementation(project(":openapi"))
+    implementation(project(":ktor"))
     implementation(project(":metadata"))
 
     // Database

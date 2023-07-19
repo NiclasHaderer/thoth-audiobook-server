@@ -6,8 +6,8 @@ import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
-import io.thoth.openapi.openapi.errors.ErrorResponse
-import io.thoth.openapi.openapi.get
+import io.thoth.openapi.ktor.errors.ErrorResponse
+import io.thoth.openapi.ktor.get
 import org.koin.ktor.ext.inject
 
 fun Routing.metadataRouting() {

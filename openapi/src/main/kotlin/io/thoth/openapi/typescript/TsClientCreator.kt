@@ -1,7 +1,7 @@
 package io.thoth.openapi.typescript
 
-import io.thoth.openapi.openapi.OpenApiRoute
-import io.thoth.openapi.openapi.Summary
+import io.thoth.openapi.ktor.OpenApiRoute
+import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.typescript.types.TsGenerator
 import io.thoth.openapi.typescript.types.generateTypes
 import java.io.File

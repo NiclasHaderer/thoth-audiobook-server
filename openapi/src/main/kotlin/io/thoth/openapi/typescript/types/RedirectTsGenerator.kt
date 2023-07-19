@@ -1,7 +1,7 @@
 package io.thoth.openapi.typescript.types
 
 import io.thoth.openapi.common.ClassType
-import io.thoth.openapi.openapi.responses.RedirectResponse
+import io.thoth.openapi.ktor.responses.RedirectResponse
 
 class RedirectTsGenerator : TsGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: (classType: ClassType) -> Type): String {
