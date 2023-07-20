@@ -13,12 +13,12 @@ internal class WebUiServer(private val config: WebUiConfig) {
     private val content = mutableMapOf<String, WebUiResource>()
 
     suspend fun interceptCall(call: ApplicationCall) {
-        if (!call.request.uri.startsWith(config.webUiPath)) {
+        if (!call.request.uri.startsWith(config.docsPath)) {
             return
         }
 
-        if (config.webUiPath == call.request.path()) {
-            call.respondRedirect("${config.webUiPath}/")
+        if (config.docsPath == call.request.path()) {
+            call.respondRedirect("${config.docsPath}/")
             return
         }
 
@@ -75,7 +75,7 @@ internal class WebUiServer(private val config: WebUiConfig) {
 
     private fun getStaticFileName(call: ApplicationCall): String {
         val callPath = call.request.path()
-        val fileName = callPath.removePrefix(config.webUiPath).trimEnd('/')
+        val fileName = callPath.removePrefix(config.docsPath).trimEnd('/')
 
         return fileName
             .ifEmpty {
