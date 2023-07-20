@@ -49,7 +49,7 @@ fun Application.openApiModule() {
     // And serve the openapi.json/yaml file as well as the web-ui
     install(OpenAPIWebUI) {
         schemaType = OpenAPISchemaType.JSON
-        schemaPath = "/docs/openapi.json"
+        schemaPath = "/docs/openapi"
         webUiPath = "/docs"
     }
 

@@ -92,11 +92,11 @@ fun Application.server() {
     // Install plugins
     configureStatusPages()
     configureRouting()
+    configureSerialization()
     configureOpenApi()
     configurePartialContent()
     configureSockets()
     configureMonitoring()
-    configureSerialization()
     configureAuthentication()
 
     routing {
