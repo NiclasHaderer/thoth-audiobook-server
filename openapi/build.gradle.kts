@@ -26,6 +26,8 @@ dependencies {
     implementation("io.swagger.core.v3:swagger-core:$openApiVersion")
     implementation("org.webjars:swagger-ui:$swaggerUiVersion")
 
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
 }

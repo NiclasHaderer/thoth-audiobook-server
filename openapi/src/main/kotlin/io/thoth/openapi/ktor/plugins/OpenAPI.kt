@@ -1,6 +1,7 @@
 package io.thoth.openapi.ktor.plugins
 
 import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.dataconversion.*
 import io.ktor.server.resources.*
 import io.thoth.openapi.ktor.SchemaHolder
@@ -15,4 +16,5 @@ val OpenAPIRouting =
         // Ensure that the dataconversion plugins is installed
         application.plugin(DataConversion)
         application.plugin(Resources)
+        application.plugin(ContentNegotiation)
     }

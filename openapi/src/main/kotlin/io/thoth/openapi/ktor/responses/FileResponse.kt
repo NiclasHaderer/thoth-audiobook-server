@@ -9,7 +9,7 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 
-class FileResponse(val path: Path) : BaseResponse() {
+class FileResponse(val path: Path) : BaseResponse {
     constructor(path: String) : this(Path.of(path))
 
     init {
