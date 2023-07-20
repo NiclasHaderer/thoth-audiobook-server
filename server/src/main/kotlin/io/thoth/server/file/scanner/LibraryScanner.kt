@@ -5,7 +5,10 @@ import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.hasBeenUpdated
 import io.thoth.server.database.access.markAsTouched
 import io.thoth.server.database.access.toModel
+import io.thoth.server.database.tables.Author
+import io.thoth.server.database.tables.Book
 import io.thoth.server.database.tables.Library
+import io.thoth.server.database.tables.Series
 import io.thoth.server.database.tables.TLibraries
 import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.Track
@@ -38,7 +41,6 @@ interface LibraryScanner {
 class LibraryScannerImpl : LibraryScanner, KoinComponent {
     private val trackManager: TrackManager by inject()
     private val libraryRepository: LibraryRepository by inject()
-    // TODO if there should be a lock on scanning a library/folder/everything
 
     companion object {
         private val fullScanIsOngoing = AtomicBoolean()
@@ -87,6 +89,17 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
 
         for (folder in library.folders.map { Paths.get(it) }) {
             scanFolder(folder, library)
+        }
+
+        transaction {
+            // Remove all tracks that have not been updated
+            Track.find { TTracks.scanIndex less library.scanIndex }.forEach { it.delete() }
+            // Find all books that have no tracks and remove them
+            Book.all().filter { it.tracks.empty() }.forEach { it.delete() }
+            // Find all authors that have no books and remove them
+            Author.all().filter { it.books.empty() }.forEach { it.delete() }
+            // Find all series that have no books and remove them
+            Series.all().filter { it.books.empty() }.forEach { it.delete() }
         }
     }
 

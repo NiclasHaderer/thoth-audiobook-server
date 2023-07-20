@@ -3,6 +3,7 @@ package io.thoth.server.file
 import io.thoth.server.common.extensions.add
 import io.thoth.server.database.access.create
 import io.thoth.server.database.access.getByPath
+import io.thoth.server.database.access.markAsTouched
 import io.thoth.server.database.tables.*
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
@@ -80,7 +81,7 @@ class TrackManagerImpl : TrackManager, KoinComponent {
     private fun insertOrUpdateTrack(scan: AudioFileAnalysisResult, library: Library): Track {
         val track = Track.getByPath(scan.path)
         return if (track != null) {
-            updateTrack(track, scan, library)
+            updateTrack(track, scan, library).also { track.markAsTouched() }
         } else {
             createTrack(scan, library)
         }

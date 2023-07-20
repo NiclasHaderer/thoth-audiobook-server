@@ -51,4 +51,5 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id) {
     var series by Series via TSeriesBookMapping
     var genres by Genre via TGenreBookMapping
     var library by Library referencedOn TBooks.library
+    val tracks by Track referrersOn TTracks.book
 }
