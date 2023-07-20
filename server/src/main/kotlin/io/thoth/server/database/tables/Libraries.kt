@@ -9,7 +9,6 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 
-@OptIn(ExperimentalUnsignedTypes::class)
 object TLibraries : UUIDTable("Libraries") {
     val name = varchar("name", 255)
     val icon = text("icon").nullable()
