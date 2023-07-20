@@ -27,7 +27,8 @@ data class PartialLibraryApiModel(
     val folders: List<String>?,
     val preferEmbeddedMetadata: Boolean?,
     val metadataScanners: List<MetadataAgent>?,
-    val fileScanners: List<FileScanner>?
+    val fileScanners: List<FileScanner>?,
+    val language: String?
 ) {
     init {
         require(folders == null || folders.isNotEmpty())

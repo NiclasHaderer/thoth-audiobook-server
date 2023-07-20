@@ -50,7 +50,7 @@ fun Application.openApiModule() {
     install(OpenAPIWebUI) {
         schemaType = OpenAPISchemaType.JSON
         schemaPath = "/docs/openapi"
-        webUiPath = "/docs"
+        docsPath = "/docs"
     }
 
     // (Optional) configure the status pages (some defaults provided by me)
