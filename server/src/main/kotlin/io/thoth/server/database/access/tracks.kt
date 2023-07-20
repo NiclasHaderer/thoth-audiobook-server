@@ -5,7 +5,6 @@ import io.thoth.models.TrackModel
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.Track
-import java.util.*
 
 fun Track.Companion.getByPath(path: String): Track? {
     return Track.findOne { TTracks.path like path }
