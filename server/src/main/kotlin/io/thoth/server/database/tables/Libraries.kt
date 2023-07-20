@@ -18,7 +18,7 @@ object TLibraries : UUIDTable("Libraries") {
     val folders = json<List<String>>("folders") { require(it.isNotEmpty()) }
     val metadataScanners = json<List<MetadataAgent>>("metadataScanners") { require(it.isNotEmpty()) }
     val fileScanners = json<List<FileScanner>>("fileScanners") { require(it.isNotEmpty()) }
-    val language = varchar("language", 255).default("en")
+    val language = varchar("language", 255)
 }
 
 class Library(id: EntityID<UUID>) : UUIDEntity(id) {

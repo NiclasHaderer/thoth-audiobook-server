@@ -31,7 +31,6 @@ interface LibraryRepository {
     fun replace(id: UUID, complete: LibraryApiModel): LibraryModel
     fun overlappingFolders(id: UUID?, folders: List<String>): Pair<Boolean, List<Path>>
     fun allFolders(): List<Path>
-
     fun getMatching(path: Path): Library?
 }
 
@@ -69,6 +68,7 @@ class LibraryRepositoryImpl() : LibraryRepository, KoinComponent {
                     preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: preferEmbeddedMetadata
                     metadataScanners = partial.metadataScanners ?: metadataScanners
                     fileScanners = partial.fileScanners ?: fileScanners
+                    language = partial.language ?: language
                 }
             }
             .also {
