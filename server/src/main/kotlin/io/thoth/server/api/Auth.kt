@@ -138,7 +138,7 @@ fun Routing.authRoutes() {
 
     get<Api.Auth.User, UserModel> {
         val principal = thothPrincipal()
-        User.getById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
+        transaction { User.getById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId) }
     }
 
     get<Api.Auth.User.All, List<UserModel>> { transaction { User.all().map { it.toModel() } } }
