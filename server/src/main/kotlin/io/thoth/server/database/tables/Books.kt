@@ -24,7 +24,7 @@ object TBooks : UUIDTable("Books") {
     val providerRating = float("rating").nullable()
 
     // Relations
-    val cover = reference("cover", TImages, onDelete = ReferenceOption.CASCADE).nullable()
+    val coverID = reference("cover", TImages, onDelete = ReferenceOption.CASCADE).nullable()
     val library = reference("library", TLibraries, onDelete = ReferenceOption.CASCADE)
 }
 
@@ -39,7 +39,7 @@ class Book(id: EntityID<UUID>) : UUIDEntity(id) {
     var language by TBooks.language
     var narrator by TBooks.narrator
     var isbn by TBooks.isbn
-    var coverID by TBooks.cover
+    var coverID by TBooks.coverID
 
     // Provider
     var provider by TBooks.provider

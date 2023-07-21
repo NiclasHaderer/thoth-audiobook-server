@@ -15,6 +15,7 @@ import io.thoth.server.plugins.authentication.Guards
 import io.thoth.server.plugins.authentication.assertAccessToLibraryId
 
 // TODO remove unused methods in the db access layer
+// TODO make sure that users only have access to the libraries they are allowed to access
 @Resource("api")
 class Api {
 
