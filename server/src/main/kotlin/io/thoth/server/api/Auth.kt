@@ -5,6 +5,7 @@ import com.nimbusds.jose.jwk.RSAKey
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
+import io.ktor.util.date.*
 import io.thoth.models.UserModel
 import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.errors.ErrorResponse
@@ -13,19 +14,9 @@ import io.thoth.openapi.ktor.post
 import io.thoth.openapi.ktor.put
 import io.thoth.server.common.extensions.asUUID
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.access.getById
-import io.thoth.server.database.access.getByName
-import io.thoth.server.database.access.internalGetByName
-import io.thoth.server.database.access.toInternalModel
-import io.thoth.server.database.access.toModel
+import io.thoth.server.database.access.*
 import io.thoth.server.database.tables.User
-import io.thoth.server.plugins.authentication.AuthConfig
-import io.thoth.server.plugins.authentication.JwtType
-import io.thoth.server.plugins.authentication.REFRESH_TOKEN_EXPIRY_MS
-import io.thoth.server.plugins.authentication.generateAccessTokenForUser
-import io.thoth.server.plugins.authentication.generateJwtForUser
-import io.thoth.server.plugins.authentication.thothPrincipal
-import io.thoth.server.plugins.authentication.validateJwt
+import io.thoth.server.plugins.authentication.*
 import java.security.interfaces.RSAPublicKey
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.ktor.ext.inject
@@ -37,11 +28,14 @@ fun Routing.authRoutes() {
     post<Api.Auth.Login, LoginUser, AccessToken> { _, user ->
         transaction {
             val userModel =
-                User.internalGetByName(user.username) ?: throw ErrorResponse.userError("Could not login user")
+                User.internalGetByName(user.username)
+                    ?: throw ErrorResponse.userError(
+                        if (config.production) "Could not login user" else "Could not find user with username"
+                    )
 
             val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
             if (!encoder.matches(user.password, userModel.passwordHash)) {
-                throw ErrorResponse.userError("Could not login user")
+                throw ErrorResponse.userError(if (config.production) "Could not login user" else "Wrong password")
             }
 
             val keyPair = generateJwtForUser(userModel, authConfig)
@@ -59,6 +53,19 @@ fun Routing.authRoutes() {
 
             AccessToken(keyPair.access)
         }
+    }
+
+    post<Api.Auth.Logout, Unit, Unit> { _, _ ->
+        call.response.cookies.append(
+            Cookie(
+                name = "refresh",
+                value = "",
+                httpOnly = true,
+                secure = config.TLS,
+                extensions = mapOf("SameSite" to "Strict", "HostOnly" to "true"),
+                expires = GMTDate(0),
+            ),
+        )
     }
 
     post<Api.Auth.Register, RegisterUser, UserModel> { _, user ->
@@ -101,7 +108,7 @@ fun Routing.authRoutes() {
         )
     }
 
-    put<Api.Auth.User.Id, ModifyUser, UserModel> { route, modifyUser ->
+    put<Api.Auth.User.Edit, ModifyUser, UserModel> { route, modifyUser ->
         val userID = route.id
         val principal = thothPrincipal()
 
@@ -137,6 +144,7 @@ fun Routing.authRoutes() {
     }
 
     get<Api.Auth.User, UserModel> {
+        println("Getting me a user")
         val principal = thothPrincipal()
         transaction { User.getById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId) }
     }
@@ -146,8 +154,16 @@ fun Routing.authRoutes() {
     delete<Api.Auth.User, Unit, Unit> { _, _,
         ->
         val principal = thothPrincipal()
-        User.findById(principal.userId)?.delete() ?: throw ErrorResponse.notFound("User", principal.userId)
+        transaction {
+            User.findById(principal.userId)?.delete()
+                ?: throw ErrorResponse.notFound(
+                    "User",
+                    principal.userId,
+                )
+        }
     }
+
+    delete<Api.Auth.User.Edit, Unit, Unit> { _, _ -> }
 
     post<Api.Auth.User.Username, UsernameChange, UserModel> { _, usernameChange ->
         val principal = thothPrincipal()

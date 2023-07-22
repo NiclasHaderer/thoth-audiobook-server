@@ -30,6 +30,8 @@ class Api {
     data class Auth(private val parent: Api) {
         @Summary("Login user", method = "POST") @Resource("login") data class Login(private val parent: Auth)
 
+        @Summary("Logout user", method = "POST") @Resource("logout") data class Logout(private val parent: Auth)
+
         @Summary("Register user", method = "POST") @Resource("register") data class Register(private val parent: Auth)
 
         @Summary("Retrieve Jwks", method = "GET")
@@ -48,11 +50,18 @@ class Api {
             @Resource("all")
             data class All(private val parent: User)
 
+            // TODO retrieve user should not be path /edit
+            //  User should be able to view their own profile
+            //  User should be able to edit their own profile
+            //  User should be able to delete their own profile
+            //  Admin should be able to view all profiles
+            //  Admin should be able to edit all profiles
+            //  Admin should be able to delete all profiles
             @Summary("Retrieve user", method = "GET")
             @Summary("Update user", method = "PUT")
             @Secured(Guards.Admin)
             @Resource("edit")
-            data class Id(val id: UUID_S, private val parent: User)
+            data class Edit(val id: UUID_S, private val parent: User)
 
             @Summary("Update username", method = "POST")
             @Resource("username")
