@@ -1,7 +1,12 @@
-package io.thoth.auth
+package io.thoth.auth.interactions
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.thoth.auth.AuthConfig
+import io.thoth.auth.ThothAccessTokenImpl
+import io.thoth.auth.ThothLoginUser
+import io.thoth.auth.generateJwtPairForUser
+import io.thoth.auth.passwordMatches
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 

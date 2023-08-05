@@ -1,7 +1,8 @@
-package io.thoth.auth
+package io.thoth.auth.interactions
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.thoth.auth.AuthConfig
 import io.thoth.openapi.ktor.RouteHandler
 
 fun RouteHandler.logout() {
