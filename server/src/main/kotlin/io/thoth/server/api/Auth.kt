@@ -25,6 +25,7 @@ import org.springframework.security.crypto.argon2.Argon2PasswordEncoder
 fun Routing.authRoutes() {
     val authConfig by inject<AuthConfig>()
     val config by inject<ThothConfig>()
+
     post<Api.Auth.Login, LoginUser, AccessToken> { _, user ->
         transaction {
             val userModel =

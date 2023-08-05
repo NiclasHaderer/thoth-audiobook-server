@@ -1,9 +1,8 @@
-val tsGeneratorVersion: String by project
 val ktorVersion: String by project
+val jwtVersion: String by project
 val kotlinLoggingVersion: String by project
-val openApiVersion: String by project
-val swaggerUiVersion: String by project
-val kotlinVersion: String by project
+val springSecurityVersion: String by project
+
 
 plugins {
     kotlin("jvm")
@@ -12,6 +11,8 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":openapi"))
+
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
 
     // Ktor
@@ -21,16 +22,12 @@ dependencies {
     implementation("io.ktor:ktor-server-data-conversion:$ktorVersion")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
 
-    // Openapi
-    implementation("io.swagger.core.v3:swagger-models:$openApiVersion")
-    implementation("io.swagger.core.v3:swagger-core:$openApiVersion")
-    implementation("org.webjars:swagger-ui:$swaggerUiVersion")
-
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-
-    // Tests
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    // Security
+    implementation("org.springframework.security:spring-security-core:$springSecurityVersion")
+    implementation("com.auth0:java-jwt:$jwtVersion")
 }
+
+
 
 afterEvaluate {
     publishing {
@@ -38,9 +35,8 @@ afterEvaluate {
             // publish to jitpack
             create<MavenPublication>("maven") {
                 groupId = "com.github.niclashaderer"
-                artifactId = "openapi"
+                artifactId = "auth"
                 version = "0.0.1"
-
                 from(components["java"])
             }
         }

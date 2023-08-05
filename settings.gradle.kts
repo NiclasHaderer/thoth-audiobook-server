@@ -5,6 +5,7 @@ include(
     "metadata",
     "models",
     "server",
+    "auth"
 )
 
 pluginManagement {
