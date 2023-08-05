@@ -13,7 +13,7 @@ interface ThothRegisterUser {
 interface ThothDatabaseUser {
     val id: Any
     val username: String
-    val password: String
+    val passwordHash: String
     val admin: Boolean
 }
 
@@ -39,3 +39,20 @@ interface ThothAccessToken {
 class ThothAccessTokenImpl(
     override val accessToken: String,
 ) : ThothAccessToken
+
+interface PasswordChange {
+    val currentPassword: String
+    val newPassword: String
+}
+
+interface RegisteredUser {
+    val username: String
+    val passwordHash: String
+    val admin: Boolean
+}
+
+class RegisteredUserImpl(
+    override val username: String,
+    override val passwordHash: String,
+    override val admin: Boolean,
+) : RegisteredUser
