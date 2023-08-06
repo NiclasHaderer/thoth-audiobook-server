@@ -23,31 +23,31 @@ fun generateJwtPairForUser(user: ThothDatabaseUser, config: ThothAuthConfig): Th
 }
 
 internal fun generateAccessTokenForUser(user: ThothDatabaseUser, config: ThothAuthConfig): String {
-    val keyPair = ThothAuthConfig.keyPairs[ThothAuthConfig.activeKeyId]!!
-    val issuer = ThothAuthConfig.issuer
+    val keyPair = config.keyPairs[config.activeKeyId]!!
+    val issuer = config.issuer
 
     return JWT.create()
         .withIssuer(issuer)
-        .withKeyId(ThothAuthConfig.activeKeyId)
+        .withKeyId(config.activeKeyId)
         .also {
-            if (ThothAuthConfig.includePermissionsInJwt) {
+            if (config.includePermissionsInJwt) {
                 it.withClaim("permissions", user.permissions)
             }
         }
         .withClaim("sub", user.id.toString())
         .withClaim("type", ThothJwtTypes.Access.type)
-        .withExpiresAt(Date(System.currentTimeMillis() + ThothAuthConfig.accessTokenExpiryTime))
+        .withExpiresAt(Date(System.currentTimeMillis() + config.accessTokenExpiryTime))
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 }
 
 internal fun generateRefreshTokenForUser(user: ThothDatabaseUser, config: ThothAuthConfig): String {
-    val issuer = ThothAuthConfig.issuer
-    val keyPair = ThothAuthConfig.keyPairs[ThothAuthConfig.activeKeyId]!!
+    val issuer = config.issuer
+    val keyPair = config.keyPairs[config.activeKeyId]!!
 
-    val refreshAge = System.currentTimeMillis() + ThothAuthConfig.refreshTokenExpiryTime
+    val refreshAge = System.currentTimeMillis() + config.refreshTokenExpiryTime
     return JWT.create()
         .withIssuer(issuer)
-        .withKeyId(ThothAuthConfig.activeKeyId)
+        .withKeyId(config.activeKeyId)
         .withClaim("type", ThothJwtTypes.Refresh.type)
         .withClaim("sub", user.id.toString())
         .withExpiresAt(Date(refreshAge))
