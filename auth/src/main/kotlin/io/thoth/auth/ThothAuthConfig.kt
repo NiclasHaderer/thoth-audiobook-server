@@ -53,11 +53,12 @@ class ThothAuthConfig {
     lateinit var protocol: URLProtocol
     lateinit var jwksPath: String
 
-    // TODO make sure that the KeyPair is a RSA key pair
     internal fun assertAreRsaKeyPairs() {
         keyPairs.values.forEach { keyPair ->
             require(keyPair.public.algorithm == "RSA") { "KeyPair ${keyPair.public} is not a RSA key pair" }
         }
+        require(keyPairs.isNotEmpty()) { "No key pairs configured" }
+        require(keyPairs.containsKey(activeKeyId)) { "Active key ID '$activeKeyId' not found in key pairs" }
     }
 
     internal val jwkProvider by lazy {
@@ -118,43 +119,33 @@ class ThothAuthConfig {
     }
 
     // Operations
-    fun getUserByUsername(username: String): ThothDatabaseUser? {
+    var getUserByUsername: (username: String) -> ThothDatabaseUser? = { _ ->
         TODO("Operation not implemented by application")
     }
 
-    fun <T : Any> getUserById(id: T): ThothDatabaseUser? {
+    var getUserById: (id: Any) -> ThothDatabaseUser? = { _ -> TODO("Operation not implemented by application") }
+
+    var isFirstUser: () -> Boolean = { TODO("Operation not implemented by application") }
+
+    var createUser: (registeredUserImpl: RegisteredUserImpl) -> ThothDatabaseUser = { _ ->
         TODO("Operation not implemented by application")
     }
 
-    fun isFirstUser(): Boolean {
+    var listAllUsers: () -> List<ThothDatabaseUser> = { TODO("Operation not implemented by application") }
+
+    var deleteUser: (user: ThothDatabaseUser) -> Unit = { _ -> TODO("Operation not implemented by application") }
+
+    var renameUser: (user: ThothDatabaseUser, id: Any) -> ThothDatabaseUser = { _, _ ->
         TODO("Operation not implemented by application")
     }
 
-    fun createUser(registeredUserImpl: RegisteredUserImpl): ThothDatabaseUser {
+    var updatePassword: (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser = { _, _ ->
         TODO("Operation not implemented by application")
     }
 
-    fun listAllUsers(): List<ThothDatabaseUser> {
-        TODO("Operation not implemented by application")
-    }
-
-    fun deleteUser(user: ThothDatabaseUser) {
-        TODO("Operation not implemented by application")
-    }
-
-    fun <T : Any> renameUser(user: ThothDatabaseUser, id: T): ThothDatabaseUser {
-        TODO("Operation not implemented by application")
-    }
-
-    fun updatePassword(user: ThothDatabaseUser, newPassword: String): ThothDatabaseUser {
-        TODO("Operation not implemented by application")
-    }
-
-    fun updateUserPermissions(
-        user: ThothDatabaseUser,
-        permissions: Map<String, Any>,
-        isAdmin: Boolean
-    ): ThothDatabaseUser {
-        TODO("Operation not implemented by application")
-    }
+    var updateUserPermissions:
+        (user: ThothDatabaseUser, permissions: Map<String, Any>, isAdmin: Boolean) -> ThothDatabaseUser =
+        { _, _, _ ->
+            TODO("Operation not implemented by application")
+        }
 }
