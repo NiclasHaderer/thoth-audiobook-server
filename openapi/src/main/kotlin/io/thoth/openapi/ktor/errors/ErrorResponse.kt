@@ -10,7 +10,7 @@ class ErrorResponse internal constructor(val status: HttpStatusCode, message: St
             return notFound(thing, id.toString(), details)
         }
 
-        fun notFound(thing: String, id: String, details: Any? = null): ErrorResponse {
+        fun notFound(thing: String, id: Any, details: Any? = null): ErrorResponse {
             return ErrorResponse(HttpStatusCode.NotFound, "$thing with ID:$id not found", details)
         }
 

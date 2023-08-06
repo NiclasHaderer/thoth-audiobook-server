@@ -2,35 +2,42 @@ package io.thoth.auth.interactions
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.thoth.auth.AuthConfig
-import io.thoth.auth.ThothAccessTokenImpl
-import io.thoth.auth.ThothLoginUser
-import io.thoth.auth.generateJwtPairForUser
-import io.thoth.auth.passwordMatches
+import io.thoth.auth.ThothAuthConfig
+import io.thoth.auth.models.ThothAccessTokenImpl
+import io.thoth.auth.models.ThothLoginUser
+import io.thoth.auth.utils.generateJwtPairForUser
+import io.thoth.auth.utils.passwordMatches
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
+interface ThothLoginParams
+
 fun RouteHandler.login(
+    params: ThothLoginParams,
     loginUser: ThothLoginUser,
 ): ThothAccessTokenImpl {
     val user =
-        AuthConfig.getUserByUsername(loginUser.username)
-            ?: throw ErrorResponse.userError(if (AuthConfig.production) "Could not login user" else "Wrong username")
+        ThothAuthConfig.getUserByUsername(loginUser.username)
+            ?: throw ErrorResponse.userError(
+                if (ThothAuthConfig.production) "Could not login user" else "Username does not exist"
+            )
 
     if (!passwordMatches(loginUser.password, user)) {
-        throw ErrorResponse.userError(if (AuthConfig.production) "Could not login user" else "Wrong password")
+        throw ErrorResponse.userError(
+            if (ThothAuthConfig.production) "Could not login user" else "Password is incorrect"
+        )
     }
 
-    val keyPair = generateJwtPairForUser(user, AuthConfig)
+    val keyPair = generateJwtPairForUser(user, ThothAuthConfig)
 
     call.response.cookies.append(
         Cookie(
             name = "refresh",
             value = keyPair.refreshToken,
             httpOnly = true,
-            secure = AuthConfig.production,
+            secure = ThothAuthConfig.production,
             extensions = mapOf("SameSite" to "Strict", "HostOnly" to "true"),
-            maxAge = (AuthConfig.refreshTokenExpiryTime / 1000).toInt(),
+            maxAge = (ThothAuthConfig.refreshTokenExpiryTime / 1000).toInt(),
         ),
     )
 

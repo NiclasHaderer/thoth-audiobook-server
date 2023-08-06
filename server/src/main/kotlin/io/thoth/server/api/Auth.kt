@@ -163,8 +163,6 @@ fun Routing.authRoutes() {
         }
     }
 
-    delete<Api.Auth.User.Edit, Unit, Unit> { _, _ -> }
-
     post<Api.Auth.User.Username, UsernameChange, UserModel> { _, usernameChange ->
         val principal = thothPrincipal()
 
@@ -195,6 +193,7 @@ fun Routing.authRoutes() {
             user.passwordHash = encoder.encode(passwordChange.newPassword)
         }
     }
+
     post<Api.Auth.User.Refresh, Unit, AccessToken> { _, _ ->
         val refreshToken = call.request.cookies["refresh"] ?: throw ErrorResponse.unauthorized("No refresh token")
 
