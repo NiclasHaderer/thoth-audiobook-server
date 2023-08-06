@@ -10,11 +10,12 @@ typealias KeyId = String
 
 object ThothAuthConfig {
 
-    var accessTokenExpiryTime = TimeUnit.MINUTES.toMillis(5)
-    var refreshTokenExpiryTime = TimeUnit.DAYS.toMillis(60)
+    val accessTokenExpiryTime = TimeUnit.MINUTES.toMillis(5)
+    val production = true
+    val firstUserIsAdmin = true
+    val refreshTokenExpiryTime = TimeUnit.DAYS.toMillis(60)
+    val includePermissionsInJwt = true
 
-    var production = true
-    var firstUserIsAdmin = true
     lateinit var keyPairs: Map<KeyId, KeyPair>
     lateinit var issuer: String
     lateinit var activeKeyId: KeyId
@@ -32,10 +33,6 @@ object ThothAuthConfig {
         TODO("Has to be implemented by the application")
     }
 
-    fun updatePassword(user: ThothDatabaseUser, newPassword: String) {
-        TODO("Has to be implemented by the application")
-    }
-
     fun isFirstUser(): Boolean {
         TODO("Has to be implemented by the application")
     }
@@ -49,6 +46,22 @@ object ThothAuthConfig {
     }
 
     fun deleteUser(user: ThothDatabaseUser) {
+        TODO("Has to be implemented by the application")
+    }
+
+    fun <T : Any> renameUser(user: ThothDatabaseUser, id: T): ThothDatabaseUser {
+        TODO("Has to be implemented by the application")
+    }
+
+    fun updatePassword(user: ThothDatabaseUser, newPassword: String): ThothDatabaseUser {
+        TODO("Has to be implemented by the application")
+    }
+
+    fun updateUserPermissions(
+        user: ThothDatabaseUser,
+        permissions: Map<String, Any>,
+        isAdmin: Boolean
+    ): ThothDatabaseUser {
         TODO("Has to be implemented by the application")
     }
 }

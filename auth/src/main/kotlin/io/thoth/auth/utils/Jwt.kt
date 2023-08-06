@@ -29,6 +29,11 @@ internal fun generateAccessTokenForUser(user: ThothDatabaseUser, config: ThothAu
     return JWT.create()
         .withIssuer(issuer)
         .withKeyId(ThothAuthConfig.activeKeyId)
+        .also {
+            if (ThothAuthConfig.includePermissionsInJwt) {
+                it.withClaim("permissions", user.permissions)
+            }
+        }
         .withClaim("sub", user.id.toString())
         .withClaim("type", ThothJwtTypes.Access.type)
         .withExpiresAt(Date(System.currentTimeMillis() + ThothAuthConfig.accessTokenExpiryTime))
