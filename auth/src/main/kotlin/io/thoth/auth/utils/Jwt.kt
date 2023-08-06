@@ -1,10 +1,8 @@
 package io.thoth.auth.utils
 
-import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
-import io.ktor.http.*
 import io.thoth.auth.ThothAuthConfig
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.auth.models.ThothJwtPairImpl
@@ -13,7 +11,6 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 fun generateJwtPairForUser(user: ThothDatabaseUser, config: ThothAuthConfig): ThothJwtPairImpl {
     return ThothJwtPairImpl(
@@ -55,22 +52,12 @@ internal fun generateRefreshTokenForUser(user: ThothDatabaseUser, config: ThothA
 }
 
 fun validateJwt(authConfig: ThothAuthConfig, token: String, type: ThothJwtTypes): DecodedJWT {
-    val url =
-        URLBuilder()
-            .apply {
-                protocol = authConfig.protocol
-                host = authConfig.domain
-                encodedPath = authConfig.jwksPath
-            }
-            .build()
-            .toURI()
-            .toURL()
-    val provider = JwkProviderBuilder(url).cached(10, 24, TimeUnit.HOURS).rateLimited(10, 1, TimeUnit.MINUTES).build()
     val decodedJWT = JWT.decode(token)
-
     if (decodedJWT.algorithm != "RS256") {
         throw ErrorResponse.userError("Unsupported JWT algorithm ${decodedJWT.algorithm}")
     }
+
+    val provider = authConfig.jwkProvider
     val algorithm = Algorithm.RSA256(provider[decodedJWT.keyId].publicKey as RSAPublicKey, null)
     val verifier = JWT.require(algorithm).withIssuer(authConfig.issuer).build()
 
