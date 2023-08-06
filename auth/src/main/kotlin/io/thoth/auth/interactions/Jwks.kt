@@ -2,9 +2,9 @@ package io.thoth.auth.interactions
 
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
-import io.thoth.auth.ThothAuthConfig
 import io.thoth.auth.models.JWK
 import io.thoth.auth.models.JWKs
+import io.thoth.auth.thothAuthConfig
 import io.thoth.openapi.ktor.RouteHandler
 import java.security.interfaces.RSAPublicKey
 
@@ -14,7 +14,9 @@ fun RouteHandler.jwks(
     params: ThothJwksParams,
     body: Unit,
 ): JWKs {
-    val keyPairs = ThothAuthConfig.keyPairs
+    val config = thothAuthConfig()
+    val keyPairs = config.keyPairs
+
     val jwks =
         keyPairs.entries
             .map { (keyId, keyPair) ->
