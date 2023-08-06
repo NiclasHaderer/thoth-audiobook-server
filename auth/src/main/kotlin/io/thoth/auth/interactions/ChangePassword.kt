@@ -1,23 +1,29 @@
 package io.thoth.auth.interactions
 
-import io.thoth.auth.AuthConfig
-import io.thoth.auth.PasswordChange
-import io.thoth.auth.encodePassword
-import io.thoth.auth.passwordMatches
+import io.thoth.auth.ThothAuthConfig
+import io.thoth.auth.models.PasswordChange
+import io.thoth.auth.utils.ThothPrincipal
+import io.thoth.auth.utils.hashPassword
+import io.thoth.auth.utils.passwordMatches
+import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
+interface ThothChangePasswordParams
+
 fun RouteHandler.changePassword(
+    params: ThothChangePasswordParams,
     passwordChange: PasswordChange,
 ) {
-
-    // TODO get userId from JWT
-    val user = AuthConfig.getUserById(userId) ?: throw ErrorResponse.userError("Could not find user with username")
+    val principal = thothPrincipal<ThothPrincipal>()
+    val user =
+        ThothAuthConfig.getUserById(principal.userId)
+            ?: throw ErrorResponse.userError("Could not find user with username")
 
     if (!passwordMatches(passwordChange.currentPassword, user)) {
         throw ErrorResponse.userError("Wrong password")
     }
 
-    val newPassword = encodePassword(passwordChange.newPassword)
-    AuthConfig.updatePassword(user, newPassword)
+    val newPassword = hashPassword(passwordChange.newPassword)
+    ThothAuthConfig.updatePassword(user, newPassword)
 }
