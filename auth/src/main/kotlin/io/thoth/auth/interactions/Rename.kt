@@ -13,7 +13,7 @@ interface ThothRenameUserAccountParams {
     val id: Any
 }
 
-fun RouteHandler.renameUserAccount(params: ThothRenameUserAccountParams, renamedUser: ThothRenameUser): ThothUser {
+fun RouteHandler.renameUser(params: ThothRenameUserAccountParams, renamedUser: ThothRenameUser): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
 
     if (principal.userId != params.id && !principal.isAdmin) {
@@ -21,6 +21,13 @@ fun RouteHandler.renameUserAccount(params: ThothRenameUserAccountParams, renamed
     }
 
     val config = thothAuthConfig()
+
+    config.usernameMeetsRequirements(renamedUser.username).also { (meetsRequirement, message) ->
+        if (!meetsRequirement) {
+            throw ErrorResponse.userError(message!!)
+        }
+    }
+
     config.getUserByUsername(renamedUser.username)?.let { throw ErrorResponse.userError("Username already exists") }
 
     var user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)

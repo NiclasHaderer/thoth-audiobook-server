@@ -148,4 +148,22 @@ class ThothAuthConfig {
         { _, _, _ ->
             TODO("Operation not implemented by application")
         }
+
+    var passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?> = { password ->
+        if (password.length < 8) {
+            Pair(false, "Password must be at least 8 characters long")
+        } else {
+            Pair(true, null)
+        }
+    }
+
+    var usernameMeetsRequirements: (username: String) -> Pair<Boolean, String?> = { username ->
+        if (username.length < 5) {
+            Pair(false, "Username must be at least 5 characters long")
+        } else if (!username.matches(Regex("^[a-zA-Z0-9_-]*$"))) {
+            Pair(false, "Username must be alphanumeric, including - and _")
+        } else {
+            Pair(true, null)
+        }
+    }
 }

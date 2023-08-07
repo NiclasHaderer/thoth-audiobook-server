@@ -12,7 +12,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothRefreshTokenParams
 
-fun RouteHandler.refreshToken(
+fun RouteHandler.getRefreshToken(
     params: ThothRefreshTokenParams,
     body: Unit,
 ): ThothAccessToken {

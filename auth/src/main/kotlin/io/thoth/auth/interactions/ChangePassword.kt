@@ -11,7 +11,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothChangePasswordParams
 
-fun RouteHandler.changePassword(
+fun RouteHandler.changeUserPassword(
     params: ThothChangePasswordParams,
     passwordChange: PasswordChange,
 ) {
@@ -20,6 +20,12 @@ fun RouteHandler.changePassword(
 
     val user =
         config.getUserById(principal.userId) ?: throw ErrorResponse.userError("Could not find user with username")
+
+    config.passwordMeetsRequirements(passwordChange.newPassword).also { (meetsRequirements, message) ->
+        if (!meetsRequirements) {
+            throw ErrorResponse.userError(message!!)
+        }
+    }
 
     if (!passwordMatches(passwordChange.currentPassword, user)) {
         throw ErrorResponse.userError("Wrong password")

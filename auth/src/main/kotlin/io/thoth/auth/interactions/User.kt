@@ -12,7 +12,7 @@ interface ThothUserAccountParams {
     val id: Any
 }
 
-fun RouteHandler.getUserAccount(params: ThothUserAccountParams): ThothUser {
+fun RouteHandler.displayUser(params: ThothUserAccountParams): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig()
 
