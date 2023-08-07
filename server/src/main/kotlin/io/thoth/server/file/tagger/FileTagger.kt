@@ -26,12 +26,15 @@ interface FileTagger : ReadonlyFileTagger {
     override var series: String?
     override var seriesIndex: Float?
     override var cover: ByteArray?
+
     fun save()
 }
 
 open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTaggerImpl(audioFile), FileTagger {
     constructor(path: Path) : this(path.toFile())
+
     constructor(file: File) : this(AudioFileIO.read(file))
+
     constructor(path: String) : this(File(path))
 
     override var title: String

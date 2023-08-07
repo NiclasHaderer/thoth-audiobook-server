@@ -14,6 +14,7 @@ import org.koin.core.component.inject
 
 interface FileTreeWatcher {
     fun watch(folders: List<Path>)
+
     fun stop()
 }
 

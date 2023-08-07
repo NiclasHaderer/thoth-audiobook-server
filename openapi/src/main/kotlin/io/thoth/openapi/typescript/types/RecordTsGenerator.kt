@@ -5,6 +5,7 @@ import mu.KotlinLogging.logger
 
 class RecordTsGenerator : TsGenerator() {
     private val log = logger {}
+
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
 
         if (classType.genericArguments.size != 2) {

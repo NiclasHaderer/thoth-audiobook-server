@@ -29,7 +29,9 @@ import org.koin.core.component.inject
 interface SeriesRepository :
     Repository<Series, SeriesModel, DetailedSeriesModel, PartialSeriesApiModel, SeriesApiModel> {
     fun findByName(seriesTitle: String, libraryId: UUID): Series?
+
     fun getOrCreate(seriesName: String, libraryId: UUID, dbAuthor: List<Author>): Series
+
     fun create(seriesName: String, libraryId: UUID, dbAuthor: List<Author>): Series
 }
 

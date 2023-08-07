@@ -23,14 +23,23 @@ import org.koin.core.component.inject
 
 interface LibraryRepository {
     fun raw(id: UUID): Library
+
     fun rescan(id: UUID)
+
     fun get(id: UUID): LibraryModel
+
     fun getAll(): List<LibraryModel>
+
     fun modify(id: UUID, partial: PartialLibraryApiModel): LibraryModel
+
     fun create(complete: LibraryApiModel): LibraryModel
+
     fun replace(id: UUID, complete: LibraryApiModel): LibraryModel
+
     fun overlappingFolders(id: UUID?, folders: List<String>): Pair<Boolean, List<Path>>
+
     fun allFolders(): List<Path>
+
     fun getMatching(path: Path): Library?
 }
 

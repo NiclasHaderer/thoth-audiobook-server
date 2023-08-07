@@ -10,16 +10,19 @@ class InfoContext internal constructor(private val info: Info) {
         set(value) {
             info.title = value
         }
+
     var description: String
         get() = info.description
         set(value) {
             info.description = value
         }
+
     var termsOfService: String
         get() = info.termsOfService
         set(value) {
             info.termsOfService = value
         }
+
     var version: String
         get() = info.version
         set(value) {

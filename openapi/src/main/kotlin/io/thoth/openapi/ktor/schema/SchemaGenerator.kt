@@ -39,7 +39,9 @@ abstract class SchemaGenerator {
     open fun generateName(classType: ClassType, generateSubType: GenerateSchemaSubtype): String? = null
 
     abstract fun canGenerate(classType: ClassType): Boolean
+
     abstract fun generateContentType(classType: ClassType): ContentType
+
     open fun priority(classType: ClassType): Int = 0
 }
 

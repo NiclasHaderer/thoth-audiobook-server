@@ -9,6 +9,7 @@ import java.nio.file.attribute.BasicFileAttributes
 
 class AudioTagScanner : AudioFileAnalyzer {
     override val name: String = "AudioTagScanner"
+
     override fun analyze(
         filePath: Path,
         attrs: BasicFileAttributes,

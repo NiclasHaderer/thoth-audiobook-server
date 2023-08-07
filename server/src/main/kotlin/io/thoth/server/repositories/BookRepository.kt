@@ -20,7 +20,9 @@ import org.koin.core.component.inject
 
 interface BookRepository : Repository<Book, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
     fun findByName(bookTitle: String, authorIds: List<UUID>, libraryId: UUID): Book?
+
     fun getOrCreate(bookName: String, libraryId: UUID, authors: List<Author>, series: List<Series>): Book
+
     fun create(bookName: String, libraryId: UUID, authors: List<Author>, series: List<Series>): Book
 }
 

@@ -19,7 +19,9 @@ class EnumTsGenerator : TsGenerator() {
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
     override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE
+
     override fun generateName(classType: ClassType, generateSubType: GenerateType): String = classType.simpleName
+
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isEnum()
     }

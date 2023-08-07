@@ -28,7 +28,9 @@ interface ReadonlyFileTagger {
 
 open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger {
     constructor(path: Path) : this(path.toFile())
+
     constructor(file: File) : this(AudioFileIO.read(file))
+
     constructor(path: String) : this(File(path))
 
     override val title: String
