@@ -1,4 +1,4 @@
-package io.thoth.server.plugins
+package io.thoth.server.plugins.auth
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -11,23 +11,8 @@ import io.thoth.server.database.tables.TUsers
 import io.thoth.server.database.tables.User
 import io.thoth.server.plugins.authentication.jwtToPrincipal
 import java.nio.file.Path
-import java.security.KeyPair
-import java.security.KeyPairGenerator
-import java.security.SecureRandom
 import java.util.*
-import kotlin.io.path.reader
-import kotlin.io.path.writer
-import org.bouncycastle.openssl.PEMKeyPair
-import org.bouncycastle.openssl.PEMParser
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.koin.ktor.ext.inject
-
-object Guards {
-    const val Admin = "admin"
-    const val Editor = "editor"
-    const val Normal = "normal"
-}
 
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
@@ -38,7 +23,7 @@ fun Application.configureAuthentication() {
         this@install.issuer = "thoth.io"
         this@install.domain = thothConfig.domain
         this@install.protocol = if (thothConfig.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
-        this@install.jwksPath = "/api/jwks.json"
+        this@install.jwksPath = "/api/auth/jwks.json"
         this@install.keyPairs["thoth"] = keyPair
         this@install.activeKeyId = "thoth"
 
@@ -103,28 +88,5 @@ fun Application.configureAuthentication() {
         }
 
         updateUserPermissions = { _, _, _ -> TODO("Not yet implemented") }
-    }
-}
-
-private fun createKeyPair(jwtKeyFile: Path): KeyPair {
-    val kpg = KeyPairGenerator.getInstance("RSA")
-    kpg.initialize(2048, SecureRandom())
-    val kp = kpg.generateKeyPair()
-
-    JcaPEMWriter(jwtKeyFile.writer()).use { pemWriter ->
-        pemWriter.writeObject(kp.private)
-        pemWriter.writeObject(kp.public)
-    }
-    return kp
-}
-
-private fun getOrCreateKeyPair(path: Path): KeyPair {
-    return try {
-        path.reader().use { reader ->
-            val parsed: PEMKeyPair = PEMParser(reader).readObject() as PEMKeyPair
-            JcaPEMKeyConverter().getKeyPair(parsed)
-        }
-    } catch (e: Exception) {
-        createKeyPair(path)
     }
 }

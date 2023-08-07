@@ -4,7 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.dataconversion.*
 import io.thoth.openapi.ktor.plugins.OpenAPIRouting
 import io.thoth.openapi.ktor.plugins.OpenAPIWebUI
-import io.thoth.server.plugins.authentication.Guards
+import io.thoth.server.plugins.auth.Guards
 
 fun Application.configureOpenApi() {
     install(DataConversion)

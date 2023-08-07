@@ -35,17 +35,17 @@ fun Routing.authRoutes() {
 
     get<Api.Auth.Jwks, JWKs>(RouteHandler::getJwks)
 
-    put<Api.Auth.User.Edit, ThothModifyPermissions, ThothUser>(RouteHandler::modifyUserPermissions)
+    put<Api.Auth.User.Id.Permissions, ThothModifyPermissions, ThothUser>(RouteHandler::modifyUserPermissions)
 
-    get<Api.Auth.User, ThothUser>(RouteHandler::displayUser)
+    get<Api.Auth.User.Id, ThothUser>(RouteHandler::displayUser)
 
     get<Api.Auth.User.All, List<ThothUser>>(RouteHandler::listUsers)
 
-    delete<Api.Auth.User, Unit, Unit>(RouteHandler::deleteUser)
+    delete<Api.Auth.User.Id, Unit, Unit>(RouteHandler::deleteUser)
 
-    post<Api.Auth.User.Username, ThothRenameUser, ThothUser>(RouteHandler::renameUser)
+    post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser>(RouteHandler::renameUser)
 
-    post<Api.Auth.User.Password, ThothChangePassword, Unit>(RouteHandler::changeUserPassword)
+    post<Api.Auth.User.Id.Password, ThothChangePassword, Unit>(RouteHandler::changeUserPassword)
 
     post<Api.Auth.User.Refresh, Unit, ThothAccessToken>(RouteHandler::getRefreshToken)
 }
