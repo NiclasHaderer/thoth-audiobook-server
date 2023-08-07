@@ -10,7 +10,7 @@ import java.security.interfaces.RSAPublicKey
 
 interface ThothJwksParams
 
-fun RouteHandler.jwks(
+fun RouteHandler.getJwks(
     params: ThothJwksParams,
     body: Unit,
 ): JWKs {

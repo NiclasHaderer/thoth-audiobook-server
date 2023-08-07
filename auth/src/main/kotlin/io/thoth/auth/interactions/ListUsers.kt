@@ -10,7 +10,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothListAllParams
 
-fun RouteHandler.listAll(
+fun RouteHandler.listUsers(
     params: ThothListAllParams,
     body: Unit,
 ): List<ThothUser> {

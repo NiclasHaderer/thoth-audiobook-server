@@ -12,7 +12,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothLoginParams
 
-fun RouteHandler.login(
+fun RouteHandler.loginUser(
     params: ThothLoginParams,
     loginUser: ThothLoginUser,
 ): ThothAccessTokenImpl {

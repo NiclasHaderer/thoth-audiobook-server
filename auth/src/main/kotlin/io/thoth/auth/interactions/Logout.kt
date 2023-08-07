@@ -7,7 +7,7 @@ import io.thoth.openapi.ktor.RouteHandler
 
 interface ThothLogoutParams
 
-fun RouteHandler.logout(
+fun RouteHandler.logoutUser(
     params: ThothLogoutParams,
     body: Unit,
 ) {

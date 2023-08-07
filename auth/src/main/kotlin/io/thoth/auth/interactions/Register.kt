@@ -11,8 +11,21 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothRegisterParams
 
-fun RouteHandler.register(params: ThothRegisterParams, user: ThothRegisterUser): ThothUser {
+fun RouteHandler.registerUser(params: ThothRegisterParams, user: ThothRegisterUser): ThothUser {
     val config = thothAuthConfig()
+
+    config.passwordMeetsRequirements(user.password).also { (meetsRequirement, message) ->
+        if (!meetsRequirement) {
+            throw ErrorResponse.userError(message!!)
+        }
+    }
+
+    config.usernameMeetsRequirements(user.username).also { (meetsRequirement, message) ->
+        if (!meetsRequirement) {
+            throw ErrorResponse.userError(message!!)
+        }
+    }
+
     val dbUser = config.getUserByUsername(user.username)
     if (dbUser != null) {
         throw ErrorResponse.userError("User with name ${user.username} already exists")
