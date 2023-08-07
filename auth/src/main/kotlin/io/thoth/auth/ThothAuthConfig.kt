@@ -44,7 +44,7 @@ class ThothAuthConfig {
     var refreshTokenExpiryTime = TimeUnit.DAYS.toMillis(60)
 
     // Key pairs
-    val keyPairs: Map<KeyId, KeyPair> = mapOf()
+    val keyPairs: MutableMap<KeyId, KeyPair> = mutableMapOf()
     lateinit var activeKeyId: KeyId
 
     // Application paths
@@ -75,45 +75,47 @@ class ThothAuthConfig {
         JwkProviderBuilder(url).cached(10, 24, TimeUnit.HOURS).rateLimited(10, 1, TimeUnit.MINUTES).build()
     }
 
-    fun AuthenticationConfig.configureGuard(
-        guard: ThothAuthGuard,
+    fun Application.configureGuard(
+        guard: String,
         getPrincipal:
             ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal?
     ) {
-        jwt(guard.name()) {
-            if (this@ThothAuthConfig.realm != null) {
-                realm = this@ThothAuthConfig.realm!!
-            }
+        install(Authentication) {
+            jwt(guard) {
+                if (this@ThothAuthConfig.realm != null) {
+                    realm = this@ThothAuthConfig.realm!!
+                }
 
-            verifier(jwkProvider, this@ThothAuthConfig.issuer) { acceptLeeway(3) }
+                verifier(jwkProvider, this@ThothAuthConfig.issuer) { acceptLeeway(3) }
 
-            validate { jwtCredential ->
-                val principal =
-                    getPrincipal(jwtCredential) { error -> attributes.put(JWT_VALIDATION_FAILED, error) }
-                        ?: return@validate null
+                validate { jwtCredential ->
+                    val principal =
+                        getPrincipal(jwtCredential) { error -> attributes.put(JWT_VALIDATION_FAILED, error) }
+                            ?: return@validate null
 
-                if (principal.type != ThothJwtTypes.Access) {
+                    if (principal.type != ThothJwtTypes.Access) {
+                        attributes.put(
+                            JWT_VALIDATION_FAILED,
+                            JwtError("JWT is not an access token", HttpStatusCode.Unauthorized),
+                        )
+                        return@validate null
+                    }
+
                     attributes.put(
                         JWT_VALIDATION_FAILED,
                         JwtError("JWT is not an access token", HttpStatusCode.Unauthorized),
                     )
-                    return@validate null
+
+                    return@validate principal
                 }
 
-                attributes.put(
-                    JWT_VALIDATION_FAILED,
-                    JwtError("JWT is not an access token", HttpStatusCode.Unauthorized),
-                )
-
-                return@validate principal
-            }
-
-            challenge { _, _ ->
-                val error = call.attributes.getOrNull(JWT_VALIDATION_FAILED)
-                call.respond(
-                    error?.statusCode ?: HttpStatusCode.Unauthorized,
-                    mapOf("error" to (error?.error ?: "Unknown JWT error")),
-                )
+                challenge { _, _ ->
+                    val error = call.attributes.getOrNull(JWT_VALIDATION_FAILED)
+                    call.respond(
+                        error?.statusCode ?: HttpStatusCode.Unauthorized,
+                        mapOf("error" to (error?.error ?: "Unknown JWT error")),
+                    )
+                }
             }
         }
     }
@@ -135,7 +137,7 @@ class ThothAuthConfig {
 
     var deleteUser: (user: ThothDatabaseUser) -> Unit = { _ -> TODO("Operation not implemented by application") }
 
-    var renameUser: (user: ThothDatabaseUser, id: Any) -> ThothDatabaseUser = { _, _ ->
+    var renameUser: (user: ThothDatabaseUser, name: String) -> ThothDatabaseUser = { _, _ ->
         TODO("Operation not implemented by application")
     }
 

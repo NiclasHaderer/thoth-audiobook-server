@@ -8,11 +8,11 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothUserAccountParams {
+interface ThothDisplayUserParams {
     val id: Any
 }
 
-fun RouteHandler.displayUser(params: ThothUserAccountParams): ThothUser {
+fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig()
 

@@ -1,6 +1,6 @@
 package io.thoth.auth.interactions
 
-import io.thoth.auth.models.PasswordChange
+import io.thoth.auth.models.ThothChangePassword
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.hashPassword
@@ -13,7 +13,7 @@ interface ThothChangePasswordParams
 
 fun RouteHandler.changeUserPassword(
     params: ThothChangePasswordParams,
-    passwordChange: PasswordChange,
+    passwordChange: ThothChangePassword,
 ) {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig()

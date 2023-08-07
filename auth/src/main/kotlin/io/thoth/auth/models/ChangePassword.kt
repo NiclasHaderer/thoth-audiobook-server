@@ -1,6 +1,6 @@
 package io.thoth.auth.models
 
-interface PasswordChange {
+interface ThothChangePassword {
     val currentPassword: String
     val newPassword: String
 }

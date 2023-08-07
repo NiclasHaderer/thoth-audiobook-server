@@ -8,11 +8,10 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothListAllParams
+interface ThothListUserParams
 
 fun RouteHandler.listUsers(
-    params: ThothListAllParams,
-    body: Unit,
+    params: ThothListUserParams,
 ): List<ThothUser> {
     val principal = thothPrincipal<ThothPrincipal>()
     if (!principal.isAdmin) {

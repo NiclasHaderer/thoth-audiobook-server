@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":models"))
     implementation(project(":openapi"))
     implementation(project(":metadata"))
+    implementation(project(":auth"))
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")

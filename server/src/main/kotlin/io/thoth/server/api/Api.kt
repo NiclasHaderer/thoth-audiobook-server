@@ -1,6 +1,17 @@
 package io.thoth.server.api
 
 import io.ktor.resources.*
+import io.thoth.auth.interactions.ThothChangePasswordParams
+import io.thoth.auth.interactions.ThothDeleteUserParams
+import io.thoth.auth.interactions.ThothDisplayUserParams
+import io.thoth.auth.interactions.ThothJwksParams
+import io.thoth.auth.interactions.ThothListUserParams
+import io.thoth.auth.interactions.ThothLoginParams
+import io.thoth.auth.interactions.ThothLogoutParams
+import io.thoth.auth.interactions.ThothModifyPermissionsParams
+import io.thoth.auth.interactions.ThothRefreshTokenParams
+import io.thoth.auth.interactions.ThothRegisterParams
+import io.thoth.auth.interactions.ThothRenameUserParams
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
@@ -11,10 +22,11 @@ import io.thoth.openapi.ktor.Secured
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.Tagged
 import io.thoth.server.common.serializion.kotlin.UUID_S
-import io.thoth.server.plugins.authentication.Guards
+import io.thoth.server.plugins.Guards
 import io.thoth.server.plugins.authentication.assertAccessToLibraryId
 
 // TODO remove unused methods in the db access layer
+// TODO move companion object functions of user into own thingi
 // TODO make sure that users only have access to the libraries they are allowed to access
 @Resource("api")
 class Api {
@@ -28,27 +40,33 @@ class Api {
     @Resource("auth")
     @Tagged("Auth")
     data class Auth(private val parent: Api) {
-        @Summary("Login user", method = "POST") @Resource("login") data class Login(private val parent: Auth)
+        @Summary("Login user", method = "POST")
+        @Resource("login")
+        data class Login(private val parent: Auth) : ThothLoginParams
 
-        @Summary("Logout user", method = "POST") @Resource("logout") data class Logout(private val parent: Auth)
+        @Summary("Logout user", method = "POST")
+        @Resource("logout")
+        data class Logout(private val parent: Auth) : ThothLogoutParams
 
-        @Summary("Register user", method = "POST") @Resource("register") data class Register(private val parent: Auth)
+        @Summary("Register user", method = "POST")
+        @Resource("register")
+        data class Register(private val parent: Auth) : ThothRegisterParams
 
         @Summary("Retrieve Jwks", method = "GET")
         @Resource(".well-known/jwks.json")
-        data class Jwks(private val parent: Auth)
+        data class Jwks(private val parent: Auth) : ThothJwksParams
 
         @Summary("Get current user", method = "GET")
         @Summary("Create user", method = "POST")
         @Summary("Delete user", method = "DELETE")
         @Secured(Guards.Normal)
         @Resource("user")
-        data class User(private val parent: Auth) {
+        data class User(private val parent: Auth) : ThothDeleteUserParams, ThothDisplayUserParams {
 
             @Summary("List users", method = "GET")
             @Secured(Guards.Admin)
             @Resource("all")
-            data class All(private val parent: User)
+            data class All(private val parent: User) : ThothListUserParams
 
             // TODO retrieve user should not be path /edit
             //  User should be able to view their own profile
@@ -61,20 +79,20 @@ class Api {
             @Summary("Update user", method = "PUT")
             @Secured(Guards.Admin)
             @Resource("edit")
-            data class Edit(val id: UUID_S, private val parent: User)
+            data class Edit(override val id: UUID_S, private val parent: User) : ThothModifyPermissionsParams
 
             @Summary("Update username", method = "POST")
             @Resource("username")
-            data class Username(private val parent: User)
+            data class Username(private val parent: User) : ThothRenameUserParams
 
             @Summary("Update password", method = "POST")
             @Resource("password")
-            data class Password(private val parent: User)
+            data class Password(private val parent: User) : ThothChangePasswordParams
 
             @NotSecured
             @Summary("Refresh access token", method = "POST")
             @Resource("refresh")
-            data class Refresh(private val parent: User)
+            data class Refresh(private val parent: User) : ThothRefreshTokenParams
         }
     }
 
