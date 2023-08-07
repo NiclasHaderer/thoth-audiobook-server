@@ -1,5 +1,7 @@
 package io.thoth.server.database.access
 
+import io.thoth.auth.models.ThothDatabaseUser
+import io.thoth.auth.models.ThothDatabaseUserImpl
 import io.thoth.models.InternalUserModel
 import io.thoth.models.NamedId
 import io.thoth.models.UserModel
@@ -17,6 +19,16 @@ fun User.Companion.getByName(name: String): UserModel? {
 
 fun User.Companion.internalGetByName(name: String): InternalUserModel? {
     return findOne { io.thoth.server.database.tables.TUsers.username like name }?.toInternalModel()
+}
+
+fun User.wrap(): ThothDatabaseUser {
+    return ThothDatabaseUserImpl(
+        id = id.value,
+        username = username,
+        passwordHash = passwordHash,
+        admin = admin,
+        permissions = mapOf(),
+    )
 }
 
 fun User.toInternalModel() =

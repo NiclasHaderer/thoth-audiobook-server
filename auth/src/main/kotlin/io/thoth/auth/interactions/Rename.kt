@@ -9,11 +9,11 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothRenameUserAccountParams {
+interface ThothRenameUserParams {
     val id: Any
 }
 
-fun RouteHandler.renameUser(params: ThothRenameUserAccountParams, renamedUser: ThothRenameUser): ThothUser {
+fun RouteHandler.renameUser(params: ThothRenameUserParams, renamedUser: ThothRenameUser): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
 
     if (principal.userId != params.id && !principal.isAdmin) {
@@ -31,6 +31,6 @@ fun RouteHandler.renameUser(params: ThothRenameUserAccountParams, renamedUser: T
     config.getUserByUsername(renamedUser.username)?.let { throw ErrorResponse.userError("Username already exists") }
 
     var user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
-    user = config.renameUser(user, params.id)
+    user = config.renameUser(user, renamedUser.username)
     return ThothUserImpl.wrap(user)
 }

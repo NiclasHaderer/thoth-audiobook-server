@@ -12,7 +12,6 @@ interface ThothJwksParams
 
 fun RouteHandler.getJwks(
     params: ThothJwksParams,
-    body: Unit,
 ): JWKs {
     val config = thothAuthConfig()
     val keyPairs = config.keyPairs

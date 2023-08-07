@@ -5,22 +5,25 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.util.pipeline.*
+import io.thoth.auth.models.ThothJwtTypes
+import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.tables.User
 import java.util.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class ThothPrincipal(
+class ThothPrincipalImpl(
     val payload: Payload,
     val username: String,
-    val userId: UUID,
-    val edit: Boolean,
-    val admin: Boolean,
-    val type: JwtType,
+    override val userId: UUID,
+    val isEditor: Boolean,
+    override val isAdmin: Boolean,
+    override val type: ThothJwtTypes,
+    override val permissions: Map<String, Any>,
     val accessToLibs: List<UUID>?,
-) : Principal
+) : ThothPrincipal
 
-fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
+fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipalImpl? {
     val username = credentials.payload.getClaim("username").asString() ?: return null
     val edit = credentials.payload.getClaim("edit").asBoolean() ?: return null
     val admin = credentials.payload.getClaim("admin").asBoolean() ?: return null
@@ -29,30 +32,31 @@ fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipal? {
     val enumType =
         try {
             val type = credentials.payload.getClaim("type").asString() ?: return null
-            JwtType.values().first { it.type == type }
+            ThothJwtTypes.values().first { it.type == type }
         } catch (e: Exception) {
             return null
         }
 
     val libraries = transaction { User.findById(userId)?.libraries?.map { it.id.value } } ?: return null
 
-    return ThothPrincipal(
+    return ThothPrincipalImpl(
         payload = credentials.payload,
         username = username,
         userId = userId,
-        edit = edit,
-        admin = admin,
+        isEditor = edit,
+        isAdmin = admin,
         type = enumType,
         accessToLibs = libraries.size.takeIf { it > 0 }.let { null },
+        permissions = emptyMap(),
     )
 }
 
-fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipal {
+fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipalImpl {
     return thothPrincipalOrNull()
         ?: throw ErrorResponse.internalError("Could not get principal. Route has to be guarded with one of the Guards")
 }
 
-fun PipelineContext<Unit, ApplicationCall>.thothPrincipalOrNull(): ThothPrincipal? = call.principal()
+fun PipelineContext<Unit, ApplicationCall>.thothPrincipalOrNull(): ThothPrincipalImpl? = call.principal()
 
 fun PipelineContext<Unit, ApplicationCall>.assertAccessToLibraryId(vararg libraryIds: UUID) {
     val principal = thothPrincipal()

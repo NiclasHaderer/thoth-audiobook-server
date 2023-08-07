@@ -2,7 +2,7 @@ package io.thoth.auth
 
 import io.ktor.server.application.*
 
-val SimplePlugin =
+val ThothAuthenticationPlugin =
     createApplicationPlugin(
         name = "ThothAuthPlugin",
         createConfiguration = ::ThothAuthConfig,

@@ -8,6 +8,14 @@ interface ThothDatabaseUser {
     val permissions: Map<String, Any>
 }
 
+class ThothDatabaseUserImpl(
+    override val id: Any,
+    override val username: String,
+    override val passwordHash: String,
+    override val admin: Boolean,
+    override val permissions: Map<String, Any>,
+) : ThothDatabaseUser
+
 interface ThothUser {
     val id: Any
     val username: String

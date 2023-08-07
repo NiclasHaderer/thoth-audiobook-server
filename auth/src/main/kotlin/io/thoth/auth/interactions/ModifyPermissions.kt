@@ -1,6 +1,6 @@
 package io.thoth.auth.interactions
 
-import io.thoth.auth.models.ModifyPermissions
+import io.thoth.auth.models.ThothModifyPermissions
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserImpl
 import io.thoth.auth.thothAuthConfig
@@ -13,7 +13,7 @@ interface ThothModifyPermissionsParams {
     val id: Any
 }
 
-fun RouteHandler.modifyUserPermissions(params: ThothModifyPermissionsParams, body: ModifyPermissions): ThothUser {
+fun RouteHandler.modifyUserPermissions(params: ThothModifyPermissionsParams, body: ThothModifyPermissions): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
 
     if (!principal.isAdmin) {
