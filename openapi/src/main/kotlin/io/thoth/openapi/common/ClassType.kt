@@ -65,7 +65,9 @@ private constructor(
         }
 
     fun isEnum() = this.clazz.java.enumConstants != null
+
     fun enumValues(): Array<*>? = this.clazz.java.enumConstants
+
     val simpleName: String
         get() = this.clazz.simpleName ?: this.clazz.qualifiedName ?: this.clazz.java.name
 
@@ -89,8 +91,10 @@ private constructor(
     }
 
     fun isSubclassOf(vararg clazz: KClass<*>): Boolean = clazz.any { this.clazz.isSubclassOf(it) }
+
     val declaredMemberProperties: Collection<KProperty1<*, *>>
         get() = clazz.declaredMemberProperties
+
     val memberProperties: Collection<KProperty1<*, *>>
         get() = clazz.memberProperties
 

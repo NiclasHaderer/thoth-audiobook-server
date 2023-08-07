@@ -24,7 +24,9 @@ import org.koin.core.component.inject
 
 interface TrackManager {
     suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: Library)
+
     suspend fun addPath(path: Path, library: Library)
+
     fun removePath(path: Path)
 }
 

@@ -23,7 +23,9 @@ import org.koin.core.component.inject
 interface AuthorRepository :
     Repository<Author, AuthorModel, DetailedAuthorModel, PartialAuthorApiModel, AuthorApiModel> {
     fun findByName(authorName: String, libraryId: UUID): Author?
+
     fun getOrCreate(authorName: String, libraryId: UUID): Author
+
     fun create(authorName: String, libraryId: UUID): Author
 }
 

@@ -14,12 +14,15 @@ import kotlinx.serialization.encoding.Encoder
 
 object DateSerializer : KSerializer<Date> {
     override val descriptor = PrimitiveSerialDescriptor("Date", PrimitiveKind.LONG)
+
     override fun serialize(encoder: Encoder, value: Date) = encoder.encodeLong(value.time)
+
     override fun deserialize(decoder: Decoder): Date = Date(decoder.decodeLong())
 }
 
 object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     override val descriptor = PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.LONG)
+
     override fun serialize(encoder: Encoder, value: LocalDateTime) {
         val epoch = value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         encoder.encodeLong(epoch)

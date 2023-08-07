@@ -17,6 +17,9 @@ import java.util.concurrent.TimeUnit
 
 typealias KeyId = String
 
+typealias GetPrincipal =
+    ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal?
+
 val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig>("ThothAuthPlugin")
 
 fun RouteHandler.thothAuthConfig(): ThothAuthConfig {
@@ -53,14 +56,6 @@ class ThothAuthConfig {
     lateinit var protocol: URLProtocol
     lateinit var jwksPath: String
 
-    internal fun assertAreRsaKeyPairs() {
-        keyPairs.values.forEach { keyPair ->
-            require(keyPair.public.algorithm == "RSA") { "KeyPair ${keyPair.public} is not a RSA key pair" }
-        }
-        require(keyPairs.isNotEmpty()) { "No key pairs configured" }
-        require(keyPairs.containsKey(activeKeyId)) { "Active key ID '$activeKeyId' not found in key pairs" }
-    }
-
     internal val jwkProvider by lazy {
         val url =
             URLBuilder()
@@ -75,46 +70,62 @@ class ThothAuthConfig {
         JwkProviderBuilder(url).cached(10, 24, TimeUnit.HOURS).rateLimited(10, 1, TimeUnit.MINUTES).build()
     }
 
+    private val guards = mutableMapOf<String, GetPrincipal>()
+
+    internal fun assertAreRsaKeyPairs() {
+        keyPairs.values.forEach { keyPair ->
+            require(keyPair.public.algorithm == "RSA") { "KeyPair ${keyPair.public} is not a RSA key pair" }
+        }
+        require(keyPairs.isNotEmpty()) { "No key pairs configured" }
+        require(keyPairs.containsKey(activeKeyId)) { "Active key ID '$activeKeyId' not found in key pairs" }
+    }
+
     fun Application.configureGuard(
         guard: String,
         getPrincipal:
             ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal?
     ) {
+        guards[guard] = getPrincipal
+    }
+
+    internal fun Application.applyGuards() {
         install(Authentication) {
-            jwt(guard) {
-                if (this@ThothAuthConfig.realm != null) {
-                    realm = this@ThothAuthConfig.realm!!
-                }
+            guards.forEach { (guard, getPrincipal) ->
+                jwt(guard) {
+                    if (this@ThothAuthConfig.realm != null) {
+                        realm = this@ThothAuthConfig.realm!!
+                    }
 
-                verifier(jwkProvider, this@ThothAuthConfig.issuer) { acceptLeeway(3) }
+                    verifier(jwkProvider, this@ThothAuthConfig.issuer) { acceptLeeway(3) }
 
-                validate { jwtCredential ->
-                    val principal =
-                        getPrincipal(jwtCredential) { error -> attributes.put(JWT_VALIDATION_FAILED, error) }
-                            ?: return@validate null
+                    validate { jwtCredential ->
+                        val principal =
+                            getPrincipal(jwtCredential) { error -> attributes.put(JWT_VALIDATION_FAILED, error) }
+                                ?: return@validate null
 
-                    if (principal.type != ThothJwtTypes.Access) {
+                        if (principal.type != ThothJwtTypes.Access) {
+                            attributes.put(
+                                JWT_VALIDATION_FAILED,
+                                JwtError("JWT is not an access token", HttpStatusCode.Unauthorized),
+                            )
+                            return@validate null
+                        }
+
                         attributes.put(
                             JWT_VALIDATION_FAILED,
                             JwtError("JWT is not an access token", HttpStatusCode.Unauthorized),
                         )
-                        return@validate null
+
+                        return@validate principal
                     }
 
-                    attributes.put(
-                        JWT_VALIDATION_FAILED,
-                        JwtError("JWT is not an access token", HttpStatusCode.Unauthorized),
-                    )
-
-                    return@validate principal
-                }
-
-                challenge { _, _ ->
-                    val error = call.attributes.getOrNull(JWT_VALIDATION_FAILED)
-                    call.respond(
-                        error?.statusCode ?: HttpStatusCode.Unauthorized,
-                        mapOf("error" to (error?.error ?: "Unknown JWT error")),
-                    )
+                    challenge { _, _ ->
+                        val error = call.attributes.getOrNull(JWT_VALIDATION_FAILED)
+                        call.respond(
+                            error?.statusCode ?: HttpStatusCode.Unauthorized,
+                            mapOf("error" to (error?.error ?: "Unknown JWT error")),
+                        )
+                    }
                 }
             }
         }

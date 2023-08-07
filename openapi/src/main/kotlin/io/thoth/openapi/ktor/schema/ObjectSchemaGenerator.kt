@@ -45,5 +45,6 @@ class ObjectSchemaGenerator : SchemaGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean = true
+
     override fun priority(classType: ClassType): Int = -1
 }

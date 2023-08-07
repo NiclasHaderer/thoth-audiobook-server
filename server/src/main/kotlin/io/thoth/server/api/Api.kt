@@ -74,6 +74,7 @@ class Api {
 
             @Resource("{id}")
             @Summary("Get user", method = "GET")
+            @Summary("Delete user", method = "DELETE")
             data class Id(override val id: UUID_S, private val parent: User) :
                 ThothDeleteUserParams, ThothDisplayUserParams {
 
@@ -91,7 +92,7 @@ class Api {
                         get() = parent.id
                 }
 
-                @Summary("Update permissions", method = "POST")
+                @Summary("Update permissions", method = "PUT")
                 @Resource("permissions")
                 @Secured(Guards.Admin)
                 data class Permissions(private val parent: Id) : ThothModifyPermissionsParams {

@@ -35,13 +35,21 @@ import org.koin.core.component.inject
 
 interface LibraryScanner {
     fun fullScan(libraryIDs: List<UUID>)
+
     fun scanLibrary(library: LibraryModel)
+
     fun scanLibrary(library: Library)
+
     fun scanFolder(folder: Path, library: Library?)
+
     fun unIgnoreFolder(folder: Path)
+
     fun ignoreFolder(folder: Path)
+
     fun removePath(path: Path)
+
     fun isIgnored(folder: Path): Boolean
+
     suspend fun addOrUpdatePath(path: Path, library: Library?)
 }
 
