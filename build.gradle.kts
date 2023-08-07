@@ -2,9 +2,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     base
-    kotlin("jvm") version "1.8.0" apply false
-    kotlin("plugin.serialization") version "1.8.0" apply false
-    id("com.ncorti.ktfmt.gradle") version "0.12.0"
+    kotlin("jvm") version "1.9.0" apply false
+    kotlin("plugin.serialization") version "1.9.0" apply false
+    id("com.ncorti.ktfmt.gradle") version "0.13.0"
 }
 
 ktfmt { kotlinLangStyle() }
@@ -23,13 +23,14 @@ subprojects {
         ktfmt {
             kotlinLangStyle()
             maxWidth.set(120)
+            removeUnusedImports.set(true)
         }
     }
 
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
             freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-            jvmTarget = "11"
+            jvmTarget = "18"
             apiVersion = "1.8"
             languageVersion = "1.8"
         }

@@ -22,7 +22,7 @@ import io.thoth.openapi.ktor.Secured
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.Tagged
 import io.thoth.server.common.serializion.kotlin.UUID_S
-import io.thoth.server.plugins.Guards
+import io.thoth.server.plugins.auth.Guards
 import io.thoth.server.plugins.authentication.assertAccessToLibraryId
 
 // TODO remove unused methods in the db access layer
@@ -53,46 +53,52 @@ class Api {
         data class Register(private val parent: Auth) : ThothRegisterParams
 
         @Summary("Retrieve Jwks", method = "GET")
-        @Resource(".well-known/jwks.json")
+        @Resource("jwks.json")
         data class Jwks(private val parent: Auth) : ThothJwksParams
 
         @Summary("Get current user", method = "GET")
         @Summary("Create user", method = "POST")
-        @Summary("Delete user", method = "DELETE")
         @Secured(Guards.Normal)
         @Resource("user")
-        data class User(private val parent: Auth) : ThothDeleteUserParams, ThothDisplayUserParams {
+        data class User(private val parent: Auth) {
 
             @Summary("List users", method = "GET")
             @Secured(Guards.Admin)
-            @Resource("all")
+            @Resource("")
             data class All(private val parent: User) : ThothListUserParams
-
-            // TODO retrieve user should not be path /edit
-            //  User should be able to view their own profile
-            //  User should be able to edit their own profile
-            //  User should be able to delete their own profile
-            //  Admin should be able to view all profiles
-            //  Admin should be able to edit all profiles
-            //  Admin should be able to delete all profiles
-            @Summary("Retrieve user", method = "GET")
-            @Summary("Update user", method = "PUT")
-            @Secured(Guards.Admin)
-            @Resource("edit")
-            data class Edit(override val id: UUID_S, private val parent: User) : ThothModifyPermissionsParams
-
-            @Summary("Update username", method = "POST")
-            @Resource("username")
-            data class Username(private val parent: User) : ThothRenameUserParams
-
-            @Summary("Update password", method = "POST")
-            @Resource("password")
-            data class Password(private val parent: User) : ThothChangePasswordParams
 
             @NotSecured
             @Summary("Refresh access token", method = "POST")
             @Resource("refresh")
             data class Refresh(private val parent: User) : ThothRefreshTokenParams
+
+            @Resource("{id}")
+            @Summary("Get user", method = "GET")
+            data class Id(override val id: UUID_S, private val parent: User) :
+                ThothDeleteUserParams, ThothDisplayUserParams {
+
+                @Summary("Update username", method = "POST")
+                @Resource("username")
+                data class Username(private val parent: Id) : ThothRenameUserParams {
+                    override val id: UUID_S
+                        get() = parent.id
+                }
+
+                @Summary("Update password", method = "POST")
+                @Resource("password")
+                data class Password(private val parent: Id) : ThothChangePasswordParams {
+                    override val id: UUID_S
+                        get() = parent.id
+                }
+
+                @Summary("Update permissions", method = "POST")
+                @Resource("permissions")
+                @Secured(Guards.Admin)
+                data class Permissions(private val parent: Id) : ThothModifyPermissionsParams {
+                    override val id: UUID_S
+                        get() = parent.id
+                }
+            }
         }
     }
 
@@ -199,6 +205,7 @@ class Api {
                     data class Position(private val parent: Id) {
                         val libraryId
                             get() = parent.libraryId
+
                         val id
                             get() = parent.id
                     }
@@ -268,6 +275,7 @@ class Api {
                     ) {
                         val libraryId
                             get() = parent.libraryId
+
                         val id
                             get() = parent.id
                     }
@@ -332,6 +340,7 @@ class Api {
                     ) {
                         val libraryId
                             get() = parent.libraryId
+
                         val id
                             get() = parent.id
                     }

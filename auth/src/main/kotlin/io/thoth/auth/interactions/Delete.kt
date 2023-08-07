@@ -6,7 +6,9 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothDeleteUserParams
+interface ThothDeleteUserParams {
+    val id: Any
+}
 
 fun RouteHandler.deleteUser(
     params: ThothDeleteUserParams,
@@ -15,6 +17,10 @@ fun RouteHandler.deleteUser(
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig()
 
-    val user = config.getUserById(principal.userId) ?: throw ErrorResponse.userError("User not found")
+    if (principal.userId != params.id && !principal.isAdmin) {
+        throw ErrorResponse.forbidden("Delete", "user")
+    }
+
+    val user = config.getUserById(params.id) ?: throw ErrorResponse.userError("User not found")
     config.deleteUser(user)
 }

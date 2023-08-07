@@ -9,7 +9,9 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothChangePasswordParams
+interface ThothChangePasswordParams {
+    val id: Any
+}
 
 fun RouteHandler.changeUserPassword(
     params: ThothChangePasswordParams,
@@ -18,8 +20,11 @@ fun RouteHandler.changeUserPassword(
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig()
 
-    val user =
-        config.getUserById(principal.userId) ?: throw ErrorResponse.userError("Could not find user with username")
+    if (principal.userId != params.id && !principal.isAdmin) {
+        throw ErrorResponse.forbidden("Change", "password")
+    }
+
+    val user = config.getUserById(params.id) ?: throw ErrorResponse.userError("Could not find user with username")
 
     config.passwordMeetsRequirements(passwordChange.newPassword).also { (meetsRequirements, message) ->
         if (!meetsRequirements) {

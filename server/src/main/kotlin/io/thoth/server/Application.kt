@@ -26,7 +26,7 @@ import io.thoth.server.database.connectToDatabase
 import io.thoth.server.database.migrateDatabase
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
-import io.thoth.server.plugins.configureAuthentication
+import io.thoth.server.plugins.auth.configureAuthentication
 import io.thoth.server.plugins.configureMonitoring
 import io.thoth.server.plugins.configureOpenApi
 import io.thoth.server.plugins.configurePartialContent
