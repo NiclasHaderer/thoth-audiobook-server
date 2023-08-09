@@ -52,6 +52,7 @@ abstract class TsGenerator {
 
 val tsGenerators: List<TsGenerator> =
     listOf(
+        AnyTsGenerator(),
         ArrayTsGenerator(),
         BinaryTsGenerator(),
         BooleanTsGenerator(),

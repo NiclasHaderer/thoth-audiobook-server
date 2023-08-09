@@ -25,25 +25,26 @@ import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.ktor.put
+import io.thoth.server.common.serializion.kotlin.UUID_S
 
 fun Routing.authRoutes() {
     post<Api.Auth.Login, ThothLoginUser, ThothAccessToken>(RouteHandler::loginUser)
 
     post<Api.Auth.Logout, Unit, Unit>(RouteHandler::logoutUser)
 
-    post<Api.Auth.Register, ThothRegisterUser, ThothUser>(RouteHandler::registerUser)
+    post<Api.Auth.Register, ThothRegisterUser, ThothUser<UUID_S>>(RouteHandler::registerUser)
 
     get<Api.Auth.Jwks, JWKs>(RouteHandler::getJwks)
 
-    put<Api.Auth.User.Id.Permissions, ThothModifyPermissions, ThothUser>(RouteHandler::modifyUserPermissions)
+    put<Api.Auth.User.Id.Permissions, ThothModifyPermissions, ThothUser<UUID_S>>(RouteHandler::modifyUserPermissions)
 
-    get<Api.Auth.User.Id, ThothUser>(RouteHandler::displayUser)
+    get<Api.Auth.User.Id, ThothUser<UUID_S>>(RouteHandler::displayUser)
 
-    get<Api.Auth.User.All, List<ThothUser>>(RouteHandler::listUsers)
+    get<Api.Auth.User.All, List<ThothUser<UUID_S>>>(RouteHandler::listUsers)
 
     delete<Api.Auth.User.Id, Unit, Unit>(RouteHandler::deleteUser)
 
-    post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser>(RouteHandler::renameUser)
+    post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser<UUID_S>>(RouteHandler::renameUser)
 
     post<Api.Auth.User.Id.Password, ThothChangePassword, Unit>(RouteHandler::changeUserPassword)
 

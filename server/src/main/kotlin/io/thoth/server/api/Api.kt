@@ -76,18 +76,18 @@ class Api {
             @Summary("Get user", method = "GET")
             @Summary("Delete user", method = "DELETE")
             data class Id(override val id: UUID_S, private val parent: User) :
-                ThothDeleteUserParams, ThothDisplayUserParams {
+                ThothDeleteUserParams<UUID_S>, ThothDisplayUserParams<UUID_S> {
 
                 @Summary("Update username", method = "POST")
                 @Resource("username")
-                data class Username(private val parent: Id) : ThothRenameUserParams {
+                data class Username(private val parent: Id) : ThothRenameUserParams<UUID_S> {
                     override val id: UUID_S
                         get() = parent.id
                 }
 
                 @Summary("Update password", method = "POST")
                 @Resource("password")
-                data class Password(private val parent: Id) : ThothChangePasswordParams {
+                data class Password(private val parent: Id) : ThothChangePasswordParams<UUID_S> {
                     override val id: UUID_S
                         get() = parent.id
                 }
@@ -95,7 +95,7 @@ class Api {
                 @Summary("Update permissions", method = "PUT")
                 @Resource("permissions")
                 @Secured(Guards.Admin)
-                data class Permissions(private val parent: Id) : ThothModifyPermissionsParams {
+                data class Permissions(private val parent: Id) : ThothModifyPermissionsParams<UUID_S> {
                     override val id: UUID_S
                         get() = parent.id
                 }

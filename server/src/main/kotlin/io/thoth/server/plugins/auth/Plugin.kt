@@ -27,7 +27,7 @@ fun Application.configureAuthentication() {
         this@install.keyPairs["thoth"] = keyPair
         this@install.activeKeyId = "thoth"
 
-        configureGuard(
+        configureGuard<UUID>(
             Guards.Normal,
         ) { jwtCredential, setError ->
             jwtToPrincipal(jwtCredential)
@@ -39,7 +39,7 @@ fun Application.configureAuthentication() {
                 }
         }
 
-        configureGuard(
+        configureGuard<UUID>(
             Guards.Admin,
         ) { jwtCredential, setError ->
             jwtToPrincipal(jwtCredential)?.let { principal ->
@@ -54,7 +54,7 @@ fun Application.configureAuthentication() {
             }
         }
 
-        configureGuard(
+        configureGuard<UUID>(
             Guards.Editor,
         ) { jwtCredential, setError ->
             jwtToPrincipal(jwtCredential)?.let { principal ->

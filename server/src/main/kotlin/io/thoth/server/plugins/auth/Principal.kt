@@ -21,7 +21,7 @@ class ThothPrincipalImpl(
     override val type: ThothJwtTypes,
     override val permissions: Map<String, Any>,
     val accessToLibs: List<UUID>?,
-) : ThothPrincipal
+) : ThothPrincipal<UUID>
 
 fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipalImpl? {
     val username = credentials.payload.getClaim("username").asString() ?: return null
