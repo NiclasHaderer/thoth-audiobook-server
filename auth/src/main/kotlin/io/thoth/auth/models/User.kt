@@ -1,23 +1,23 @@
 package io.thoth.auth.models
 
-interface ThothDatabaseUser {
-    val id: Any
+interface ThothDatabaseUser<T : Any> {
+    val id: T
     val username: String
     val passwordHash: String
     val admin: Boolean
     val permissions: Map<String, Any>
 }
 
-class ThothDatabaseUserImpl(
-    override val id: Any,
+class ThothDatabaseUserImpl<T : Any>(
+    override val id: T,
     override val username: String,
     override val passwordHash: String,
     override val admin: Boolean,
     override val permissions: Map<String, Any>,
-) : ThothDatabaseUser
+) : ThothDatabaseUser<T>
 
-interface ThothUser {
-    val id: Any
+interface ThothUser<T : Any> {
+    val id: T
     val username: String
     val admin: Boolean
     val permissions: Map<String, Any>
@@ -27,15 +27,15 @@ interface ThothRenameUser {
     val username: String
 }
 
-internal class ThothUserImpl
+internal class ThothUserImpl<T : Any>
 private constructor(
-    override val id: Any,
+    override val id: T,
     override val username: String,
     override val admin: Boolean,
     override val permissions: Map<String, Any>,
-) : ThothUser {
+) : ThothUser<T> {
     companion object {
-        fun wrap(user: ThothDatabaseUser): ThothUser {
+        fun <T : Any> wrap(user: ThothDatabaseUser<T>): ThothUser<T> {
             return ThothUserImpl(
                 id = user.id,
                 username = user.username,

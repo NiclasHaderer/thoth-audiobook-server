@@ -11,7 +11,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothRegisterParams
 
-fun RouteHandler.registerUser(params: ThothRegisterParams, user: ThothRegisterUser): ThothUser {
+fun <T : Any> RouteHandler.registerUser(params: ThothRegisterParams, user: ThothRegisterUser): ThothUser<T> {
     val config = thothAuthConfig()
 
     config.passwordMeetsRequirements(user.password).also { (meetsRequirement, message) ->
@@ -42,5 +42,5 @@ fun RouteHandler.registerUser(params: ThothRegisterParams, user: ThothRegisterUs
                 admin = isAdmin,
             ),
         )
-        .let { ThothUserImpl.wrap(it) }
+        .let { ThothUserImpl.wrap(it) } as ThothUser<T>
 }

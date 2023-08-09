@@ -9,12 +9,15 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothModifyPermissionsParams {
-    val id: Any
+interface ThothModifyPermissionsParams<T> {
+    val id: T
 }
 
-fun RouteHandler.modifyUserPermissions(params: ThothModifyPermissionsParams, body: ThothModifyPermissions): ThothUser {
-    val principal = thothPrincipal<ThothPrincipal>()
+fun <T : Any> RouteHandler.modifyUserPermissions(
+    params: ThothModifyPermissionsParams<T>,
+    body: ThothModifyPermissions
+): ThothUser<T> {
+    val principal = thothPrincipal<ThothPrincipal<T>>()
 
     if (!principal.isAdmin) {
         throw ErrorResponse.forbidden("Modify", "permissions")
@@ -23,4 +26,5 @@ fun RouteHandler.modifyUserPermissions(params: ThothModifyPermissionsParams, bod
 
     val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
     return config.updateUserPermissions(user, body.permissions, body.isAdmin).let { ThothUserImpl.wrap(it) }
+        as ThothUser<T>
 }

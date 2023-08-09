@@ -9,12 +9,12 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothRenameUserParams {
-    val id: Any
+interface ThothRenameUserParams<T : Any> {
+    val id: T
 }
 
-fun RouteHandler.renameUser(params: ThothRenameUserParams, renamedUser: ThothRenameUser): ThothUser {
-    val principal = thothPrincipal<ThothPrincipal>()
+fun <T : Any> RouteHandler.renameUser(params: ThothRenameUserParams<T>, renamedUser: ThothRenameUser): ThothUser<T> {
+    val principal = thothPrincipal<ThothPrincipal<T>>()
 
     if (principal.userId != params.id && !principal.isAdmin) {
         throw ErrorResponse.forbidden("Rename", "account")
@@ -32,5 +32,5 @@ fun RouteHandler.renameUser(params: ThothRenameUserParams, renamedUser: ThothRen
 
     var user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
     user = config.renameUser(user, renamedUser.username)
-    return ThothUserImpl.wrap(user)
+    return ThothUserImpl.wrap(user) as ThothUser<T>
 }

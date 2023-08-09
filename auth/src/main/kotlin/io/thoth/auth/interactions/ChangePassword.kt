@@ -9,15 +9,15 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothChangePasswordParams {
-    val id: Any
+interface ThothChangePasswordParams<T : Any> {
+    val id: T
 }
 
-fun RouteHandler.changeUserPassword(
-    params: ThothChangePasswordParams,
+fun <T : Any> RouteHandler.changeUserPassword(
+    params: ThothChangePasswordParams<T>,
     passwordChange: ThothChangePassword,
 ) {
-    val principal = thothPrincipal<ThothPrincipal>()
+    val principal = thothPrincipal<ThothPrincipal<T>>()
     val config = thothAuthConfig()
 
     if (principal.userId != params.id && !principal.isAdmin) {

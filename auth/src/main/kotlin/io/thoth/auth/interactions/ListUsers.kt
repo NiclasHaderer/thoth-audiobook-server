@@ -10,14 +10,14 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothListUserParams
 
-fun RouteHandler.listUsers(
+fun <T : Any> RouteHandler.listUsers(
     params: ThothListUserParams,
-): List<ThothUser> {
-    val principal = thothPrincipal<ThothPrincipal>()
+): List<ThothUser<T>> {
+    val principal = thothPrincipal<ThothPrincipal<T>>()
     if (!principal.isAdmin) {
         throw ErrorResponse.userError("User is not admin")
     }
 
     val config = thothAuthConfig()
-    return config.listAllUsers().map { ThothUserImpl.wrap(it) }
+    return config.listAllUsers().map { ThothUserImpl.wrap(it) } as List<ThothUser<T>>
 }

@@ -21,7 +21,7 @@ fun User.Companion.internalGetByName(name: String): InternalUserModel? {
     return findOne { io.thoth.server.database.tables.TUsers.username like name }?.toInternalModel()
 }
 
-fun User.wrap(): ThothDatabaseUser {
+fun User.wrap(): ThothDatabaseUser<UUID> {
     return ThothDatabaseUserImpl(
         id = id.value,
         username = username,

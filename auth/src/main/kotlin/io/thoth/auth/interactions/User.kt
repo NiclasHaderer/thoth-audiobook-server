@@ -8,12 +8,12 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothDisplayUserParams {
-    val id: Any
+interface ThothDisplayUserParams<T : Any> {
+    val id: T
 }
 
-fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
-    val principal = thothPrincipal<ThothPrincipal>()
+fun <T : Any> RouteHandler.displayUser(params: ThothDisplayUserParams<T>): ThothUser<T> {
+    val principal = thothPrincipal<ThothPrincipal<T>>()
     val config = thothAuthConfig()
 
     if (principal.userId != params.id && !principal.isAdmin) {
@@ -21,5 +21,5 @@ fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
     }
 
     val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
-    return ThothUserImpl.wrap(user)
+    return ThothUserImpl.wrap(user) as ThothUser<T>
 }

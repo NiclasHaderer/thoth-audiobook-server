@@ -6,15 +6,15 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothDeleteUserParams {
-    val id: Any
+interface ThothDeleteUserParams<T : Any> {
+    val id: T
 }
 
-fun RouteHandler.deleteUser(
-    params: ThothDeleteUserParams,
+fun <T : Any> RouteHandler.deleteUser(
+    params: ThothDeleteUserParams<T>,
     body: Unit,
 ) {
-    val principal = thothPrincipal<ThothPrincipal>()
+    val principal = thothPrincipal<ThothPrincipal<T>>()
     val config = thothAuthConfig()
 
     if (principal.userId != params.id && !principal.isAdmin) {
