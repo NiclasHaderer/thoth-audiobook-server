@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import io.thoth.auth.ThothAuthConfig
 import io.thoth.auth.models.ThothDatabaseUser
+import io.thoth.auth.models.ThothDatabaseUserPermissions
 import io.thoth.auth.models.ThothJwtPairImpl
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.openapi.ktor.errors.ErrorResponse
@@ -12,14 +13,20 @@ import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.*
 
-fun <T : Any> generateJwtPairForUser(user: ThothDatabaseUser<T>, config: ThothAuthConfig): ThothJwtPairImpl {
+fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> generateJwtPairForUser(
+    user: ThothDatabaseUser<ID, PERMISSIONS>,
+    config: ThothAuthConfig
+): ThothJwtPairImpl {
     return ThothJwtPairImpl(
         accessToken = generateAccessTokenForUser(user, config),
         refreshToken = generateRefreshTokenForUser(user, config),
     )
 }
 
-internal fun <T : Any> generateAccessTokenForUser(user: ThothDatabaseUser<T>, config: ThothAuthConfig): String {
+internal fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> generateAccessTokenForUser(
+    user: ThothDatabaseUser<ID, PERMISSIONS>,
+    config: ThothAuthConfig
+): String {
     val keyPair = config.keyPairs[config.activeKeyId]!!
     val issuer = config.issuer
 
@@ -28,7 +35,8 @@ internal fun <T : Any> generateAccessTokenForUser(user: ThothDatabaseUser<T>, co
         .withKeyId(config.activeKeyId)
         .also {
             if (config.includePermissionsInJwt) {
-                it.withClaim("permissions", user.permissions)
+                TODO("Serialize JWT permissions")
+                // it.withClaim("permissions", user.permissions)
             }
         }
         .withClaim("sub", user.id.toString())
@@ -37,7 +45,10 @@ internal fun <T : Any> generateAccessTokenForUser(user: ThothDatabaseUser<T>, co
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 }
 
-internal fun <T : Any> generateRefreshTokenForUser(user: ThothDatabaseUser<T>, config: ThothAuthConfig): String {
+internal fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> generateRefreshTokenForUser(
+    user: ThothDatabaseUser<ID, PERMISSIONS>,
+    config: ThothAuthConfig
+): String {
     val issuer = config.issuer
     val keyPair = config.keyPairs[config.activeKeyId]!!
 
