@@ -1,5 +1,6 @@
 package io.thoth.auth.interactions
 
+import io.thoth.auth.models.ThothDatabaseUserPermissions
 import io.thoth.auth.models.ThothRenameUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserImpl
@@ -13,8 +14,11 @@ interface ThothRenameUserParams<T : Any> {
     val id: T
 }
 
-fun <T : Any> RouteHandler.renameUser(params: ThothRenameUserParams<T>, renamedUser: ThothRenameUser): ThothUser<T> {
-    val principal = thothPrincipal<ThothPrincipal<T>>()
+fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> RouteHandler.renameUser(
+    params: ThothRenameUserParams<ID>,
+    renamedUser: ThothRenameUser
+): ThothUser<ID, PERMISSIONS> {
+    val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
 
     if (principal.userId != params.id && !principal.isAdmin) {
         throw ErrorResponse.forbidden("Rename", "account")
@@ -32,5 +36,5 @@ fun <T : Any> RouteHandler.renameUser(params: ThothRenameUserParams<T>, renamedU
 
     var user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
     user = config.renameUser(user, renamedUser.username)
-    return ThothUserImpl.wrap(user) as ThothUser<T>
+    return ThothUserImpl.wrap(user) as ThothUser<ID, PERMISSIONS>
 }

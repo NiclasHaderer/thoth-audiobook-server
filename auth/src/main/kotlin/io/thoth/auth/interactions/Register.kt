@@ -1,6 +1,7 @@
 package io.thoth.auth.interactions
 
 import io.thoth.auth.models.RegisteredUserImpl
+import io.thoth.auth.models.ThothDatabaseUserPermissions
 import io.thoth.auth.models.ThothRegisterUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserImpl
@@ -11,7 +12,10 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothRegisterParams
 
-fun <T : Any> RouteHandler.registerUser(params: ThothRegisterParams, user: ThothRegisterUser): ThothUser<T> {
+fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> RouteHandler.registerUser(
+    params: ThothRegisterParams,
+    user: ThothRegisterUser
+): ThothUser<ID, PERMISSIONS> {
     val config = thothAuthConfig()
 
     config.passwordMeetsRequirements(user.password).also { (meetsRequirement, message) ->
@@ -42,5 +46,5 @@ fun <T : Any> RouteHandler.registerUser(params: ThothRegisterParams, user: Thoth
                 admin = isAdmin,
             ),
         )
-        .let { ThothUserImpl.wrap(it) } as ThothUser<T>
+        .let { ThothUserImpl.wrap(it) } as ThothUser<ID, PERMISSIONS>
 }

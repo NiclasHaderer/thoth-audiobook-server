@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 typealias KeyId = String
 
 typealias GetPrincipal =
-    ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal<*>?
+    ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal<*, *>?
 
 val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig>("ThothAuthPlugin")
 
@@ -128,32 +128,32 @@ class ThothAuthConfig {
     }
 
     // Operations
-    var getUserByUsername: (username: String) -> ThothDatabaseUser<*>? = { _ ->
+    var getUserByUsername: (username: String) -> ThothDatabaseUser<*, *>? = { _ ->
         TODO("Operation not implemented by application")
     }
 
-    var getUserById: (id: Any) -> ThothDatabaseUser<*>? = { _ -> TODO("Operation not implemented by application") }
+    var getUserById: (id: Any) -> ThothDatabaseUser<*, *>? = { _ -> TODO("Operation not implemented by application") }
 
     var isFirstUser: () -> Boolean = { TODO("Operation not implemented by application") }
 
-    var createUser: (registeredUserImpl: RegisteredUserImpl) -> ThothDatabaseUser<*> = { _ ->
+    var createUser: (registeredUserImpl: RegisteredUserImpl) -> ThothDatabaseUser<*, *> = { _ ->
         TODO("Operation not implemented by application")
     }
 
-    var listAllUsers: () -> List<ThothDatabaseUser<*>> = { TODO("Operation not implemented by application") }
+    var listAllUsers: () -> List<ThothDatabaseUser<*, *>> = { TODO("Operation not implemented by application") }
 
-    var deleteUser: (user: ThothDatabaseUser<*>) -> Unit = { _ -> TODO("Operation not implemented by application") }
+    var deleteUser: (user: ThothDatabaseUser<*, *>) -> Unit = { _ -> TODO("Operation not implemented by application") }
 
-    var renameUser: (user: ThothDatabaseUser<*>, name: String) -> ThothDatabaseUser<*> = { _, _ ->
+    var renameUser: (user: ThothDatabaseUser<*, *>, name: String) -> ThothDatabaseUser<*, *> = { _, _ ->
         TODO("Operation not implemented by application")
     }
 
-    var updatePassword: (user: ThothDatabaseUser<*>, newPassword: String) -> ThothDatabaseUser<*> = { _, _ ->
+    var updatePassword: (user: ThothDatabaseUser<*, *>, newPassword: String) -> ThothDatabaseUser<*, *> = { _, _ ->
         TODO("Operation not implemented by application")
     }
 
     var updateUserPermissions:
-        (user: ThothDatabaseUser<*>, permissions: Map<String, *>, isAdmin: Boolean) -> ThothDatabaseUser<*> =
+        (user: ThothDatabaseUser<*, *>, permissions: Map<String, *>, isAdmin: Boolean) -> ThothDatabaseUser<*, *> =
         { _, _, _ ->
             TODO("Operation not implemented by application")
         }

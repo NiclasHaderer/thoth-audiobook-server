@@ -1,47 +1,49 @@
 package io.thoth.auth.models
 
-interface ThothDatabaseUser<T : Any> {
-    val id: T
-    val username: String
-    val passwordHash: String
-    val admin: Boolean
-    val permissions: Map<String, Any>
+// User models which will be returned by the auth api
+interface ThothDatabaseUserPermissions {
+    val isAdmin: Boolean
 }
 
-class ThothDatabaseUserImpl<T : Any>(
-    override val id: T,
-    override val username: String,
-    override val passwordHash: String,
-    override val admin: Boolean,
-    override val permissions: Map<String, Any>,
-) : ThothDatabaseUser<T>
-
-interface ThothUser<T : Any> {
-    val id: T
+interface ThothUser<ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> {
+    val id: ID
     val username: String
-    val admin: Boolean
-    val permissions: Map<String, Any>
+    val permissions: PERMISSIONS
 }
 
-interface ThothRenameUser {
-    val username: String
-}
-
-internal class ThothUserImpl<T : Any>
+internal class ThothUserImpl<ID : Any, PERMISSIONS : ThothDatabaseUserPermissions>
 private constructor(
-    override val id: T,
+    override val id: ID,
     override val username: String,
-    override val admin: Boolean,
-    override val permissions: Map<String, Any>,
-) : ThothUser<T> {
+    override val permissions: PERMISSIONS,
+) : ThothUser<ID, PERMISSIONS> {
     companion object {
-        fun <T : Any> wrap(user: ThothDatabaseUser<T>): ThothUser<T> {
+        fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> wrap(
+            user: ThothDatabaseUser<ID, PERMISSIONS>
+        ): ThothUser<ID, PERMISSIONS> {
             return ThothUserImpl(
                 id = user.id,
                 username = user.username,
-                admin = user.admin,
                 permissions = user.permissions,
             )
         }
     }
 }
+
+// The Internal database model of the user, intentionally does not extend from ThothUser, so the
+// internal database
+// user cannot be accidentally leaked by returning it instead of the ThothUser
+
+interface ThothDatabaseUser<ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> {
+    val id: ID
+    val username: String
+    val passwordHash: String
+    val permissions: PERMISSIONS
+}
+
+class ThothDatabaseUserImpl<ID : Any, PERMISSIONS : ThothDatabaseUserPermissions>(
+    override val id: ID,
+    override val username: String,
+    override val passwordHash: String,
+    override val permissions: PERMISSIONS,
+) : ThothDatabaseUser<ID, PERMISSIONS>
