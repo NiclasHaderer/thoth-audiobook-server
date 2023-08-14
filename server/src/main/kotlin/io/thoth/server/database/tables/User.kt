@@ -5,12 +5,12 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.ReferenceOption
 
 object TUsers : UUIDTable("Users") {
     val username = char("username", 256).uniqueIndex()
     val passwordHash = char("passwordHash", 512)
-    val admin = bool("admin")
-    val edit = bool("edit")
+    val permissions = reference("permissions", TUserPermissions, onDelete = ReferenceOption.CASCADE)
 }
 
 class User(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -18,7 +18,5 @@ class User(id: EntityID<UUID>) : UUIDEntity(id) {
 
     var username by TUsers.username
     var passwordHash by TUsers.passwordHash
-    var admin by TUsers.admin
-    var edit by TUsers.edit
-    var libraries by Library via TLibraryUserMapping
+    val permissions by UserPermissions referencedOn TUsers.permissions
 }

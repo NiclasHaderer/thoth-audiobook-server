@@ -10,6 +10,7 @@ import io.ktor.util.*
 import io.thoth.auth.models.RegisteredUserImpl
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.auth.models.ThothJwtTypes
+import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import java.security.KeyPair
@@ -39,7 +40,6 @@ class ThothAuthConfig {
 
     // Default user settings
     var firstUserIsAdmin = true
-    var includePermissionsInJwt = true
     var realm: String? = null
 
     // Token expiry times
@@ -153,7 +153,9 @@ class ThothAuthConfig {
     }
 
     var updateUserPermissions:
-        (user: ThothDatabaseUser<*, *>, permissions: Map<String, *>, isAdmin: Boolean) -> ThothDatabaseUser<*, *> =
+        (user: ThothDatabaseUser<*, *>, permissions: ThothUserPermissions, isAdmin: Boolean) -> ThothDatabaseUser<
+                *, *
+            > =
         { _, _, _ ->
             TODO("Operation not implemented by application")
         }

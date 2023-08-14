@@ -41,7 +41,7 @@ fun Routing.libraryRouting() {
 
     post<Api.Libraries.Rescan, Unit, Unit> { _, _ ->
         val libsToScan = thothPrincipal().accessToLibs
-        if (libsToScan == null) scheduler.schedule(schedules.fullScan)
+        if (libsToScan) scheduler.schedule(schedules.fullScan)
         else scheduler.dispatch(schedules.scanLibraries.build(libsToScan))
     }
 
