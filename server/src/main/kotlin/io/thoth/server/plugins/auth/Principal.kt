@@ -1,27 +1,22 @@
 package io.thoth.server.plugins.authentication
 
-import com.auth0.jwt.interfaces.Payload
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.util.pipeline.*
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.utils.ThothPrincipal
+import io.thoth.models.UserPermissionsModel
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.database.tables.User
 import java.util.*
-import org.jetbrains.exposed.sql.transactions.transaction
 
 class ThothPrincipalImpl(
-    val payload: Payload,
     val username: String,
     override val userId: UUID,
-    val isEditor: Boolean,
-    override val isAdmin: Boolean,
     override val type: ThothJwtTypes,
-    override val permissions: Map<String, Any>,
-    val accessToLibs: List<UUID>?,
-) : ThothPrincipal<UUID>
+    override val permissions: UserPermissionsModel,
+) : ThothPrincipal<UUID, UserPermissionsModel>
 
 fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipalImpl? {
     val username = credentials.payload.getClaim("username").asString() ?: return null
@@ -37,18 +32,9 @@ fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipalImpl? {
             return null
         }
 
-    val libraries = transaction { User.findById(userId)?.libraries?.map { it.id.value } } ?: return null
+    val permission = TODO("Get from JWT")
 
-    return ThothPrincipalImpl(
-        payload = credentials.payload,
-        username = username,
-        userId = userId,
-        isEditor = edit,
-        isAdmin = admin,
-        type = enumType,
-        accessToLibs = libraries.size.takeIf { it > 0 }.let { null },
-        permissions = emptyMap(),
-    )
+    return ThothPrincipalImpl(username = username, userId = userId, type = enumType, permissions = permission)
 }
 
 fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipalImpl {
@@ -58,13 +44,23 @@ fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipalImpl 
 
 fun PipelineContext<Unit, ApplicationCall>.thothPrincipalOrNull(): ThothPrincipalImpl? = call.principal()
 
-fun PipelineContext<Unit, ApplicationCall>.assertAccessToLibraryId(vararg libraryIds: UUID) {
+fun PipelineContext<Unit, ApplicationCall>.assertAccessToLibraryId(method: HttpMethod, vararg libraryIds: UUID) {
     val principal = thothPrincipal()
-    if (principal.accessToLibs == null) return
 
-    libraryIds.forEach { libraryId ->
-        if (!principal.accessToLibs.contains(libraryId)) {
-            throw ErrorResponse.forbidden("access", "Library $libraryId")
+    val readonlyMethods = listOf(HttpMethod.Head, HttpMethod.Get, HttpMethod.Options)
+
+    libraryIds.forEach { libId ->
+        val matches =
+            principal.permissions.libraries.any { allowedLib ->
+                allowedLib.id == libId &&
+                    (
+                    // If the user is not allowed to edit the library
+                    !allowedLib.canEdit &&
+                        // The used http method is not the readonlyMethods list
+                        !readonlyMethods.contains(method))
+            }
+        if (!matches) {
+            throw ErrorResponse.forbidden("access", "Library $libId")
         }
     }
 }

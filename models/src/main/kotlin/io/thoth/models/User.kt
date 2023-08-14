@@ -2,19 +2,11 @@ package io.thoth.models
 
 import java.util.*
 
-data class UserModel(
-    val id: UUID,
-    val username: String,
-    val admin: Boolean,
-    val edit: Boolean,
-    val libraries: List<NamedId>
-)
+data class UserModel(val id: UUID, val username: String, val permissions: UserPermissionsModel)
 
 data class InternalUserModel(
     val id: UUID,
     val username: String,
-    val admin: Boolean,
-    val edit: Boolean,
     val passwordHash: String,
-    val libraries: List<NamedId>
+    val permissions: UserPermissionsModel
 )

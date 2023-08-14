@@ -1,7 +1,7 @@
 package io.thoth.auth.interactions
 
 import io.thoth.auth.models.ThothChangePassword
-import io.thoth.auth.models.ThothDatabaseUserPermissions
+import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.hashPassword
@@ -14,7 +14,7 @@ interface ThothChangePasswordParams<T : Any> {
     val id: T
 }
 
-fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> RouteHandler.changeUserPassword(
+fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.changeUserPassword(
     params: ThothChangePasswordParams<ID>,
     passwordChange: ThothChangePassword,
 ) {
@@ -22,7 +22,7 @@ fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> RouteHandler.changeUs
     val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
     val config = thothAuthConfig()
 
-    if (principal.userId != params.id && !principal.isAdmin) {
+    if (principal.userId != params.id && !principal.permissions.isAdmin) {
         throw ErrorResponse.forbidden("Change", "password")
     }
 

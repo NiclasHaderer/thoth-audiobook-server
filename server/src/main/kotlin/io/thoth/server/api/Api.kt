@@ -1,29 +1,18 @@
 package io.thoth.server.api
 
 import io.ktor.resources.*
-import io.thoth.auth.interactions.ThothChangePasswordParams
-import io.thoth.auth.interactions.ThothDeleteUserParams
-import io.thoth.auth.interactions.ThothDisplayUserParams
-import io.thoth.auth.interactions.ThothJwksParams
-import io.thoth.auth.interactions.ThothListUserParams
-import io.thoth.auth.interactions.ThothLoginParams
-import io.thoth.auth.interactions.ThothLogoutParams
-import io.thoth.auth.interactions.ThothModifyPermissionsParams
-import io.thoth.auth.interactions.ThothRefreshTokenParams
-import io.thoth.auth.interactions.ThothRegisterParams
-import io.thoth.auth.interactions.ThothRenameUserParams
+import io.ktor.server.request.*
+import io.thoth.auth.interactions.*
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
-import io.thoth.openapi.ktor.BeforeBodyParsing
-import io.thoth.openapi.ktor.NotSecured
-import io.thoth.openapi.ktor.RouteHandler
-import io.thoth.openapi.ktor.Secured
-import io.thoth.openapi.ktor.Summary
-import io.thoth.openapi.ktor.Tagged
+import io.thoth.openapi.ktor.*
 import io.thoth.server.common.serializion.kotlin.UUID_S
+import io.thoth.server.database.tables.TLibraries
 import io.thoth.server.plugins.auth.Guards
 import io.thoth.server.plugins.authentication.assertAccessToLibraryId
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.transaction
 
 // TODO remove unused methods in the db access layer
 // TODO move companion object functions of user into own thingi
@@ -144,10 +133,14 @@ class Api {
             }
         }
 
-        @Secured(Guards.Editor)
         @Summary("Rescan all libraries", method = "POST")
         @Resource("rescan")
-        data class Rescan(private val parent: Libraries)
+        data class Rescan(private val parent: Libraries) : BeforeBodyParsing {
+            override suspend fun RouteHandler.beforeBodyParsing() {
+                val allLibIds = transaction { TLibraries.selectAll().map { it[TLibraries.id].value } }
+                assertAccessToLibraryId(this.context.request.httpMethod, *allLibIds.toTypedArray())
+            }
+        }
 
         @Resource("{libraryId}")
         @Summary("Replace library", method = "PUT")
@@ -156,7 +149,7 @@ class Api {
         @Summary("Get library", method = "GET")
         data class Id(val libraryId: UUID_S, private val parent: Libraries) : BeforeBodyParsing {
             override suspend fun RouteHandler.beforeBodyParsing() {
-                assertAccessToLibraryId(libraryId)
+                assertAccessToLibraryId(this.context.request.httpMethod, libraryId)
             }
 
             @Summary("Rescan library", method = "POST")

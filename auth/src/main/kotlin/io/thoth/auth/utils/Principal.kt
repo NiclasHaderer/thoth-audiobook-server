@@ -2,14 +2,13 @@ package io.thoth.auth.utils
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.thoth.auth.models.ThothDatabaseUserPermissions
 import io.thoth.auth.models.ThothJwtTypes
+import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-interface ThothPrincipal<ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> : Principal {
+interface ThothPrincipal<ID : Any, PERMISSIONS : ThothUserPermissions> : Principal {
     val userId: ID
-    val isAdmin: Boolean
     val type: ThothJwtTypes
     val permissions: PERMISSIONS
 }

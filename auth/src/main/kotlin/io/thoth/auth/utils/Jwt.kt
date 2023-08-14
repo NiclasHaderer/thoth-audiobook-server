@@ -5,15 +5,15 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import io.thoth.auth.ThothAuthConfig
 import io.thoth.auth.models.ThothDatabaseUser
-import io.thoth.auth.models.ThothDatabaseUserPermissions
 import io.thoth.auth.models.ThothJwtPairImpl
 import io.thoth.auth.models.ThothJwtTypes
+import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.*
 
-fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> generateJwtPairForUser(
+fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateJwtPairForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
     config: ThothAuthConfig
 ): ThothJwtPairImpl {
@@ -23,7 +23,7 @@ fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> generateJwtPairForUse
     )
 }
 
-internal fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> generateAccessTokenForUser(
+internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateAccessTokenForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
     config: ThothAuthConfig
 ): String {
@@ -33,19 +33,15 @@ internal fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> generateAcce
     return JWT.create()
         .withIssuer(issuer)
         .withKeyId(config.activeKeyId)
-        .also {
-            if (config.includePermissionsInJwt) {
-                TODO("Serialize JWT permissions")
-                // it.withClaim("permissions", user.permissions)
-            }
-        }
+        // TODO("Serialize JWT permissions")
+        // it.withClaim("permissions", user.permissions)
         .withClaim("sub", user.id.toString())
         .withClaim("type", ThothJwtTypes.Access.type)
         .withExpiresAt(Date(System.currentTimeMillis() + config.accessTokenExpiryTime))
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 }
 
-internal fun <ID : Any, PERMISSIONS : ThothDatabaseUserPermissions> generateRefreshTokenForUser(
+internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateRefreshTokenForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
     config: ThothAuthConfig
 ): String {

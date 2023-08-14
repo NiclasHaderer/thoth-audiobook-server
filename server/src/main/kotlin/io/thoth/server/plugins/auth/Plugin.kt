@@ -43,26 +43,11 @@ fun Application.configureAuthentication() {
             Guards.Admin,
         ) { jwtCredential, setError ->
             jwtToPrincipal(jwtCredential)?.let { principal ->
-                if (principal.isAdmin) {
+                if (principal.permissions.isAdmin) {
                     principal
                 } else {
                     setError(
                         JwtError(error = "User is not an admin", statusCode = HttpStatusCode.Unauthorized),
-                    )
-                    null
-                }
-            }
-        }
-
-        configureGuard<UUID>(
-            Guards.Editor,
-        ) { jwtCredential, setError ->
-            jwtToPrincipal(jwtCredential)?.let { principal ->
-                if (principal.isEditor) {
-                    principal
-                } else {
-                    setError(
-                        JwtError(error = "User is not an editor", statusCode = HttpStatusCode.Unauthorized),
                     )
                     null
                 }

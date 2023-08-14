@@ -1,6 +1,6 @@
 package io.thoth.auth.models
 
 interface ThothModifyPermissions {
-    val permissions: Map<String, Any>
+    val permissions: ThothUserPermissions
     val isAdmin: Boolean
 }
