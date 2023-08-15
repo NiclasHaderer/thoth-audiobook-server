@@ -11,12 +11,12 @@ interface ThothDeleteUserParams<T : Any> {
     val id: T
 }
 
-fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.deleteUser(
+fun <ID : Any> RouteHandler.deleteUser(
     params: ThothDeleteUserParams<ID>,
     body: Unit,
 ) {
-    val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
-    val config = thothAuthConfig()
+    val principal = thothPrincipal<ThothPrincipal<ID, ThothUserPermissions>>()
+    val config = thothAuthConfig<ID, ThothUserPermissions>()
 
     if (principal.userId != params.id && !principal.permissions.isAdmin) {
         throw ErrorResponse.forbidden("Delete", "user")

@@ -14,13 +14,13 @@ interface ThothChangePasswordParams<T : Any> {
     val id: T
 }
 
-fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.changeUserPassword(
+fun <ID : Any> RouteHandler.changeUserPassword(
     params: ThothChangePasswordParams<ID>,
     passwordChange: ThothChangePassword,
 ) {
 
-    val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
-    val config = thothAuthConfig()
+    val principal = thothPrincipal<ThothPrincipal<ID, ThothUserPermissions>>()
+    val config = thothAuthConfig<ID, ThothUserPermissions>()
 
     if (principal.userId != params.id && !principal.permissions.isAdmin) {
         throw ErrorResponse.forbidden("Change", "password")

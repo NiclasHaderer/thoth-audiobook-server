@@ -15,7 +15,7 @@ import java.util.*
 
 fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateJwtPairForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
-    config: ThothAuthConfig
+    config: ThothAuthConfig<ID, PERMISSIONS>
 ): ThothJwtPairImpl {
     return ThothJwtPairImpl(
         accessToken = generateAccessTokenForUser(user, config),
@@ -25,7 +25,7 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateJwtPairForUser(
 
 internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateAccessTokenForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
-    config: ThothAuthConfig
+    config: ThothAuthConfig<ID, PERMISSIONS>
 ): String {
     val keyPair = config.keyPairs[config.activeKeyId]!!
     val issuer = config.issuer
@@ -43,7 +43,7 @@ internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateAccessTokenF
 
 internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateRefreshTokenForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
-    config: ThothAuthConfig
+    config: ThothAuthConfig<ID, PERMISSIONS>
 ): String {
     val issuer = config.issuer
     val keyPair = config.keyPairs[config.activeKeyId]!!
@@ -58,7 +58,7 @@ internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateRefreshToken
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 }
 
-fun validateJwt(authConfig: ThothAuthConfig, token: String, type: ThothJwtTypes): DecodedJWT {
+fun validateJwt(authConfig: ThothAuthConfig<*, *>, token: String, type: ThothJwtTypes): DecodedJWT {
     val decodedJWT = JWT.decode(token)
     if (decodedJWT.algorithm != "RS256") {
         throw ErrorResponse.userError("Unsupported JWT algorithm ${decodedJWT.algorithm}")

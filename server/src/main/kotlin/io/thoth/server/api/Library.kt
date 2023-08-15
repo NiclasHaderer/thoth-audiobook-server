@@ -9,12 +9,10 @@ import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.ktor.put
 import io.thoth.server.common.scheduling.Scheduler
-import io.thoth.server.database.tables.Library
 import io.thoth.server.plugins.authentication.thothPrincipal
 import io.thoth.server.repositories.LibraryRepository
 import io.thoth.server.repositories.SearchRepository
 import io.thoth.server.schedules.ThothSchedules
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.ktor.ext.inject
 
 fun Routing.libraryRouting() {
@@ -40,13 +38,12 @@ fun Routing.libraryRouting() {
     post<Api.Libraries, LibraryApiModel, LibraryModel> { _, postLibrary -> libraryRepository.create(postLibrary) }
 
     post<Api.Libraries.Rescan, Unit, Unit> { _, _ ->
-        val libsToScan = thothPrincipal().accessToLibs
-        if (libsToScan) scheduler.schedule(schedules.fullScan)
-        else scheduler.dispatch(schedules.scanLibraries.build(libsToScan))
+        val libsToScan = thothPrincipal().permissions.libraries
+        scheduler.dispatch(schedules.scanLibraries.build(libsToScan.map { it.id }))
     }
 
     get<Api.Libraries.Search, SearchModel> {
-        val libsToSearch = thothPrincipal().accessToLibs ?: transaction { Library.all().map { it.id.value } }
+        val libsToSearch = thothPrincipal().permissions.libraries.map { lib -> lib.id }
 
         if (it.q != null) {
             return@get SearchRepository.everywhere(it.q, libsToSearch)

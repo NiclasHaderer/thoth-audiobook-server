@@ -24,7 +24,7 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.renameUser(
         throw ErrorResponse.forbidden("Rename", "account")
     }
 
-    val config = thothAuthConfig()
+    val config = thothAuthConfig<ID, PERMISSIONS>()
 
     config.usernameMeetsRequirements(renamedUser.username).also { (meetsRequirement, message) ->
         if (!meetsRequirement) {
@@ -36,5 +36,5 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.renameUser(
 
     var user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
     user = config.renameUser(user, renamedUser.username)
-    return ThothUserImpl.wrap(user) as ThothUser<ID, PERMISSIONS>
+    return ThothUserImpl.wrap(user)
 }

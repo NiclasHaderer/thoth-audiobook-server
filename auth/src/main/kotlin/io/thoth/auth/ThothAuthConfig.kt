@@ -16,26 +16,29 @@ import io.thoth.openapi.ktor.RouteHandler
 import java.security.KeyPair
 import java.util.concurrent.TimeUnit
 
-typealias KeyId = String
+internal typealias KeyId = String
 
-typealias GetPrincipal =
-    ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal<*, *>?
+internal typealias GetPrincipal<ID, PERMISSIONS> =
+    ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal<
+            ID, PERMISSIONS
+        >?
 
-val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig>("ThothAuthPlugin")
+internal val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig<*, *>>("ThothAuthPlugin")
 
-fun RouteHandler.thothAuthConfig(): ThothAuthConfig {
+internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.thothAuthConfig():
+    ThothAuthConfig<ID, PERMISSIONS> {
     if (!call.attributes.contains(PLUGIN_CONFIG_KEY)) {
         throw IllegalStateException("ThothAuthPlugin not installed")
     }
 
-    return call.attributes[PLUGIN_CONFIG_KEY]
+    @Suppress("UNCHECKED_CAST") return call.attributes[PLUGIN_CONFIG_KEY] as ThothAuthConfig<ID, PERMISSIONS>
 }
 
 data class JwtError(val error: String, val statusCode: HttpStatusCode)
 
-val JWT_VALIDATION_FAILED = AttributeKey<JwtError>("JWT_VALIDATION_FAILED")
+private val JWT_VALIDATION_FAILED = AttributeKey<JwtError>("JWT_VALIDATION_FAILED")
 
-class ThothAuthConfig {
+class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions> {
     var production = true
 
     // Default user settings
@@ -70,7 +73,7 @@ class ThothAuthConfig {
         JwkProviderBuilder(url).cached(10, 24, TimeUnit.HOURS).rateLimited(10, 1, TimeUnit.MINUTES).build()
     }
 
-    private val guards = mutableMapOf<String, GetPrincipal>()
+    private val guards = mutableMapOf<String, GetPrincipal<ID, PERMISSIONS>>()
 
     internal fun assertAreRsaKeyPairs() {
         keyPairs.values.forEach { keyPair ->
@@ -80,7 +83,7 @@ class ThothAuthConfig {
         require(keyPairs.containsKey(activeKeyId)) { "Active key ID '$activeKeyId' not found in key pairs" }
     }
 
-    fun <T : Any> Application.configureGuard(guard: String, getPrincipal: GetPrincipal) {
+    fun configureGuard(guard: String, getPrincipal: GetPrincipal<ID, PERMISSIONS>) {
         guards[guard] = getPrincipal
     }
 
@@ -128,36 +131,45 @@ class ThothAuthConfig {
     }
 
     // Operations
-    var getUserByUsername: (username: String) -> ThothDatabaseUser<*, *>? = { _ ->
-        TODO("Operation not implemented by application")
+    var getUserByUsername: (username: String) -> ThothDatabaseUser<ID, PERMISSIONS>? = { _ ->
+        throw RuntimeException("Operation not implemented by application")
     }
 
-    var getUserById: (id: Any) -> ThothDatabaseUser<*, *>? = { _ -> TODO("Operation not implemented by application") }
-
-    var isFirstUser: () -> Boolean = { TODO("Operation not implemented by application") }
-
-    var createUser: (registeredUserImpl: RegisteredUserImpl) -> ThothDatabaseUser<*, *> = { _ ->
-        TODO("Operation not implemented by application")
+    var getUserById: (id: Any) -> ThothDatabaseUser<ID, PERMISSIONS>? = { _ ->
+        throw RuntimeException("Operation not implemented by application")
     }
 
-    var listAllUsers: () -> List<ThothDatabaseUser<*, *>> = { TODO("Operation not implemented by application") }
+    var isFirstUser: () -> Boolean = { throw RuntimeException("Operation not implemented by application") }
 
-    var deleteUser: (user: ThothDatabaseUser<*, *>) -> Unit = { _ -> TODO("Operation not implemented by application") }
-
-    var renameUser: (user: ThothDatabaseUser<*, *>, name: String) -> ThothDatabaseUser<*, *> = { _, _ ->
-        TODO("Operation not implemented by application")
+    var createUser: (registeredUserImpl: RegisteredUserImpl) -> ThothDatabaseUser<ID, PERMISSIONS> = { _ ->
+        throw RuntimeException("Operation not implemented by application")
     }
 
-    var updatePassword: (user: ThothDatabaseUser<*, *>, newPassword: String) -> ThothDatabaseUser<*, *> = { _, _ ->
-        TODO("Operation not implemented by application")
+    var listAllUsers: () -> List<ThothDatabaseUser<ID, PERMISSIONS>> = {
+        throw RuntimeException("Operation not implemented by application")
     }
+
+    var deleteUser: (user: ThothDatabaseUser<ID, PERMISSIONS>) -> Unit = { _ ->
+        throw RuntimeException("Operation not implemented by application")
+    }
+
+    var renameUser: (user: ThothDatabaseUser<ID, PERMISSIONS>, name: String) -> ThothDatabaseUser<ID, PERMISSIONS> =
+        { _, _ ->
+            throw RuntimeException("Operation not implemented by application")
+        }
+
+    var updatePassword:
+        (user: ThothDatabaseUser<ID, PERMISSIONS>, newPassword: String) -> ThothDatabaseUser<ID, PERMISSIONS> =
+        { _, _ ->
+            throw RuntimeException("Operation not implemented by application")
+        }
 
     var updateUserPermissions:
-        (user: ThothDatabaseUser<*, *>, permissions: ThothUserPermissions, isAdmin: Boolean) -> ThothDatabaseUser<
-                *, *
+        (user: ThothDatabaseUser<ID, PERMISSIONS>, permissions: ThothUserPermissions) -> ThothDatabaseUser<
+                ID, PERMISSIONS
             > =
-        { _, _, _ ->
-            TODO("Operation not implemented by application")
+        { _, _ ->
+            throw RuntimeException("Operation not implemented by application")
         }
 
     var passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?> = { password ->
