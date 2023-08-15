@@ -10,10 +10,15 @@ import io.thoth.server.common.serializion.jackson.CustomLocalDateDesSerializer
 import io.thoth.server.common.serializion.jackson.CustomLocalDateSerializer
 import io.thoth.server.common.serializion.jackson.CustomLocalDateTimeDesSerializer
 import io.thoth.server.common.serializion.jackson.CustomLocalDateTimeSerializer
+import io.thoth.server.di.serialization.JacksonSerialization
+import io.thoth.server.di.serialization.Serialization
 import java.time.LocalDate
 import java.time.LocalDateTime
+import org.koin.ktor.ext.inject
 
 fun Application.configureSerialization() {
+    @Suppress("UNCHECKED_CAST") val serialization by inject<Serialization>() as Lazy<JacksonSerialization>
+
     install(ContentNegotiation) {
         jackson {
             val module = SimpleModule()
@@ -25,6 +30,7 @@ fun Application.configureSerialization() {
             module.addSerializer(LocalDate::class.java, CustomLocalDateSerializer())
             module.addDeserializer(LocalDate::class.java, CustomLocalDateDesSerializer())
             registerModule(module)
+            serialization.objectMapper = this
         }
     }
 }

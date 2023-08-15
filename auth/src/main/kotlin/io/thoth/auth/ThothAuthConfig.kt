@@ -131,6 +131,10 @@ class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions> {
     }
 
     // Operations
+    var serializePermissions: (permissions: PERMISSIONS) -> String = { _ ->
+        throw RuntimeException("Operation not implemented by application")
+    }
+
     var getUserByUsername: (username: String) -> ThothDatabaseUser<ID, PERMISSIONS>? = { _ ->
         throw RuntimeException("Operation not implemented by application")
     }

@@ -5,6 +5,8 @@ import io.thoth.metadata.MetadataWrapper
 import io.thoth.metadata.audible.client.AudibleClient
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.loadPublicConfig
+import io.thoth.server.di.serialization.JacksonSerialization
+import io.thoth.server.di.serialization.Serialization
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.TrackManagerImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
@@ -49,6 +51,7 @@ fun setupDependencyInjection() = startKoin {
                 )
             }
             single<LibraryScanner> { LibraryScannerImpl() }
+            single<Serialization> { JacksonSerialization() }
             single<BookRepository> { BookRepositoryImpl() }
             single<AuthorRepository> { AuthorServiceImpl() }
             single<SeriesRepository> { SeriesRepositoryImpl() }
