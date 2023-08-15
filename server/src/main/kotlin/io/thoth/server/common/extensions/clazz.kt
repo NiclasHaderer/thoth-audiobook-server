@@ -1,6 +1,9 @@
 package io.thoth.server.common.extensions
 
-import kotlin.reflect.KClass
-
-val KClass<*>.parent: KClass<*>?
-    get() = this.java.enclosingClass?.kotlin
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> Any.getFieldByName(name: String): T {
+    return this::class.java.getDeclaredField(name).let { field ->
+        field.isAccessible = true
+        field.get(this) as T
+    }
+}

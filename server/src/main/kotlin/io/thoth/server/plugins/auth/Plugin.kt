@@ -11,6 +11,7 @@ import io.thoth.server.database.access.wrap
 import io.thoth.server.database.tables.TUsers
 import io.thoth.server.database.tables.User
 import io.thoth.server.database.tables.UserPermissions
+import io.thoth.server.di.serialization.Serialization
 import io.thoth.server.plugins.authentication.jwtToPrincipal
 import java.nio.file.Path
 import java.util.*
@@ -19,6 +20,8 @@ import org.koin.ktor.ext.inject
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
     val keyPair = getOrCreateKeyPair(Path.of("${thothConfig.configDirectory}/jwt.pem"))
+
+    val serializer by inject<Serialization>()
 
     install(ThothAuthenticationPlugin.build<UUID, UserPermissionsModel>()) {
         production = thothConfig.production
@@ -57,6 +60,8 @@ fun Application.configureAuthentication() {
         }
 
         getUserByUsername = { username -> User.findOne { TUsers.username eq username }?.wrap() }
+
+        serializePermissions = { serializer.serializeValue(it) }
 
         getUserById = { User.findById(it as UUID)?.wrap() }
 
