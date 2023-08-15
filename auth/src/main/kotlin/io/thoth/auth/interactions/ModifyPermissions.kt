@@ -23,9 +23,8 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.modifyUserPermis
     if (!principal.permissions.isAdmin) {
         throw ErrorResponse.forbidden("Modify", "permissions")
     }
-    val config = thothAuthConfig()
+    val config = thothAuthConfig<ID, PERMISSIONS>()
 
     val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
-    return config.updateUserPermissions(user, body.permissions, body.isAdmin).let { ThothUserImpl.wrap(it) }
-        as ThothUser<ID, PERMISSIONS>
+    return config.updateUserPermissions(user, body.permissions).let { ThothUserImpl.wrap(it) }
 }

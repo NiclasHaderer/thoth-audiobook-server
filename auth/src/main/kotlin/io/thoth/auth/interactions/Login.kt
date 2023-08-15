@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.models.ThothLoginUser
+import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.generateJwtPairForUser
 import io.thoth.auth.utils.passwordMatches
@@ -16,7 +17,7 @@ fun RouteHandler.loginUser(
     params: ThothLoginParams,
     loginUser: ThothLoginUser,
 ): ThothAccessTokenImpl {
-    val config = thothAuthConfig()
+    val config = thothAuthConfig<Any, ThothUserPermissions>()
 
     val user =
         config.getUserByUsername(loginUser.username)

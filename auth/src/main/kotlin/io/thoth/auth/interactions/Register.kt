@@ -16,7 +16,7 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.registerUser(
     params: ThothRegisterParams,
     user: ThothRegisterUser
 ): ThothUser<ID, PERMISSIONS> {
-    val config = thothAuthConfig()
+    val config = thothAuthConfig<ID, PERMISSIONS>()
 
     config.passwordMeetsRequirements(user.password).also { (meetsRequirement, message) ->
         if (!meetsRequirement) {
@@ -46,5 +46,5 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.registerUser(
                 admin = isAdmin,
             ),
         )
-        .let { ThothUserImpl.wrap(it) } as ThothUser<ID, PERMISSIONS>
+        .let { ThothUserImpl.wrap(it) }
 }

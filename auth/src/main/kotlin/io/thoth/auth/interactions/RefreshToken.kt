@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.thoth.auth.models.ThothAccessToken
 import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.models.ThothJwtTypes
+import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.generateAccessTokenForUser
 import io.thoth.auth.utils.validateJwt
@@ -17,7 +18,7 @@ fun RouteHandler.getRefreshToken(
     body: Unit,
 ): ThothAccessToken {
     val refreshToken = call.request.cookies["refresh"] ?: throw ErrorResponse.unauthorized("No refresh token")
-    val config = thothAuthConfig()
+    val config = thothAuthConfig<Any, ThothUserPermissions>()
     val decodedJwt = validateJwt(config, refreshToken, ThothJwtTypes.Refresh)
     val userId = decodedJwt.getClaim("sub").asString()
     val user = config.getUserById(userId) ?: throw ErrorResponse.internalError("User not found")

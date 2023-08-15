@@ -20,10 +20,6 @@ fun Application.configureOpenApi() {
                     scheme = "bearer"
                     bearerFormat = "JWT"
                 }
-                http(Guards.Editor) {
-                    scheme = "bearer"
-                    bearerFormat = "JWT"
-                }
                 http(Guards.Normal) {
                     scheme = "bearer"
                     bearerFormat = "JWT"

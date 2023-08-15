@@ -13,6 +13,7 @@ import io.thoth.server.database.tables.TSeries
 import io.thoth.server.database.tables.TSeriesAuthorMapping
 import io.thoth.server.database.tables.TSeriesBookMapping
 import io.thoth.server.database.tables.TTracks
+import io.thoth.server.database.tables.TUserPermissions
 import io.thoth.server.database.tables.TUsers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -28,6 +29,7 @@ class `01_Create_Tables` : Migration() {
                 TGenres,
                 TTracks,
                 TUsers,
+                TUserPermissions,
                 TAuthorBookMapping,
                 TGenreBookMapping,
                 TGenreSeriesMapping,

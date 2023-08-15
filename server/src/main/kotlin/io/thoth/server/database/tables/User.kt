@@ -18,5 +18,5 @@ class User(id: EntityID<UUID>) : UUIDEntity(id) {
 
     var username by TUsers.username
     var passwordHash by TUsers.passwordHash
-    val permissions by UserPermissions referencedOn TUsers.permissions
+    var permissions by UserPermissions referencedOn TUsers.permissions
 }

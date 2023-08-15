@@ -19,6 +19,6 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.listUsers(
         throw ErrorResponse.userError("User is not admin")
     }
 
-    val config = thothAuthConfig()
-    return config.listAllUsers().map { ThothUserImpl.wrap(it) } as List<ThothUser<ID, PERMISSIONS>>
+    val config = thothAuthConfig<ID, PERMISSIONS>()
+    return config.listAllUsers().map { ThothUserImpl.wrap(it) }
 }

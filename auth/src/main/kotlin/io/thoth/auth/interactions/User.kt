@@ -17,12 +17,12 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.displayUser(
     params: ThothDisplayUserParams<ID>
 ): ThothUser<ID, PERMISSIONS> {
     val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
-    val config = thothAuthConfig()
+    val config = thothAuthConfig<ID, PERMISSIONS>()
 
     if (principal.userId != params.id && !principal.permissions.isAdmin) {
         throw ErrorResponse.forbidden("View", "account")
     }
 
     val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
-    return ThothUserImpl.wrap(user) as ThothUser<ID, PERMISSIONS>
+    return ThothUserImpl.wrap(user)
 }
