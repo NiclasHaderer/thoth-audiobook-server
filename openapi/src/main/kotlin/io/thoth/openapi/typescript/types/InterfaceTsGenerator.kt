@@ -1,6 +1,8 @@
 package io.thoth.openapi.typescript.types
 
 import io.thoth.openapi.common.ClassType
+import java.util.function.Predicate.not
+import kotlin.reflect.KClass
 import kotlin.reflect.KTypeParameter
 
 class InterfaceTsGenerator : TsGenerator() {
@@ -43,7 +45,7 @@ class InterfaceTsGenerator : TsGenerator() {
             }
 
         val interfaceStart =
-            "interface ${generateName(classType, false, null)} ${
+            "interface ${generateName(classType, false, generateSubType)} ${
                 if (superClasses.isNotEmpty()) {
                     "extends ${superClasses.joinToString(", ") { it.name }} "
                 } else {
@@ -63,18 +65,48 @@ class InterfaceTsGenerator : TsGenerator() {
         return InsertionMode.REFERENCE
     }
 
-    private fun generateName(classType: ClassType, resolveGeneric: Boolean, generateSubType: GenerateType?): String {
+    private fun generateName(classType: ClassType, resolveGeneric: Boolean, generateSubType: GenerateType): String {
         val typeParams = classType.typeParameters()
         val typeParamsString =
-            typeParams.joinToString(", ") {
-                if (resolveGeneric) {
-                    val typePar = classType.resolveTypeParameter(it)
-                    val subType = generateSubType?.invoke(typePar)
-                    subType?.reference() ?: "unknown"
-                } else {
-                    it.name
+            typeParams
+                .joinToString(", ") {
+                    if (resolveGeneric) {
+                        val typePar = classType.resolveTypeParameter(it)
+                        val subType = generateSubType.invoke(typePar)
+                        subType.reference()
+                    } else {
+                        // Check if the generic type has upper bounds
+                        val upperBounds = it.upperBounds
+                        val bounds =
+                            if (upperBounds.isNotEmpty()) {
+                                upperBounds
+                                    .filter { bound ->
+                                        val clazz = bound.classifier as KClass<*>
+                                        (clazz == Any::class && bound.isMarkedNullable).not()
+                                    }
+                                    .joinToString(" & ") { bound ->
+                                        val clazz = bound.classifier as KClass<*>
+                                        if (clazz == Any::class) {
+                                            "NonNullable<any>"
+                                        } else {
+                                            generateSubType(ClassType.create(bound)).reference()
+                                        }
+                                    }
+                            } else {
+                                ""
+                            }
+
+                        "${it.name} ${
+                        if (bounds.isNotEmpty()) {
+                            "extends $bounds"
+                        } else {
+                            ""
+                        }
+                    }"
+                    }
                 }
-            }
+                .trim()
+
         return "${classType.simpleName}${
             if (typeParams.isNotEmpty()) {
                 "<$typeParamsString>"

@@ -5,6 +5,7 @@ import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.typescript.types.TsGenerator
 import io.thoth.openapi.typescript.types.generateTypes
 import java.io.File
+import mu.KotlinLogging.logger
 
 class TsClientCreator(
     private val routes: List<OpenApiRoute>,
@@ -13,6 +14,7 @@ class TsClientCreator(
 ) {
     private val typeDefinitions = mutableMapOf<String, TsGenerator.Type>()
     private val clientFunctions = mutableListOf<String>()
+    private val log = logger {}
 
     init {
         generateApiClient()
@@ -128,10 +130,10 @@ class TsClientCreator(
 
         val urlParamsDecompositionStr =
             "{${
-            urlParams.joinToString(", ") {
-                it.first.name
-            }
-        }}"
+                urlParams.joinToString(", ") {
+                    it.first.name
+                }
+            }}"
 
         val bodyParamString =
             if (route.requestBodyType.clazz != Unit::class) {
@@ -174,7 +176,7 @@ class TsClientCreator(
         routes.forEach { route ->
             val routeName = getRouteName(route)
             if (routeName == null) {
-                println("Route ${route.method}:${route.fullPath} has no summary")
+                log.warn("Route ${route.method}:${route.fullPath} has no summary")
                 return@forEach
             }
             val responseBody = generateTypes(route.responseBodyType).first

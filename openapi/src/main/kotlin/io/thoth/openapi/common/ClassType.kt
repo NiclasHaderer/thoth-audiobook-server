@@ -123,8 +123,24 @@ private constructor(
         return ClassType(typeArg.type!!)
     }
 
-    fun isGenericProperty(prop: KProperty1<*, *>) = prop.returnType is KTypeParameter
+    /**
+     * Checks if the property is a generic property with a type parameter, an example would be: interface Something<T> {
+     * val hello: T } In this case the property is fully generic, because the type parameter is the complete type, not
+     * only a part of it
+     */
+    @OptIn(ExperimentalStdlibApi::class)
+    fun isGenericProperty(prop: KProperty1<*, *>): Boolean {
+        return prop.returnType.javaType is TypeVariable<*>
+    }
 
+    /**
+     * Checks if the property is a generic property with a type parameter, an example would be: interface Something<T> {
+     * val hello: T } This is different from a parameterized property, which is a property with a generic type, an
+     * example would be: interface Something<T> { val hello: Map<String, T> } The second example is a parameterized
+     * property because it has a generic type (Map<String, T>)
+     *
+     * @param prop The property to check
+     */
     fun isParameterizedProperty(prop: KProperty1<*, *>) = prop.returnType.arguments.isNotEmpty()
 
     /** Create a new ClassType for a member of the current `ClassType.clazz` */
