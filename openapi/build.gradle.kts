@@ -40,7 +40,6 @@ afterEvaluate {
                 groupId = "com.github.niclashaderer"
                 artifactId = "openapi"
                 version = "0.0.1"
-
                 from(components["java"])
             }
         }
