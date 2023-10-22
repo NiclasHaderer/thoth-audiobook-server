@@ -1,6 +1,4 @@
 jdk:
-  - openjdk16
+  - openjdk18
 before_install:
-  - sdk install java 16.0.2
-  - sdk use java 16.0.2
   - ./scripts/prepareJitpackEnvironment.sh
