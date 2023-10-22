@@ -170,7 +170,8 @@ class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions> {
 
     var updateUserPermissions:
         (user: ThothDatabaseUser<ID, PERMISSIONS>, permissions: ThothUserPermissions) -> ThothDatabaseUser<
-                ID, PERMISSIONS
+                ID,
+                PERMISSIONS,
             > =
         { _, _ ->
             throw RuntimeException("Operation not implemented by application")

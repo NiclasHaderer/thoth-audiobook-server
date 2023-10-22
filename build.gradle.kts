@@ -4,7 +4,7 @@ plugins {
     base
     kotlin("jvm") version "1.9.0" apply false
     kotlin("plugin.serialization") version "1.9.0" apply false
-    id("com.ncorti.ktfmt.gradle") version "0.13.0"
+    id("com.ncorti.ktfmt.gradle") version "0.14.0"
 }
 
 ktfmt { kotlinLangStyle() }
