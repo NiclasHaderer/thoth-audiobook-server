@@ -1,6 +1,6 @@
 jdk:
   - openjdk18
 before_install:
-  - sdk install java 18
-  - sdk use java 18
+  - sdk install java 18.0.2-amzn
+  - sdk use java 18.0.2-amzn
   - ./scripts/prepareJitpackEnvironment.sh
