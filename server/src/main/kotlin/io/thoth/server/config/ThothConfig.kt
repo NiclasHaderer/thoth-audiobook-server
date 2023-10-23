@@ -6,6 +6,7 @@ import io.thoth.metadata.audible.models.AudibleRegions
 interface ThothConfig {
     val ignoreFile: String
     val production: Boolean
+    val allowNewSignups: Boolean
     val fullScanCron: Cron
     val metadataRefreshCron: Cron
     val domain: String
@@ -17,17 +18,10 @@ interface ThothConfig {
     val configDirectory: String
 }
 
-interface DatabaseConnection {
-    val driverClassName: String
-    val jdbcUrl: String
-    val maximumPoolSize: Int
-    val autoCommit: Boolean
-    val transactionIsolation: String
-}
-
 data class ThothConfigImpl(
     override val ignoreFile: String,
     override val production: Boolean,
+    override val allowNewSignups: Boolean,
     override val fullScanCron: Cron,
     override val metadataRefreshCron: Cron,
     override val analyzerThreads: Int,
@@ -38,11 +32,3 @@ data class ThothConfigImpl(
     override val database: DatabaseConnectionImpl,
     override val configDirectory: String,
 ) : ThothConfig
-
-data class DatabaseConnectionImpl(
-    override val driverClassName: String,
-    override val jdbcUrl: String,
-    override val maximumPoolSize: Int,
-    override val autoCommit: Boolean,
-    override val transactionIsolation: String
-) : DatabaseConnection

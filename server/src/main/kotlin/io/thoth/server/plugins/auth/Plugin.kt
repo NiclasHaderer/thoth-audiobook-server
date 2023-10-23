@@ -61,6 +61,8 @@ fun Application.configureAuthentication() {
 
         getUserByUsername = { username -> User.findOne { TUsers.username eq username }?.wrap() }
 
+        allowNewSignups = { thothConfig.allowNewSignups }
+
         serializePermissions = { serializer.serializeValue(it) }
 
         getUserById = { User.findById(it as UUID)?.wrap() }

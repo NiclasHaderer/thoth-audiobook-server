@@ -1,6 +1,7 @@
 {
   "ignoreFile": ".thothignore",
   "production": false,
+  "allowNewSignups": true,
   "fullScanCron": "0 0 * * 1",
   "metadataRefreshCron": "0 0 * * 1",
   "audioFileLocations": [
