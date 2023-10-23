@@ -18,6 +18,11 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.registerUser(
 ): ThothUser<ID, PERMISSIONS> {
     val config = thothAuthConfig<ID, PERMISSIONS>()
 
+
+    if(!config.allowNewSignups()) {
+        throw ErrorResponse.userError("New signups are not allowed")
+    }
+
     config.passwordMeetsRequirements(user.password).also { (meetsRequirement, message) ->
         if (!meetsRequirement) {
             throw ErrorResponse.userError(message!!)

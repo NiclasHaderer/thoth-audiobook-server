@@ -42,7 +42,7 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 fun main() {
-    // Force every library which is using the standard java logger to use SLF4J
+    // Force every library using the standard java logger force it to use SLF4J
     LogManager.getLogManager().reset()
     SLF4JBridgeHandler.install()
 

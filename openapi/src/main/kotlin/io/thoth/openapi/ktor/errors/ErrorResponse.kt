@@ -3,8 +3,7 @@ package io.thoth.openapi.ktor.errors
 import io.ktor.http.*
 import java.util.*
 
-class ErrorResponse internal constructor(val status: HttpStatusCode, message: String, val details: Any? = null) :
-    Exception(message) {
+class ErrorResponse(val status: HttpStatusCode, message: String, val details: Any? = null) : Exception(message) {
     companion object {
         fun notFound(thing: String, id: UUID, details: Any? = null): ErrorResponse {
             return notFound(thing, id.toString(), details)
