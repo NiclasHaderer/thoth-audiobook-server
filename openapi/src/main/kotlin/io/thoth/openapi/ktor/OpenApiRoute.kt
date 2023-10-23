@@ -157,7 +157,7 @@ class OpenApiRoute(
             paramsClassType.properties.map { it.returnType.classifier as KClass<*> }.any { it == parentClassType.clazz }
         if (!hasDeclaredParent) {
             throw IllegalStateException(
-                "Class ${paramsClazz.qualifiedName} has no property of type ${parentClassType.simpleName}." +
+                "Class ${paramsClazz.qualifiedName} has no property of type ${parentClassType.clazz.qualifiedName}." +
                     "You have to create an additional property with the parent class as type",
             )
         }
