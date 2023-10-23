@@ -139,7 +139,7 @@ class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions> {
         throw RuntimeException("Operation not implemented by application")
     }
 
-    val allowNewSignups: () -> Boolean = { throw RuntimeException("Operation not implemented by application") }
+    var allowNewSignups: () -> Boolean = { throw RuntimeException("Operation not implemented by application") }
 
     var getUserById: (id: Any) -> ThothDatabaseUser<ID, PERMISSIONS>? = { _ ->
         throw RuntimeException("Operation not implemented by application")
