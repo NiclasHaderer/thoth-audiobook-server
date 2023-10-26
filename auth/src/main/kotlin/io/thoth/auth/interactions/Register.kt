@@ -1,10 +1,10 @@
 package io.thoth.auth.interactions
 
-import io.thoth.auth.models.RegisteredUserImpl
 import io.thoth.auth.models.ThothRegisterUser
 import io.thoth.auth.models.ThothUser
-import io.thoth.auth.models.ThothUserImpl
 import io.thoth.auth.models.ThothUserPermissions
+import io.thoth.auth.models.impl.RegisteredUserImpl
+import io.thoth.auth.models.impl.ThothUserImpl
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.hashPassword
 import io.thoth.openapi.ktor.RouteHandler

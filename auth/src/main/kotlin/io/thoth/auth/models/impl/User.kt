@@ -1,12 +1,9 @@
-package io.thoth.auth.models
+package io.thoth.auth.models.impl
 
-// User models which will be returned by the auth api
+import io.thoth.auth.models.ThothDatabaseUser
+import io.thoth.auth.models.ThothUser
+import io.thoth.auth.models.ThothUserPermissions
 
-interface ThothUser<ID : Any, PERMISSIONS : ThothUserPermissions> {
-    val id: ID
-    val username: String
-    val permissions: PERMISSIONS
-}
 
 internal data class ThothUserImpl<ID : Any, PERMISSIONS : ThothUserPermissions>(
     override val id: ID,
@@ -26,16 +23,6 @@ internal data class ThothUserImpl<ID : Any, PERMISSIONS : ThothUserPermissions>(
     }
 }
 
-// The Internal database model of the user, intentionally does not extend from ThothUser, so the
-// internal database
-// user cannot be accidentally leaked by returning it instead of the ThothUser
-
-interface ThothDatabaseUser<ID : Any, PERMISSIONS : ThothUserPermissions> {
-    val id: ID
-    val username: String
-    val passwordHash: String
-    val permissions: PERMISSIONS
-}
 
 internal data class ThothDatabaseUserImpl<ID : Any, PERMISSIONS : ThothUserPermissions>(
     override val id: ID,
@@ -43,3 +30,4 @@ internal data class ThothDatabaseUserImpl<ID : Any, PERMISSIONS : ThothUserPermi
     override val passwordHash: String,
     override val permissions: PERMISSIONS,
 ) : ThothDatabaseUser<ID, PERMISSIONS>
+
