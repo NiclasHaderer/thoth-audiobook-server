@@ -2,6 +2,7 @@ package io.thoth.auth.interactions
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.thoth.auth.models.ThothAccessToken
 import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.models.ThothLoginUser
 import io.thoth.auth.models.ThothUserPermissions
@@ -16,13 +17,13 @@ interface ThothLoginParams
 fun RouteHandler.loginUser(
     params: ThothLoginParams,
     loginUser: ThothLoginUser,
-): ThothAccessTokenImpl {
+): ThothAccessToken {
     val config = thothAuthConfig<Any, ThothUserPermissions>()
 
     val user =
         config.getUserByUsername(loginUser.username)
             ?: throw ErrorResponse.userError(
-                if (config.production) "Could not login user" else "Username does not exist"
+                if (config.production) "Could not login user" else "Username does not exist",
             )
 
     if (!passwordMatches(loginUser.password, user)) {
@@ -37,7 +38,7 @@ fun RouteHandler.loginUser(
             value = keyPair.refreshToken,
             httpOnly = true,
             secure = config.production,
-            extensions = mapOf("SameSite" to "Strict", "HostOnly" to "true"),
+            extensions = mapOf("SameSite" to "Strict", "HttpOnly" to "true", "Secure" to config.ssl.toString()),
             maxAge = (config.refreshTokenExpiryTime / 1000).toInt(),
         ),
     )

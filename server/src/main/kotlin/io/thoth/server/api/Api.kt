@@ -45,8 +45,6 @@ class Api {
         @Resource("jwks.json")
         data class Jwks(private val parent: Auth) : ThothJwksParams
 
-        @Summary("Get current user", method = "GET")
-        @Summary("Create user", method = "POST")
         @Secured(Guards.Normal)
         @Resource("user")
         data class User(private val parent: Auth) {

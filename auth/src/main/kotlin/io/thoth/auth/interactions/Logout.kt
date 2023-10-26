@@ -19,7 +19,7 @@ fun RouteHandler.logoutUser(
             value = "",
             httpOnly = true,
             secure = config.production,
-            extensions = mapOf("SameSite" to "Strict", "HostOnly" to "true"),
+            extensions = mapOf("SameSite" to "Strict", "HttpOnly" to "true", "Secure" to config.ssl.toString()),
             maxAge = 0,
         ),
     )

@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
 import io.thoth.auth.ThothAuthConfig
 import io.thoth.auth.models.ThothDatabaseUser
+import io.thoth.auth.models.ThothJwtPair
 import io.thoth.auth.models.ThothJwtPairImpl
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.models.ThothUserPermissions
@@ -16,7 +17,7 @@ import java.util.*
 fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateJwtPairForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
     config: ThothAuthConfig<ID, PERMISSIONS>
-): ThothJwtPairImpl {
+): ThothJwtPair {
     return ThothJwtPairImpl(
         accessToken = generateAccessTokenForUser(user, config),
         refreshToken = generateRefreshTokenForUser(user, config),
