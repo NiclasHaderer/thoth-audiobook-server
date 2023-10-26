@@ -3,6 +3,7 @@ package io.thoth.openapi.ktor.plugins
 import io.ktor.server.application.*
 import io.thoth.openapi.ktor.OpenApiRouteCollector
 import io.thoth.openapi.ktor.SchemaHolder
+import kotlin.math.log
 
 enum class OpenAPISchemaType(val extension: String) {
     JSON("json"),
@@ -37,7 +38,11 @@ class WebUiConfig internal constructor() {
 val OpenAPIWebUI =
     createApplicationPlugin("OpenAPIWebUI", createConfiguration = { WebUiConfig() }) {
         application.environment.monitor.subscribe(ApplicationStarted) {
-            OpenApiRouteCollector.forEach { SchemaHolder.addRouteToApi(it) }
+            try {
+                OpenApiRouteCollector.forEach { SchemaHolder.addRouteToApi(it) }
+            } catch (e: Exception) {
+                it.log.error("Error while adding routes to API. OpenApi document is not complete!", e)
+            }
         }
 
         val webUiServer = WebUiServer(pluginConfig)
