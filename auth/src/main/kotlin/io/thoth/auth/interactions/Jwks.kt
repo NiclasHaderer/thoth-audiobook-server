@@ -2,11 +2,10 @@ package io.thoth.auth.interactions
 
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
-import io.thoth.auth.models.JWK
-import io.thoth.auth.models.JWKImpl
 import io.thoth.auth.models.JWKs
-import io.thoth.auth.models.JWKsImpl
 import io.thoth.auth.models.ThothUserPermissions
+import io.thoth.auth.models.impl.JWKImpl
+import io.thoth.auth.models.impl.JWKsImpl
 import io.thoth.auth.thothAuthConfig
 import io.thoth.openapi.ktor.RouteHandler
 import java.security.interfaces.RSAPublicKey

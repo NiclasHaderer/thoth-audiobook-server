@@ -15,6 +15,7 @@ plugins {
 
 dependencies {
     implementation(project(":openapi"))
+    implementation(project(":auth-models"))
 
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
 
