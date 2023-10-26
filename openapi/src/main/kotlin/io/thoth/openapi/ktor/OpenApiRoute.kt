@@ -146,7 +146,7 @@ class OpenApiRoute(
         // There are three conditions under which the hierarchy is valid:
         // 1. Every class over params is decorated as @Resource
         paramsClazz.findAnnotation<Resource>()
-            ?: throw IllegalStateException("Class ${paramsClassType.simpleName} is not decorated as a resource")
+            ?: throw IllegalStateException("Class ${paramsClassType.clazz.qualifiedName} is not decorated as a resource")
 
         if (paramsClassType.parent == null) return
         val parentClassType = paramsClassType.parent!!
@@ -174,8 +174,8 @@ class OpenApiRoute(
             // Check if the variable name is already taken
             if (takenParams.containsKey(param.name)) {
                 throw IllegalStateException(
-                    "Class ${params.simpleName} has a duplicate path parameter name ${param.name}. " +
-                        "The parameter is already taken by ${takenParams[param.name]!!.origin.simpleName}",
+                    "Class ${params.clazz.qualifiedName} has a duplicate path parameter name ${param.name}. " +
+                        "The parameter is already taken by ${takenParams[param.name]!!.origin.clazz.qualifiedName}",
                 )
             }
         }
@@ -196,7 +196,7 @@ class OpenApiRoute(
             val varMember =
                 params.properties.find { it.name == varName }
                     ?: throw IllegalStateException(
-                        "Class ${params.simpleName} has a path parameter $varName which is not declared as a member. " +
+                        "Class ${params.clazz.qualifiedName} has a path parameter $varName which is not declared as a member. " +
                             "You have to create a property with the name $varName",
                     )
             pathParams.add(
@@ -214,8 +214,8 @@ class OpenApiRoute(
         for (param in queryParams) {
             if (param.name in takenParams) {
                 throw IllegalStateException(
-                    "Class ${params.simpleName} has a query parameter " +
-                        "called ${param.name} which is also used in ${takenParams[param.name]!!.origin.simpleName}. " +
+                    "Class ${params.clazz.qualifiedName} has a query parameter " +
+                        "called ${param.name} which is also used in ${takenParams[param.name]!!.origin.clazz.qualifiedName}. " +
                         "Do not used duplicate parameters",
                 )
             }
