@@ -5,7 +5,7 @@ interface ThothJwtPair {
     val refreshToken: String
 }
 
-class ThothJwtPairImpl(
+internal data class ThothJwtPairImpl(
     override val accessToken: String,
     override val refreshToken: String,
 ) : ThothJwtPair
@@ -19,6 +19,6 @@ interface ThothAccessToken {
     val accessToken: String
 }
 
-class ThothAccessTokenImpl(
+internal  class ThothAccessTokenImpl(
     override val accessToken: String,
 ) : ThothAccessToken

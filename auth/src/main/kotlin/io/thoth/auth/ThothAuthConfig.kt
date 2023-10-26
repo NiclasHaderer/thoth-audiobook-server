@@ -7,7 +7,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.util.*
-import io.thoth.auth.models.RegisteredUserImpl
+import io.thoth.auth.models.RegisteredUser
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.models.ThothUserPermissions
@@ -40,6 +40,7 @@ private val JWT_VALIDATION_FAILED = AttributeKey<JwtError>("JWT_VALIDATION_FAILE
 
 class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions> {
     var production = true
+    var ssl = true
 
     // Default user settings
     var firstUserIsAdmin = true
@@ -147,7 +148,7 @@ class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions> {
 
     var isFirstUser: () -> Boolean = { throw RuntimeException("Operation not implemented by application") }
 
-    var createUser: (registeredUserImpl: RegisteredUserImpl) -> ThothDatabaseUser<ID, PERMISSIONS> = { _ ->
+    var createUser: (registeredUser: RegisteredUser) -> ThothDatabaseUser<ID, PERMISSIONS> = { _ ->
         throw RuntimeException("Operation not implemented by application")
     }
 

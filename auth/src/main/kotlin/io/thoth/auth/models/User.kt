@@ -8,13 +8,12 @@ interface ThothUser<ID : Any, PERMISSIONS : ThothUserPermissions> {
     val permissions: PERMISSIONS
 }
 
-internal class ThothUserImpl<ID : Any, PERMISSIONS : ThothUserPermissions>
-private constructor(
+internal data class ThothUserImpl<ID : Any, PERMISSIONS : ThothUserPermissions>(
     override val id: ID,
     override val username: String,
     override val permissions: PERMISSIONS,
 ) : ThothUser<ID, PERMISSIONS> {
-    companion object {
+    internal companion object {
         fun <ID : Any, PERMISSIONS : ThothUserPermissions> wrap(
             user: ThothDatabaseUser<ID, PERMISSIONS>
         ): ThothUser<ID, PERMISSIONS> {
@@ -38,7 +37,7 @@ interface ThothDatabaseUser<ID : Any, PERMISSIONS : ThothUserPermissions> {
     val permissions: PERMISSIONS
 }
 
-class ThothDatabaseUserImpl<ID : Any, PERMISSIONS : ThothUserPermissions>(
+internal data class ThothDatabaseUserImpl<ID : Any, PERMISSIONS : ThothUserPermissions>(
     override val id: ID,
     override val username: String,
     override val passwordHash: String,

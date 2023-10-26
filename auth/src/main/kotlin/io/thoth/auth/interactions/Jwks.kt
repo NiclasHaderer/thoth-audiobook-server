@@ -3,7 +3,9 @@ package io.thoth.auth.interactions
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import io.thoth.auth.models.JWK
+import io.thoth.auth.models.JWKImpl
 import io.thoth.auth.models.JWKs
+import io.thoth.auth.models.JWKsImpl
 import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.openapi.ktor.RouteHandler
@@ -23,7 +25,7 @@ fun RouteHandler.getJwks(
                 RSAKey.Builder(keyPair.public as RSAPublicKey).keyUse(KeyUse.SIGNATURE).keyID(keyId).build()
             }
             .map { rsaKey ->
-                JWK(
+                JWKImpl(
                     kty = rsaKey.keyType.toString(),
                     use = rsaKey.keyUse.toString(),
                     kid = rsaKey.keyID,
@@ -32,5 +34,5 @@ fun RouteHandler.getJwks(
                 )
             }
 
-    return JWKs(keys = jwks)
+    return JWKsImpl(keys = jwks)
 }

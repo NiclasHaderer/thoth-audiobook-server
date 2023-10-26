@@ -6,7 +6,7 @@ interface RegisteredUser {
     val admin: Boolean
 }
 
-class RegisteredUserImpl(
+internal data class RegisteredUserImpl(
     override val username: String,
     override val passwordHash: String,
     override val admin: Boolean,
