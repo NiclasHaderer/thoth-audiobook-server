@@ -3,7 +3,6 @@ package io.thoth.auth.models.impl
 import io.thoth.auth.models.JWK
 import io.thoth.auth.models.JWKs
 
-
 internal data class JWKImpl(
     override val kty: String,
     override val use: String,
