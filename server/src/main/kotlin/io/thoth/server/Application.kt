@@ -5,9 +5,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.thoth.openapi.client.kotlin.generateKotlinClient
-import io.thoth.openapi.ktor.OpenApiRouteCollector
 import io.thoth.openapi.ktor.errors.configureStatusPages
-import io.thoth.openapi.client.typescript.TsClientCreator
 import io.thoth.server.api.audioRouting
 import io.thoth.server.api.authRoutes
 import io.thoth.server.api.authorRouting
@@ -36,12 +34,11 @@ import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
 import io.thoth.server.repositories.LibraryRepository
 import io.thoth.server.schedules.ThothSchedules
-import java.io.File
+import java.nio.file.Path
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.slf4j.bridge.SLF4JBridgeHandler
-import java.nio.file.Path
 
 fun main() {
     // Force every library using the standard java logger force it to use SLF4J
@@ -57,12 +54,12 @@ fun main() {
     migrateDatabase(config.database)
     // Start the server
     embeddedServer(
-        Netty,
-        port = 8080,
-        watchPaths = listOf("classes"),
-        host = "0.0.0.0",
-        module = Application::applicationModule,
-    )
+            Netty,
+            port = 8080,
+            watchPaths = listOf("classes"),
+            host = "0.0.0.0",
+            module = Application::applicationModule,
+        )
         .start(wait = true)
 }
 
@@ -70,14 +67,14 @@ fun Application.applicationModule() {
     launch { get<Scheduler>().start() }
     runBlocking {
         launch {
-            val scheduler = get<Scheduler>()
-            val thothSchedules = get<ThothSchedules>()
-            scheduler.register(thothSchedules.scanLibrary)
-            scheduler.schedule(thothSchedules.fullScan)
-            scheduler.schedule(thothSchedules.retrieveMetadata)
-            scheduler.launchScheduledJob(thothSchedules.fullScan)
-            scheduler.launchScheduledJob(thothSchedules.retrieveMetadata)
-        }
+                val scheduler = get<Scheduler>()
+                val thothSchedules = get<ThothSchedules>()
+                scheduler.register(thothSchedules.scanLibrary)
+                scheduler.schedule(thothSchedules.fullScan)
+                scheduler.schedule(thothSchedules.retrieveMetadata)
+                scheduler.launchScheduledJob(thothSchedules.fullScan)
+                scheduler.launchScheduledJob(thothSchedules.retrieveMetadata)
+            }
             .join()
     }
 

@@ -2,7 +2,8 @@ package io.thoth.openapi.common
 
 @RequiresOptIn(
     level = RequiresOptIn.Level.ERROR,
-    message = "This API is internal in openapi generator and should not be used. It could be removed or changed without notice."
+    message =
+        "This API is internal in openapi generator and should not be used. It could be removed or changed without notice."
 )
 @Target(
     AnnotationTarget.CLASS,

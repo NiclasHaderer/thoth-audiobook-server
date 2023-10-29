@@ -8,8 +8,6 @@ interface JWK {
     val e: String
 }
 
-
 interface JWKs {
     val keys: List<JWK>
 }
-

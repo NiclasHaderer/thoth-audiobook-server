@@ -2,7 +2,6 @@ package io.thoth.openapi.client.common
 
 import io.thoth.openapi.ktor.OpenApiRoute
 
-
 abstract class ClientGenerator {
     protected abstract val routes: List<OpenApiRoute>
 
