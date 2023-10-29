@@ -146,7 +146,9 @@ class OpenApiRoute(
         // There are three conditions under which the hierarchy is valid:
         // 1. Every class over params is decorated as @Resource
         paramsClazz.findAnnotation<Resource>()
-            ?: throw IllegalStateException("Class ${paramsClassType.clazz.qualifiedName} is not decorated as a resource")
+            ?: throw IllegalStateException(
+                "Class ${paramsClassType.clazz.qualifiedName} is not decorated as a resource"
+            )
 
         if (paramsClassType.parent == null) return
         val parentClassType = paramsClassType.parent!!

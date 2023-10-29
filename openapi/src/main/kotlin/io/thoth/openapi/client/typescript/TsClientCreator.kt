@@ -1,9 +1,9 @@
 package io.thoth.openapi.client.typescript
 
-import io.thoth.openapi.ktor.OpenApiRoute
-import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.client.typescript.types.TsGenerator
 import io.thoth.openapi.client.typescript.types.generateTypes
+import io.thoth.openapi.ktor.OpenApiRoute
+import io.thoth.openapi.ktor.Summary
 import java.io.File
 import mu.KotlinLogging.logger
 

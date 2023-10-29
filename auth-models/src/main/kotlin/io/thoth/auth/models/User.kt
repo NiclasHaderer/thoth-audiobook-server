@@ -8,7 +8,6 @@ interface ThothUser<ID : Any, PERMISSIONS : ThothUserPermissions> {
     val permissions: PERMISSIONS
 }
 
-
 // The Internal database model of the user, intentionally does not extend from ThothUser, so the
 // internal database
 // user cannot be accidentally leaked by returning it instead of the ThothUser
