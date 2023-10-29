@@ -4,6 +4,7 @@ val kotlinLoggingVersion: String by project
 val openApiVersion: String by project
 val swaggerUiVersion: String by project
 val kotlinVersion: String by project
+val reflectVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -11,8 +12,20 @@ plugins {
     id("maven-publish")
 }
 
+sourceSets{
+    main {
+        resources {
+            srcDirs("src/main/resources")
+        }
+    }
+}
+
 dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
+
+    // TODO remove
+    implementation("org.reflections:reflections:$reflectVersion")
+
 
     // Ktor
     implementation("io.ktor:ktor-server-core:$ktorVersion")

@@ -1,9 +1,11 @@
-package io.thoth.openapi.typescript.types
+package io.thoth.openapi.client.typescript.types
 
 import io.thoth.openapi.common.ClassType
-import kotlin.String
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
 
-class StringTsGenerator : TsGenerator() {
+class DateTsGenerator : TsGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         return "string"
     }
@@ -16,8 +18,9 @@ class StringTsGenerator : TsGenerator() {
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
-            String::class,
-            Char::class,
+            Date::class,
+            LocalDate::class,
+            LocalDateTime::class,
         )
     }
 }

@@ -1,9 +1,9 @@
-package io.thoth.openapi.typescript
+package io.thoth.openapi.client.typescript
 
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.Summary
-import io.thoth.openapi.typescript.types.TsGenerator
-import io.thoth.openapi.typescript.types.generateTypes
+import io.thoth.openapi.client.typescript.types.TsGenerator
+import io.thoth.openapi.client.typescript.types.generateTypes
 import java.io.File
 import mu.KotlinLogging.logger
 
@@ -218,7 +218,7 @@ class TsClientCreator(
         }} from \"./${this.typesFile.nameWithoutExtension}\";\n"
     }
 
-    public fun generateClientFactory(): String {
+    fun generateClientFactory(): String {
         return createTypeImports() +
             createUrlCreator() +
             createRequestMaker() +
@@ -244,7 +244,7 @@ class TsClientCreator(
                 .trimIndent()
     }
 
-    public fun getClientTypes(): String {
+    fun getClientTypes(): String {
         val internalTypes =
             """
             export type ApiError = {
