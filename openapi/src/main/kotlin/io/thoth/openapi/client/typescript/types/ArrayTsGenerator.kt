@@ -1,4 +1,4 @@
-package io.thoth.openapi.typescript.types
+package io.thoth.openapi.client.typescript.types
 
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging
