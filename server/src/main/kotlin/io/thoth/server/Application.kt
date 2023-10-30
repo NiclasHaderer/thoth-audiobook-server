@@ -131,7 +131,7 @@ fun Application.startBackgroundJobs() = runBlocking {
         launch {
             log.info("Generating clients")
             generateTsClient("gen/client/typescript")
-            generateKotlinClient("io.thoth.client", "gen/client/kotlin")
+            generateKotlinClient("io.thoth.client.gen", "client/src/main/kotlin/io/thoth/client/gen")
         }
     }
 
