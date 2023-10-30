@@ -1,14 +1,41 @@
 package io.thoth.openapi.client.common
 
 import io.thoth.openapi.common.ClassType
+import io.thoth.openapi.common.InternalAPI
 
 typealias GenerateType = (classType: ClassType) -> TypeGenerator.Type
 
+@OptIn(InternalAPI::class)
 abstract class TypeGenerator {
-    abstract class Type internal constructor(val name: String, val content: String, val inlineMode: InsertionMode) {
-        fun reference(): String = if (inlineMode == InsertionMode.INLINE) content else name
+    interface Type {
+        @InternalAPI val identifier: String?
+        @InternalAPI val content: String?
+        @InternalAPI val insertionMode: InsertionMode
 
-        override fun toString(): String = content
+        fun reference(): String {
+            return when (insertionMode) {
+                InsertionMode.INLINE -> return content ?: error("Content is null, but insertion mode is INLINE")
+                InsertionMode.REFERENCE -> identifier ?: error("Identifier is null, but insertion mode is REFERENCE")
+            }
+        }
+
+        fun content(): String {
+            return when (insertionMode) {
+                InsertionMode.INLINE -> content ?: error("Content is null, but insertion mode is INLINE")
+                InsertionMode.REFERENCE -> content ?: error("Content is null, but insertion mode is REFERENCE")
+            }
+        }
+    }
+
+    abstract class InlineType(
+        override val content: String,
+    ) : Type {
+        override val insertionMode: InsertionMode = InsertionMode.INLINE
+        override val identifier: String? = null
+    }
+
+    abstract class ReferenceType(override val identifier: String, override val content: String) : Type {
+        override val insertionMode: InsertionMode = InsertionMode.REFERENCE
     }
 
     enum class InsertionMode {
@@ -22,7 +49,7 @@ abstract class TypeGenerator {
 
     abstract fun insertionMode(classType: ClassType): InsertionMode
 
-    abstract fun generateName(classType: ClassType, generateSubType: GenerateType): String
+    abstract fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String?
 
     abstract fun canGenerate(classType: ClassType): Boolean
 

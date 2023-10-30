@@ -1,17 +1,17 @@
-package io.thoth.openapi.client.typescript.types
+package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging.logger
 
-class RecordTsGenerator : TsGenerator() {
+class MapKtGenerator : KtGenerator() {
     private val log = logger {}
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
 
         if (classType.genericArguments.size != 2) {
             log.warn { "Record type without generic arguments" }
-            return "Record<unknown, unknown>"
+            return "Map<*, *>"
         }
 
         val keyClassType = classType.genericArguments[0]
@@ -19,20 +19,20 @@ class RecordTsGenerator : TsGenerator() {
         val valueClassType = classType.genericArguments[1]
         val valueType = generateSubType(valueClassType)
 
-        return "Record<${keyType.reference()} ${
+        val className = classType.simpleName
+
+        return "${className}<${keyType.reference()} ${
             if (keyClassType.isNullable) {
-                " | undefined"
+                "?"
             } else {
                 ""
             }
         }, ${valueType.reference()}>"
     }
 
-    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
-
     override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "Record"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

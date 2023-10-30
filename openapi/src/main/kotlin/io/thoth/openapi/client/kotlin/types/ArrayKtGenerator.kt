@@ -1,30 +1,28 @@
-package io.thoth.openapi.client.typescript.types
+package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging
 
-class ArrayTsGenerator : TsGenerator() {
+class ArrayKtGenerator : KtGenerator() {
     private val log = KotlinLogging.logger {}
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         if (classType.genericArguments.isEmpty()) {
             log.warn { "Array type without generic arguments" }
-            return "unknown[]"
+            return "List<*>"
         }
 
         val genericArg = classType.genericArguments.first()
         val subType = generateSubType(genericArg)
-        return "(${subType.reference()}${
+        return "List<${subType.reference()}>${
             if (genericArg.isNullable) {
-                " | null"
+                "?"
             } else {
                 ""
             }
-        })[]"
+        }"
     }
-
-    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
     override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
