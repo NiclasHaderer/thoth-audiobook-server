@@ -35,7 +35,7 @@ class InterfaceKtGenerator : KtGenerator() {
                     } else {
                         generateSubType(classType.forMember(property)).reference()
                     }
-                } ${
+                }${
                     if (property.returnType.isMarkedNullable) {
                         "?"
                     } else {

@@ -25,7 +25,24 @@ class KotlinClientGenerator(
     }
 
     private fun getParameters(route: OpenApiRoute): String {
-        return ""
+        // Url parameter
+        val urlParams = route.queryParameters + route.pathParameters
+        val paramsStr =
+            urlParams.map { (param) ->
+                val (actual, all) = KtGenerator.generateTypes(param.type)
+                typeDefinitions.putAll(
+                    all.filterIsInstance<KtGenerator.ReferenceType>().associateBy { it.reference() },
+                )
+                "${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}"
+            }.toMutableList()
+
+        // TODO Body parameter
+
+        // TODO Request builder
+
+        paramsStr += listOf("onBeforeRequest: OnBeforeRequest<*, *>")
+
+        return paramsStr.joinToString(", ")
     }
 
     private fun asdf() {

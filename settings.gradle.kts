@@ -6,7 +6,8 @@ include(
     "models",
     "server",
     "auth",
-    "auth-models"
+    "auth-models",
+    "client",
 )
 
 pluginManagement {
