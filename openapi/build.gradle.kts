@@ -12,13 +12,6 @@ plugins {
     id("maven-publish")
 }
 
-sourceSets{
-    main {
-        resources {
-            srcDirs("src/main/resources")
-        }
-    }
-}
 
 dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")

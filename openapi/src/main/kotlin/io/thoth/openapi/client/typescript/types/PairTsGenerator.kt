@@ -1,12 +1,17 @@
 package io.thoth.openapi.client.typescript.types
 
+import io.thoth.openapi.client.common.GenerateType
+import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging
 
 class PairTsGenerator : TsGenerator() {
     private val log = KotlinLogging.logger {}
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: (classType: ClassType) -> TypeGenerator.Type
+    ): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Pari type without insufficient arguments" }
             return "[unknown, unknown]"

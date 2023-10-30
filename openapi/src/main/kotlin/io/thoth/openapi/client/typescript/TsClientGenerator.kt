@@ -1,24 +1,19 @@
 package io.thoth.openapi.client.typescript
 
+import io.thoth.openapi.client.common.ClientGenerator
+import io.thoth.openapi.client.common.ClientPart
+import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.client.typescript.types.TsGenerator
-import io.thoth.openapi.client.typescript.types.generateTypes
 import io.thoth.openapi.ktor.OpenApiRoute
+import io.thoth.openapi.ktor.OpenApiRouteCollector
 import io.thoth.openapi.ktor.Summary
-import java.io.File
+import java.nio.file.Path
 import mu.KotlinLogging.logger
 
-class TsClientCreator(
-    private val routes: List<OpenApiRoute>,
-    private val typesFile: File,
-    private val clientFile: File,
-) {
+class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : ClientGenerator(dist) {
     private val typeDefinitions = mutableMapOf<String, TsGenerator.Type>()
     private val clientFunctions = mutableListOf<String>()
     private val log = logger {}
-
-    init {
-        generateApiClient()
-    }
 
     private companion object {
 
@@ -100,6 +95,10 @@ class TsClientCreator(
         }
     }
 
+    init {
+        generateApiClient()
+    }
+
     private fun getRouteName(route: OpenApiRoute): String? {
         val summary = route.requestParamsType.findAnnotations<Summary>().firstOrNull { it.method == route.method.value }
         val summaryString = summary?.summary ?: return null
@@ -123,21 +122,21 @@ class TsClientCreator(
         val urlParams = route.queryParameters + route.pathParameters
         val urlParamsStr =
             urlParams.map { (param) ->
-                val (actual, all) = generateTypes(param.type)
+                val (actual, all) = TsGenerator.generateTypes(param.type)
                 typeDefinitions.putAll(all.associateBy { it.name })
                 "${param.name}${if (param.optional) "?" else ""}: ${actual.reference()}"
             }
 
         val urlParamsDecompositionStr =
             "{${
-                urlParams.joinToString(", ") {
-                    it.first.name
-                }
-            }}"
+            urlParams.joinToString(", ") {
+                it.first.name
+            }
+        }}"
 
         val bodyParamString =
             if (route.requestBodyType.clazz != Unit::class) {
-                val (actual, all) = generateTypes(route.requestBodyType)
+                val (actual, all) = TsGenerator.generateTypes(route.requestBodyType)
                 typeDefinitions.putAll(all.associateBy { it.name })
                 "body: ${actual.reference()}"
             } else ""
@@ -179,46 +178,41 @@ class TsClientCreator(
                 log.warn("Route ${route.method}:${route.fullPath} has no summary")
                 return@forEach
             }
-            val responseBody = generateTypes(route.responseBodyType).first
+            val responseBody = TsGenerator.generateTypes(route.responseBodyType).first
             val function =
                 """
             $routeName(${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> {
                 const headersImpl = new Headers(headers)
                 defaultHeadersImpl.forEach((value, key) => headersImpl.append(key, value))
                 return __request(${createURL(route)}, "${route.method.value}", "${
-                    responseBody.parser.methodName
-                }", headersImpl, ${
-                    if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"
-                }, [...defaultInterceptors, ...interceptors], 
+                responseBody.parser.methodName
+            }", headersImpl, ${
+                if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"
+            }, [...defaultInterceptors, ...interceptors], 
                 executor,
                 ${
-                    route.secured != null
-                });
+                route.secured != null
+            });
             }
         """
                     .trimIndent()
             clientFunctions.add(function)
 
-            val responseInterfaces = generateTypes(route.responseBodyType)
+            val responseInterfaces = TsGenerator.generateTypes(route.responseBodyType)
             typeDefinitions.putAll(responseInterfaces.second.associateBy { it.name })
         }
     }
 
     private fun createTypeImports(): String {
         return "import type {${
-            typeDefinitions.values
-                .asSequence()
-                .filter { it.inlineMode == TsGenerator.InsertionMode.REFERENCE }
-                .map {
-                    // Replace the generic <> with nothing to not break the import
-                    it.name.replace("<.*>".toRegex(), "")
-                }.distinct()
-                .sorted()
-                .joinToString(", ") + ", ApiResponse, ApiInterceptor, ApiCallData"
-        }} from \"./${this.typesFile.nameWithoutExtension}\";\n"
+            typeDefinitions.values.asSequence().filter { it.inlineMode == TypeGenerator.InsertionMode.REFERENCE }.map {
+                // Replace the generic <> with nothing to not break the import
+                it.name.replace("<.*>".toRegex(), "")
+            }.distinct().sorted().joinToString(", ") + ", ApiResponse, ApiInterceptor, ApiCallData"
+        }} from \"./types\";\n"
     }
 
-    fun generateClientFactory(): String {
+    private fun getClientRequests(): String {
         return createTypeImports() +
             createUrlCreator() +
             createRequestMaker() +
@@ -244,7 +238,7 @@ class TsClientCreator(
                 .trimIndent()
     }
 
-    fun getClientTypes(): String {
+    private fun getClientTypes(): String {
         val internalTypes =
             """
             export type ApiError = {
@@ -273,15 +267,23 @@ class TsClientCreator(
             export type ApiInterceptor = (param: ApiCallData) => ApiCallData | Promise<ApiCallData>
         """
                 .trimIndent() + "\n"
-        val referenceTypes = typeDefinitions.values.filter { it.inlineMode == TsGenerator.InsertionMode.REFERENCE }
+        val referenceTypes = typeDefinitions.values.filter { it.inlineMode == TypeGenerator.InsertionMode.REFERENCE }
         return internalTypes + referenceTypes.joinToString("\n\n") { "export ${it.content}" }
     }
 
-    fun saveTypes() {
-        typesFile.writeText(getClientTypes())
-    }
-
-    fun saveClient() {
-        clientFile.writeText(generateClientFactory())
+    override fun generateClient(): List<ClientPart> {
+        val clientTypes = getClientTypes()
+        val clientRequests = getClientRequests()
+        return listOf(
+            ClientPart("types.ts", clientTypes),
+            ClientPart("api.ts", clientRequests),
+        )
     }
 }
+
+fun generateTsClient(dist: Path, routes: List<OpenApiRoute> = OpenApiRouteCollector.values()) {
+    TsClientGenerator(routes = routes, dist = dist).safeClient()
+}
+
+fun generateTsClient(dist: String, routes: List<OpenApiRoute> = OpenApiRouteCollector.values()) =
+    generateTsClient(Path.of(dist), routes)
