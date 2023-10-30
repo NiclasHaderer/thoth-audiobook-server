@@ -1,12 +1,10 @@
 package io.thoth.openapi.client.kotlin
 
-import io.ktor.client.request.*
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.OpenApiRouteCollector
 import java.nio.file.Path
-import java.util.regex.Pattern
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
 import org.reflections.util.ConfigurationBuilder
@@ -14,12 +12,13 @@ import org.reflections.util.ConfigurationBuilder
 class KotlinClientGenerator(
     override val routes: List<OpenApiRoute>,
     private val packageName: String,
-    private val dist: Path,
-) : ClientGenerator() {
+    dist: Path,
+) : ClientGenerator(dist) {
 
-    private val reflections = Reflections(
-        ConfigurationBuilder().forPackages("io.thoth.openapi.client.kotlin").addScanners(Scanners.Resources),
-    )
+    private val reflections =
+        Reflections(
+            ConfigurationBuilder().forPackages("io.thoth.openapi.client.kotlin").addScanners(Scanners.Resources),
+        )
 
     private val requestRunner: String by lazy {
         object {}.javaClass.getResourceAsStream("/RequestRunner.kt")?.bufferedReader()?.readText()
@@ -28,7 +27,7 @@ class KotlinClientGenerator(
 
     override fun generateClient(): List<ClientPart> {
         val parts = mutableListOf<ClientPart>()
-        parts += ClientPart(path = dist.resolve("RequestRunner.kt"), content = requestRunner)
+        parts += ClientPart(path = "RequestRunner.kt", content = requestRunner)
         return parts
     }
 }
@@ -36,10 +35,18 @@ class KotlinClientGenerator(
 fun generateKotlinClient(
     packageName: String,
     dist: Path,
+    routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
 ) {
     KotlinClientGenerator(
-        routes = OpenApiRouteCollector.values(),
-        packageName = packageName,
-        dist = dist,
-    ).safeClient()
+            routes = routes,
+            packageName = packageName,
+            dist = dist,
+        )
+        .safeClient()
 }
+
+fun generateKotlinClient(
+    packageName: String,
+    dist: String,
+    routes: List<OpenApiRoute> = OpenApiRouteCollector.values()
+) = generateKotlinClient(packageName, Path.of(dist), routes)

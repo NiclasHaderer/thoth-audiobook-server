@@ -1,5 +1,6 @@
 package io.thoth.openapi.client.typescript.types
 
+import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging.logger
 

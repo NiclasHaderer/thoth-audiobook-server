@@ -1,8 +1,9 @@
 package io.thoth.openapi.client.common
 
 import io.thoth.openapi.ktor.OpenApiRoute
+import java.nio.file.Path
 
-abstract class ClientGenerator {
+abstract class ClientGenerator(private val dist: Path) {
     protected abstract val routes: List<OpenApiRoute>
 
     protected abstract fun generateClient(): List<ClientPart>
@@ -10,8 +11,9 @@ abstract class ClientGenerator {
     fun safeClient() {
         val client = generateClient()
         client.forEach {
-            it.path.toFile().parentFile.mkdirs()
-            it.path.toFile().writeText(it.content)
+            val destination = dist.resolve(it.path).toFile()
+            destination.parentFile.mkdirs()
+            destination.writeText(it.content)
         }
     }
 }

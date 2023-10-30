@@ -5,6 +5,7 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.routing.*
 import io.thoth.openapi.client.kotlin.generateKotlinClient
+import io.thoth.openapi.client.typescript.generateTsClient
 import io.thoth.openapi.ktor.errors.configureStatusPages
 import io.thoth.server.api.audioRouting
 import io.thoth.server.api.authRoutes
@@ -34,10 +35,8 @@ import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
 import io.thoth.server.repositories.LibraryRepository
 import io.thoth.server.schedules.ThothSchedules
-import java.nio.file.Path
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 fun main() {
@@ -45,13 +44,6 @@ fun main() {
     LogManager.getLogManager().reset()
     SLF4JBridgeHandler.install()
 
-    // Setup DI with Koin
-    setupDependencyInjection()
-
-    // Connect to database
-    val config = get<ThothConfig>()
-    connectToDatabase(config.database)
-    migrateDatabase(config.database)
     // Start the server
     embeddedServer(
             Netty,
@@ -64,31 +56,22 @@ fun main() {
 }
 
 fun Application.applicationModule() {
-    launch { get<Scheduler>().start() }
-    runBlocking {
-        launch {
-                val scheduler = get<Scheduler>()
-                val thothSchedules = get<ThothSchedules>()
-                scheduler.register(thothSchedules.scanLibrary)
-                scheduler.schedule(thothSchedules.fullScan)
-                scheduler.schedule(thothSchedules.retrieveMetadata)
-                scheduler.launchScheduledJob(thothSchedules.fullScan)
-                scheduler.launchScheduledJob(thothSchedules.retrieveMetadata)
-            }
-            .join()
-    }
+    // Setup DI with Koin
+    setupDependencyInjection()
 
-    launch {
-        val libraryRepository = get<LibraryRepository>()
-        get<FileTreeWatcher>().watch(libraryRepository.allFolders())
-    }
-    server()
+    // Setup routes
+    plugins()
+    routing()
+
+    // Connect to database
+    val config = get<ThothConfig>()
+    connectToDatabase(config.database)
+    migrateDatabase(config.database)
+
+    startBackgroundJobs()
 }
 
-fun Application.server() {
-    val config = get<ThothConfig>()
-
-    // Install plugins
+fun Application.plugins() {
     configureStatusPages()
     configureRouting()
     configureSerialization()
@@ -97,7 +80,9 @@ fun Application.server() {
     configureSockets()
     configureMonitoring()
     configureAuthentication()
+}
 
+fun Application.routing() {
     routing {
         // Authentication
         authRoutes()
@@ -125,20 +110,30 @@ fun Application.server() {
         // Routes for checking if the server is available
         pingRouting()
     }
+}
+
+fun Application.startBackgroundJobs() {
+    launch { get<Scheduler>().start() }
+    launch {
+        val scheduler = get<Scheduler>()
+        val thothSchedules = get<ThothSchedules>()
+        scheduler.register(thothSchedules.scanLibrary)
+        scheduler.schedule(thothSchedules.fullScan)
+        scheduler.schedule(thothSchedules.retrieveMetadata)
+        scheduler.launchScheduledJob(thothSchedules.fullScan)
+        scheduler.launchScheduledJob(thothSchedules.retrieveMetadata)
+    }
+    launch {
+        val libraryRepository = get<LibraryRepository>()
+        get<FileTreeWatcher>().watch(libraryRepository.allFolders())
+    }
+
+    // Generate clients
+    val config = get<ThothConfig>()
     if (!config.production) {
         launch {
-            generateKotlinClient("io.thoth.client", Path.of("gen/client/kotlin"))
-            /*TsClientCreator(
-                    OpenApiRouteCollector.values(),
-                    File("models.ts"),
-                    File("client.ts"),
-                )
-                .also {
-                    it.saveClient()
-                    it.saveTypes()
-
-                }
-            */
+            generateKotlinClient("io.thoth.client", "gen/client/kotlin")
+            generateTsClient("gen/client/typescript")
         }
     }
 }

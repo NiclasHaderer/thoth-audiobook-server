@@ -1,5 +1,6 @@
 package io.thoth.openapi.client.typescript.types
 
+import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.common.ClassType
 
 class AnyTsGenerator : TsGenerator() {
@@ -7,9 +8,7 @@ class AnyTsGenerator : TsGenerator() {
         return "any"
     }
 
-    override fun priority(classType: ClassType): Int {
-        return -1
-    }
+    override fun priority(classType: ClassType): Int = -1
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
