@@ -40,6 +40,7 @@ private constructor(
     val isNullable: Boolean
         get() = type.isMarkedNullable
 
+    @OptIn(InternalAPI::class)
     val parent: ClassType?
         get() {
             // Get the parent class

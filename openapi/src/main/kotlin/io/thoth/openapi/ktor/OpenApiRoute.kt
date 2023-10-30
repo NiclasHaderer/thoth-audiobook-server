@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.resources.*
 import io.ktor.server.routing.*
 import io.thoth.openapi.common.ClassType
+import io.thoth.openapi.common.InternalAPI
 import io.thoth.openapi.common.fullPath
 import io.thoth.openapi.common.optional
 import io.thoth.openapi.common.parent
@@ -72,6 +73,7 @@ class OpenApiRoute(
     val pathParameters by lazy {
         extractAllPathParams(requestParamsType).map { it to generateSchemas(it.type).toNamed() }
     }
+    @OptIn(InternalAPI::class)
     val resourcePath by lazy {
         var resourcePath = ""
         var resourceClass: KClass<*>? = this.requestParamsType.clazz
