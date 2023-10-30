@@ -1,11 +1,11 @@
-package io.thoth.openapi.client.typescript.types
+package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.common.ClassType
 import kotlin.reflect.KClass
 import kotlin.reflect.KTypeParameter
 
-class InterfaceTsGenerator : TsGenerator() {
+class InterfaceKtGenerator : KtGenerator() {
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         val properties = classType.properties
@@ -17,13 +17,7 @@ class InterfaceTsGenerator : TsGenerator() {
 
         val tsProperties =
             properties.map { property ->
-                "${property.name}${
-                    if (property.returnType.isMarkedNullable) {
-                        "?"
-                    } else {
-                        ""
-                    }
-                }: ${
+                "val ${property.name}: ${
                     if (classType.isGenericProperty(property)) {
                         "${property.returnType}"
                     } else if (classType.isParameterizedProperty(property)) {
@@ -41,13 +35,19 @@ class InterfaceTsGenerator : TsGenerator() {
                     } else {
                         generateSubType(classType.forMember(property)).reference()
                     }
-                };"
+                } ${
+                    if (property.returnType.isMarkedNullable) {
+                        "?"
+                    } else {
+                        ""
+                    }
+                }"
             }
 
         val interfaceStart =
             "interface ${generateName(classType, false, generateSubType)} ${
                 if (superClasses.isNotEmpty()) {
-                    "extends ${superClasses.joinToString(", ") { it.reference() }} "
+                    ": ${superClasses.joinToString(", ") { it.reference() }} "
                 } else {
                     ""
                 }
@@ -58,8 +58,6 @@ class InterfaceTsGenerator : TsGenerator() {
 
         return interfaceStart + interfaceContent + interfaceEnd
     }
-
-    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
     override fun insertionMode(classType: ClassType): InsertionMode {
         return InsertionMode.REFERENCE

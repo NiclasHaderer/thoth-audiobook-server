@@ -1,23 +1,26 @@
-package io.thoth.openapi.client.typescript.types
+package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging
 
-class EnumTsGenerator : TsGenerator() {
+class EnumKtGenerator : KtGenerator() {
     private val log = KotlinLogging.logger {}
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         val enumValues = classType.enumValues()
-        if (enumValues?.run { isNotEmpty() } != true) {
+        if (enumValues?.run { !isEmpty() } != true) {
             log.warn { "Enum type without values" }
-            return "unknown"
+            return "Any?"
         }
 
-        return "type ${generateIdentifier(classType, generateSubType)} = ${enumValues.joinToString(" | ") { "'$it'" }}"
+        return """
+            enum class ${classType.simpleName} {
+              ${enumValues.joinToString(separator = ",\n") { "'$it'" }}
+            } 
+            """
+            .trimMargin()
     }
-
-    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
     override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE
 

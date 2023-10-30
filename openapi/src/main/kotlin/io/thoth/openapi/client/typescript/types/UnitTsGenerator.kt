@@ -12,7 +12,7 @@ class UnitTsGenerator : TsGenerator() {
 
     override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE
 
-    override fun generateName(classType: ClassType, generateSubType: GenerateType): String = "Empty"
+    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "Empty"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(Unit::class)

@@ -37,6 +37,7 @@ import io.thoth.server.repositories.LibraryRepository
 import io.thoth.server.schedules.ThothSchedules
 import java.util.logging.LogManager
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 fun main() {
@@ -112,7 +113,7 @@ fun Application.routing() {
     }
 }
 
-fun Application.startBackgroundJobs() {
+fun Application.startBackgroundJobs() = runBlocking {
     launch { get<Scheduler>().start() }
     launch {
         val scheduler = get<Scheduler>()
@@ -123,17 +124,19 @@ fun Application.startBackgroundJobs() {
         scheduler.launchScheduledJob(thothSchedules.fullScan)
         scheduler.launchScheduledJob(thothSchedules.retrieveMetadata)
     }
-    launch {
-        val libraryRepository = get<LibraryRepository>()
-        get<FileTreeWatcher>().watch(libraryRepository.allFolders())
-    }
 
     // Generate clients
     val config = get<ThothConfig>()
     if (!config.production) {
         launch {
-            generateKotlinClient("io.thoth.client", "gen/client/kotlin")
+            log.info("Generating clients")
             generateTsClient("gen/client/typescript")
+            generateKotlinClient("io.thoth.client", "gen/client/kotlin")
         }
+    }
+
+    launch {
+        val libraryRepository = get<LibraryRepository>()
+        get<FileTreeWatcher>().watch(libraryRepository.allFolders())
     }
 }

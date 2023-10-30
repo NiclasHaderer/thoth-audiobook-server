@@ -1,15 +1,13 @@
-package io.thoth.openapi.client.typescript.types
+package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.common.ClassType
 import java.util.*
 
-class UUIDTsGenerator : TsGenerator() {
+class UUIDKtGenerator : KtGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
-        return "type UUID = `\${string}-\${string}-\${string}-\${string}-\${string}`"
+        return "UUID"
     }
-
-    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
     override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE
 

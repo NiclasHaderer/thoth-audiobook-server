@@ -7,8 +7,14 @@ import kotlin.reflect.full.createInstance
 import org.reflections.Reflections
 
 abstract class TsGenerator : TypeGenerator() {
-    class Type(name: String, content: String, inlineMode: InsertionMode, val parser: ParseMethod) :
-        TypeGenerator.Type(name, content, inlineMode)
+    interface Type : TypeGenerator.Type {
+        val parser: ParseMethod
+    }
+
+    class InlineType(content: String, override val parser: ParseMethod) : TypeGenerator.InlineType(content), Type
+
+    class ReferenceType(identifier: String, content: String, override val parser: ParseMethod) :
+        TypeGenerator.ReferenceType(identifier, content), Type
 
     companion object {
         private val tsGenerators: List<TsGenerator> = run {
@@ -40,11 +46,13 @@ abstract class TsGenerator : TypeGenerator() {
     abstract fun parseMethod(classType: ClassType): ParseMethod
 
     override fun createType(classType: ClassType, generateSubType: GenerateType): Type {
-        return Type(
-            name = generateName(classType, generateSubType),
-            content = generateContent(classType, generateSubType),
-            inlineMode = insertionMode(classType),
-            parser = parseMethod(classType),
-        )
+        val identifier = generateIdentifier(classType, generateSubType)
+        val content = generateContent(classType, generateSubType)
+        val insertionMode = insertionMode(classType)
+        val parser = parseMethod(classType)
+        return when (insertionMode) {
+            InsertionMode.INLINE -> InlineType(content, parser)
+            InsertionMode.REFERENCE -> ReferenceType(identifier!!, content, parser)
+        }
     }
 }
