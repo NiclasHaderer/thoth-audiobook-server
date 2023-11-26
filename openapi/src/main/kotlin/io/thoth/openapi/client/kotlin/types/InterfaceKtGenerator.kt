@@ -6,7 +6,6 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KTypeParameter
 
 class InterfaceKtGenerator : KtGenerator() {
-
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         val properties = classType.properties
         val superClasses =
@@ -19,21 +18,14 @@ class InterfaceKtGenerator : KtGenerator() {
             properties.map { property ->
                 "val ${property.name}: ${
                     if (classType.isGenericProperty(property)) {
+                        // type: T
                         "${property.returnType}"
                     } else if (classType.isParameterizedProperty(property)) {
-                        val typeArgs = property.returnType.arguments.map {
-                            val argClassifier = it.type!!.classifier
-                            if (argClassifier is KTypeParameter) {
-                                argClassifier.name
-                            } else {
-                                generateSubType(ClassType.create(it.type!!)).reference()
-                            }
-                        }
                         val parameterizedType = generateSubType(classType.forMember(property))
-
-                        "${parameterizedType.reference()}<${typeArgs.joinToString(", ")}>"
+                        parameterizedType.reference()
                     } else {
-                        generateSubType(classType.forMember(property)).reference()
+                        val subType = generateSubType(classType.forMember(property))
+                        subType.reference()
                     }
                 }${
                     if (property.returnType.isMarkedNullable) {
@@ -95,12 +87,12 @@ class InterfaceKtGenerator : KtGenerator() {
                             }
 
                         "${it.name} ${
-                        if (bounds.isNotEmpty()) {
-                            "extends $bounds"
-                        } else {
-                            ""
-                        }
-                    }"
+                            if (bounds.isNotEmpty()) {
+                                "extends $bounds"
+                            } else {
+                                ""
+                            }
+                        }"
                     }
                 }
                 .trim()

@@ -14,12 +14,9 @@ class EnumKtGenerator : KtGenerator() {
             return "Any?"
         }
 
-        return """
-            enum class ${classType.simpleName} {
-              ${enumValues.joinToString(separator = ",\n") { "'$it'" }}
-            } 
-            """
-            .trimMargin()
+        return "enum class ${classType.simpleName} {\n${
+            enumValues.joinToString(separator = ",\n") { "  $it" }
+        }\n}"
     }
 
     override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE

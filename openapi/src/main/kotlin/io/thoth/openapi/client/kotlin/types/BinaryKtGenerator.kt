@@ -19,6 +19,12 @@ class BinaryKtGenerator : KtGenerator() {
     override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String =
         "ByteArrayInputStream"
 
+    override fun withImports(classType: ClassType): List<String> {
+        return listOf(
+            "import java.io.ByteArrayInputStream",
+        )
+    }
+
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
             BinaryResponse::class,

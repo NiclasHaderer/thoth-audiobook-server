@@ -128,6 +128,7 @@ private constructor(
      * Checks if the property is a generic property with a type parameter, an example would be: interface Something<T> {
      * val hello: T } In this case the property is fully generic, because the type parameter is the complete type, not
      * only a part of it
+     * type: T
      */
     @OptIn(ExperimentalStdlibApi::class)
     fun isGenericProperty(prop: KProperty1<*, *>): Boolean {
@@ -139,7 +140,19 @@ private constructor(
      * val hello: T } This is different from a parameterized property, which is a property with a generic type, an
      * example would be: interface Something<T> { val hello: Map<String, T> } The second example is a parameterized
      * property because it has a generic type (Map<String, T>)
-     *
+     * ```kotlin
+     * if (classType.isParameterizedProperty(property)) {
+     *     val typeArgs = property.returnType.arguments.map {
+     *     val argClassifier = it.type!!.classifier
+     *     if (argClassifier is KTypeParameter) {
+     *         // type: List<T>
+     *         argClassifier.name
+     *     } else {
+     *         // type List<LibraryPermissionsModel>
+     *         generateSubType(ClassType.create(it.type!!)).reference()
+     *     }
+     * }
+     * ```
      * @param prop The property to check
      */
     fun isParameterizedProperty(prop: KProperty1<*, *>) = prop.returnType.arguments.isNotEmpty()
