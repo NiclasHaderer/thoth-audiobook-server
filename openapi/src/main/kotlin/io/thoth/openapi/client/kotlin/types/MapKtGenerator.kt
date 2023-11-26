@@ -8,7 +8,6 @@ class MapKtGenerator : KtGenerator() {
     private val log = logger {}
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
-
         if (classType.genericArguments.size != 2) {
             log.warn { "Record type without generic arguments" }
             return "Map<*, *>"
@@ -33,6 +32,16 @@ class MapKtGenerator : KtGenerator() {
     override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
     override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "Record"
+
+    override fun withImports(classType: ClassType): List<String> {
+        if (classType.genericArguments.size != 2) {
+            return listOf()
+        }
+        return listOf(
+            classType.genericArguments[0].clazz.qualifiedName ?: "",
+            classType.genericArguments[1].clazz.qualifiedName ?: "",
+        ).filter { it.isNotEmpty() }
+    }
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

@@ -13,6 +13,12 @@ class DateKtGenerator : KtGenerator() {
 
     override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "Date"
 
+    override fun withImports(classType: ClassType): List<String> {
+        return listOf(
+            "import java.util.Date",
+        )
+    }
+
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
             Date::class,

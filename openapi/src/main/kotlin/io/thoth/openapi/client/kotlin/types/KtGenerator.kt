@@ -7,19 +7,24 @@ import kotlin.reflect.full.createInstance
 import org.reflections.Reflections
 
 abstract class KtGenerator : TypeGenerator() {
-    interface Type : TypeGenerator.Type
+    interface Type : TypeGenerator.Type{
+        val imports: List<String>
+    }
 
-    class InlineType(content: String) : TypeGenerator.InlineType(content), Type
+    class InlineType(content: String, override val imports: List<String>) : TypeGenerator.InlineType(content), Type
 
-    class ReferenceType(identifier: String, content: String) : TypeGenerator.ReferenceType(identifier, content), Type
+    class ReferenceType(identifier: String, content: String, override val imports: List<String>) : TypeGenerator.ReferenceType(identifier, content), Type
+
+    open fun withImports(classType: ClassType): List<String> = emptyList()
 
     override fun createType(classType: ClassType, generateSubType: GenerateType): Type {
         val content = generateContent(classType, generateSubType)
         val identifier = generateIdentifier(classType, generateSubType)
         val inlineMode = insertionMode(classType)
+        val imports = withImports(classType)
         return when (inlineMode) {
-            InsertionMode.INLINE -> InlineType(content)
-            InsertionMode.REFERENCE -> ReferenceType(identifier!!, content)
+            InsertionMode.INLINE -> InlineType(content, imports)
+            InsertionMode.REFERENCE -> ReferenceType(identifier!!, content, imports)
         }
     }
 

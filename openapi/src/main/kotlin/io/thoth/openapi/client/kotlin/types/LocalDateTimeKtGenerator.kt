@@ -14,6 +14,12 @@ class LocalDateTimeKtGenerator : KtGenerator() {
 
     override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "LocalDateTime"
 
+    override fun withImports(classType: ClassType): List<String> {
+        return listOf(
+            "import java.time.LocalDateTime",
+        )
+    }
+
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
             LocalDateTime::class,

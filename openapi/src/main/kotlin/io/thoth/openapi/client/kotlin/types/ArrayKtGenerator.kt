@@ -15,13 +15,14 @@ class ArrayKtGenerator : KtGenerator() {
 
         val genericArg = classType.genericArguments.first()
         val subType = generateSubType(genericArg)
-        return "List<${subType.reference()}>${
+        val content =  "List<${subType.reference()}${
             if (genericArg.isNullable) {
                 "?"
             } else {
                 ""
             }
-        }"
+        }>"
+        return content
     }
 
     override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
