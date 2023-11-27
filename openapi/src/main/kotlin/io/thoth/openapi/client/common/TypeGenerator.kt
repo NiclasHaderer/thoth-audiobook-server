@@ -8,16 +8,18 @@ typealias GenerateType = (classType: ClassType) -> TypeGenerator.Type
 @OptIn(InternalAPI::class)
 abstract class TypeGenerator {
     interface Type {
-        @InternalAPI val identifier: String?
+        @InternalAPI val identifier: String
         @InternalAPI val content: String?
         @InternalAPI val insertionMode: InsertionMode
 
         fun reference(): String {
             return when (insertionMode) {
                 InsertionMode.INLINE -> return content ?: error("Content is null, but insertion mode is INLINE")
-                InsertionMode.REFERENCE -> identifier ?: error("Identifier is null, but insertion mode is REFERENCE")
+                InsertionMode.REFERENCE -> identifier
             }
         }
+
+        fun identifier(): String = identifier
 
         fun content(): String {
             return when (insertionMode) {
@@ -31,7 +33,7 @@ abstract class TypeGenerator {
         override val content: String,
     ) : Type {
         override val insertionMode: InsertionMode = InsertionMode.INLINE
-        override val identifier: String? = null
+        override val identifier: String = content
     }
 
     abstract class ReferenceType(override val identifier: String, override val content: String) : Type {

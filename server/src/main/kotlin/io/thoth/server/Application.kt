@@ -47,12 +47,12 @@ fun main() {
 
     // Start the server
     embeddedServer(
-            Netty,
-            port = 8080,
-            watchPaths = listOf("classes"),
-            host = "0.0.0.0",
-            module = Application::applicationModule,
-        )
+        Netty,
+        port = 8080,
+        watchPaths = listOf("classes"),
+        host = "0.0.0.0",
+        module = Application::applicationModule,
+    )
         .start(wait = true)
 }
 
@@ -131,7 +131,11 @@ fun Application.startBackgroundJobs() = runBlocking {
         launch {
             log.info("Generating clients")
             generateTsClient("gen/client/typescript")
-            generateKotlinClient("io.thoth.client.gen", "client/src/main/kotlin/io/thoth/client/gen")
+            generateKotlinClient(
+                packageName = "io.thoth.client.gen",
+                dist = "client/src/main/kotlin/io/thoth/client/gen",
+                apiClientName = "ThothClient",
+            )
             log.info("Clients generated")
         }
     }

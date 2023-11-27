@@ -12,16 +12,17 @@ import mu.KotlinLogging.logger
 class KotlinClientGenerator(
     override val routes: List<OpenApiRoute>,
     private val packageName: String,
+    private val apiClientName: String,
     dist: Path,
 ) : ClientGenerator(dist) {
     private val log = logger {}
 
     private val requestRunner: String by lazy { getResourceContent("/RequestRunner.kt") }
     private val clientFunctions = mutableListOf<String>()
-    private val typeDefinitions = mutableMapOf<String, KtGenerator.Type>()
+    private val typeDefinitions = mutableMapOf<String, KtGenerator.ReferenceType>()
 
     init {
-        asdf()
+        initializeValues()
     }
 
     private fun getParameters(route: OpenApiRoute): String {
@@ -52,7 +53,7 @@ class KotlinClientGenerator(
         return paramsStr.joinToString(", ")
     }
 
-    private fun asdf() {
+    private fun initializeValues() {
         routes.forEach { route ->
             val routeName = getRouteName(route)
             if (routeName == null) {
@@ -60,38 +61,42 @@ class KotlinClientGenerator(
                 return@forEach
             }
 
-            val responseBody = KtGenerator.generateTypes(route.responseBodyType).first
-            val function = """
-                fun ${routeName}(${getParameters(route)}): ${responseBody.reference()} {
-                    TODO("Not implemented")
-                }
-                """.trimIndent()
+            val (responseBody, all) = KtGenerator.generateTypes(route.responseBodyType)
+            typeDefinitions.putAll(all.filterIsInstance<KtGenerator.ReferenceType>().associateBy { it.reference() })
+            val function = buildString {
+                append("    open fun ${routeName}(${getParameters(route)}): ${responseBody.reference()} {\n")
+                append("        TODO(\"Not implemented\")")
+                append("\n    }")
+            }
             clientFunctions += function
-
-            val responseTypes =
-                KtGenerator.generateTypes(route.requestBodyType).second.filterIsInstance<KtGenerator.ReferenceType>()
-            typeDefinitions.putAll(responseTypes.associateBy { it.reference() })
         }
     }
 
     override fun generateClient(): List<ClientPart> {
         val parts = mutableListOf<ClientPart>()
         parts += ClientPart(path = "RequestRunner.kt", content = requestRunner)
-        parts += ClientPart(path = "Client.kt", content = clientFunctions.joinToString("\n\n"))
+        parts += ClientPart(
+            path = "${apiClientName}.kt",
+            content = run {
+                clientFunctions.joinToString("\n\n")
+
+                "open class ${apiClientName}(\n" +
+                    "    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n" +
+                    ") : RequestRunner(clientBuilder) {\n" +
+                    "${clientFunctions.joinToString("\n\n")}\n" +
+                    "}"
+            },
+        )
         parts += typeDefinitions.values
-            .filterIsInstance<KtGenerator.ReferenceType>()
             .map {
                 ClientPart(
-                    path = "types/${it.reference()}.kt",
+                    path = "types/${it.identifier()}.kt",
                     content = run {
                         val imports = it.imports.joinToString("\n")
                         val content = it.content()
-                        StringBuilder()
-                            .append("package $packageName.types\n")
-                            .append(imports)
-                            .append("\n\n")
-                            .append(content)
-                            .toString()
+                        "package $packageName.types\n\n" +
+                            "$imports\n\n" +
+                            content
                     },
                 )
             }
@@ -101,6 +106,7 @@ class KotlinClientGenerator(
 
 fun generateKotlinClient(
     packageName: String,
+    apiClientName: String,
     dist: Path,
     routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
 ) {
@@ -108,9 +114,18 @@ fun generateKotlinClient(
         routes = routes,
         packageName = packageName,
         dist = dist,
+        apiClientName = apiClientName,
     ).safeClient()
 }
 
 fun generateKotlinClient(
-    packageName: String, dist: String, routes: List<OpenApiRoute> = OpenApiRouteCollector.values()
-) = generateKotlinClient(packageName, Path.of(dist), routes)
+    packageName: String,
+    apiClientName: String,
+    dist: String,
+    routes: List<OpenApiRoute> = OpenApiRouteCollector.values()
+) = generateKotlinClient(
+    packageName = packageName,
+    dist = Path.of(dist),
+    routes = routes,
+    apiClientName = apiClientName,
+)

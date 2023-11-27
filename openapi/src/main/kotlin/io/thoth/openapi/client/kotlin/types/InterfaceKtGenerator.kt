@@ -77,7 +77,7 @@ class InterfaceKtGenerator : KtGenerator() {
                                     .joinToString(" & ") { bound ->
                                         val clazz = bound.classifier as KClass<*>
                                         if (clazz == Any::class) {
-                                            "NonNullable<any>"
+                                            "Any"
                                         } else {
                                             generateSubType(ClassType.create(bound)).reference()
                                         }
@@ -88,7 +88,7 @@ class InterfaceKtGenerator : KtGenerator() {
 
                         "${it.name} ${
                             if (bounds.isNotEmpty()) {
-                                "extends $bounds"
+                                ": $bounds"
                             } else {
                                 ""
                             }
