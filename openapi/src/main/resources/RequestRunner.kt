@@ -23,7 +23,7 @@ typealias OnBeforeRequest<T, R> = (metadata: RequestMetadata<T, R>, requestBuild
 typealias OnAfterRequest<T, R> = (metadata: RequestMetadata<T, R>, response: HttpResponse) -> Unit
 
 
-class OpenapiHttpResponse<T>(private val delegate: HttpResponse, val typeInfo: TypeInfo) : HttpResponse() {
+class OpenApiHttpResponse<T>(private val delegate: HttpResponse, val typeInfo: TypeInfo) : HttpResponse() {
     override val call: HttpClientCall
         get() = delegate.call
 
@@ -44,7 +44,7 @@ class OpenapiHttpResponse<T>(private val delegate: HttpResponse, val typeInfo: T
         get() = delegate.coroutineContext
 
     @Suppress("UNCHECKED_CAST")
-    suspend inline fun body(): T = call.bodyNullable(typeInfo)!! as T
+    suspend inline fun body(): T = call.body(typeInfo) as T
 }
 
 
@@ -64,13 +64,13 @@ open class RequestRunner(
     }
 
 
-    suspend inline fun <reified T, reified R> makeRequest(metadata: RequestMetadata<T, R>): OpenapiHttpResponse<R> {
+    suspend inline fun <reified T, reified R> makeRequest(metadata: RequestMetadata<T, R>): OpenApiHttpResponse<R> {
         return makeRequest(metadata, typeInfo<T>(), typeInfo<R>())
     }
 
     suspend fun <T, R> makeRequest(
         metadata: RequestMetadata<T, R>, requestBody: TypeInfo, responseBody: TypeInfo
-    ): OpenapiHttpResponse<R> {
+    ): OpenApiHttpResponse<R> {
         val response = client.request(metadata.url) {
             this.method = metadata.method
             metadata.headers.forEach { key, value -> this.headers.appendAll(key, value) }
@@ -79,7 +79,7 @@ open class RequestRunner(
         }
 
         afterRequestHooks.forEach { it(metadata, response) }
-        return OpenapiHttpResponse(response, responseBody)
+        return OpenApiHttpResponse(response, responseBody)
     }
 }
 
