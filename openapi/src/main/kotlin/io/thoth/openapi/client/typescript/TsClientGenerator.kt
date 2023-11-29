@@ -2,7 +2,6 @@ package io.thoth.openapi.client.typescript
 
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
-import io.thoth.openapi.client.typescript.types.TsGenerator
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.common.padLinesStart
 import io.thoth.openapi.ktor.OpenApiRoute
