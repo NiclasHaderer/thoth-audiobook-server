@@ -3,7 +3,6 @@ package io.thoth.server.database.extensions
 import io.thoth.server.di.serialization.Serialization
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
-import org.h2.jdbc.JdbcClob
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.TextColumnType
@@ -21,7 +20,6 @@ class JsonColumnType<T : Any>(
     override fun valueFromDB(value: Any): Any =
         when (value) {
             is String -> serializer.deserializeValue(value, mapperClass)
-            is JdbcClob -> serializer.deserializeValue(value.characterStream, mapperClass)
             else -> value
         }
 
