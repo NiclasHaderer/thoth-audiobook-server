@@ -3,6 +3,8 @@ package io.thoth.openapi.client.typescript
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.client.typescript.types.TsGenerator
+import io.thoth.openapi.common.getResourceContent
+import io.thoth.openapi.common.padLinesStart
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.OpenApiRouteCollector
 import java.nio.file.Path
@@ -12,86 +14,7 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
     private val typeDefinitions = mutableMapOf<String, TsGenerator.Type>()
     private val clientFunctions = mutableListOf<String>()
     private val log = logger {}
-
-    private companion object {
-
-        private fun createUrlCreator(): String {
-            return """
-        type ArrayIsch<T> = T | T[]
-        const __createUrl = (route: string, params: Record<string, ArrayIsch<string | number | boolean | undefined | null>>): string => {
-          const finalUrlParams = new URLSearchParams()
-          for (let [key, value] of Object.entries(params)) {
-            if (Array.isArray(value)) {
-              const newValue = value.filter(i => i !== "" && i !== undefined && i !== null) as (string | number | boolean)[]
-              newValue.forEach(v => finalUrlParams.append(key, v.toString()))
-            } else {
-              if (value !== null && value !== undefined) {
-                finalUrlParams.append(key, value.toString())
-              }
-            }
-          }
-          return finalUrlParams ? `$ {route}?$ {finalUrlParams.toString()}` : route
-        };
-    """
-                .trimIndent()
-                .replace("$ ", "$") + "\n"
-        }
-
-        private fun createRequestMaker(): String {
-            return """
-        const __request = async <T>(
-                route: string, 
-                method: string, 
-                bodyParseMethod: "text" | "json" | "blob", 
-                headers: Headers,
-                body: object | undefined,
-                interceptors: ApiInterceptor[],
-                executor: ApiCallData["executor"],
-                requiresAuth: boolean,
-            ): Promise<ApiResponse<T>> => {
-            if(!headers.has("Content-Type")) {
-                headers.set("Content-Type", "application/json");
-            }
-            let apiCallData: ApiCallData = {
-                route,
-                method, 
-                body, 
-                headers, 
-                bodySerializer: (body?: object) => body ? JSON.stringify(body) : undefined,
-                executor,
-                requiresAuth,
-            };
-            if (interceptors.length > 0) {
-                for (const interceptor of interceptors) {
-                    apiCallData = await interceptor(apiCallData);
-                }
-            }
-                    
-            return apiCallData.executor(apiCallData)
-                .then(async (response) => {
-                    if(!(response instanceof Response)) {
-                        return response;
-                    }
-                
-                    if (response.ok) {
-                        return {
-                            success: true,
-                            body: await response[bodyParseMethod]()
-                        } as const
-                    } else {
-                        return {
-                            success: false,
-                            status: response.status,
-                            error: await response.json().catch(() => response.text()).catch(() => response.statusText)
-                        } as const
-                    }
-                })
-                .catch((error) => ({success: false, error: error?.toString()} as const))
-        };
-        """
-                .trimIndent() + "\n"
-        }
-    }
+    private val requestRunner: String by lazy { getResourceContent("/client.ts") }
 
     init {
         generateApiClient()
@@ -147,7 +70,7 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
             if (route.queryParameters.isEmpty()) {
                 "`$finalPath`"
             } else {
-                "__createUrl(`$finalPath`, {${route.queryParameters.joinToString(", ") { it.first.name }}})"
+                "_createUrl(`$finalPath`, {${route.queryParameters.joinToString(", ") { it.first.name }}})"
             }
         }
     """
@@ -165,21 +88,21 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
             val function =
                 """
             $routeName(${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> {
-                const headersImpl = new Headers(headers)
-                defaultHeadersImpl.forEach((value, key) => headersImpl.append(key, value))
-                return __request(${createURL(route)}, "${route.method.value}", "${
-                    responseBody.parser.methodName
-                }", headersImpl, ${
-                    if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"
-                }, [...defaultInterceptors, ...interceptors], 
-                executor,
-                ${
-                    route.secured != null
-                });
+              const headersImpl = new Headers(headers)
+              defaultHeadersImpl.forEach((value, key) => headersImpl.append(key, value))
+              return _request(${createURL(route)}, "${route.method.value}", "${
+                  responseBody.parser.methodName
+              }", headersImpl, ${
+                  if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"
+              }, [...defaultInterceptors, ...interceptors], 
+              executor,
+              ${
+                  route.secured != null
+              });
             }
         """
                     .trimIndent()
-            clientFunctions.add(function)
+            clientFunctions.add(function.padLinesStart(' ', 4))
 
             val responseInterfaces = TsGenerator.generateTypes(route.responseBodyType)
             typeDefinitions.putAll(
@@ -189,19 +112,19 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
     }
 
     private fun createTypeImports(): String {
-        return "import type {${
+        val modelImports = "import type {${
             typeDefinitions.values.asSequence().filterIsInstance<TsGenerator.ReferenceType>()
                 .map {
                     // Replace the generic <> with nothing to not break the import
                     it.reference().replace("<.*>".toRegex(), "")
-                }.distinct().sorted().joinToString(", ") + ", ApiResponse, ApiInterceptor, ApiCallData"
+                }.distinct().sorted().joinToString(", ")
         }} from \"./types\";\n"
+        val apiImports = "import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl} from \"./client\";\n"
+        return modelImports + apiImports + "\n"
     }
 
     private fun getClientRequests(): String {
         return createTypeImports() +
-            createUrlCreator() +
-            createRequestMaker() +
             """
             export const createApi = (
               defaultHeaders: HeadersInit = {},
@@ -212,11 +135,9 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
               return {
             """
                 .trimIndent() +
-            clientFunctions.joinToString(
-                ",\n",
-            ) {
-                "  $it"
-            } +
+            "\n" +
+            clientFunctions.joinToString(",\n") { it } +
+            "\n" +
             """
               } as const;
             }
@@ -225,42 +146,15 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
     }
 
     private fun getClientTypes(): String {
-        val internalTypes =
-            """
-            export type ApiError = {
-                success: false,
-                error: string | object
-                status?: number
-            }
-            
-            export type ApiSuccess<T> = {
-                success: true,
-                body: T
-            }
-
-            export type ApiResponse<T> = ApiError | ApiSuccess<T>
-            
-            export type ApiCallData = {
-                requiresAuth: boolean,
-                route: string,
-                method: string,
-                body?: object,
-                headers: Headers,
-                bodySerializer: (body?: object) => string | undefined,
-                executor: (callData: ApiCallData) => Promise<Response | ApiResponse<any>>,
-            }
-            
-            export type ApiInterceptor = (param: ApiCallData) => ApiCallData | Promise<ApiCallData>
-        """
-                .trimIndent() + "\n"
         val referenceTypes = typeDefinitions.values.filterIsInstance<TsGenerator.ReferenceType>()
-        return internalTypes + referenceTypes.joinToString("\n\n") { "export ${it.content()}" }
+        return referenceTypes.joinToString("\n\n") { "export ${it.content()}" }
     }
 
     override fun generateClient(): List<ClientPart> {
         val clientTypes = getClientTypes()
         val clientRequests = getClientRequests()
         return listOf(
+            ClientPart("client.ts", requestRunner),
             ClientPart("types.ts", clientTypes),
             ClientPart("api.ts", clientRequests),
         )

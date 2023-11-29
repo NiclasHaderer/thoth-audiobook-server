@@ -27,10 +27,19 @@ class InterfaceTsGenerator : TsGenerator() {
                     if (classType.isGenericProperty(property)) {
                         "${property.returnType}"
                     } else if (classType.isParameterizedProperty(property)) {
+                        val typeArgs = property.returnType.arguments.map {
+                            val argClassifier = it.type!!.classifier
+                            if (argClassifier is KTypeParameter) {
+                                argClassifier.name
+                            } else {
+                                generateSubType(ClassType.create(it.type!!)).reference()
+                            }
+                        }
                         val parameterizedType = generateSubType(classType.forMember(property))
-                        parameterizedType.reference()
+
+                        "${parameterizedType.identifier()}<${typeArgs.joinToString(", ")}>"
                     } else {
-                        generateSubType(classType.forMember(property)).reference()
+                        generateSubType(classType.forMember(property)).identifier()
                     }
                 };"
             }

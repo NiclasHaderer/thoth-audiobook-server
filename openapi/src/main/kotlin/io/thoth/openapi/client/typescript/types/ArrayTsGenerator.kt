@@ -10,25 +10,25 @@ class ArrayTsGenerator : TsGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         if (classType.genericArguments.isEmpty()) {
             log.warn { "Array type without generic arguments" }
-            return "unknown[]"
+            return "Array<unknown>"
         }
 
         val genericArg = classType.genericArguments.first()
         val subType = generateSubType(genericArg)
-        return "(${subType.reference()}${
+        return "Array<${subType.reference()}${
             if (genericArg.isNullable) {
                 " | null"
             } else {
                 ""
             }
-        })[]"
+        }>"
     }
 
     override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
     override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "Array"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
