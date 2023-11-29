@@ -2,6 +2,7 @@ package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.common.TypeGenerator
+import io.thoth.openapi.client.kotlin.KtGenerator
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging
 

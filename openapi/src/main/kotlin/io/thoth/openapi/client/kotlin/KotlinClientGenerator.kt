@@ -2,7 +2,6 @@ package io.thoth.openapi.client.kotlin
 
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
-import io.thoth.openapi.client.kotlin.types.KtGenerator
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.OpenApiRouteCollector

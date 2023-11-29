@@ -1,6 +1,7 @@
 package io.thoth.openapi.client.typescript.types
 
 import io.thoth.openapi.client.common.GenerateType
+import io.thoth.openapi.client.typescript.TsGenerator
 import io.thoth.openapi.common.ClassType
 import java.math.BigDecimal
 import java.math.BigInteger
