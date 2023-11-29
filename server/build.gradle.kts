@@ -4,7 +4,6 @@ val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
 val exposedVersion: String by project
-val h2Version: String by project
 val reflectVersion: String by project
 val sqliteVersion: String by project
 val koinVersion: String by project
@@ -54,7 +53,6 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     // Drivers
     implementation("org.xerial:sqlite-jdbc:$sqliteVersion")
-    implementation("com.h2database:h2:$h2Version")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     // Migration
     implementation("org.reflections:reflections:$reflectVersion")
