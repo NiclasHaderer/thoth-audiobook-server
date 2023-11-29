@@ -3,18 +3,17 @@ package io.thoth.openapi.client.typescript
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.common.ClassType
-import kotlin.reflect.full.createInstance
-import org.reflections.Reflections
 
 abstract class TsGenerator : TypeGenerator<TsGenerator.Type>() {
     interface Type : TypeGenerator.Type {
         val parser: ParseMethod
     }
 
-    class InlineType(content: String, override val parser: ParseMethod) : TypeGenerator.InlineType(content), Type
+    class InlineType(content: String, override val parser: ParseMethod) :
+        TypeGenerator.InlineType(content = content), Type
 
-    class ReferenceType(identifier: String, content: String, override val parser: ParseMethod) :
-        TypeGenerator.ReferenceType(identifier, content), Type
+    class ReferenceType(reference: String, content: String, name: String, override val parser: ParseMethod) :
+        TypeGenerator.ReferenceType(reference, content, name), Type
 
     companion object : Provider<Type, TsGenerator>(
         TsGenerator::class,
@@ -27,16 +26,26 @@ abstract class TsGenerator : TypeGenerator<TsGenerator.Type>() {
         TEXT("text"),
     }
 
-    abstract fun parseMethod(classType: ClassType): ParseMethod
+    abstract fun getParsingMethod(classType: ClassType): ParseMethod
 
     override fun createType(classType: ClassType, generateSubType: GenerateType): Type {
-        val identifier = generateIdentifier(classType, generateSubType)
+        val reference = generateReference(classType, generateSubType)
         val content = generateContent(classType, generateSubType)
-        val insertionMode = insertionMode(classType)
-        val parser = parseMethod(classType)
+        val insertionMode = getInsertionMode(classType)
+        val parser = getParsingMethod(classType)
+        val name = getName(classType)
         return when (insertionMode) {
-            InsertionMode.INLINE -> InlineType(content, parser)
-            InsertionMode.REFERENCE -> ReferenceType(identifier!!, content, parser)
+            DataType.PRIMITIVE -> {
+                require(reference == null) { "Reference must be null for primitive types" }
+                require(name == null) { "Name must be null for primitive types" }
+                InlineType(content = content, parser)
+            }
+
+            DataType.COMPLEX -> {
+                require(reference != null) { "Reference must not be null for complex types" }
+                require(name != null) { "Name must not be null for complex types" }
+                ReferenceType(reference = reference, content = content, name = name, parser = parser)
+            }
         }
     }
 }

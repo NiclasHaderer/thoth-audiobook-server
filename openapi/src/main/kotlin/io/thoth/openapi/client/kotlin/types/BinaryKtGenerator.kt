@@ -15,9 +15,9 @@ class BinaryKtGenerator : KtGenerator() {
         return "ByteArrayInputStream"
     }
 
-    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
+    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String =
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String =
         "ByteArrayInputStream"
 
     override fun withImports(classType: ClassType): List<String> {

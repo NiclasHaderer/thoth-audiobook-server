@@ -20,9 +20,9 @@ class EnumKtGenerator : KtGenerator() {
         }\n}"
     }
 
-    override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE
+    override fun getInsertionMode(classType: ClassType) = DataType.COMPLEX
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = classType.simpleName
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = classType.simpleName
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isEnum()

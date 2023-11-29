@@ -10,9 +10,9 @@ class DateKtGenerator : KtGenerator() {
         return "Date"
     }
 
-    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
+    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "Date"
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "Date"
 
     override fun withImports(classType: ClassType): List<String> {
         return listOf(

@@ -51,8 +51,8 @@ class InterfaceKtGenerator : KtGenerator() {
         return interfaceStart + interfaceContent + interfaceEnd
     }
 
-    override fun insertionMode(classType: ClassType): InsertionMode {
-        return InsertionMode.REFERENCE
+    override fun getInsertionMode(classType: ClassType): DataType {
+        return DataType.COMPLEX
     }
 
     private fun generateName(classType: ClassType, resolveGeneric: Boolean, generateSubType: GenerateType): String {
@@ -106,7 +106,7 @@ class InterfaceKtGenerator : KtGenerator() {
         }"
     }
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String {
         return generateName(classType, true, generateSubType)
     }
 

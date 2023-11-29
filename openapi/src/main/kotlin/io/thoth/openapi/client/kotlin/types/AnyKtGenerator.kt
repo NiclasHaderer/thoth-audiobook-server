@@ -11,9 +11,9 @@ class AnyKtGenerator : KtGenerator() {
 
     override fun priority(classType: ClassType): Int = -1
 
-    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
+    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "Any"
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "Any"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.clazz == Any::class

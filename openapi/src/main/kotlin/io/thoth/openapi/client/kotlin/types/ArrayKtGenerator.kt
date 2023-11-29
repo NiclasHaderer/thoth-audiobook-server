@@ -26,9 +26,9 @@ class ArrayKtGenerator : KtGenerator() {
         return content
     }
 
-    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
+    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

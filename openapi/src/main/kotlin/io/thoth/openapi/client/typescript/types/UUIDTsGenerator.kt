@@ -10,11 +10,12 @@ class UUIDTsGenerator : TsGenerator() {
         return "type UUID = `\${string}-\${string}-\${string}-\${string}-\${string}`"
     }
 
-    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
+    override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
-    override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE
+    override fun getInsertionMode(classType: ClassType) = DataType.COMPLEX
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "UUID"
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "UUID"
+    override fun getName(classType: ClassType): String = "UUID"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(UUID::class)
