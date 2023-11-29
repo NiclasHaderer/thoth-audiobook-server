@@ -9,12 +9,12 @@ class UnitTsGenerator : TsGenerator() {
         return """type Empty = "" """
     }
 
-    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
+    override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
-    override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE
+    override fun getInsertionMode(classType: ClassType) = DataType.COMPLEX
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "Empty"
-
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "Empty"
+    override fun getName(classType: ClassType): String? = null
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(Unit::class)
     }

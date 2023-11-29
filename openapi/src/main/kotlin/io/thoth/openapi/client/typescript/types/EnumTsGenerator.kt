@@ -15,14 +15,16 @@ class EnumTsGenerator : TsGenerator() {
             return "unknown"
         }
 
-        return "type ${generateIdentifier(classType, generateSubType)} = ${enumValues.joinToString(" | ") { "'$it'" }}"
+        return "type ${generateReference(classType, generateSubType)} = ${enumValues.joinToString(" | ") { "'$it'" }}"
     }
 
-    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
+    override fun getName(classType: ClassType): String = classType.simpleName
 
-    override fun insertionMode(classType: ClassType) = InsertionMode.REFERENCE
+    override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = classType.simpleName
+    override fun getInsertionMode(classType: ClassType) = DataType.COMPLEX
+
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = classType.simpleName
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isEnum()

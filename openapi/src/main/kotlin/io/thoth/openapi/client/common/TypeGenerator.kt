@@ -1,6 +1,5 @@
 package io.thoth.openapi.client.common
 
-import io.thoth.openapi.client.typescript.TsGenerator
 import io.thoth.openapi.common.ClassType
 import io.thoth.openapi.common.InternalAPI
 import org.reflections.Reflections
@@ -12,7 +11,7 @@ typealias GenerateType = (classType: ClassType) -> TypeGenerator.Type
 @OptIn(InternalAPI::class)
 abstract class TypeGenerator<T : TypeGenerator.Type> {
 
-    abstract class Provider<T: Type, G : TypeGenerator<T>>(
+    abstract class Provider<T : Type, G : TypeGenerator<T>>(
         private val clazz: KClass<G>,
         private val paths: List<String>,
     ) {
@@ -38,56 +37,65 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
 
     interface Type {
         @InternalAPI
-        val identifier: String
+        val reference: String?
 
         @InternalAPI
-        val content: String?
+        val name: String
 
         @InternalAPI
-        val insertionMode: InsertionMode
+        val content: String
+
+        @InternalAPI
+        val dataType: DataType
 
         fun reference(): String {
-            return when (insertionMode) {
-                InsertionMode.INLINE -> return content ?: error("Content is null, but insertion mode is INLINE")
-                InsertionMode.REFERENCE -> identifier
+            return when (dataType) {
+                DataType.PRIMITIVE -> content
+                DataType.COMPLEX -> reference ?: "Reference not found for complex type"
             }
         }
 
-        fun identifier(): String = identifier
-
-        fun content(): String {
-            return when (insertionMode) {
-                InsertionMode.INLINE -> content ?: error("Content is null, but insertion mode is INLINE")
-                InsertionMode.REFERENCE -> content ?: error("Content is null, but insertion mode is REFERENCE")
-            }
-        }
+        fun name(): String = name
     }
 
     abstract class InlineType(
         final override val content: String,
     ) : Type {
-        override val insertionMode: InsertionMode = InsertionMode.INLINE
-        override val identifier: String = content
+        override val dataType: DataType = DataType.PRIMITIVE
+        override val reference: String = content
+        override val name: String = content
     }
 
-    abstract class ReferenceType(override val identifier: String, override val content: String) : Type {
-        override val insertionMode: InsertionMode = InsertionMode.REFERENCE
+    abstract class ReferenceType(
+        override val reference: String,
+        override val content: String,
+        override val name: String
+    ) : Type {
+        override val dataType: DataType = DataType.COMPLEX
+        fun content(): String {
+            return when (dataType) {
+                DataType.PRIMITIVE -> content
+                DataType.COMPLEX -> content
+            }
+        }
     }
 
-    enum class InsertionMode {
-        INLINE,
-        REFERENCE,
+    enum class DataType {
+        PRIMITIVE,
+        COMPLEX,
     }
 
     abstract fun generateContent(classType: ClassType, generateSubType: GenerateType): String
 
     abstract fun createType(classType: ClassType, generateSubType: GenerateType): T
 
-    abstract fun insertionMode(classType: ClassType): InsertionMode
+    abstract fun getInsertionMode(classType: ClassType): DataType
 
-    abstract fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String?
+    abstract fun generateReference(classType: ClassType, generateSubType: GenerateType): String?
 
     abstract fun canGenerate(classType: ClassType): Boolean
+
+    abstract fun getName(classType: ClassType): String?
 
     open fun priority(classType: ClassType): Int = 0
 }

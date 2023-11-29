@@ -38,9 +38,9 @@ class PairKtGenerator : KtGenerator() {
         }>"
     }
 
-    override fun insertionMode(classType: ClassType) = InsertionMode.INLINE
+    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String = "Pair"
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "Pair"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

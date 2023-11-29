@@ -38,9 +38,9 @@ class InterfaceTsGenerator : TsGenerator() {
                         }
                         val parameterizedType = generateSubType(classType.forMember(property))
 
-                        "${parameterizedType.identifier()}<${typeArgs.joinToString(", ")}>"
+                        "${parameterizedType.name()}<${typeArgs.joinToString(", ")}>"
                     } else {
-                        generateSubType(classType.forMember(property)).identifier()
+                        generateSubType(classType.forMember(property)).reference()
                     }
                 };"
             }
@@ -60,10 +60,10 @@ class InterfaceTsGenerator : TsGenerator() {
         return interfaceStart + interfaceContent + interfaceEnd
     }
 
-    override fun parseMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
+    override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 
-    override fun insertionMode(classType: ClassType): InsertionMode {
-        return InsertionMode.REFERENCE
+    override fun getInsertionMode(classType: ClassType): DataType {
+        return DataType.COMPLEX
     }
 
     private fun generateName(classType: ClassType, resolveGeneric: Boolean, generateSubType: GenerateType): String {
@@ -117,9 +117,11 @@ class InterfaceTsGenerator : TsGenerator() {
         }"
     }
 
-    override fun generateIdentifier(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String {
         return generateName(classType, true, generateSubType)
     }
+
+    override fun getName(classType: ClassType): String = classType.simpleName
 
     override fun priority(classType: ClassType): Int = -10
 
