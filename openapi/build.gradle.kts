@@ -16,9 +16,8 @@ plugins {
 dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
 
-    // TODO remove
+    // Get type generators
     implementation("org.reflections:reflections:$reflectVersion")
-
 
     // Ktor
     implementation("io.ktor:ktor-server-core:$ktorVersion")

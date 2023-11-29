@@ -81,4 +81,3 @@ dataSources
 .idea/dataSources.local.xml
 .idea/dataSources.xml
 *.sqlite
-*.ts

@@ -30,7 +30,7 @@ abstract class TypeGenerator {
     }
 
     abstract class InlineType(
-        override val content: String,
+        final override val content: String,
     ) : Type {
         override val insertionMode: InsertionMode = InsertionMode.INLINE
         override val identifier: String = content
