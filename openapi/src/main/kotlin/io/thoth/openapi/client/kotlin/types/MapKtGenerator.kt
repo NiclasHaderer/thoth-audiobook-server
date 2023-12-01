@@ -30,13 +30,13 @@ class MapKtGenerator : KtGenerator() {
         }, ${valueType.reference()}>"
     }
 
-    override fun getName(classType: ClassType): String? = null
+    override fun getName(classType: ClassType): String = "Map"
 
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 
-    override fun withImports(classType: ClassType): List<String> {
+    override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
         if (classType.genericArguments.size != 2) {
             return listOf()
         }

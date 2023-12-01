@@ -29,7 +29,7 @@ class ArrayKtGenerator : KtGenerator() {
 
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
-    override fun getName(classType: ClassType): String? = null
+    override fun getName(classType: ClassType): String = "List"
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 

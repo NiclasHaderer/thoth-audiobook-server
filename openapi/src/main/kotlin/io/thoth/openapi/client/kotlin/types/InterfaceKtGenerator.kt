@@ -4,6 +4,7 @@ import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.kotlin.KtGenerator
 import io.thoth.openapi.common.ClassType
 import kotlin.reflect.KClass
+import kotlin.reflect.KTypeParameter
 
 class InterfaceKtGenerator : KtGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
@@ -14,18 +15,25 @@ class InterfaceKtGenerator : KtGenerator() {
                 .filterNot { it.clazz == Enum::class }
                 .map { generateSubType(it) }
 
-        val tsProperties =
+        val ktProperties =
             properties.map { property ->
                 "val ${property.name}: ${
                     if (classType.isGenericProperty(property)) {
-                        // type: T
                         "${property.returnType}"
                     } else if (classType.isParameterizedProperty(property)) {
+                        val typeArgs = property.returnType.arguments.map {
+                            val argClassifier = it.type!!.classifier
+                            if (argClassifier is KTypeParameter) {
+                                argClassifier.name
+                            } else {
+                                generateSubType(ClassType.create(it.type!!)).reference()
+                            }
+                        }
                         val parameterizedType = generateSubType(classType.forMember(property))
-                        parameterizedType.reference()
+
+                        "${parameterizedType.name()}<${typeArgs.joinToString(", ")}>"
                     } else {
-                        val subType = generateSubType(classType.forMember(property))
-                        subType.reference()
+                        generateSubType(classType.forMember(property)).reference()
                     }
                 }${
                     if (property.returnType.isMarkedNullable) {
@@ -45,7 +53,7 @@ class InterfaceKtGenerator : KtGenerator() {
                 }
             } {\n"
 
-        val interfaceContent = tsProperties.joinToString("\n") { "  $it" }
+        val interfaceContent = ktProperties.joinToString("\n") { "  $it" }
         val interfaceEnd = "\n}"
 
         return interfaceStart + interfaceContent + interfaceEnd
@@ -76,13 +84,8 @@ class InterfaceKtGenerator : KtGenerator() {
                                         val clazz = bound.classifier as KClass<*>
                                         (clazz == Any::class && bound.isMarkedNullable).not()
                                     }
-                                    .joinToString(" & ") { bound ->
-                                        val clazz = bound.classifier as KClass<*>
-                                        if (clazz == Any::class) {
-                                            "Any"
-                                        } else {
-                                            generateSubType(ClassType.create(bound)).reference()
-                                        }
+                                    .joinToString(", ") { bound ->
+                                        generateSubType(ClassType.create(bound)).reference()
                                     }
                             } else {
                                 ""
@@ -106,6 +109,13 @@ class InterfaceKtGenerator : KtGenerator() {
                 ""
             }
         }"
+    }
+
+    override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
+        return classType.properties.flatMap {
+            val type = generateSubType(classType.forMember(it)) as Type
+            type.imports
+        }.distinct()
     }
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String {

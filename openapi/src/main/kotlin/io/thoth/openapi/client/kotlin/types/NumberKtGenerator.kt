@@ -18,16 +18,16 @@ class NumberKtGenerator : KtGenerator() {
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
             Number::class,
-            // Int::class,
-            // Long::class,
-            // Double::class,
-            // Float::class,
-            // Short::class,
-            // Byte::class,
-            // UInt::class,
-            // ULong::class,
-            // UShort::class,
-            // UByte::class,
+            Int::class,
+            Long::class,
+            Double::class,
+            Float::class,
+            Short::class,
+            Byte::class,
+            UInt::class,
+            ULong::class,
+            UShort::class,
+            UByte::class,
         )
     }
 }

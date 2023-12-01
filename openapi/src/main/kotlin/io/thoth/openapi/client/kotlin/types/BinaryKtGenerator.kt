@@ -21,7 +21,7 @@ class BinaryKtGenerator : KtGenerator() {
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 
-    override fun withImports(classType: ClassType): List<String> {
+    override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
         return listOf(
             "import java.io.ByteArrayInputStream",
         )
