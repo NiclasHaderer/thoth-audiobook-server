@@ -16,7 +16,8 @@ class ArrayKtGenerator : KtGenerator() {
 
         val genericArg = classType.genericArguments.first()
         val subType = generateSubType(genericArg)
-        val content =  "List<${subType.reference()}${
+        val content =
+            "List<${subType.reference()}${
             if (genericArg.isNullable) {
                 "?"
             } else {
@@ -27,6 +28,8 @@ class ArrayKtGenerator : KtGenerator() {
     }
 
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
+
+    override fun getName(classType: ClassType): String? = null
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 

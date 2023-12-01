@@ -14,7 +14,9 @@ class UnitTsGenerator : TsGenerator() {
     override fun getInsertionMode(classType: ClassType) = DataType.COMPLEX
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "Empty"
-    override fun getName(classType: ClassType): String? = null
+
+    override fun getName(classType: ClassType): String = "Empty"
+
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(Unit::class)
     }

@@ -51,6 +51,8 @@ class InterfaceKtGenerator : KtGenerator() {
         return interfaceStart + interfaceContent + interfaceEnd
     }
 
+    override fun getName(classType: ClassType): String = classType.simpleName
+
     override fun getInsertionMode(classType: ClassType): DataType {
         return DataType.COMPLEX
     }

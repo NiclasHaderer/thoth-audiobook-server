@@ -30,18 +30,21 @@ class MapKtGenerator : KtGenerator() {
         }, ${valueType.reference()}>"
     }
 
+    override fun getName(classType: ClassType): String? = null
+
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "Record"
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 
     override fun withImports(classType: ClassType): List<String> {
         if (classType.genericArguments.size != 2) {
             return listOf()
         }
         return listOf(
-            classType.genericArguments[0].clazz.qualifiedName ?: "",
-            classType.genericArguments[1].clazz.qualifiedName ?: "",
-        ).filter { it.isNotEmpty() }
+                classType.genericArguments[0].clazz.qualifiedName ?: "",
+                classType.genericArguments[1].clazz.qualifiedName ?: "",
+            )
+            .filter { it.isNotEmpty() }
     }
 
     override fun canGenerate(classType: ClassType): Boolean {

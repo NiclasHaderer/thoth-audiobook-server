@@ -10,10 +10,11 @@ import java.nio.file.Path
 import mu.KotlinLogging.logger
 
 class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : ClientGenerator(dist) {
+    private val log = logger {}
     private val typeDefinitions = mutableMapOf<String, TsGenerator.Type>()
     private val clientFunctions = mutableListOf<String>()
-    private val log = logger {}
     private val requestRunner: String by lazy { getResourceContent("/client.ts") }
+    private val utilityTypes by lazy { getResourceContent("/utility-types.ts") }
 
     init {
         generateApiClient()
@@ -90,14 +91,14 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
               const headersImpl = new Headers(headers)
               defaultHeadersImpl.forEach((value, key) => headersImpl.append(key, value))
               return _request(${createURL(route)}, "${route.method.value}", "${
-                  responseBody.parser.methodName
-              }", headersImpl, ${
-                  if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"
-              }, [...defaultInterceptors, ...interceptors], 
+                    responseBody.parser.methodName
+                }", headersImpl, ${
+                    if (route.requestBodyType.clazz != Unit::class) "body" else "undefined"
+                }, [...defaultInterceptors, ...interceptors], 
               executor,
               ${
-                  route.secured != null
-              });
+                    route.secured != null
+                });
             }
         """
                     .trimIndent()
@@ -111,19 +112,22 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
     }
 
     private fun createTypeImports(): String {
-        val modelImports = "import type {${
+        val modelImports =
+            "import type {${
             typeDefinitions.values.asSequence().filterIsInstance<TsGenerator.ReferenceType>()
                 .map {
                     // Replace the generic <> with nothing to not break the import
                     it.reference().replace("<.*>".toRegex(), "")
                 }.distinct().sorted().joinToString(", ")
-        }} from \"./types\";\n"
+        }} from \"./models\";\n"
         val apiImports = "import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl} from \"./client\";\n"
         return modelImports + apiImports + "\n"
     }
 
     private fun getClientRequests(): String {
-        return createTypeImports() +
+
+        return "// noinspection JSUnusedGlobalSymbols,ES6UnusedImports\n" +
+            createTypeImports() +
             """
             export const createApi = (
               defaultHeaders: HeadersInit = {},
@@ -146,7 +150,8 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
 
     private fun getClientTypes(): String {
         val referenceTypes = typeDefinitions.values.filterIsInstance<TsGenerator.ReferenceType>()
-        return referenceTypes.joinToString("\n\n") { "export ${it.content()}" }
+        return "import type { Pair } from \"./utility-types\";\n" +
+            referenceTypes.joinToString("\n\n") { "export ${it.content()}" }
     }
 
     override fun generateClient(): List<ClientPart> {
@@ -154,7 +159,8 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
         val clientRequests = getClientRequests()
         return listOf(
             ClientPart("client.ts", requestRunner),
-            ClientPart("types.ts", clientTypes),
+            ClientPart("utility-types.ts", utilityTypes),
+            ClientPart("models.ts", clientTypes),
             ClientPart("api.ts", clientRequests),
         )
     }

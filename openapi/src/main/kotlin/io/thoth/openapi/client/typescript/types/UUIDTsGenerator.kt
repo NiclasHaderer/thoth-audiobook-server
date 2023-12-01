@@ -15,6 +15,7 @@ class UUIDTsGenerator : TsGenerator() {
     override fun getInsertionMode(classType: ClassType) = DataType.COMPLEX
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "UUID"
+
     override fun getName(classType: ClassType): String = "UUID"
 
     override fun canGenerate(classType: ClassType): Boolean {

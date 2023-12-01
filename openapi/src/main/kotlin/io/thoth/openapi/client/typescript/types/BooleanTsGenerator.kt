@@ -6,7 +6,8 @@ import io.thoth.openapi.common.ClassType
 
 class BooleanTsGenerator : TsGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String = "boolean"
-    override fun getName(classType: ClassType): String ? = null
+
+    override fun getName(classType: ClassType): String? = null
 
     override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
 

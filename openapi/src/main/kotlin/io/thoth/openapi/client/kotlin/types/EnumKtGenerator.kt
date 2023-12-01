@@ -20,6 +20,8 @@ class EnumKtGenerator : KtGenerator() {
         }\n}"
     }
 
+    override fun getName(classType: ClassType): String = classType.simpleName
+
     override fun getInsertionMode(classType: ClassType) = DataType.COMPLEX
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = classType.simpleName

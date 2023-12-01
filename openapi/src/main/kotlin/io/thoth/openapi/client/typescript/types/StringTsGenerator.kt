@@ -15,7 +15,9 @@ class StringTsGenerator : TsGenerator() {
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
+
     override fun getName(classType: ClassType): String? = null
+
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
             String::class,

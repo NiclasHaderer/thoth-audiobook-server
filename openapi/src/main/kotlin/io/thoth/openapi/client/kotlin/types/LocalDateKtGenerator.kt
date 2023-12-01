@@ -10,9 +10,11 @@ class LocalDateKtGenerator : KtGenerator() {
         return "LocalDate"
     }
 
+    override fun getName(classType: ClassType): String? = null
+
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "LocalDate"
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 
     override fun withImports(classType: ClassType): List<String> {
         return listOf(
