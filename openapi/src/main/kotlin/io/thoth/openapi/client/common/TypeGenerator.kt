@@ -2,9 +2,9 @@ package io.thoth.openapi.client.common
 
 import io.thoth.openapi.common.ClassType
 import io.thoth.openapi.common.InternalAPI
-import org.reflections.Reflections
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
+import org.reflections.Reflections
 
 typealias GenerateType = (classType: ClassType) -> TypeGenerator.Type
 
@@ -16,9 +16,9 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
         private val paths: List<String>,
     ) {
         private val tsGenerators: List<G> = run {
-            paths.map { Reflections(it) }.flatMap { ref ->
-                ref.getSubTypesOf(clazz.java).map { it.kotlin.createInstance() }.toList()
-            }
+            paths
+                .map { Reflections(it) }
+                .flatMap { ref -> ref.getSubTypesOf(clazz.java).map { it.kotlin.createInstance() }.toList() }
         }
 
         fun generateTypes(classType: ClassType): Pair<T, List<T>> {
@@ -36,17 +36,13 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
     }
 
     interface Type {
-        @InternalAPI
-        val reference: String?
+        @InternalAPI val reference: String?
 
-        @InternalAPI
-        val name: String
+        @InternalAPI val name: String
 
-        @InternalAPI
-        val content: String
+        @InternalAPI val content: String
 
-        @InternalAPI
-        val dataType: DataType
+        @InternalAPI val dataType: DataType
 
         fun reference(): String {
             return when (dataType) {
@@ -58,12 +54,9 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
         fun name(): String = name
     }
 
-    abstract class InlineType(
-        final override val content: String,
-    ) : Type {
+    abstract class InlineType(final override val content: String, override val name: String) : Type {
         override val dataType: DataType = DataType.PRIMITIVE
         override val reference: String = content
-        override val name: String = content
     }
 
     abstract class ReferenceType(
@@ -72,12 +65,8 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
         override val name: String
     ) : Type {
         override val dataType: DataType = DataType.COMPLEX
-        fun content(): String {
-            return when (dataType) {
-                DataType.PRIMITIVE -> content
-                DataType.COMPLEX -> content
-            }
-        }
+
+        fun content(): String = content
     }
 
     enum class DataType {

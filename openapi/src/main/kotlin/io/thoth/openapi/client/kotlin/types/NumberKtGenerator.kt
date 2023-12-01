@@ -9,9 +9,11 @@ class NumberKtGenerator : KtGenerator() {
         return classType.simpleName
     }
 
+    override fun getName(classType: ClassType): String? = null
+
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "Number"
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

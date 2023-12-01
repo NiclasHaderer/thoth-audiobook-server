@@ -27,13 +27,16 @@ class KotlinClientGenerator(
     private fun getParameters(route: OpenApiRoute): String {
         // Url parameter
         val urlParams = route.queryParameters + route.pathParameters
-        val paramsStr = urlParams.map { (param) ->
-            val (actual, all) = KtGenerator.generateTypes(param.type)
-            typeDefinitions.putAll(
-                all.filterIsInstance<KtGenerator.ReferenceType>().associateBy { it.reference() },
-            )
-            "${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}"
-        }.toMutableList()
+        val paramsStr =
+            urlParams
+                .map { (param) ->
+                    val (actual, all) = KtGenerator.generateTypes(param.type)
+                    typeDefinitions.putAll(
+                        all.filterIsInstance<KtGenerator.ReferenceType>().associateBy { it.reference() },
+                    )
+                    "${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}"
+                }
+                .toMutableList()
 
         // Body
         if (route.requestBodyType.clazz != Unit::class) {
@@ -74,29 +77,30 @@ class KotlinClientGenerator(
     override fun generateClient(): List<ClientPart> {
         val parts = mutableListOf<ClientPart>()
         parts += ClientPart(path = "RequestRunner.kt", content = requestRunner)
-        parts += ClientPart(
-            path = "${apiClientName}.kt",
-            content = run {
-                clientFunctions.joinToString("\n\n")
+        parts +=
+            ClientPart(
+                path = "${apiClientName}.kt",
+                content =
+                    run {
+                        clientFunctions.joinToString("\n\n")
 
-                "open class ${apiClientName}(\n" +
-                    "    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n" +
-                    ") : RequestRunner(clientBuilder) {\n" +
-                    "${clientFunctions.joinToString("\n\n")}\n" +
-                    "}"
-            },
-        )
-        parts += typeDefinitions.values
-            .map {
-                ClientPart(
-                    path = "types/${it.identifier()}.kt",
-                    content = run {
-                        val imports = it.imports.joinToString("\n")
-                        val content = it.content()
-                        "package $packageName.types\n\n" +
-                            "$imports\n\n" +
-                            content
+                        "open class ${apiClientName}(\n" +
+                            "    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n" +
+                            ") : RequestRunner(clientBuilder) {\n" +
+                            "${clientFunctions.joinToString("\n\n")}\n" +
+                            "}"
                     },
+            )
+        parts +=
+            typeDefinitions.values.map {
+                ClientPart(
+                    path = "types/${it.name()}.kt",
+                    content =
+                        run {
+                            val imports = it.imports.joinToString("\n")
+                            val content = it.content()
+                            "package $packageName.types\n\n" + "$imports\n\n" + content
+                        },
                 )
             }
         return parts
@@ -110,11 +114,12 @@ fun generateKotlinClient(
     routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
 ) {
     KotlinClientGenerator(
-        routes = routes,
-        packageName = packageName,
-        dist = dist,
-        apiClientName = apiClientName,
-    ).safeClient()
+            routes = routes,
+            packageName = packageName,
+            dist = dist,
+            apiClientName = apiClientName,
+        )
+        .safeClient()
 }
 
 fun generateKotlinClient(
@@ -122,9 +127,10 @@ fun generateKotlinClient(
     apiClientName: String,
     dist: String,
     routes: List<OpenApiRoute> = OpenApiRouteCollector.values()
-) = generateKotlinClient(
-    packageName = packageName,
-    dist = Path.of(dist),
-    routes = routes,
-    apiClientName = apiClientName,
-)
+) =
+    generateKotlinClient(
+        packageName = packageName,
+        dist = Path.of(dist),
+        routes = routes,
+        apiClientName = apiClientName,
+    )

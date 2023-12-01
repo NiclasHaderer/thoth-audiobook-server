@@ -47,12 +47,12 @@ fun main() {
 
     // Start the server
     embeddedServer(
-        Netty,
-        port = 8080,
-        watchPaths = listOf("classes"),
-        host = "0.0.0.0",
-        module = Application::applicationModule,
-    )
+            Netty,
+            port = 8080,
+            watchPaths = listOf("classes"),
+            host = "0.0.0.0",
+            module = Application::applicationModule,
+        )
         .start(wait = true)
 }
 

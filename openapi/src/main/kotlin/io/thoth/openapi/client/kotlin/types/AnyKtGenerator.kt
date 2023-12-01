@@ -9,6 +9,8 @@ class AnyKtGenerator : KtGenerator() {
         return "Any"
     }
 
+    override fun getName(classType: ClassType): String? = null
+
     override fun priority(classType: ClassType): Int = -1
 
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE

@@ -9,16 +9,17 @@ abstract class TsGenerator : TypeGenerator<TsGenerator.Type>() {
         val parser: ParseMethod
     }
 
-    class InlineType(content: String, override val parser: ParseMethod) :
-        TypeGenerator.InlineType(content = content), Type
+    class InlineType(content: String, name: String?, override val parser: ParseMethod) :
+        TypeGenerator.InlineType(content = content, name = name ?: content), Type
 
     class ReferenceType(reference: String, content: String, name: String, override val parser: ParseMethod) :
         TypeGenerator.ReferenceType(reference, content, name), Type
 
-    companion object : Provider<Type, TsGenerator>(
-        TsGenerator::class,
-        listOf("io.thoth.openapi.client.typescript"),
-    )
+    companion object :
+        Provider<Type, TsGenerator>(
+            TsGenerator::class,
+            listOf("io.thoth.openapi.client.typescript"),
+        )
 
     enum class ParseMethod(val methodName: String) {
         BLOB("blob"),
@@ -37,10 +38,8 @@ abstract class TsGenerator : TypeGenerator<TsGenerator.Type>() {
         return when (insertionMode) {
             DataType.PRIMITIVE -> {
                 require(reference == null) { "Reference must be null for primitive types" }
-                require(name == null) { "Name must be null for primitive types" }
-                InlineType(content = content, parser)
+                InlineType(content = content, name = name, parser = parser)
             }
-
             DataType.COMPLEX -> {
                 require(reference != null) { "Reference must not be null for complex types" }
                 require(name != null) { "Name must not be null for complex types" }

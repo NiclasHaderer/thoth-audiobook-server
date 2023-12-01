@@ -15,7 +15,7 @@ class PairTsGenerator : TsGenerator() {
     ): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Pair type without insufficient arguments" }
-            return "[unknown, unknown]"
+            return "Pair<unknown, unknown>"
         }
 
         val genericArg1 = classType.genericArguments.first()
@@ -23,19 +23,19 @@ class PairTsGenerator : TsGenerator() {
         val genericArg2 = classType.genericArguments.last()
         val subType2 = generateSubType(genericArg2)
 
-        return "[${subType1.reference()} ${
+        return "Pair<${subType1.reference()} ${
             if (genericArg1.isNullable) {
-                " | undefined"
+                " | null"
             } else {
                 ""
             }
         }, ${subType2.reference()} ${
             if (genericArg2.isNullable) {
-                " | undefined"
+                " | null"
             } else {
                 ""
             }
-        }]"
+        }>"
     }
 
     override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
@@ -44,7 +44,7 @@ class PairTsGenerator : TsGenerator() {
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 
-    override fun getName(classType: ClassType): String? = null
+    override fun getName(classType: ClassType): String = "Pair"
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
