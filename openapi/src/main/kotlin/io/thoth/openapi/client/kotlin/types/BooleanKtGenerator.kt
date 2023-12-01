@@ -6,7 +6,7 @@ import io.thoth.openapi.common.ClassType
 
 class BooleanKtGenerator : KtGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
-        return "Bool"
+        return "Boolean"
     }
 
     override fun getName(classType: ClassType): String? = null

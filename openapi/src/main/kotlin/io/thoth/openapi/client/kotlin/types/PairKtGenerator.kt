@@ -38,7 +38,7 @@ class PairKtGenerator : KtGenerator() {
         }>"
     }
 
-    override fun getName(classType: ClassType): String? = null
+    override fun getName(classType: ClassType): String = "Pair"
 
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
 

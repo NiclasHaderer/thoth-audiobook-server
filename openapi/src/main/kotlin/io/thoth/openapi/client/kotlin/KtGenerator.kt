@@ -15,14 +15,14 @@ abstract class KtGenerator : TypeGenerator<KtGenerator.Type>() {
     class ReferenceType(identifier: String, content: String, name: String, override val imports: List<String>) :
         TypeGenerator.ReferenceType(identifier, content, name), Type
 
-    open fun withImports(classType: ClassType): List<String> = emptyList()
+    open fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> = emptyList()
 
     override fun createType(classType: ClassType, generateSubType: GenerateType): Type {
         val content = generateContent(classType, generateSubType)
         val reference = generateReference(classType, generateSubType)
         val insertionMode = getInsertionMode(classType)
         val name = getName(classType)
-        val imports = withImports(classType)
+        val imports = withImports(classType, generateSubType)
         return when (insertionMode) {
             DataType.PRIMITIVE -> {
                 require(reference == null) { "Reference must be null for primitive types" }
