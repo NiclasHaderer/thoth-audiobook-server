@@ -1,4 +1,4 @@
-package io.thoth.server.common.serializion.jackson
+package io.thoth.openapi.serializion.jackson
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser

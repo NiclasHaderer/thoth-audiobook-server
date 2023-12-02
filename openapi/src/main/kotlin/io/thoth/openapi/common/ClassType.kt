@@ -49,7 +49,7 @@ private constructor(
             // Get the number of generic arguments the generic class has
             val argCount = parentType.typeParameters.size
 
-            // Because we cannot determine the type of the generic arguments we just use Any instead
+            // Because we cannot determine the type of the generic arguments, we just use Any instead
             val parentTypeArgs = List(argCount) { KTypeProjection.invariant(Any::class.createType()) }
 
             return create(parentType.createType(parentTypeArgs))
@@ -165,8 +165,8 @@ private constructor(
         val member = this.clazz.declaredMemberProperties.first { it.name == property.name }
         val memberType: KType = member.returnType
 
-        // If the member type is a complete generic type we resolve it and return it
-        // e.g. interface Something<T> { val hello: T }
+        // If the member type is a complete generic type, we resolve it and return it
+        // e.g., interface Something<T> { val hello: T }
         if (memberType.javaType is TypeVariable<*>) {
             val resolved = genericArgValueMap[memberType.classifier]!!
             return create(resolved.type!!)
@@ -175,7 +175,7 @@ private constructor(
         val memberParameters =
             memberType.arguments.map {
                 // This is the case if we have a mix of generic and inline generics
-                // e.g. interface Something<T> { val hello: Map<String, T> }
+                // e.g., interface Something<T> { val hello: Map<String, T> }
                 if (it.type!!.classifier is KClass<*>) {
                     KTypeProjection(variance = it.variance, type = it.type)
                 } else {

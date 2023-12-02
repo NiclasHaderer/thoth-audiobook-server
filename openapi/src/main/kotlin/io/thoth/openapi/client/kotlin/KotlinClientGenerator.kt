@@ -6,11 +6,10 @@ import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.client.common.mappedKtReference
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
-import io.thoth.openapi.ktor.OpenApiRouteCollector
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
+import mu.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
-import mu.KotlinLogging.logger
 
 class KotlinClientGenerator(
     override val routes: List<OpenApiRoute>,
@@ -83,46 +82,46 @@ class KotlinClientGenerator(
             ClientPart(
                 path = "RequestRunner.kt",
                 content =
-                    buildString {
-                        append("package $packageName\n\n")
-                        append(requestRunner)
-                    },
+                buildString {
+                    append("package $packageName\n\n")
+                    append(requestRunner)
+                },
             )
         parts +=
             ClientPart(
                 path = "${apiClientName}.kt",
                 content =
-                    buildString {
-                        // Package
-                        append("package $packageName\n\n")
+                buildString {
+                    // Package
+                    append("package $packageName\n\n")
 
-                        // Imports
-                        append("import io.ktor.client.*\n")
-                        append(clientImports.joinToString("\n"))
-                        append("\n")
-                        append("import io.ktor.http.*\n")
-                        append("import $packageName.models.*\n")
-                        append("\n\n")
+                    // Imports
+                    append("import io.ktor.client.*\n")
+                    append(clientImports.joinToString("\n"))
+                    append("\n")
+                    append("import io.ktor.http.*\n")
+                    append("import $packageName.models.*\n")
+                    append("\n\n")
 
-                        // Class
-                        append("open class ${apiClientName}(\n")
-                        append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n")
-                        append(") : RequestRunner(clientBuilder) {\n")
-                        append("${clientFunctions.joinToString("\n\n")}\n")
-                        append("}")
-                    },
+                    // Class
+                    append("open class ${apiClientName}(\n")
+                    append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n")
+                    append(") : RequestRunner(clientBuilder) {\n")
+                    append("${clientFunctions.joinToString("\n\n")}\n")
+                    append("}")
+                },
             )
         parts +=
             typeDefinitions.values.map {
                 ClientPart(
                     path = "models/${it.name()}.kt",
                     content =
-                        buildString {
-                            append("package $packageName.models\n\n")
-                            append(it.imports.joinToString("\n"))
-                            append("\n\n")
-                            append(it.content())
-                        },
+                    buildString {
+                        append("package $packageName.models\n\n")
+                        append(it.imports.joinToString("\n"))
+                        append("\n\n")
+                        append(it.content())
+                    },
                 )
             }
         return parts
@@ -137,12 +136,12 @@ fun Application.generateKotlinClient(
     fileWriter: ((File, String) -> Unit)? = null,
 ) {
     KotlinClientGenerator(
-            routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
-            packageName = packageName,
-            dist = dist,
-            apiClientName = apiClientName,
-            fileWriter = fileWriter,
-        )
+        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+        packageName = packageName,
+        dist = dist,
+        apiClientName = apiClientName,
+        fileWriter = fileWriter,
+    )
         .safeClient()
 }
 

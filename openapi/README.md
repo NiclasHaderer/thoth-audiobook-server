@@ -145,7 +145,9 @@ fun Route.someRoute() {
 }
 ```
 
-If you want some custom behaviour that is not covered by these three responses, you can create your own response (see the binary response for an example).
+If you want some custom behavior not covered by these three responses, you can create your own response (see
+the binary response for an example).
+
 ```kotlin
 class BinaryResponse(val bytes: ByteArray) : BaseResponse {
     override suspend fun respond(call: ApplicationCall) {
@@ -157,7 +159,6 @@ fun RouteHandler.binaryResponse(byteArray: ByteArray): BinaryResponse {
     return BinaryResponse(byteArray)
 }
 ```
-
 
 ### Typescript client generation
 

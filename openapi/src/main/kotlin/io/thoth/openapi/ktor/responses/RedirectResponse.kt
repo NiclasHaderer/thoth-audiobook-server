@@ -1,3 +1,5 @@
+@file:Suppress("UnusedReceiverParameter", "unused")
+
 package io.thoth.openapi.ktor.responses
 
 import io.ktor.server.application.*

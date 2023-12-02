@@ -1,8 +1,6 @@
 package io.thoth.openapi.ktor.plugins
 
 import io.ktor.server.application.*
-import io.thoth.openapi.ktor.OpenApiRouteCollector
-import io.thoth.openapi.ktor.SchemaHolder
 
 enum class OpenAPISchemaType(val extension: String) {
     JSON("json"),
@@ -35,15 +33,15 @@ class WebUiConfig internal constructor() {
 }
 
 val OpenAPIWebUI = createApplicationPlugin("OpenAPIWebUI", createConfiguration = { WebUiConfig() }) {
-    application.environment.monitor.subscribe(ApplicationStarted) {
+    application.environment.monitor.subscribe(ApplicationStarted) { app ->
 
         // Get the plugin configuration
-        val pluginConfig = application.attributes.get(OpenAPIConfigurationKey)
+        val pluginConfig = application.attributes[OpenAPIConfigurationKey]
 
         try {
             pluginConfig.routeCollector.forEach { pluginConfig.schemaHolder.addRouteToApi(it) }
         } catch (e: Exception) {
-            it.log.error("Error while adding routes to API. OpenApi document is not complete!", e)
+            app.log.error("Error while adding routes to API. OpenApi document is not complete!", e)
         }
     }
 

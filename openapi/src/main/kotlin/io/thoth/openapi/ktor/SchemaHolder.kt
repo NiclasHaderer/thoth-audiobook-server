@@ -43,9 +43,9 @@ class SchemaHolder {
         val method = route.method
         if (
             method != HttpMethod.Get &&
-                method != HttpMethod.Head &&
-                method != HttpMethod.Delete &&
-                method != HttpMethod.Options
+            method != HttpMethod.Head &&
+            method != HttpMethod.Delete &&
+            method != HttpMethod.Options
         ) {
             addRequestBody(route, operation)
         }
@@ -113,7 +113,7 @@ class SchemaHolder {
 
         // Apply security
         if (route.secured != null) {
-            // Check if security scheme is already defined
+            // Check if a security scheme is already defined
             if (!_api.components.securitySchemes.containsKey(route.secured!!.name)) {
                 throw IllegalStateException("Security scheme ${route.secured!!.name} is not defined")
             }

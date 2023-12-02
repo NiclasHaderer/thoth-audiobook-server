@@ -41,9 +41,9 @@ class MapKtGenerator : KtGenerator() {
             return listOf()
         }
         return listOf(
-                classType.genericArguments[0].clazz.qualifiedName ?: "",
-                classType.genericArguments[1].clazz.qualifiedName ?: "",
-            )
+            classType.genericArguments[0].clazz.qualifiedName ?: "",
+            classType.genericArguments[1].clazz.qualifiedName ?: "",
+        )
             .filter { it.isNotEmpty() }
     }
 

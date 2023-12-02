@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package io.thoth.openapi.ktor
 
 import io.ktor.http.*
@@ -5,7 +7,6 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
-import io.ktor.server.resources.handle as resourceHandle
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
@@ -14,6 +15,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
 import io.thoth.openapi.ktor.responses.BaseResponse
 import kotlin.reflect.full.findAnnotation
+import io.ktor.server.resources.handle as resourceHandle
 
 typealias RouteHandler = PipelineContext<Unit, ApplicationCall>
 
@@ -70,7 +72,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
         OpenApiRoute.create<PARAMS, BODY, RESPONSE>(method, this),
     )
 
-    // Check if the route should be secured by ktor
+    // Check if ktor should secure the route
     val ignoreSecured = PARAMS::class.findAnnotation<NotSecured>() != null
     val secured = PARAMS::class.findAnnotationUp<Secured>()
     if (secured != null && !ignoreSecured) {
