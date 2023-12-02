@@ -12,7 +12,12 @@ import mu.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
 
-class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fileWriter: ((File, String) -> Unit)?) :
+class TsClientGenerator(
+    override val routes: List<OpenApiRoute>,
+    val apiFactoryName: String,
+    dist: Path,
+    fileWriter: ((File, String) -> Unit)?
+) :
     ClientGenerator(dist, fileWriter) {
     private val log = logger {}
     private val typeDefinitions = mutableMapOf<String, TsGenerator.ReferenceType>()
@@ -71,10 +76,8 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fil
 
             val function = buildString {
                 append("$routeName(${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> {\n")
-                append("  const headersImpl = new Headers(headers)\n")
-                append("  defaultHeadersImpl.forEach((value, key) => headersImpl.append(key, value))\n")
                 append("  return _request(${createURL(route)}, \"${route.method.value}\", \"${responseBody.parser.methodName}\", ")
-                append("headersImpl, ")
+                append("_mergeHeaders(defaultHeadersImpl, headers), ")
                 append(if (route.requestBodyType.clazz != Unit::class) "body" else "undefined")
                 append(", [...defaultInterceptors, ...interceptors], executor, ${route.secured != null});\n")
                 append("}")
@@ -85,7 +88,7 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fil
 
     private fun createTypeImports(): String {
         return buildString {
-            append("import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl} from \"./client\";\n")
+            append("import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from \"./client\";\n")
             append("import type {")
             append(typeDefinitions.keys.sorted().joinToString(", "))
             append("} from \"./models\";\n")
@@ -96,7 +99,8 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fil
         return buildString {
             append("// noinspection JSUnusedGlobalSymbols,ES6UnusedImports\n")
             append(createTypeImports())
-            append("export const createApi = (\n")
+            append("\n")
+            append("export const $apiFactoryName = (\n")
             append("  defaultHeaders: HeadersInit = {},\n")
             append("  defaultInterceptors: ApiInterceptor[] = [],\n")
             append("  executor = (callData: ApiCallData) => fetch(callData.route, {method: callData.method, headers: callData.headers, body: callData.bodySerializer(callData.body)})\n")
@@ -131,6 +135,7 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fil
 
 fun Application.generateTsClient(
     dist: Path,
+    apiFactoryName: String = "createApi",
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null
 ) {
@@ -138,11 +143,13 @@ fun Application.generateTsClient(
         routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
         dist = dist,
         fileWriter = fileWriter,
+        apiFactoryName = apiFactoryName,
     ).safeClient()
 }
 
 fun Application.generateTsClient(
     dist: String,
+    apiFactoryName: String = "createApi",
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null
-) = generateTsClient(Path.of(dist), routes, fileWriter)
+) = generateTsClient(dist = Path.of(dist), routes = routes, fileWriter = fileWriter, apiFactoryName = apiFactoryName)
