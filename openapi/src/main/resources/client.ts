@@ -89,3 +89,11 @@ export const _request = async <T>(
         })
         .catch((error) => ({success: false, error: error?.toString()} as const))
 };
+
+export const _mergeHeaders = (headers: Headers, newHeaders: HeadersInit): Headers => {
+    const mergedHeaders = new Headers(headers)
+    for (const [key, value] of Object.entries(newHeaders)) {
+        mergedHeaders.set(key, value)
+    }
+    return mergedHeaders
+}
