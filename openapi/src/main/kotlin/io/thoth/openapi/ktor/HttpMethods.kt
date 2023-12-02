@@ -95,10 +95,24 @@ inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.get(
     wrapRequest(HttpMethod.Get, callback)
 }
 
+inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.get(
+    path: String,
+    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
+) {
+    route(path) { wrapRequest(HttpMethod.Get, callback) }
+}
+
 inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.head(
     noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
 ) {
     wrapRequest(HttpMethod.Head, callback)
+}
+
+inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.head(
+    path: String,
+    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
+) {
+    route(path) { wrapRequest(HttpMethod.Head, callback) }
 }
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.post(
@@ -107,10 +121,24 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Ro
     wrapRequest(HttpMethod.Post, callback)
 }
 
+inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.post(
+    path: String,
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+) {
+    route(path) { wrapRequest(HttpMethod.Post, callback) }
+}
+
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.put(
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
     wrapRequest(HttpMethod.Put, callback)
+}
+
+inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.put(
+    path: String,
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+) {
+    route(path) { wrapRequest(HttpMethod.Put, callback) }
 }
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.delete(
@@ -119,14 +147,35 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Ro
     wrapRequest(HttpMethod.Delete, callback)
 }
 
+inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.delete(
+    path: String,
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+) {
+    route(path) { wrapRequest(HttpMethod.Delete, callback) }
+}
+
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.options(
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
     wrapRequest(HttpMethod.Options, callback)
 }
 
+inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.options(
+    path: String,
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+) {
+    route(path) { wrapRequest(HttpMethod.Options, callback) }
+}
+
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.patch(
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
     wrapRequest(HttpMethod.Patch, callback)
+}
+
+inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.patch(
+    path: String,
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+) {
+    route(path) { wrapRequest(HttpMethod.Patch, callback) }
 }

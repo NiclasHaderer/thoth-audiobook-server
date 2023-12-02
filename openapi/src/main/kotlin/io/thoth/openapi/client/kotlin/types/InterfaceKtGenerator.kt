@@ -112,10 +112,12 @@ class InterfaceKtGenerator : KtGenerator() {
     }
 
     override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
-        return classType.properties.flatMap {
-            val type = generateSubType(classType.forMember(it)) as Type
-            type.imports
-        }.distinct()
+        return classType.properties
+            .flatMap {
+                val type = generateSubType(classType.forMember(it)) as Type
+                type.imports
+            }
+            .distinct()
     }
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String {

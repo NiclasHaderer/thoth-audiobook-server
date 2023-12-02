@@ -1,4 +1,4 @@
-package io.thoth.server.common.serializion.kotlin
+package io.thoth.openapi.serializion.kotlin
 
 import java.util.*
 import kotlinx.serialization.KSerializer
