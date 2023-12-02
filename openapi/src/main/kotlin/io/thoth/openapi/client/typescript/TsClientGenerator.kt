@@ -108,7 +108,7 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fil
             append(clientFunctions.joinToString(",\n") { it })
             append("\n")
             append("  } as const;\n")
-            append("}\n")
+            append("}")
         }
     }
 
@@ -126,7 +126,7 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fil
             ClientPart("client.ts", requestRunner),
             ClientPart("utility-types.ts", utilityTypes),
             ClientPart("models.ts", clientTypes),
-            ClientPart("api.ts", clientRequests),
+            ClientPart("api-client.ts", clientRequests),
         )
     }
 }
