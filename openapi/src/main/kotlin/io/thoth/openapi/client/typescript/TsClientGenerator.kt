@@ -6,10 +6,12 @@ import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.common.padLinesStart
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.OpenApiRouteCollector
+import java.io.File
 import java.nio.file.Path
 import mu.KotlinLogging.logger
 
-class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : ClientGenerator(dist) {
+class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fileWriter: (File, String) -> Unit) :
+    ClientGenerator(dist, fileWriter) {
     private val log = logger {}
     private val typeDefinitions = mutableMapOf<String, TsGenerator.Type>()
     private val clientFunctions = mutableListOf<String>()
@@ -114,12 +116,12 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
     private fun createTypeImports(): String {
         val modelImports =
             "import type {${
-            typeDefinitions.values.asSequence().filterIsInstance<TsGenerator.ReferenceType>()
-                .map {
-                    // Replace the generic <> with nothing to not break the import
-                    it.reference().replace("<.*>".toRegex(), "")
-                }.distinct().sorted().joinToString(", ")
-        }} from \"./models\";\n"
+                typeDefinitions.values.asSequence().filterIsInstance<TsGenerator.ReferenceType>()
+                    .map {
+                        // Replace the generic <> with nothing to not break the import
+                        it.reference().replace("<.*>".toRegex(), "")
+                    }.distinct().sorted().joinToString(", ")
+            }} from \"./models\";\n"
         val apiImports = "import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl} from \"./client\";\n"
         return modelImports + apiImports + "\n"
     }
@@ -166,9 +168,16 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path) : C
     }
 }
 
-fun generateTsClient(dist: Path, routes: List<OpenApiRoute> = OpenApiRouteCollector.values()) {
-    TsClientGenerator(routes = routes, dist = dist).safeClient()
+fun generateTsClient(
+    dist: Path,
+    routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
+    fileWriter: (File, String) -> Unit
+) {
+    TsClientGenerator(routes = routes, dist = dist, fileWriter = fileWriter).safeClient()
 }
 
-fun generateTsClient(dist: String, routes: List<OpenApiRoute> = OpenApiRouteCollector.values()) =
-    generateTsClient(Path.of(dist), routes)
+fun generateTsClient(
+    dist: String,
+    routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
+    fileWriter: (File, String) -> Unit
+) = generateTsClient(Path.of(dist), routes, fileWriter)

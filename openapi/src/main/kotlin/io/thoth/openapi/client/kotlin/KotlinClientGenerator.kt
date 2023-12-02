@@ -5,6 +5,7 @@ import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.OpenApiRouteCollector
+import java.io.File
 import java.nio.file.Path
 import mu.KotlinLogging.logger
 
@@ -13,7 +14,8 @@ class KotlinClientGenerator(
     private val packageName: String,
     private val apiClientName: String,
     dist: Path,
-) : ClientGenerator(dist) {
+    fileWriter: ((File, String) -> Unit)?,
+) : ClientGenerator(dist, fileWriter) {
     private val log = logger {}
 
     private val requestRunner: String by lazy { getResourceContent("/RequestRunner.kt") }
@@ -74,46 +76,52 @@ class KotlinClientGenerator(
 
     override fun generateClient(): List<ClientPart> {
         val parts = mutableListOf<ClientPart>()
-        parts += ClientPart(
-                path = "RequestRunner.kt",
-                content = buildString {
-                    append("package $packageName\n\n")
-                    append(requestRunner)
-                },
-        )
-        parts += ClientPart(
-            path = "${apiClientName}.kt",
-            content = buildString {
-                // Package
-                append("package $packageName\n\n")
-
-                // Imports
-                append("import io.ktor.client.*\n")
-                append(clientImports.joinToString("\n"))
-                append("\n")
-                append("import io.ktor.http.*\n")
-                append("import $packageName.models.*\n")
-                append("\n\n")
-
-                // Class
-                append("open class ${apiClientName}(\n")
-                append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n")
-                append(") : RequestRunner(clientBuilder) {\n")
-                append("${clientFunctions.joinToString("\n\n")}\n")
-                append("}")
-            },
-        )
-        parts += typeDefinitions.values.map {
+        parts +=
             ClientPart(
-                path = "models/${it.name()}.kt",
-                content = buildString {
-                    append("package $packageName.models\n\n")
-                    append(it.imports.joinToString("\n"))
-                    append("\n\n")
-                    append(it.content())
-                },
+                path = "RequestRunner.kt",
+                content =
+                    buildString {
+                        append("package $packageName\n\n")
+                        append(requestRunner)
+                    },
             )
-        }
+        parts +=
+            ClientPart(
+                path = "${apiClientName}.kt",
+                content =
+                    buildString {
+                        // Package
+                        append("package $packageName\n\n")
+
+                        // Imports
+                        append("import io.ktor.client.*\n")
+                        append(clientImports.joinToString("\n"))
+                        append("\n")
+                        append("import io.ktor.http.*\n")
+                        append("import $packageName.models.*\n")
+                        append("\n\n")
+
+                        // Class
+                        append("open class ${apiClientName}(\n")
+                        append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n")
+                        append(") : RequestRunner(clientBuilder) {\n")
+                        append("${clientFunctions.joinToString("\n\n")}\n")
+                        append("}")
+                    },
+            )
+        parts +=
+            typeDefinitions.values.map {
+                ClientPart(
+                    path = "models/${it.name()}.kt",
+                    content =
+                        buildString {
+                            append("package $packageName.models\n\n")
+                            append(it.imports.joinToString("\n"))
+                            append("\n\n")
+                            append(it.content())
+                        },
+                )
+            }
         return parts
     }
 }
@@ -123,13 +131,16 @@ fun generateKotlinClient(
     apiClientName: String,
     dist: Path,
     routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
+    fileWriter: ((File, String) -> Unit)? = null,
 ) {
     KotlinClientGenerator(
-        routes = routes,
-        packageName = packageName,
-        dist = dist,
-        apiClientName = apiClientName,
-    ).safeClient()
+            routes = routes,
+            packageName = packageName,
+            dist = dist,
+            apiClientName = apiClientName,
+            fileWriter = fileWriter,
+        )
+        .safeClient()
 }
 
 fun generateKotlinClient(
@@ -137,9 +148,10 @@ fun generateKotlinClient(
     apiClientName: String,
     dist: String,
     routes: List<OpenApiRoute> = OpenApiRouteCollector.values()
-) = generateKotlinClient(
-    packageName = packageName,
-    dist = Path.of(dist),
-    routes = routes,
-    apiClientName = apiClientName,
-)
+) =
+    generateKotlinClient(
+        packageName = packageName,
+        dist = Path.of(dist),
+        routes = routes,
+        apiClientName = apiClientName,
+    )

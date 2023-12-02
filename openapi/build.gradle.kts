@@ -10,6 +10,7 @@ plugins {
     kotlin("jvm")
     id("com.ncorti.ktfmt.gradle")
     id("maven-publish")
+    kotlin("plugin.serialization")
 }
 
 
@@ -35,6 +36,7 @@ dependencies {
 
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
 }
 
 afterEvaluate {

@@ -7,7 +7,7 @@ import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
 import io.thoth.openapi.ktor.*
-import io.thoth.server.common.serializion.kotlin.UUID_S
+import io.thoth.openapi.serializion.kotlin.UUID_S
 import io.thoth.server.database.tables.TLibraries
 import io.thoth.server.plugins.auth.Guards
 import io.thoth.server.plugins.authentication.assertAccessToLibraryId
