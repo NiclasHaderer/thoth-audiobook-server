@@ -17,7 +17,7 @@ import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.responses.ApiResponses
 import io.swagger.v3.oas.models.security.SecurityRequirement
 
-object SchemaHolder {
+class SchemaHolder {
     private val _api: OpenAPI =
         OpenAPI().also {
             it.components = Components()

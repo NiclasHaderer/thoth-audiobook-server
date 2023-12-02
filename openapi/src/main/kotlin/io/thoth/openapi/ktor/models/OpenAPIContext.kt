@@ -6,7 +6,7 @@ import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.servers.Server
 
-class OpenAPIContext internal constructor(private val api: OpenAPI) {
+open class OpenAPIContext internal constructor(private val api: OpenAPI) {
 
     companion object {
         fun generate(api: OpenAPI? = null): OpenAPIContext {

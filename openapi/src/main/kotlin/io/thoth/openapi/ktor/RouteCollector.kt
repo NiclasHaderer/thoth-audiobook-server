@@ -2,7 +2,7 @@ package io.thoth.openapi.ktor
 
 import kotlin.collections.set
 
-object OpenApiRouteCollector {
+class OpenApiRouteCollector {
     private val routes = mutableMapOf<String, MutableList<OpenApiRoute>>()
 
     fun addRoute(route: OpenApiRoute) {

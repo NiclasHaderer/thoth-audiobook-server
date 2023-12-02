@@ -1,11 +1,13 @@
 package io.thoth.openapi.client.kotlin
 
+import io.ktor.server.application.*
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.client.common.mappedKtReference
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.OpenApiRouteCollector
+import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
 import java.io.File
 import java.nio.file.Path
 import mu.KotlinLogging.logger
@@ -127,15 +129,15 @@ class KotlinClientGenerator(
     }
 }
 
-fun generateKotlinClient(
+fun Application.generateKotlinClient(
     packageName: String,
     apiClientName: String,
     dist: Path,
-    routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
+    routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
 ) {
     KotlinClientGenerator(
-            routes = routes,
+            routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
             packageName = packageName,
             dist = dist,
             apiClientName = apiClientName,
@@ -144,11 +146,11 @@ fun generateKotlinClient(
         .safeClient()
 }
 
-fun generateKotlinClient(
+fun Application.generateKotlinClient(
     packageName: String,
     apiClientName: String,
     dist: String,
-    routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
+    routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
 ) =
     generateKotlinClient(

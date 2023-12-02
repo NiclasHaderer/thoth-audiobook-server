@@ -11,6 +11,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
 import io.thoth.openapi.common.findAnnotationUp
 import io.thoth.openapi.ktor.errors.ErrorResponse
+import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
 import io.thoth.openapi.ktor.responses.BaseResponse
 import kotlin.reflect.full.findAnnotation
 
@@ -63,7 +64,9 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
 ) {
 
-    OpenApiRouteCollector.addRoute(
+    val routeCollector = application.attributes[OpenAPIConfigurationKey].routeCollector
+
+    routeCollector.addRoute(
         OpenApiRoute.create<PARAMS, BODY, RESPONSE>(method, this),
     )
 
