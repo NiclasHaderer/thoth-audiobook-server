@@ -2,6 +2,7 @@ package io.thoth.openapi.client.kotlin
 
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
+import io.thoth.openapi.client.common.mappedKtReference
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.OpenApiRouteCollector
@@ -34,7 +35,7 @@ class KotlinClientGenerator(
         (route.queryParameters + route.pathParameters).forEach { (param) ->
             val (actual, all) = KtGenerator.generateTypes(param.type)
             clientImports += actual.imports
-            typeDefinitions.putAll(all.mappedReference())
+            typeDefinitions.putAll(all.mappedKtReference())
             append("${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}, ")
         }
 
@@ -42,7 +43,7 @@ class KotlinClientGenerator(
         if (route.requestBodyType.clazz != Unit::class) {
             val (actual, all) = KtGenerator.generateTypes(route.requestBodyType)
             clientImports += actual.imports
-            typeDefinitions.putAll(all.mappedReference())
+            typeDefinitions.putAll(all.mappedKtReference())
             append("body: ${actual.reference()}, ")
         }
 
@@ -64,7 +65,7 @@ class KotlinClientGenerator(
 
             val (responseBody, all) = KtGenerator.generateTypes(route.responseBodyType)
             clientImports += responseBody.imports
-            typeDefinitions.putAll(all.mappedReference())
+            typeDefinitions.putAll(all.mappedKtReference())
             val function = buildString {
                 append("    open fun ${routeName}(${getParameters(route)}): ${responseBody.reference()} {\n")
                 append("        TODO(\"Not implemented\")")
@@ -147,11 +148,13 @@ fun generateKotlinClient(
     packageName: String,
     apiClientName: String,
     dist: String,
-    routes: List<OpenApiRoute> = OpenApiRouteCollector.values()
+    routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
+    fileWriter: ((File, String) -> Unit)? = null,
 ) =
     generateKotlinClient(
         packageName = packageName,
         dist = Path.of(dist),
         routes = routes,
         apiClientName = apiClientName,
+        fileWriter = fileWriter,
     )
