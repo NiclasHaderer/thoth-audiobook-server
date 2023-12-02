@@ -5,7 +5,6 @@ import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.thoth.openapi.ktor.SchemaHolder
 import java.net.URL
 
 internal class WebUiServer(private val config: WebUiConfig) {
@@ -13,6 +12,7 @@ internal class WebUiServer(private val config: WebUiConfig) {
     private val content = mutableMapOf<String, WebUiResource>()
 
     suspend fun interceptCall(call: ApplicationCall) {
+        val pluginConfig = call.application.attributes[OpenAPIConfigurationKey]
         if (!call.request.uri.startsWith(config.docsPath)) {
             return
         }
@@ -23,19 +23,19 @@ internal class WebUiServer(private val config: WebUiConfig) {
         }
 
         if (isSchemaRequest(call)) {
-            respondWithSchema(call)
+            respondWithSchema(call, pluginConfig)
         } else if (isStaticRequest(call)) {
             respondWithStatic(call)
         }
     }
 
-    private suspend fun respondWithSchema(call: ApplicationCall) {
+    private suspend fun respondWithSchema(call: ApplicationCall, pluginConfig: OpenAPIConfiguration) {
         when (config.schemaType) {
             OpenAPISchemaType.JSON -> {
-                call.respondText(ContentType.Application.Json, HttpStatusCode.OK) { SchemaHolder.json() }
+                call.respondText(ContentType.Application.Json, HttpStatusCode.OK) { pluginConfig.schemaHolder.json() }
             }
             OpenAPISchemaType.YAML -> {
-                call.respondText(ContentType.Text.Plain, HttpStatusCode.OK) { SchemaHolder.yaml() }
+                call.respondText(ContentType.Text.Plain, HttpStatusCode.OK) { pluginConfig.schemaHolder.yaml() }
             }
         }
     }

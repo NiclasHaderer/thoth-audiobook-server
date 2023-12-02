@@ -1,12 +1,15 @@
 package io.thoth.openapi.client.typescript
 
+import io.ktor.server.application.*
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.client.common.mappedTsReference
+import io.thoth.openapi.client.kotlin.generateKotlinClient
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.common.padLinesStart
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.OpenApiRouteCollector
+import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
 import java.io.File
 import java.nio.file.Path
 import mu.KotlinLogging.logger
@@ -128,16 +131,20 @@ class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fil
     }
 }
 
-fun generateTsClient(
+fun Application.generateTsClient(
     dist: Path,
-    routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
+    routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null
 ) {
-    TsClientGenerator(routes = routes, dist = dist, fileWriter = fileWriter).safeClient()
+    TsClientGenerator(
+        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+        dist = dist,
+        fileWriter = fileWriter,
+    ).safeClient()
 }
 
-fun generateTsClient(
+fun Application.generateTsClient(
     dist: String,
-    routes: List<OpenApiRoute> = OpenApiRouteCollector.values(),
+    routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null
 ) = generateTsClient(Path.of(dist), routes, fileWriter)
