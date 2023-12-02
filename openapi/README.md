@@ -165,17 +165,5 @@ fun RouteHandler.binaryResponse(byteArray: ByteArray): BinaryResponse {
 You can automatically generate a typescript client for the openapi specification.
 
 ```kotlin
-TsClientCreator(
-    // Get the routes from the OpenApiRouteCollector object
-    routes = OpenApiRouteCollector.values(),
-    // Specify where the types should be saved
-    typesFile = File("models.ts"),
-    // Specify where the client should be saved
-    clientFile = File("client.ts"),
-)
-.also {
-    // Save the client and types
-    it.saveClient()
-    it.saveTypes()
-}
+generateTsClient(dist = "gen/client/typescript")
 ```
