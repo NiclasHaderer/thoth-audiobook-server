@@ -1,6 +1,7 @@
 package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
+import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.client.kotlin.KtGenerator
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging
@@ -25,6 +26,14 @@ class ArrayKtGenerator : KtGenerator() {
                 }
             }>"
         return content
+    }
+
+    override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
+        if(classType.genericArguments.isEmpty()) return emptyList()
+
+        val genericArg = classType.genericArguments.first()
+        val subType = generateSubType(genericArg) as Type
+        return subType.imports
     }
 
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE

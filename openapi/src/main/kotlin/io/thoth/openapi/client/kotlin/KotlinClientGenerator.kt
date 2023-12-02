@@ -12,6 +12,9 @@ import java.io.File
 import java.nio.file.Path
 
 class KotlinClientGenerator(
+    // TODO
+    //  UserPermissionsModel
+    //  MetadataAuthor
     override val routes: List<OpenApiRoute>,
     private val packageName: String,
     private val apiClientName: String,
@@ -118,8 +121,10 @@ class KotlinClientGenerator(
                     content =
                     buildString {
                         append("package $packageName.models\n\n")
-                        append(it.imports.joinToString("\n"))
-                        append("\n\n")
+                        if(it.imports.isNotEmpty()) {
+                            append(it.imports.joinToString("\n"))
+                            append("\n\n")
+                        }
                         append(it.content())
                     },
                 )
