@@ -12,12 +12,16 @@ class NumberSchemaGenerator : SchemaGenerator() {
         return when (classType.clazz) {
             UByte::class,
             Byte::class -> NumberSchema().format("int8")
+
             UShort::class,
             Short::class -> NumberSchema().format("int16")
+
             Int::class,
             UInt::class -> NumberSchema().format("int32")
+
             Long::class,
             ULong::class -> NumberSchema().format("int64")
+
             BigInteger::class -> NumberSchema().format("int64")
             BigDecimal::class -> NumberSchema().format("decimal")
             Float::class -> NumberSchema().format("float")

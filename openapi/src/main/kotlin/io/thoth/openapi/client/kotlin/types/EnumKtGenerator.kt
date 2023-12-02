@@ -10,7 +10,7 @@ class EnumKtGenerator : KtGenerator() {
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         val enumValues = classType.enumValues()
-        if (enumValues?.run { !isEmpty() } != true) {
+        if (enumValues?.run { isNotEmpty() } != true) {
             log.warn { "Enum type without values" }
             return "Any?"
         }

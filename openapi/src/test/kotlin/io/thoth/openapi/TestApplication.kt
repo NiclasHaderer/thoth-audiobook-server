@@ -8,8 +8,8 @@ import io.ktor.server.resources.Resources
 import io.ktor.server.routing.*
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.get
-import io.thoth.openapi.ktor.post
 import io.thoth.openapi.ktor.plugins.OpenAPIRouting
+import io.thoth.openapi.ktor.post
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import java.time.LocalDate
 import java.time.LocalDateTime

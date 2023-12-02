@@ -1,9 +1,9 @@
 package io.thoth.openapi
 
 import io.thoth.openapi.common.ClassType
+import org.junit.Test
 import java.math.BigInteger
 import kotlin.test.expect
-import org.junit.Test
 
 class InnerType
 
@@ -65,9 +65,9 @@ class GenericExtractionTest {
 
         val bMember = classType.forMember(HardToResolve<*>::b)
         expect(bMember.clazz) { List::class }
-        bMember.genericArguments.forEach {
-            expect(it.clazz) { List::class }
-            it.genericArguments.forEach { expect(it.clazz) { Unique::class } }
+        bMember.genericArguments.forEach { member ->
+            expect(member.clazz) { List::class }
+            member.genericArguments.forEach { expect(it.clazz) { Unique::class } }
         }
 
         val cMember = classType.forMember(HardToResolve<*>::c)

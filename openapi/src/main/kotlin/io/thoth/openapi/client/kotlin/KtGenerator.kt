@@ -28,6 +28,7 @@ abstract class KtGenerator : TypeGenerator<KtGenerator.Type>() {
                 require(reference == null) { "Reference must be null for primitive types" }
                 InlineType(content = content, name = name, imports = imports)
             }
+
             DataType.COMPLEX -> {
                 require(reference != null) { "Reference must not be null for complex types" }
                 require(name != null) { "Name must not be null for complex types" }

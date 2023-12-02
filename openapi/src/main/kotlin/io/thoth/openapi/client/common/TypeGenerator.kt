@@ -2,9 +2,9 @@ package io.thoth.openapi.client.common
 
 import io.thoth.openapi.common.ClassType
 import io.thoth.openapi.common.InternalAPI
+import org.reflections.Reflections
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
-import org.reflections.Reflections
 
 typealias GenerateType = (classType: ClassType) -> TypeGenerator.Type
 
@@ -36,13 +36,17 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
     }
 
     interface Type {
-        @InternalAPI val reference: String?
+        @InternalAPI
+        val reference: String?
 
-        @InternalAPI val name: String
+        @InternalAPI
+        val name: String
 
-        @InternalAPI val content: String
+        @InternalAPI
+        val content: String
 
-        @InternalAPI val dataType: DataType
+        @InternalAPI
+        val dataType: DataType
 
         fun reference(): String {
             return when (dataType) {

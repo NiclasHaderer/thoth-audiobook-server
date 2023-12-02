@@ -4,15 +4,13 @@ import io.ktor.server.application.*
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.client.common.mappedTsReference
-import io.thoth.openapi.client.kotlin.generateKotlinClient
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.common.padLinesStart
 import io.thoth.openapi.ktor.OpenApiRoute
-import io.thoth.openapi.ktor.OpenApiRouteCollector
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
+import mu.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
-import mu.KotlinLogging.logger
 
 class TsClientGenerator(override val routes: List<OpenApiRoute>, dist: Path, fileWriter: ((File, String) -> Unit)?) :
     ClientGenerator(dist, fileWriter) {

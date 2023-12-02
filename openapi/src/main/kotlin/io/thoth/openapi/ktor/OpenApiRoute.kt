@@ -73,6 +73,7 @@ class OpenApiRoute(
     val pathParameters by lazy {
         extractAllPathParams(requestParamsType).map { it to generateSchemas(it.type).toNamed() }
     }
+
     @OptIn(InternalAPI::class)
     val resourcePath by lazy {
         var resourcePath = ""
@@ -149,7 +150,7 @@ class OpenApiRoute(
         // 1. Every class over params is decorated as @Resource
         paramsClazz.findAnnotation<Resource>()
             ?: throw IllegalStateException(
-                "Class ${paramsClassType.clazz.qualifiedName} is not decorated as a resource"
+                "Class ${paramsClassType.clazz.qualifiedName} is not decorated as a resource",
             )
 
         if (paramsClassType.parent == null) return

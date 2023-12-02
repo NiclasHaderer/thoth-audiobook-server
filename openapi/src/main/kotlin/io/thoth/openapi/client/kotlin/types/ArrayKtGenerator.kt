@@ -18,12 +18,12 @@ class ArrayKtGenerator : KtGenerator() {
         val subType = generateSubType(genericArg)
         val content =
             "List<${subType.reference()}${
-            if (genericArg.isNullable) {
-                "?"
-            } else {
-                ""
-            }
-        }>"
+                if (genericArg.isNullable) {
+                    "?"
+                } else {
+                    ""
+                }
+            }>"
         return content
     }
 
