@@ -4,7 +4,6 @@ import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.typescript.TsGenerator
 import io.thoth.openapi.common.ClassType
 import kotlin.reflect.KClass
-import kotlin.reflect.KTypeParameter
 
 class InterfaceTsGenerator : TsGenerator() {
 
@@ -16,48 +15,29 @@ class InterfaceTsGenerator : TsGenerator() {
                 .filterNot { it.clazz == Enum::class }
                 .map { generateSubType(it) }
 
-        val tsProperties =
-            properties.map { property ->
-                "${property.name}${
-                    if (property.returnType.isMarkedNullable) {
-                        "?"
-                    } else {
-                        ""
-                    }
-                }: ${
-                    if (classType.isGenericProperty(property)) {
-                        "${property.returnType}"
-                    } else if (classType.isParameterizedProperty(property)) {
-                        val typeArgs = property.returnType.arguments.map {
-                            val argClassifier = it.type!!.classifier
-                            if (argClassifier is KTypeParameter) {
-                                argClassifier.name
-                            } else {
-                                generateSubType(ClassType.create(it.type!!)).reference()
-                            }
-                        }
-                        val parameterizedType = generateSubType(classType.forMember(property))
+        val tsProperties = interfaceProperties(classType, generateSubType)
 
-                        "${parameterizedType.name()}<${typeArgs.joinToString(", ")}>"
-                    } else {
-                        generateSubType(classType.forMember(property)).reference()
-                    }
-                };"
+        return buildString {
+            val interfaceName = generateName(
+                classType = classType,
+                resolveGeneric = false,
+                generateSubType = generateSubType,
+            )
+            append("interface $interfaceName")
+            if (superClasses.isNotEmpty()) {
+                append(" extends ${superClasses.joinToString(", ") { it.reference() }}")
             }
-
-        val interfaceStart =
-            "interface ${generateName(classType, false, generateSubType)} ${
-                if (superClasses.isNotEmpty()) {
-                    "extends ${superClasses.joinToString(", ") { it.reference() }} "
-                } else {
-                    ""
-                }
-            } {\n"
-
-        val interfaceContent = tsProperties.joinToString("\n") { "  $it" }
-        val interfaceEnd = "\n}"
-
-        return interfaceStart + interfaceContent + interfaceEnd
+            append(" {\n")
+            tsProperties.filter { !it.declaredInSuperclass }.mapIndexed { i, it ->
+                append("  ")
+                if (it.overwrites) append("override ")
+                append("${it.name}: ${it.type.name}")
+                if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
+                if (it.nullable) append("?")
+                append(";\n")
+            }
+            append("}")
+        }
     }
 
     override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.JSON

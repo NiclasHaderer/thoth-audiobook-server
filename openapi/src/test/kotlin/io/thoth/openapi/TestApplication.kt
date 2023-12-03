@@ -28,7 +28,11 @@ class Routes(val path: UUID_S, val name: String, val someParam: List<Int>) {
     @Summary(summary = "V5", method = "POST") @Resource("V5") class V5(val parent: Routes)
 }
 
-class ListRoute(val name: String, val someParam: List<UUID>)
+interface Something {
+    val name: String
+}
+
+class ListRoute(override val name: String, val someParam: List<UUID>): Something
 
 class MapRoute(val name: Boolean, val someParam: Map<String, UUID>)
 
