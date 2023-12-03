@@ -43,9 +43,9 @@ class SchemaHolder {
         val method = route.method
         if (
             method != HttpMethod.Get &&
-            method != HttpMethod.Head &&
-            method != HttpMethod.Delete &&
-            method != HttpMethod.Options
+                method != HttpMethod.Head &&
+                method != HttpMethod.Delete &&
+                method != HttpMethod.Options
         ) {
             addRequestBody(route, operation)
         }

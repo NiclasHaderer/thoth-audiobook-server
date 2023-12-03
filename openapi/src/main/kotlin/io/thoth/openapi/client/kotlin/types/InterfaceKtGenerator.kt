@@ -10,11 +10,14 @@ class InterfaceKtGenerator : KtGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         val properties = classType.properties
         val superClasses =
-            classType.superClasses.filter { it.memberProperties.isNotEmpty() }.filterNot { it.clazz == Enum::class }
+            classType.superClasses
+                .filter { it.memberProperties.isNotEmpty() }
+                .filterNot { it.clazz == Enum::class }
                 .map { generateSubType(it) }
 
-        val ktProperties = properties.map { property ->
-            "val ${property.name}: ${
+        val ktProperties =
+            properties.map { property ->
+                "val ${property.name}: ${
                 if (classType.isGenericProperty(property)) {
                     "${property.returnType}"
                 } else if (classType.isParameterizedProperty(property)) {
@@ -39,16 +42,17 @@ class InterfaceKtGenerator : KtGenerator() {
                     ""
                 }
             }"
-        }
+            }
 
         val classInterface = buildString {
-            val interfaceName = generateName(
-                classType = classType,
-                resolveGeneric = false,
-                generateSubType = generateSubType,
-                isImpl = false,
-                includeBounds = true,
-            )
+            val interfaceName =
+                generateName(
+                    classType = classType,
+                    resolveGeneric = false,
+                    generateSubType = generateSubType,
+                    isImpl = false,
+                    includeBounds = true,
+                )
             append("interface $interfaceName")
             if (superClasses.isNotEmpty()) {
                 append(" : ${superClasses.joinToString(", ") { it.reference() }}")
@@ -59,23 +63,25 @@ class InterfaceKtGenerator : KtGenerator() {
         }
 
         val classInterfaceImpl = buildString {
-            val dataClassName = generateName(
-                classType = classType,
-                resolveGeneric = false,
-                generateSubType = generateSubType,
-                isImpl = true,
-                includeBounds = true,
-            )
+            val dataClassName =
+                generateName(
+                    classType = classType,
+                    resolveGeneric = false,
+                    generateSubType = generateSubType,
+                    isImpl = true,
+                    includeBounds = true,
+                )
             append("data class $dataClassName(\n")
             append(ktProperties.joinToString(",\n") { "  override $it" })
             append("\n")
-            val superInterfaceName = generateName(
-                classType = classType,
-                resolveGeneric = false,
-                generateSubType = generateSubType,
-                isImpl = false,
-                includeBounds = false,
-            )
+            val superInterfaceName =
+                generateName(
+                    classType = classType,
+                    resolveGeneric = false,
+                    generateSubType = generateSubType,
+                    isImpl = false,
+                    includeBounds = false,
+                )
             append(") : $superInterfaceName")
         }
 
@@ -96,34 +102,40 @@ class InterfaceKtGenerator : KtGenerator() {
         includeBounds: Boolean
     ): String {
         val typeParams = classType.typeParameters()
-        val typeParamsString = typeParams.joinToString(", ") {
-            if (resolveGeneric) {
-                val typePar = classType.resolveTypeParameter(it)
-                val subType = generateSubType.invoke(typePar)
-                subType.reference()
-            } else {
-                // Check if the generic type has upper bounds
-                val upperBounds = it.upperBounds
-                val bounds = if (upperBounds.isNotEmpty()) {
-                    upperBounds.filter { bound ->
-                        val clazz = bound.classifier as KClass<*>
-                        (clazz == Any::class && bound.isMarkedNullable).not()
-                    }.joinToString(", ") { bound ->
-                        generateSubType(ClassType.create(bound)).reference()
-                    }
-                } else {
-                    ""
-                }
+        val typeParamsString =
+            typeParams
+                .joinToString(", ") {
+                    if (resolveGeneric) {
+                        val typePar = classType.resolveTypeParameter(it)
+                        val subType = generateSubType.invoke(typePar)
+                        subType.reference()
+                    } else {
+                        // Check if the generic type has upper bounds
+                        val upperBounds = it.upperBounds
+                        val bounds =
+                            if (upperBounds.isNotEmpty()) {
+                                upperBounds
+                                    .filter { bound ->
+                                        val clazz = bound.classifier as KClass<*>
+                                        (clazz == Any::class && bound.isMarkedNullable).not()
+                                    }
+                                    .joinToString(", ") { bound ->
+                                        generateSubType(ClassType.create(bound)).reference()
+                                    }
+                            } else {
+                                ""
+                            }
 
-                "${it.name} ${
+                        "${it.name} ${
                     if (bounds.isNotEmpty() && includeBounds) {
                         ": $bounds"
                     } else {
                         ""
                     }
                 }"
-            }
-        }.trim()
+                    }
+                }
+                .trim()
 
         return "${classType.simpleName + if (isImpl) "Impl" else ""}${
             if (typeParams.isNotEmpty()) {
@@ -135,15 +147,16 @@ class InterfaceKtGenerator : KtGenerator() {
     }
 
     override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
-        return classType.declaredMemberProperties.flatMap {
-            // If the property is a generic type, we can skip it
-            if (classType.isGenericProperty(it)) emptyList()
-            else {
-                val type = generateSubType(classType.forMember(it)) as Type
-                type.imports
+        return classType.declaredMemberProperties
+            .flatMap {
+                // If the property is a generic type, we can skip it
+                if (classType.isGenericProperty(it)) emptyList()
+                else {
+                    val type = generateSubType(classType.forMember(it)) as Type
+                    type.imports
+                }
             }
-
-        }.distinct()
+            .distinct()
     }
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String {
