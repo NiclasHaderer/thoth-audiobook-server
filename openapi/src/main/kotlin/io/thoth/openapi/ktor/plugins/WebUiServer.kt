@@ -34,7 +34,6 @@ internal class WebUiServer(private val config: WebUiConfig) {
             OpenAPISchemaType.JSON -> {
                 call.respondText(ContentType.Application.Json, HttpStatusCode.OK) { pluginConfig.schemaHolder.json() }
             }
-
             OpenAPISchemaType.YAML -> {
                 call.respondText(ContentType.Text.Plain, HttpStatusCode.OK) { pluginConfig.schemaHolder.yaml() }
             }
@@ -60,7 +59,6 @@ internal class WebUiServer(private val config: WebUiConfig) {
                 content[fileName] = WebUiResource.index(config.schemaPath)
                 return true
             }
-
             else -> {
                 val resource =
                     this::class.java.getResource("/META-INF/resources/webjars/swagger-ui/$webUiVersion/$fileName")

@@ -17,25 +17,15 @@ import java.util.*
 
 @Resource("{path}")
 class Routes(val path: UUID_S, val name: String, val someParam: List<Int>) {
-    @Summary(summary = "V1", method = "GET")
-    @Resource("V1")
-    class V1(val parent: Routes)
+    @Summary(summary = "V1", method = "GET") @Resource("V1") class V1(val parent: Routes)
 
-    @Summary(summary = "V2", method = "GET")
-    @Resource("V2")
-    class V2(val parent: Routes)
+    @Summary(summary = "V2", method = "GET") @Resource("V2") class V2(val parent: Routes)
 
-    @Summary(summary = "V3", method = "GET")
-    @Resource("V3")
-    class V3(val parent: Routes)
+    @Summary(summary = "V3", method = "GET") @Resource("V3") class V3(val parent: Routes)
 
-    @Summary(summary = "V4", method = "GET")
-    @Resource("V4")
-    class V4(val parent: Routes)
+    @Summary(summary = "V4", method = "GET") @Resource("V4") class V4(val parent: Routes)
 
-    @Summary(summary = "V5", method = "POST")
-    @Resource("V5")
-    class V5(val parent: Routes)
+    @Summary(summary = "V5", method = "POST") @Resource("V5") class V5(val parent: Routes)
 }
 
 class ListRoute(val name: String, val someParam: List<UUID>)

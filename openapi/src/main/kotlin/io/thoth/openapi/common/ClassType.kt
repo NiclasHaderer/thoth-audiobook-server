@@ -49,7 +49,8 @@ private constructor(
             // Get the number of generic arguments the generic class has
             val argCount = parentType.typeParameters.size
 
-            // Because we cannot determine the type of the generic arguments, we just use Any instead
+            // Because we cannot determine the type of the generic arguments, we just use Any
+            // instead
             val parentTypeArgs = List(argCount) { KTypeProjection.invariant(Any::class.createType()) }
 
             return create(parentType.createType(parentTypeArgs))

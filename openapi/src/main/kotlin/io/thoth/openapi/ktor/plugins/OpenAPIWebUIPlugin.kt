@@ -32,22 +32,23 @@ class WebUiConfig internal constructor() {
     }
 }
 
-val OpenAPIWebUI = createApplicationPlugin("OpenAPIWebUI", createConfiguration = { WebUiConfig() }) {
-    application.environment.monitor.subscribe(ApplicationStarted) { app ->
+val OpenAPIWebUI =
+    createApplicationPlugin("OpenAPIWebUI", createConfiguration = { WebUiConfig() }) {
+        application.environment.monitor.subscribe(ApplicationStarted) { app ->
 
-        // Get the plugin configuration
-        val pluginConfig = application.attributes[OpenAPIConfigurationKey]
+            // Get the plugin configuration
+            val pluginConfig = application.attributes[OpenAPIConfigurationKey]
 
-        try {
-            pluginConfig.routeCollector.forEach { pluginConfig.schemaHolder.addRouteToApi(it) }
-        } catch (e: Exception) {
-            app.log.error("Error while adding routes to API. OpenApi document is not complete!", e)
+            try {
+                pluginConfig.routeCollector.forEach { pluginConfig.schemaHolder.addRouteToApi(it) }
+            } catch (e: Exception) {
+                app.log.error("Error while adding routes to API. OpenApi document is not complete!", e)
+            }
         }
-    }
 
-    val webUiServer = WebUiServer(pluginConfig)
-    this.onCall { call -> webUiServer.interceptCall(call) }
-}
+        val webUiServer = WebUiServer(pluginConfig)
+        this.onCall { call -> webUiServer.interceptCall(call) }
+    }
 
 private fun String.prependIfMissing(char: Char): String {
     return if (isNotEmpty() && this[0] != char) {
