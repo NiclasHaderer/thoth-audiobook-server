@@ -19,7 +19,7 @@ afterEvaluate {
             // publish to jitpack
             create<MavenPublication>("maven") {
                 groupId = "com.github.niclashaderer"
-                artifactId = "auth"
+                artifactId = "auth-models"
                 version = "0.0.1"
                 from(components["java"])
             }

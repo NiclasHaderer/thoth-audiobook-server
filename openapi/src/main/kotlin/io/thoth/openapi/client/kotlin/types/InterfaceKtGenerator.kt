@@ -5,7 +5,6 @@ import io.thoth.openapi.client.kotlin.KtGenerator
 import io.thoth.openapi.common.ClassType
 import kotlin.reflect.KClass
 
-
 class InterfaceKtGenerator : KtGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         val superClasses =
@@ -30,14 +29,16 @@ class InterfaceKtGenerator : KtGenerator() {
                 append(" : ${superClasses.joinToString(", ") { it.reference() }}")
             }
             append(" {\n")
-            ktProperties.filter { !it.declaredInSuperclass }.mapIndexed { i, it ->
-                append("    ")
-                if (it.overwrites) append("override ")
-                append("val ${it.name}: ${it.type.name}")
-                if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
-                if (it.nullable) append("?")
-                append("\n")
-            }
+            ktProperties
+                .filter { !it.declaredInSuperclass }
+                .map {
+                    append("    ")
+                    if (it.overwrites) append("override ")
+                    append("val ${it.name}: ${it.type.name}")
+                    if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
+                    if (it.nullable) append("?")
+                    append("\n")
+                }
             append("}")
         }
 
