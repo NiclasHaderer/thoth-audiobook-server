@@ -15,12 +15,6 @@ abstract class TsGenerator : TypeGenerator<TsGenerator.Type>() {
     class ReferenceType(reference: String, content: String, name: String, override val parser: ParseMethod) :
         TypeGenerator.ReferenceType(reference, content, name), Type
 
-    companion object :
-        Provider<Type, TsGenerator>(
-            TsGenerator::class,
-            listOf("io.thoth.openapi.client.typescript"),
-        )
-
     enum class ParseMethod(val methodName: String) {
         BLOB("blob"),
         JSON("json"),
@@ -40,7 +34,6 @@ abstract class TsGenerator : TypeGenerator<TsGenerator.Type>() {
                 require(reference == null) { "Reference must be null for primitive types" }
                 InlineType(content = content, name = name, parser = parser)
             }
-
             DataType.COMPLEX -> {
                 require(reference != null) { "Reference must not be null for complex types" }
                 require(name != null) { "Name must not be null for complex types" }
