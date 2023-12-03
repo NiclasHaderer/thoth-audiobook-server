@@ -10,14 +10,14 @@ import io.ktor.utils.io.*
 import kotlin.coroutines.CoroutineContext
 
 
-interface RequestMetadata<T, RESPONSE> {
-    val url: Url
-    val method: HttpMethod
-    val headers: Headers
-    val body: T
-    val shouldLogin: Boolean
-    val securitySchema: String
-}
+class RequestMetadata<T, RESPONSE>(
+    val path: String,
+    val method: HttpMethod,
+    val headers: Headers,
+    val body: T,
+    val shouldLogin: Boolean,
+    val securitySchema: String?
+)
 
 typealias OnBeforeRequest<T, R> = (metadata: RequestMetadata<T, R>, requestBuilder: HttpRequestBuilder) -> Unit
 typealias OnAfterRequest<T, R> = (metadata: RequestMetadata<T, R>, response: HttpResponse) -> Unit
@@ -49,7 +49,8 @@ class OpenApiHttpResponse<T>(private val delegate: HttpResponse, val typeInfo: T
 
 
 open class RequestRunner(
-    clientBuilder: HttpClientConfig<*>.() -> Unit = {}
+    clientBuilder: HttpClientConfig<*>.() -> Unit = {},
+    val baseUrl: Url,
 ) {
     private val beforeRequestHooks: MutableList<OnBeforeRequest<*, *>> = mutableListOf()
     private val afterRequestHooks: MutableList<OnAfterRequest<*, *>> = mutableListOf()
@@ -63,21 +64,23 @@ open class RequestRunner(
         afterRequestHooks.add(onAfterRequest)
     }
 
-
-    suspend inline fun <reified T, reified R> makeRequest(metadata: RequestMetadata<T, R>): OpenApiHttpResponse<R> {
-        return makeRequest(metadata, typeInfo<T>(), typeInfo<R>())
-    }
-
     suspend fun <T, R> makeRequest(
-        metadata: RequestMetadata<T, R>, requestBody: TypeInfo, responseBody: TypeInfo
+        metadata: RequestMetadata<T, R>,
+        requestBody: TypeInfo,
+        responseBody: TypeInfo,
+        onBeforeRequest: OnBeforeRequest<T, R>,
+        onAfterRequest: OnAfterRequest<T, R>
     ): OpenApiHttpResponse<R> {
-        val response = client.request(metadata.url) {
+        val finalUrl = URLBuilder(baseUrl).appendEncodedPathSegments(metadata.path).build()
+        val response = client.request(finalUrl) {
             this.method = metadata.method
             metadata.headers.forEach { key, value -> this.headers.appendAll(key, value) }
             setBody(metadata.body, requestBody)
+            onBeforeRequest(metadata, this)
             beforeRequestHooks.forEach { it(metadata, this) }
         }
 
+        onAfterRequest(metadata, response)
         afterRequestHooks.forEach { it(metadata, response) }
         return OpenApiHttpResponse(response, responseBody)
     }

@@ -8,9 +8,9 @@ import io.thoth.openapi.client.common.mappedKtReference
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
+import mu.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
-import mu.KotlinLogging.logger
 
 class KotlinClientGenerator(
     // TODO  UserPermissionsModel (to many imports)
@@ -37,13 +37,13 @@ class KotlinClientGenerator(
         initializeValues()
     }
 
-    private fun getParameters(route: OpenApiRoute): String = buildString {
+    private fun getParameters(route: OpenApiRoute) = buildList<String> {
         // Path parameters
         (route.queryParameters + route.pathParameters).forEach { (param) ->
             val (actual, all) = typeProvider.generateTypes(param.type)
             clientImports += actual.imports
             typeDefinitions.putAll(all.mappedKtReference())
-            append("${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}, ")
+            add("${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}, ")
         }
 
         // Body
@@ -51,15 +51,18 @@ class KotlinClientGenerator(
             val (actual, all) = typeProvider.generateTypes(route.requestBodyType)
             clientImports += actual.imports
             typeDefinitions.putAll(all.mappedKtReference())
-            append("body: ${actual.reference()}, ")
+            add("body: ${actual.reference()}, ")
         }
 
         // Headers
-        append("headers: Headers = Headers.Empty, ")
+        add("headers: Headers = Headers.Empty, ")
 
+        val (responseBody, _) = typeProvider.generateTypes(route.responseBodyType)
+        val (requestBody, _) = typeProvider.generateTypes(route.requestBodyType)
+        val hookGeneric = "<${requestBody.reference()}, ${responseBody.reference()}>"
         // Hooks to modify the request
-        append("onBeforeRequest: OnBeforeRequest<*, *> = { _, _ -> }, ")
-        append("onAfterRequest: OnAfterRequest<*, *> = { _, _ -> }")
+        add("onBeforeRequest: OnBeforeRequest${hookGeneric} = { _, _ -> }, ")
+        add("onAfterRequest: OnAfterRequest${hookGeneric} = { _, _ -> }")
     }
 
     private fun initializeValues() {
@@ -71,11 +74,29 @@ class KotlinClientGenerator(
             }
 
             val (responseBody, all) = typeProvider.generateTypes(route.responseBodyType)
+            val (requestBody, _) = typeProvider.generateTypes(route.requestBodyType)
             clientImports += responseBody.imports
             typeDefinitions.putAll(all.mappedKtReference())
             val function = buildString {
-                append("    open fun ${routeName}(${getParameters(route)}): ${responseBody.reference()} {\n")
-                append("        TODO(\"Not implemented\")")
+                append("    open suspend fun ${routeName}(\n")
+                getParameters(route).forEach {
+                    append("        $it\n")
+                }
+                append("    ): OpenApiHttpResponse<${responseBody.reference()}> {\n")
+                append("        return makeRequest(\n")
+                append("            RequestMetadata(\n")
+                append("                path = \"${route.fullPath}\",\n")
+                append("                method = HttpMethod(\"${route.method.value}\"),\n")
+                append("                headers = headers,\n")
+                append("                body = ${if (route.requestBodyType.clazz == Unit::class) "Unit" else "body"},\n")
+                append("                shouldLogin = ${route.secured != null},\n")
+                append("                securitySchema = \"${route.secured?.name}\",\n")
+                append("            ),\n")
+                append("            typeInfo<${requestBody.reference()}>(),\n")
+                append("            typeInfo<${responseBody.reference()}>(),\n")
+                append("            onBeforeRequest=onBeforeRequest,\n")
+                append("            onAfterRequest=onAfterRequest\n")
+                append("        )")
                 append("\n    }")
             }
             clientFunctions += function
@@ -88,48 +109,51 @@ class KotlinClientGenerator(
             ClientPart(
                 path = "RequestRunner.kt",
                 content =
-                    buildString {
-                        append("package $packageName\n\n")
-                        append(requestRunner)
-                    },
+                buildString {
+                    append("package $packageName\n\n")
+                    append(requestRunner)
+                },
             )
         parts +=
             ClientPart(
                 path = "${apiClientName}.kt",
                 content =
-                    buildString {
-                        // Package
-                        append("package $packageName\n\n")
+                buildString {
+                    // Package
+                    append("package $packageName\n\n")
 
-                        // Imports
-                        append("import io.ktor.client.*\n")
-                        append(clientImports.joinToString("\n"))
-                        append("\n")
-                        append("import io.ktor.http.*\n")
-                        append("import $packageName.models.*\n")
-                        append("\n\n")
+                    // Imports
+                    append("import io.ktor.client.*\n")
+                    append(clientImports.joinToString("\n"))
+                    append("\n")
+                    append("import io.ktor.http.*\n")
+                    append("import io.ktor.util.reflect.*\n")
+                    append("import $packageName.models.*\n")
+                    append("\n\n")
 
-                        // Class
-                        append("open class ${apiClientName}(\n")
-                        append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n")
-                        append(") : RequestRunner(clientBuilder) {\n")
-                        append("${clientFunctions.joinToString("\n\n")}\n")
-                        append("}")
-                    },
+                    // Class
+                    append("@Suppress(\"unused\")\n")
+                    append("open class ${apiClientName}(\n")
+                    append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {},\n")
+                    append("    baseUrl: Url\n")
+                    append(") : RequestRunner(clientBuilder, baseUrl) {\n")
+                    append("${clientFunctions.joinToString("\n\n")}\n")
+                    append("}")
+                },
             )
         parts +=
             typeDefinitions.values.map {
                 ClientPart(
                     path = "models/${it.name()}.kt",
                     content =
-                        buildString {
-                            append("package $packageName.models\n\n")
-                            if (it.imports.isNotEmpty()) {
-                                append(it.imports.joinToString("\n"))
-                                append("\n\n")
-                            }
-                            append(it.content())
-                        },
+                    buildString {
+                        append("package $packageName.models\n\n")
+                        if (it.imports.isNotEmpty()) {
+                            append(it.imports.joinToString("\n"))
+                            append("\n\n")
+                        }
+                        append(it.content())
+                    },
                 )
             }
         return parts
@@ -145,13 +169,13 @@ fun Application.generateKotlinClient(
     typePackages: List<String> = emptyList()
 ) {
     KotlinClientGenerator(
-            routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
-            packageName = packageName,
-            dist = dist,
-            apiClientName = apiClientName,
-            fileWriter = fileWriter,
-            typePackages = typePackages,
-        )
+        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+        packageName = packageName,
+        dist = dist,
+        apiClientName = apiClientName,
+        fileWriter = fileWriter,
+        typePackages = typePackages,
+    )
         .safeClient()
 }
 
