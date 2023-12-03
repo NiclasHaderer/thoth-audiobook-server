@@ -16,58 +16,59 @@ class TsGenerationTest {
                 generateTsClient(
                     dist = "",
                     fileWriter = { file, content -> generatedStuff[file.name] = content },
-                    apiFactoryName = "createTestApi"
+                    apiFactoryName = "createTestApi",
                 )
             }
         }
-        val models =
-            """
+        val models = """
         import type { Pair } from "./utility-types";
+
+        export interface Something {
+          name: string;
+        }
+        
         export type UUID = `$\{string}-$\{string}-$\{string}-$\{string}-$\{string}`
         
-        export interface ListRoute  {
-          name: string;
+        export interface ListRoute extends Something {
+          override name: string;
           someParam: Array<UUID>;
         }
         
-        export interface MapRoute  {
+        export interface MapRoute {
           name: boolean;
           someParam: Record<string, UUID>;
         }
         
-        export interface SetRoute  {
+        export interface SetRoute {
           name: number;
           someParam: Array<UUID>;
         }
         
-        export interface GenericRoute<T>  {
+        export interface GenericRoute<T> {
           name: Pair<any, UUID>;
           someParam: T;
         }
         
-        export interface GenericRoute2<T , U>  {
+        export interface GenericRoute2<T , U> {
           name: string;
           someParam: T;
           someParam2: U;
         }
         
-        export interface GenericRoute3<T>  {
+        export interface GenericRoute3<T> {
           name: string;
           someParam: Record<string, T>;
           someParam2: GenericRoute2<T, string>;
         }
-        """
-                .trimIndent()
-                .replace("\\{", "{")
+        """.trimIndent().replace("\\{", "{")
 
         val generatedModels = generatedStuff["models.ts"]
         assertEquals(models, generatedModels)
 
-        val apiClient =
-            """
+        val apiClient = """
         // noinspection JSUnusedGlobalSymbols,ES6UnusedImports
         import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from "./client";
-        import type {GenericRoute, GenericRoute2, GenericRoute3, ListRoute, MapRoute, SetRoute, UUID} from "./models";
+        import type {GenericRoute, GenericRoute2, GenericRoute3, ListRoute, MapRoute, SetRoute, Something, UUID} from "./models";
         
         export const createTestApi = (
           defaultHeaders: HeadersInit = {},
@@ -93,9 +94,7 @@ class TsGenerationTest {
             }
           } as const;
         }
-        """
-                .trimIndent()
-                .replace("\\{", "{")
+        """.trimIndent().replace("\\{", "{")
 
         val generatedApiClient = generatedStuff["api-client.ts"]
         assertEquals(apiClient, generatedApiClient)

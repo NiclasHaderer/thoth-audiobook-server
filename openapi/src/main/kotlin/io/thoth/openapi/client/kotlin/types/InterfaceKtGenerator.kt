@@ -4,45 +4,17 @@ import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.kotlin.KtGenerator
 import io.thoth.openapi.common.ClassType
 import kotlin.reflect.KClass
-import kotlin.reflect.KTypeParameter
+
 
 class InterfaceKtGenerator : KtGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
-        val properties = classType.properties
         val superClasses =
             classType.superClasses
                 .filter { it.memberProperties.isNotEmpty() }
                 .filterNot { it.clazz == Enum::class }
                 .map { generateSubType(it) }
 
-        val ktProperties =
-            properties.map { property ->
-                "val ${property.name}: ${
-                if (classType.isGenericProperty(property)) {
-                    "${property.returnType}"
-                } else if (classType.isParameterizedProperty(property)) {
-                    val typeArgs = property.returnType.arguments.map {
-                        val argClassifier = it.type!!.classifier
-                        if (argClassifier is KTypeParameter) {
-                            argClassifier.name
-                        } else {
-                            generateSubType(ClassType.create(it.type!!)).reference()
-                        }
-                    }
-                    val parameterizedType = generateSubType(classType.forMember(property))
-
-                    "${parameterizedType.name()}<${typeArgs.joinToString(", ")}>"
-                } else {
-                    generateSubType(classType.forMember(property)).reference()
-                }
-            }${
-                if (property.returnType.isMarkedNullable) {
-                    "?"
-                } else {
-                    ""
-                }
-            }"
-            }
+        val ktProperties = interfaceProperties(classType, generateSubType)
 
         val classInterface = buildString {
             val interfaceName =
@@ -58,8 +30,15 @@ class InterfaceKtGenerator : KtGenerator() {
                 append(" : ${superClasses.joinToString(", ") { it.reference() }}")
             }
             append(" {\n")
-            append(ktProperties.joinToString("\n") { "  $it" })
-            append("\n}")
+            ktProperties.filter { !it.declaredInSuperclass }.mapIndexed { i, it ->
+                append("    ")
+                if (it.overwrites) append("override ")
+                append("val ${it.name}: ${it.type.name}")
+                if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
+                if (it.nullable) append("?")
+                append("\n")
+            }
+            append("}")
         }
 
         val classInterfaceImpl = buildString {
@@ -72,7 +51,14 @@ class InterfaceKtGenerator : KtGenerator() {
                     includeBounds = true,
                 )
             append("data class $dataClassName(\n")
-            append(ktProperties.joinToString(",\n") { "  override $it" })
+            ktProperties.mapIndexed { i, it ->
+                append("    ")
+                append("override ")
+                append("val ${it.name}: ${it.type.name}")
+                if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
+                if (it.nullable) append("?")
+                if (i < ktProperties.size - 1) append(",\n")
+            }
             append("\n")
             val superInterfaceName =
                 generateName(
@@ -127,12 +113,12 @@ class InterfaceKtGenerator : KtGenerator() {
                             }
 
                         "${it.name} ${
-                    if (bounds.isNotEmpty() && includeBounds) {
-                        ": $bounds"
-                    } else {
-                        ""
-                    }
-                }"
+                            if (bounds.isNotEmpty() && includeBounds) {
+                                ": $bounds"
+                            } else {
+                                ""
+                            }
+                        }"
                     }
                 }
                 .trim()
@@ -147,7 +133,7 @@ class InterfaceKtGenerator : KtGenerator() {
     }
 
     override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
-        return classType.declaredMemberProperties
+        return classType.memberProperties
             .flatMap {
                 // If the property is a generic type, we can skip it
                 if (classType.isGenericProperty(it)) emptyList()

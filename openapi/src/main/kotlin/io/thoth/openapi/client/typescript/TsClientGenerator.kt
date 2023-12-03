@@ -133,7 +133,7 @@ class TsClientGenerator(
 
     private fun getClientTypes(): String {
         return buildString {
-            append("import type { Pair } from \"./utility-types\";\n")
+            append("import type { Pair } from \"./utility-types\";\n\n")
             append(typeDefinitions.values.joinToString("\n\n") { "export ${it.content()}" })
         }
     }

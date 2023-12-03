@@ -159,11 +159,16 @@ private constructor(
      */
     fun isParameterizedProperty(prop: KProperty1<*, *>) = prop.returnType.arguments.isNotEmpty()
 
+    fun isOverwrittenProperty(prop: KProperty1<*, *>): Boolean {
+        return this.superClasses.any { it.properties.any { it.name == prop.name } }
+    }
+
+
     /** Create a new ClassType for a member of the current `ClassType.clazz` */
     @OptIn(ExperimentalStdlibApi::class)
     fun forMember(property: KProperty1<*, *>): ClassType {
         // Get property from clazz
-        val member = this.clazz.declaredMemberProperties.first { it.name == property.name }
+        val member = this.clazz.memberProperties.first { it.name == property.name }
         val memberType: KType = member.returnType
 
         // If the member type is a complete generic type, we resolve it and return it

@@ -2,11 +2,25 @@ package io.thoth.openapi.client.common
 
 import io.thoth.openapi.common.ClassType
 import io.thoth.openapi.common.InternalAPI
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 import org.reflections.Reflections
+import kotlin.reflect.KClass
+import kotlin.reflect.KTypeParameter
+import kotlin.reflect.full.createInstance
 
 typealias GenerateType = (classType: ClassType) -> TypeGenerator.Type
+
+data class PropertyType(
+    val name: String,
+    val typeArguments: List<String>
+)
+
+data class Property(
+    val name: String,
+    val nullable: Boolean,
+    val type: PropertyType,
+    val overwrites: Boolean,
+    val declaredInSuperclass: Boolean
+)
 
 @OptIn(InternalAPI::class)
 abstract class TypeGenerator<T : TypeGenerator.Type> {
@@ -36,13 +50,17 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
     }
 
     interface Type {
-        @InternalAPI val reference: String?
+        @InternalAPI
+        val reference: String?
 
-        @InternalAPI val name: String
+        @InternalAPI
+        val name: String
 
-        @InternalAPI val content: String
+        @InternalAPI
+        val content: String
 
-        @InternalAPI val dataType: DataType
+        @InternalAPI
+        val dataType: DataType
 
         fun reference(): String {
             return when (dataType) {
@@ -87,4 +105,58 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
     abstract fun getName(classType: ClassType): String?
 
     open fun priority(classType: ClassType): Int = 0
+
+    fun interfaceProperties(
+        classType: ClassType,
+        generateSubType: GenerateType
+    ): List<Property> {
+        val properties = classType.memberProperties
+
+        return properties.map { property ->
+            val overwritesProperty = classType.isOverwrittenProperty(property)
+            val propertyName = property.name
+            val declaredInSuperclass = classType.properties.none { it.name == propertyName }
+
+            val propertyType: PropertyType = run {
+                if (classType.isGenericProperty(property)) {
+                    // Fully generic property, example: interface Something<T> { val hello: T }
+                    PropertyType(
+                        name = property.returnType.toString(),
+                        typeArguments = emptyList(),
+                    )
+                } else if (classType.isParameterizedProperty(property)) {
+                    // Parameterized property, example: interface Something<T> { val hello: Map<String, T> }
+                    val typeArgs = property.returnType.arguments.map {
+                        val argClassifier = it.type!!.classifier
+                        if (argClassifier is KTypeParameter) {
+                            argClassifier.name
+                        } else {
+                            generateSubType(ClassType.create(it.type!!)).reference()
+                        }
+                    }
+                    val parameterizedType = generateSubType(classType.forMember(property))
+
+                    PropertyType(
+                        name = parameterizedType.name(),
+                        typeArguments = typeArgs,
+                    )
+                } else {
+                    // Regular property, example: interface Something { val hello: String }
+                    PropertyType(
+                        name = generateSubType(classType.forMember(property)).name(),
+                        typeArguments = emptyList(),
+                    )
+                }
+            }
+
+            val nullable = property.returnType.isMarkedNullable
+            Property(
+                name = propertyName,
+                nullable = nullable,
+                type = propertyType,
+                overwrites = overwritesProperty,
+                declaredInSuperclass = declaredInSuperclass,
+            )
+        }
+    }
 }
