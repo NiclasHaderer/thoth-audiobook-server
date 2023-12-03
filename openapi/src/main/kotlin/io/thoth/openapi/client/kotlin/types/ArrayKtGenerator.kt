@@ -28,11 +28,9 @@ class ArrayKtGenerator : KtGenerator() {
     }
 
     override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
-        if (classType.genericArguments.isEmpty()) return emptyList()
-
-        val genericArg = classType.genericArguments.first()
-        val subType = generateSubType(genericArg) as Type
-        return subType.imports
+        return classType.genericArguments.flatMap {
+            (generateSubType(it) as Type).imports
+        }
     }
 
     override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE

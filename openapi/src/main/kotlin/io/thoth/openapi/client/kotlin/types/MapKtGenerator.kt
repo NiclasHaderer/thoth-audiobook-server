@@ -37,14 +37,9 @@ class MapKtGenerator : KtGenerator() {
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 
     override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
-        if (classType.genericArguments.size != 2) {
-            return listOf()
+        return classType.genericArguments.flatMap {
+            (generateSubType(it) as Type).imports
         }
-        return listOf(
-                classType.genericArguments[0].clazz.qualifiedName ?: "",
-                classType.genericArguments[1].clazz.qualifiedName ?: "",
-            )
-            .filter { it.isNotEmpty() }
     }
 
     override fun canGenerate(classType: ClassType): Boolean {

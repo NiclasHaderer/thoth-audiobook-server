@@ -44,6 +44,12 @@ class PairKtGenerator : KtGenerator() {
 
     override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
 
+    override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
+        return classType.genericArguments.flatMap {
+            (generateSubType(it) as Type).imports
+        }
+    }
+
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(
             Pair::class,

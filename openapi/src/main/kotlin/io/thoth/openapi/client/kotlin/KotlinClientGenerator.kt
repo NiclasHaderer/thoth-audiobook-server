@@ -13,9 +13,7 @@ import java.nio.file.Path
 import mu.KotlinLogging.logger
 
 class KotlinClientGenerator(
-    // TODO
-    //  UserPermissionsModel
-    //  MetadataAuthor
+    // TODO  UserPermissionsModel (to many imports)
     override val routes: List<OpenApiRoute>,
     private val packageName: String,
     private val apiClientName: String,
@@ -36,8 +34,6 @@ class KotlinClientGenerator(
         )
 
     init {
-        // TODO imports for list, pair, maps, ...
-        // TODO override val for interfaces (or omit)
         initializeValues()
     }
 
