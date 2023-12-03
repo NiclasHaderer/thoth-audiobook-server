@@ -8,7 +8,6 @@ import kotlin.reflect.KClass
 class InterfaceTsGenerator : TsGenerator() {
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
-        val properties = classType.properties
         val superClasses =
             classType.superClasses
                 .filter { it.memberProperties.isNotEmpty() }
@@ -18,24 +17,27 @@ class InterfaceTsGenerator : TsGenerator() {
         val tsProperties = interfaceProperties(classType, generateSubType)
 
         return buildString {
-            val interfaceName = generateName(
-                classType = classType,
-                resolveGeneric = false,
-                generateSubType = generateSubType,
-            )
+            val interfaceName =
+                generateName(
+                    classType = classType,
+                    resolveGeneric = false,
+                    generateSubType = generateSubType,
+                )
             append("interface $interfaceName")
             if (superClasses.isNotEmpty()) {
                 append(" extends ${superClasses.joinToString(", ") { it.reference() }}")
             }
             append(" {\n")
-            tsProperties.filter { !it.declaredInSuperclass }.mapIndexed { i, it ->
-                append("  ")
-                if (it.overwrites) append("override ")
-                append("${it.name}: ${it.type.name}")
-                if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
-                if (it.nullable) append("?")
-                append(";\n")
-            }
+            tsProperties
+                .filter { !it.declaredInSuperclass }
+                .mapIndexed { i, it ->
+                    append("  ")
+                    if (it.overwrites) append("override ")
+                    append("${it.name}: ${it.type.name}")
+                    if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
+                    if (it.nullable) append("?")
+                    append(";\n")
+                }
             append("}")
         }
     }
