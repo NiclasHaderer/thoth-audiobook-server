@@ -16,13 +16,15 @@ class ArrayTsGenerator : TsGenerator() {
 
         val genericArg = classType.genericArguments.first()
         val subType = generateSubType(genericArg)
-        return "Array<${subType.reference()}${
+
+        return buildString {
+            append("Array<")
+            append(subType.reference())
             if (genericArg.isNullable) {
-                " | null"
-            } else {
-                ""
+                append(" | null")
             }
-        }>"
+            append(">")
+        }
     }
 
     override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.JSON

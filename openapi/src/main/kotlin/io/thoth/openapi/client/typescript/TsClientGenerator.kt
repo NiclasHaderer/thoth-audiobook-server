@@ -3,27 +3,33 @@ package io.thoth.openapi.client.typescript
 import io.ktor.server.application.*
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
+import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.client.common.mappedTsReference
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.common.padLinesStart
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
-import mu.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
+import mu.KotlinLogging.logger
 
 class TsClientGenerator(
     override val routes: List<OpenApiRoute>,
     val apiFactoryName: String,
     dist: Path,
-    fileWriter: ((File, String) -> Unit)?
-) :
-    ClientGenerator(dist, fileWriter) {
+    fileWriter: ((File, String) -> Unit)?,
+    typePackages: List<String>
+) : ClientGenerator(dist, fileWriter) {
     private val log = logger {}
     private val typeDefinitions = mutableMapOf<String, TsGenerator.ReferenceType>()
     private val clientFunctions = mutableListOf<String>()
     private val requestRunner: String by lazy { getResourceContent("/client.ts") }
     private val utilityTypes by lazy { getResourceContent("/utility-types.ts") }
+    private val typeProvider =
+        TypeGenerator.Provider(
+            TsGenerator::class,
+            listOf("io.thoth.openapi.client.typescript") + typePackages,
+        )
 
     init {
         generateApiClient()
@@ -33,7 +39,7 @@ class TsClientGenerator(
         val urlParams = route.queryParameters + route.pathParameters
         val urlParamsStr =
             urlParams.map { (param) ->
-                val (actual, all) = TsGenerator.generateTypes(param.type)
+                val (actual, all) = typeProvider.generateTypes(param.type)
                 typeDefinitions.putAll(all.mappedTsReference())
                 "${param.name}${if (param.optional) "?" else ""}: ${actual.reference()}"
             }
@@ -42,13 +48,14 @@ class TsClientGenerator(
 
         val bodyParamString =
             if (route.requestBodyType.clazz != Unit::class) {
-                val (actual, all) = TsGenerator.generateTypes(route.requestBodyType)
+                val (actual, all) = typeProvider.generateTypes(route.requestBodyType)
                 typeDefinitions.putAll(all.mappedTsReference())
                 "body: ${actual.reference()}"
             } else ""
 
         return buildString {
-            if (urlParamsStr.isNotEmpty()) append("$urlParamsDecompositionStr: {${urlParamsStr.joinToString(",") { it }}}, ")
+            if (urlParamsStr.isNotEmpty())
+                append("$urlParamsDecompositionStr: {${urlParamsStr.joinToString(",") { it }}}, ")
             if (bodyParamString.isNotEmpty()) append("$bodyParamString, ")
             append("headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []")
         }
@@ -71,24 +78,32 @@ class TsClientGenerator(
                 log.warn("Route ${route.method}:${route.fullPath} has no summary")
                 return@forEach
             }
-            val (responseBody, all) = TsGenerator.generateTypes(route.responseBodyType)
+            val (responseBody, all) = typeProvider.generateTypes(route.responseBodyType)
             typeDefinitions.putAll(all.mappedTsReference())
 
-            val function = buildString {
-                append("$routeName(${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> {\n")
-                append("  return _request(${createURL(route)}, \"${route.method.value}\", \"${responseBody.parser.methodName}\", ")
-                append("_mergeHeaders(defaultHeadersImpl, headers), ")
-                append(if (route.requestBodyType.clazz != Unit::class) "body" else "undefined")
-                append(", [...defaultInterceptors, ...interceptors], executor, ${route.secured != null});\n")
-                append("}")
-            }.padLinesStart(' ', 4)
+            val function =
+                buildString {
+                        append(
+                            "$routeName(${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> {\n"
+                        )
+                        append(
+                            "  return _request(${createURL(route)}, \"${route.method.value}\", \"${responseBody.parser.methodName}\", "
+                        )
+                        append("_mergeHeaders(defaultHeadersImpl, headers), ")
+                        append(if (route.requestBodyType.clazz != Unit::class) "body" else "undefined")
+                        append(", [...defaultInterceptors, ...interceptors], executor, ${route.secured != null});\n")
+                        append("}")
+                    }
+                    .padLinesStart(' ', 4)
             clientFunctions.add(function)
         }
     }
 
     private fun createTypeImports(): String {
         return buildString {
-            append("import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from \"./client\";\n")
+            append(
+                "import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from \"./client\";\n"
+            )
             append("import type {")
             append(typeDefinitions.keys.sorted().joinToString(", "))
             append("} from \"./models\";\n")
@@ -103,7 +118,9 @@ class TsClientGenerator(
             append("export const $apiFactoryName = (\n")
             append("  defaultHeaders: HeadersInit = {},\n")
             append("  defaultInterceptors: ApiInterceptor[] = [],\n")
-            append("  executor = (callData: ApiCallData) => fetch(callData.route, {method: callData.method, headers: callData.headers, body: callData.bodySerializer(callData.body)})\n")
+            append(
+                "  executor = (callData: ApiCallData) => fetch(callData.route, {method: callData.method, headers: callData.headers, body: callData.bodySerializer(callData.body)})\n"
+            )
             append(") => {\n")
             append("  const defaultHeadersImpl = new Headers(defaultHeaders)\n")
             append("  return {\n")
@@ -137,19 +154,30 @@ fun Application.generateTsClient(
     dist: Path,
     apiFactoryName: String = "createApi",
     routes: List<OpenApiRoute>? = null,
-    fileWriter: ((File, String) -> Unit)? = null
+    fileWriter: ((File, String) -> Unit)? = null,
+    typePackages: List<String> = emptyList()
 ) {
     TsClientGenerator(
-        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
-        dist = dist,
-        fileWriter = fileWriter,
-        apiFactoryName = apiFactoryName,
-    ).safeClient()
+            routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+            dist = dist,
+            fileWriter = fileWriter,
+            apiFactoryName = apiFactoryName,
+            typePackages = typePackages,
+        )
+        .safeClient()
 }
 
 fun Application.generateTsClient(
     dist: String,
     apiFactoryName: String = "createApi",
     routes: List<OpenApiRoute>? = null,
-    fileWriter: ((File, String) -> Unit)? = null
-) = generateTsClient(dist = Path.of(dist), routes = routes, fileWriter = fileWriter, apiFactoryName = apiFactoryName)
+    fileWriter: ((File, String) -> Unit)? = null,
+    typePackages: List<String> = emptyList()
+) =
+    generateTsClient(
+        dist = Path.of(dist),
+        routes = routes,
+        fileWriter = fileWriter,
+        apiFactoryName = apiFactoryName,
+        typePackages = typePackages,
+    )

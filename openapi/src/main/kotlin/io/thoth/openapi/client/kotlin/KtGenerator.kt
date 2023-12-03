@@ -28,7 +28,6 @@ abstract class KtGenerator : TypeGenerator<KtGenerator.Type>() {
                 require(reference == null) { "Reference must be null for primitive types" }
                 InlineType(content = content, name = name, imports = imports)
             }
-
             DataType.COMPLEX -> {
                 require(reference != null) { "Reference must not be null for complex types" }
                 require(name != null) { "Name must not be null for complex types" }
@@ -36,10 +35,4 @@ abstract class KtGenerator : TypeGenerator<KtGenerator.Type>() {
             }
         }
     }
-
-    companion object :
-        Provider<Type, KtGenerator>(
-            KtGenerator::class,
-            listOf("io.thoth.openapi.client.kotlin"),
-        )
 }

@@ -3,13 +3,14 @@ package io.thoth.openapi.client.kotlin
 import io.ktor.server.application.*
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
+import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.client.common.mappedKtReference
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
-import mu.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
+import mu.KotlinLogging.logger
 
 class KotlinClientGenerator(
     // TODO
@@ -20,6 +21,7 @@ class KotlinClientGenerator(
     private val apiClientName: String,
     dist: Path,
     fileWriter: ((File, String) -> Unit)?,
+    typePackages: List<String>
 ) : ClientGenerator(dist, fileWriter) {
     private val log = logger {}
 
@@ -27,6 +29,11 @@ class KotlinClientGenerator(
     private val clientFunctions = mutableListOf<String>()
     private val clientImports = mutableSetOf<String>()
     private val typeDefinitions = mutableMapOf<String, KtGenerator.ReferenceType>()
+    private val typeProvider =
+        TypeGenerator.Provider(
+            KtGenerator::class,
+            listOf("io.thoth.openapi.client.kotlin") + typePackages,
+        )
 
     init {
         // TODO imports for list, pair, maps, ...
@@ -37,7 +44,7 @@ class KotlinClientGenerator(
     private fun getParameters(route: OpenApiRoute): String = buildString {
         // Path parameters
         (route.queryParameters + route.pathParameters).forEach { (param) ->
-            val (actual, all) = KtGenerator.generateTypes(param.type)
+            val (actual, all) = typeProvider.generateTypes(param.type)
             clientImports += actual.imports
             typeDefinitions.putAll(all.mappedKtReference())
             append("${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}, ")
@@ -45,7 +52,7 @@ class KotlinClientGenerator(
 
         // Body
         if (route.requestBodyType.clazz != Unit::class) {
-            val (actual, all) = KtGenerator.generateTypes(route.requestBodyType)
+            val (actual, all) = typeProvider.generateTypes(route.requestBodyType)
             clientImports += actual.imports
             typeDefinitions.putAll(all.mappedKtReference())
             append("body: ${actual.reference()}, ")
@@ -67,7 +74,7 @@ class KotlinClientGenerator(
                 return@forEach
             }
 
-            val (responseBody, all) = KtGenerator.generateTypes(route.responseBodyType)
+            val (responseBody, all) = typeProvider.generateTypes(route.responseBodyType)
             clientImports += responseBody.imports
             typeDefinitions.putAll(all.mappedKtReference())
             val function = buildString {
@@ -85,48 +92,48 @@ class KotlinClientGenerator(
             ClientPart(
                 path = "RequestRunner.kt",
                 content =
-                buildString {
-                    append("package $packageName\n\n")
-                    append(requestRunner)
-                },
+                    buildString {
+                        append("package $packageName\n\n")
+                        append(requestRunner)
+                    },
             )
         parts +=
             ClientPart(
                 path = "${apiClientName}.kt",
                 content =
-                buildString {
-                    // Package
-                    append("package $packageName\n\n")
+                    buildString {
+                        // Package
+                        append("package $packageName\n\n")
 
-                    // Imports
-                    append("import io.ktor.client.*\n")
-                    append(clientImports.joinToString("\n"))
-                    append("\n")
-                    append("import io.ktor.http.*\n")
-                    append("import $packageName.models.*\n")
-                    append("\n\n")
+                        // Imports
+                        append("import io.ktor.client.*\n")
+                        append(clientImports.joinToString("\n"))
+                        append("\n")
+                        append("import io.ktor.http.*\n")
+                        append("import $packageName.models.*\n")
+                        append("\n\n")
 
-                    // Class
-                    append("open class ${apiClientName}(\n")
-                    append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n")
-                    append(") : RequestRunner(clientBuilder) {\n")
-                    append("${clientFunctions.joinToString("\n\n")}\n")
-                    append("}")
-                },
+                        // Class
+                        append("open class ${apiClientName}(\n")
+                        append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {}\n")
+                        append(") : RequestRunner(clientBuilder) {\n")
+                        append("${clientFunctions.joinToString("\n\n")}\n")
+                        append("}")
+                    },
             )
         parts +=
             typeDefinitions.values.map {
                 ClientPart(
                     path = "models/${it.name()}.kt",
                     content =
-                    buildString {
-                        append("package $packageName.models\n\n")
-                        if(it.imports.isNotEmpty()) {
-                            append(it.imports.joinToString("\n"))
-                            append("\n\n")
-                        }
-                        append(it.content())
-                    },
+                        buildString {
+                            append("package $packageName.models\n\n")
+                            if (it.imports.isNotEmpty()) {
+                                append(it.imports.joinToString("\n"))
+                                append("\n\n")
+                            }
+                            append(it.content())
+                        },
                 )
             }
         return parts
@@ -139,14 +146,16 @@ fun Application.generateKotlinClient(
     dist: Path,
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
+    typePackages: List<String> = emptyList()
 ) {
     KotlinClientGenerator(
-        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
-        packageName = packageName,
-        dist = dist,
-        apiClientName = apiClientName,
-        fileWriter = fileWriter,
-    )
+            routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+            packageName = packageName,
+            dist = dist,
+            apiClientName = apiClientName,
+            fileWriter = fileWriter,
+            typePackages = typePackages,
+        )
         .safeClient()
 }
 
@@ -156,6 +165,7 @@ fun Application.generateKotlinClient(
     dist: String,
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
+    typePackages: List<String> = emptyList()
 ) =
     generateKotlinClient(
         packageName = packageName,
@@ -163,4 +173,5 @@ fun Application.generateKotlinClient(
         routes = routes,
         apiClientName = apiClientName,
         fileWriter = fileWriter,
+        typePackages = typePackages,
     )

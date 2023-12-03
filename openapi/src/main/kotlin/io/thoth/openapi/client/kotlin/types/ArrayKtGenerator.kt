@@ -1,7 +1,6 @@
 package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
-import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.client.kotlin.KtGenerator
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging
@@ -17,19 +16,19 @@ class ArrayKtGenerator : KtGenerator() {
 
         val genericArg = classType.genericArguments.first()
         val subType = generateSubType(genericArg)
-        val content =
-            "List<${subType.reference()}${
-                if (genericArg.isNullable) {
-                    "?"
-                } else {
-                    ""
-                }
-            }>"
-        return content
+
+        return buildString {
+            append("List<")
+            append(subType.reference())
+            if (genericArg.isNullable) {
+                append("?")
+            }
+            append(">")
+        }
     }
 
     override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
-        if(classType.genericArguments.isEmpty()) return emptyList()
+        if (classType.genericArguments.isEmpty()) return emptyList()
 
         val genericArg = classType.genericArguments.first()
         val subType = generateSubType(genericArg) as Type
