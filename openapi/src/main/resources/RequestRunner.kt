@@ -1,3 +1,5 @@
+package io.moneytracker.client.gen
+
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -47,14 +49,15 @@ class OpenApiHttpResponse<T>(private val delegate: HttpResponse, val typeInfo: T
     suspend inline fun body(): T = call.body(typeInfo) as T
 }
 
-
-open class RequestRunner(
-    clientBuilder: HttpClientConfig<*>.() -> Unit = {},
-    val baseUrl: Url,
+abstract class RequestRunner(
+    protected val baseUrl: Url,
 ) {
     private val beforeRequestHooks: MutableList<OnBeforeRequest<*, *>> = mutableListOf()
     private val afterRequestHooks: MutableList<OnAfterRequest<*, *>> = mutableListOf()
-    private val client = HttpClient { clientBuilder() }
+    private val requestFailedHooks: MutableList<OnAfterRequest<*, *>> = mutableListOf()
+    private val client: HttpClient by lazy { createHttpClient() }
+
+    open fun createHttpClient(): HttpClient = HttpClient()
 
     fun onBeforeRequest(onBeforeRequest: OnBeforeRequest<*, *>) {
         beforeRequestHooks.add(onBeforeRequest)
@@ -62,6 +65,10 @@ open class RequestRunner(
 
     fun onAfterRequest(onAfterRequest: OnAfterRequest<*, *>) {
         afterRequestHooks.add(onAfterRequest)
+    }
+
+    fun onRequestFailed(onRequestFailed: OnAfterRequest<*, *>) {
+        requestFailedHooks.add(onRequestFailed)
     }
 
     suspend fun <T, R> makeRequest(
@@ -82,6 +89,9 @@ open class RequestRunner(
 
         onAfterRequest(metadata, response)
         afterRequestHooks.forEach { it(metadata, response) }
+        if(!response.status.isSuccess()) {
+            requestFailedHooks.forEach { it(metadata, response) }
+        }
         return OpenApiHttpResponse(response, responseBody)
     }
 }
