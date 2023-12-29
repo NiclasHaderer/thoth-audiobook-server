@@ -1,11 +1,11 @@
 package io.thoth.auth.models
 
-interface ThothLoginUser {
+interface ThothRegisterUser {
     val username: String
     val password: String
 }
 
-data class ThothLoginUserImpl(
+data class ThothRegisterUserImpl(
     override val username: String,
     override val password: String,
-) : ThothLoginUser
+) : ThothRegisterUser

@@ -8,7 +8,7 @@ import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.auth.models.ThothJwtPair
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.models.ThothUserPermissions
-import io.thoth.auth.models.impl.ThothJwtPairImpl
+import io.thoth.auth.models.ThothJwtPairImpl
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey

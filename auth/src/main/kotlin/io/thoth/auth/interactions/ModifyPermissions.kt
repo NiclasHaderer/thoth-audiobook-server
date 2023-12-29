@@ -3,10 +3,11 @@ package io.thoth.auth.interactions
 import io.thoth.auth.models.ThothModifyPermissions
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserPermissions
-import io.thoth.auth.models.impl.ThothUserImpl
+import io.thoth.auth.models.ThothUserImpl
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
+import io.thoth.auth.utils.wrap
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
@@ -26,5 +27,5 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.modifyUserPermis
     val config = thothAuthConfig<ID, PERMISSIONS>()
 
     val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
-    return config.updateUserPermissions(user, body.permissions).let { ThothUserImpl.wrap(it) }
+    return config.updateUserPermissions(user, body.permissions).let { it.wrap() }
 }

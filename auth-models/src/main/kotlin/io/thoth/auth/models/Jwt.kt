@@ -5,11 +5,8 @@ interface ThothJwtPair {
     val refreshToken: String
 }
 
-enum class ThothJwtTypes(val type: String) {
-    Access("access"),
-    Refresh("refresh")
-}
+data class ThothJwtPairImpl(
+    override val accessToken: String,
+    override val refreshToken: String,
+) : ThothJwtPair
 
-interface ThothAccessToken {
-    val accessToken: String
-}

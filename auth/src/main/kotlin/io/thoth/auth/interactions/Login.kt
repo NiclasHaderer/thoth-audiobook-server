@@ -5,7 +5,7 @@ import io.ktor.server.application.*
 import io.thoth.auth.models.ThothAccessToken
 import io.thoth.auth.models.ThothLoginUser
 import io.thoth.auth.models.ThothUserPermissions
-import io.thoth.auth.models.impl.ThothAccessTokenImpl
+import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.generateJwtPairForUser
 import io.thoth.auth.utils.passwordMatches

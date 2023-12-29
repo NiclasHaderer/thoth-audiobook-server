@@ -1,12 +1,12 @@
 package io.thoth.auth.interactions
 
 import io.thoth.auth.models.ThothRegisterUser
+import io.thoth.auth.models.ThothRegisteredUserImpl
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserPermissions
-import io.thoth.auth.models.impl.RegisteredUserImpl
-import io.thoth.auth.models.impl.ThothUserImpl
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.hashPassword
+import io.thoth.auth.utils.wrap
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
@@ -44,11 +44,10 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.registerUser(
 
     return config
         .createUser(
-            RegisteredUserImpl(
+            ThothRegisteredUserImpl(
                 username = user.username,
                 passwordHash = passwordHash,
                 admin = isAdmin,
             ),
-        )
-        .let { ThothUserImpl.wrap(it) }
+        ).wrap()
 }
