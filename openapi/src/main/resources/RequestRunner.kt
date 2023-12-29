@@ -1,5 +1,3 @@
-package io.moneytracker.client.gen
-
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -21,8 +19,8 @@ class RequestMetadata<T, RESPONSE>(
     val securitySchema: String?
 )
 
-typealias OnBeforeRequest<T, R> = (metadata: RequestMetadata<T, R>, requestBuilder: HttpRequestBuilder) -> Unit
-typealias OnAfterRequest<T, R> = (metadata: RequestMetadata<T, R>, response: HttpResponse) -> Unit
+typealias OnBeforeRequest<T, R> = suspend (metadata: RequestMetadata<T, R>, requestBuilder: HttpRequestBuilder) -> Unit
+typealias OnAfterRequest<T, R> = suspend (metadata: RequestMetadata<T, R>, response: HttpResponse) -> Unit
 
 
 class OpenApiHttpResponse<T>(private val delegate: HttpResponse, val typeInfo: TypeInfo) : HttpResponse() {
@@ -89,7 +87,7 @@ abstract class RequestRunner(
 
         onAfterRequest(metadata, response)
         afterRequestHooks.forEach { it(metadata, response) }
-        if(!response.status.isSuccess()) {
+        if (!response.status.isSuccess()) {
             requestFailedHooks.forEach { it(metadata, response) }
         }
         return OpenApiHttpResponse(response, responseBody)
