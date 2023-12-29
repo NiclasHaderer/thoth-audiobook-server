@@ -140,9 +140,8 @@ class KotlinClientGenerator(
                     } else {
                         append("open class ${apiClientName}(\n")
                     }
-                    append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {},\n")
                     append("    baseUrl: Url\n")
-                    append(") : RequestRunner(clientBuilder, baseUrl) {\n")
+                    append(") : RequestRunner(baseUrl) {\n")
                     append("${clientFunctions.joinToString("\n\n")}\n")
                     append("}")
                 },
