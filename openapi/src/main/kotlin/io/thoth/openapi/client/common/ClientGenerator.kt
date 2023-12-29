@@ -5,7 +5,11 @@ import io.thoth.openapi.ktor.Summary
 import java.io.File
 import java.nio.file.Path
 
-abstract class ClientGenerator(private val dist: Path, fileWriter: ((File, String) -> Unit)?) {
+abstract class ClientGenerator(
+    private val dist: Path,
+    fileWriter: ((File, String) -> Unit)?,
+    private val cleanDistPackage: Boolean
+) {
 
     private val fileWriter =
         fileWriter
@@ -20,6 +24,9 @@ abstract class ClientGenerator(private val dist: Path, fileWriter: ((File, Strin
 
     fun safeClient() {
         val client = generateClient()
+        if (cleanDistPackage) {
+            dist.toFile().deleteRecursively()
+        }
         client.forEach {
             val destination = dist.resolve(it.path).toFile()
             fileWriter(destination, it.content)

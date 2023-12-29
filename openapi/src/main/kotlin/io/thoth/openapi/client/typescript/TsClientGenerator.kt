@@ -18,8 +18,9 @@ class TsClientGenerator(
     val apiFactoryName: String,
     dist: Path,
     fileWriter: ((File, String) -> Unit)?,
-    typePackages: List<String>
-) : ClientGenerator(dist, fileWriter) {
+    typePackages: List<String>,
+    cleanDistPackage: Boolean,
+) : ClientGenerator(dist, fileWriter, cleanDistPackage) {
     private val log = logger {}
     private val typeDefinitions = mutableMapOf<String, TsGenerator.ReferenceType>()
     private val clientFunctions = mutableListOf<String>()
@@ -155,7 +156,8 @@ fun Application.generateTsClient(
     apiFactoryName: String = "createApi",
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
-    typePackages: List<String> = emptyList()
+    typePackages: List<String> = emptyList(),
+    cleanDistPackage: Boolean = true
 ) {
     TsClientGenerator(
             routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
@@ -163,6 +165,7 @@ fun Application.generateTsClient(
             fileWriter = fileWriter,
             apiFactoryName = apiFactoryName,
             typePackages = typePackages,
+            cleanDistPackage = cleanDistPackage
         )
         .safeClient()
 }
@@ -172,7 +175,8 @@ fun Application.generateTsClient(
     apiFactoryName: String = "createApi",
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
-    typePackages: List<String> = emptyList()
+    typePackages: List<String> = emptyList(),
+    cleanDistPackage: Boolean = true
 ) =
     generateTsClient(
         dist = Path.of(dist),
@@ -180,4 +184,5 @@ fun Application.generateTsClient(
         fileWriter = fileWriter,
         apiFactoryName = apiFactoryName,
         typePackages = typePackages,
+        cleanDistPackage = cleanDistPackage
     )
