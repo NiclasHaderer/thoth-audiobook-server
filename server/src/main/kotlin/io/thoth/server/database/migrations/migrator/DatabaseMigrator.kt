@@ -108,12 +108,12 @@ class DatabaseMigrator(
         migrations.forEach {
             try {
                 transaction(db = db) {
-                    log.info("Applying migration ${it.javaClass.simpleName}")
+                    log.info("Applying migration ${it.migration.javaClass.simpleName}")
                     it.migration.migrate(db)
                     saveMigrationInDatabase(it)
                 }
             } catch (e: Exception) {
-                log.error("Error while applying migration ${it.javaClass.simpleName}", e)
+                log.error("Error while applying migration ${it.migration.javaClass.simpleName}", e)
                 throw e
             }
         }

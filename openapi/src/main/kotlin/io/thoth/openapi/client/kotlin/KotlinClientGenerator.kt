@@ -17,10 +17,12 @@ class KotlinClientGenerator(
     override val routes: List<OpenApiRoute>,
     private val packageName: String,
     private val apiClientName: String,
+    private val abstract: Boolean,
     dist: Path,
     fileWriter: ((File, String) -> Unit)?,
+    cleanDistPackage: Boolean,
     typePackages: List<String>
-) : ClientGenerator(dist, fileWriter) {
+) : ClientGenerator(dist, fileWriter, cleanDistPackage) {
     private val log = logger {}
 
     private val requestRunner: String by lazy { getResourceContent("/RequestRunner.kt") }
@@ -133,7 +135,11 @@ class KotlinClientGenerator(
 
                     // Class
                     append("@Suppress(\"unused\")\n")
-                    append("open class ${apiClientName}(\n")
+                    if (abstract) {
+                        append("abstract class ${apiClientName}(\n")
+                    } else {
+                        append("open class ${apiClientName}(\n")
+                    }
                     append("    clientBuilder: HttpClientConfig<*>.() -> Unit = {},\n")
                     append("    baseUrl: Url\n")
                     append(") : RequestRunner(clientBuilder, baseUrl) {\n")
@@ -166,7 +172,9 @@ fun Application.generateKotlinClient(
     dist: Path,
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
-    typePackages: List<String> = emptyList()
+    typePackages: List<String> = emptyList(),
+    abstract: Boolean = false,
+    cleanDistPackage: Boolean = true
 ) {
     KotlinClientGenerator(
         routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
@@ -175,6 +183,8 @@ fun Application.generateKotlinClient(
         apiClientName = apiClientName,
         fileWriter = fileWriter,
         typePackages = typePackages,
+        abstract = abstract,
+        cleanDistPackage = cleanDistPackage
     )
         .safeClient()
 }
@@ -185,7 +195,9 @@ fun Application.generateKotlinClient(
     dist: String,
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
-    typePackages: List<String> = emptyList()
+    typePackages: List<String> = emptyList(),
+    abstract: Boolean = false,
+    cleanDistPackage: Boolean = true
 ) =
     generateKotlinClient(
         packageName = packageName,
@@ -194,4 +206,6 @@ fun Application.generateKotlinClient(
         apiClientName = apiClientName,
         fileWriter = fileWriter,
         typePackages = typePackages,
+        abstract = abstract,
+        cleanDistPackage = cleanDistPackage
     )

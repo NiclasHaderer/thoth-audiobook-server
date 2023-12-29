@@ -21,10 +21,3 @@ internal data class ThothUserImpl<ID : Any, PERMISSIONS : ThothUserPermissions>(
         }
     }
 }
-
-internal data class ThothDatabaseUserImpl<ID : Any, PERMISSIONS : ThothUserPermissions>(
-    override val id: ID,
-    override val username: String,
-    override val passwordHash: String,
-    override val permissions: PERMISSIONS,
-) : ThothDatabaseUser<ID, PERMISSIONS>
