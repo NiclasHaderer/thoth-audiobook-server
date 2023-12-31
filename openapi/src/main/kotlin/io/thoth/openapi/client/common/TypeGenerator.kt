@@ -72,15 +72,16 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
         fun name(): String = name
     }
 
-    abstract class InlineType(final override val content: String, override val name: String) : Type {
+    abstract class InlineType(final override var content: String, override var name: String) : Type {
         override val dataType: DataType = DataType.PRIMITIVE
-        override val reference: String = content
+        override val reference: String
+            get() = content
     }
 
     abstract class ReferenceType(
-        override val reference: String,
-        override val content: String,
-        override val name: String
+        override var reference: String,
+        override var content: String,
+        override var name: String
     ) : Type {
         override val dataType: DataType = DataType.COMPLEX
 
