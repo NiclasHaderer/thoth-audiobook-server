@@ -50,5 +50,6 @@ abstract class ClientGenerator(
                 }
             }
             .joinToString("")
+            .replace(Regex("[^A-Za-z0-9]"), "")
     }
 }
