@@ -39,7 +39,7 @@ class KotlinClientGenerator(
         initializeValues()
     }
 
-    private fun getParameters(route: OpenApiRoute) = buildList<String> {
+    private fun getParameters(route: OpenApiRoute) = buildList {
         // Path parameters
         (route.queryParameters + route.pathParameters).forEach { (param) ->
             val (actual, all) = typeProvider.generateTypes(param.type)
@@ -146,6 +146,19 @@ class KotlinClientGenerator(
                     append("}")
                 },
             )
+
+        // TODO
+        //  Iterate over all type definitions and check the following:
+        //  1. If the type ends with Impl AND there is a type with the same name but without Impl,
+        //     then check if the type without Impl has the same properties as the Impl type.
+        //     If so, then just remove the Impl type, as the non-Impl type will generate an Impl type as well
+        //  2. If the type ends with Impl AND there is a type with the same name but without Impl,
+        //     but the type without Impl has different properties, then we have to keep both types.
+        //  3. If the type ends with Impl AND there is no type with the same name but without Impl,
+        //     then we can just remove the Impl from the types name, as a type without Impl in the name will also
+        //     generate an Impl type.
+        // TODO Now we have to make sure that every reference that has been made up to this point is still valid.
+
         parts +=
             typeDefinitions.values.map {
                 ClientPart(
@@ -176,14 +189,14 @@ fun Application.generateKotlinClient(
     cleanDistPackage: Boolean = true
 ) {
     KotlinClientGenerator(
-        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
-        packageName = packageName,
-        dist = dist,
-        apiClientName = apiClientName,
-        fileWriter = fileWriter,
-        typePackages = typePackages,
-        abstract = abstract,
-        cleanDistPackage = cleanDistPackage
+            routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+            packageName = packageName,
+            dist = dist,
+            apiClientName = apiClientName,
+            fileWriter = fileWriter,
+            typePackages = typePackages,
+            abstract = abstract,
+            cleanDistPackage = cleanDistPackage,
     )
         .safeClient()
 }
@@ -199,12 +212,12 @@ fun Application.generateKotlinClient(
     cleanDistPackage: Boolean = true
 ) =
     generateKotlinClient(
-        packageName = packageName,
-        dist = Path.of(dist),
-        routes = routes,
-        apiClientName = apiClientName,
-        fileWriter = fileWriter,
-        typePackages = typePackages,
-        abstract = abstract,
-        cleanDistPackage = cleanDistPackage
+            packageName = packageName,
+            dist = Path.of(dist),
+            routes = routes,
+            apiClientName = apiClientName,
+            fileWriter = fileWriter,
+            typePackages = typePackages,
+            abstract = abstract,
+            cleanDistPackage = cleanDistPackage,
     )
