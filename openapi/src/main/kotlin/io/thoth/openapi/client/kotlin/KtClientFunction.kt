@@ -12,15 +12,18 @@ class KtClientFunction(
     val typeDefinitions: MutableMap<String, KtGenerator.ReferenceType>,
     val typeProviders: TypeGenerator.Provider<KtGenerator.Type, KtGenerator>,
 ) {
+
     companion object {
         private val log = logger {}
     }
+
+    val content = run { generateContent() }
 
     private fun getParameters(route: OpenApiRoute) = buildList {
         // Path parameters
         (route.queryParameters + route.pathParameters).forEach { (param) ->
             val (actual, all) = typeProviders.generateTypes(param.type)
-            clientImports += actual.imports
+            clientImports.addAll(actual.imports)
             typeDefinitions.putAll(all.mappedKtReference())
             add("${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}, ")
         }
@@ -28,7 +31,7 @@ class KtClientFunction(
         // Body
         if (route.requestBodyType.clazz != Unit::class) {
             val (actual, all) = typeProviders.generateTypes(route.requestBodyType)
-            clientImports += actual.imports
+            clientImports.addAll(actual.imports)
             typeDefinitions.putAll(all.mappedKtReference())
             add("body: ${actual.reference()}, ")
         }
@@ -44,7 +47,7 @@ class KtClientFunction(
         add("onAfterRequest: OnAfterRequest${hookGeneric} = { _, _ -> }")
     }
 
-    fun generateContent(): String? {
+    private fun generateContent(): String? {
         val routeName = getRouteName(route)
         if (routeName == null) {
             log.warn("Route ${route.method}:${route.fullPath} has no summary")
@@ -53,7 +56,8 @@ class KtClientFunction(
 
         val (responseBody, all) = typeProviders.generateTypes(route.responseBodyType)
         val (requestBody, _) = typeProviders.generateTypes(route.requestBodyType)
-        clientImports += responseBody.imports
+        clientImports.addAll(responseBody.imports)
+        clientImports.addAll(requestBody.imports)
         typeDefinitions.putAll(all.mappedKtReference())
         return buildString {
             append("    open suspend fun ${routeName}(\n")
@@ -70,8 +74,8 @@ class KtClientFunction(
             append("                shouldLogin = ${route.secured != null},\n")
             append("                securitySchema = \"${route.secured?.name}\",\n")
             append("            ),\n")
-            append("            typeInfo<${requestBody.implReference()}>(),\n")
-            append("            typeInfo<${responseBody.implReference()}>(),\n")
+            append("            typeInfo<${requestBody.reference()}>(),\n")
+            append("            typeInfo<${responseBody.reference()}>(),\n")
             append("            onBeforeRequest=onBeforeRequest,\n")
             append("            onAfterRequest=onAfterRequest\n")
             append("        )")
