@@ -29,29 +29,19 @@ class KotlinClientGenerator(
         KtGenerator::class,
         listOf("io.thoth.openapi.client.kotlin") + typePackages,
     )
-    private val clientFunctions by lazy {
-        routes.map {
+
+    override fun generateClient(): List<ClientPart> = buildList {
+        cleanupTypes(typeDefinitions)
+
+        val clientFunctions = routes.map {
             KtClientFunction(
-                getRouteName = this::getRouteName,
+                getRouteName = this@KotlinClientGenerator::getRouteName,
                 route = it,
                 clientImports = clientImports,
                 typeDefinitions = typeDefinitions,
                 typeProviders = typeProviders,
             )
         }
-    }
-
-    override fun generateClient(): List<ClientPart> = buildList {
-        cleanupTypes(typeDefinitions)
-        add(
-            ClientPart(
-                path = "RequestRunner.kt",
-                content = buildString {
-                    append("package $packageName\n\n")
-                    append(requestRunner)
-                },
-            ),
-        )
         add(
             ClientPart(
                 path = "${apiClientName}.kt",
@@ -77,8 +67,17 @@ class KotlinClientGenerator(
                     }
                     append("    baseUrl: Url\n")
                     append(") : RequestRunner(baseUrl) {\n")
-                    append("${clientFunctions.map { it.generateContent() }.joinToString("\n\n")}\n")
+                    append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
                     append("}")
+                },
+            ),
+        )
+        add(
+            ClientPart(
+                path = "RequestRunner.kt",
+                content = buildString {
+                    append("package $packageName\n\n")
+                    append(requestRunner)
                 },
             ),
         )
