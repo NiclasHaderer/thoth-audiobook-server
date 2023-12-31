@@ -3,6 +3,7 @@ package io.thoth.openapi.client.kotlin
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.common.ClassType
+import io.thoth.openapi.common.InternalAPI
 
 abstract class KtGenerator : TypeGenerator<KtGenerator.Type>() {
     interface Type : TypeGenerator.Type {
@@ -28,6 +29,7 @@ abstract class KtGenerator : TypeGenerator<KtGenerator.Type>() {
                 require(reference == null) { "Reference must be null for primitive types" }
                 InlineType(content = content, name = name, imports = imports)
             }
+
             DataType.COMPLEX -> {
                 require(reference != null) { "Reference must not be null for complex types" }
                 require(name != null) { "Name must not be null for complex types" }

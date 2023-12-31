@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.client.common.TypeGenerator
+import io.thoth.openapi.common.InternalAPI
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
@@ -41,6 +42,7 @@ class KotlinClientGenerator(
     }
 
     override fun generateClient(): List<ClientPart> = buildList {
+        cleanupTypes(typeDefinitions)
         add(
             ClientPart(
                 path = "RequestRunner.kt",
@@ -95,18 +97,66 @@ class KotlinClientGenerator(
                 )
             },
         )
+    }
+}
 
-        // TODO
-        //  Iterate over all type definitions and check the following:
-        //  1. If the type ends with Impl AND there is a type with the same name but without Impl,
-        //     then check if the type without Impl has the same properties as the Impl type.
-        //     If so, then just remove the Impl type, as the non-Impl type will generate an Impl type as well
-        //  2. If the type ends with Impl AND there is a type with the same name but without Impl,
-        //     but the type without Impl has different properties, then we have to keep both types.
-        //  3. If the type ends with Impl AND there is no type with the same name but without Impl,
-        //     then we can just remove the Impl from the types name, as a type without Impl in the name will also
-        //     generate an Impl type.
-        // TODO Now we have to make sure that every reference that has been made up to this point is still valid.
+@OptIn(InternalAPI::class)
+fun cleanupTypes(typesMap: Map<String, KtGenerator.ReferenceType>) {
+    //  Iterate over all type definitions and check the following:
+    //  1. If the type ends with Impl AND there is a type with the same name but without Impl,
+    //     then check if the type without Impl has the same properties as the Impl type.
+    //     If so, then modify the Impl type, so it has the same name, thereby generating the same type.
+    //  2. If the type ends with Impl AND there is a type with the same name but without Impl,
+    //     but the type without Impl has different properties, then we have to keep both types.
+    //     The name of the Impl type will be changed to Implementation to avoid name clashes.
+    //  3. If the type ends with Impl AND there is no type with the same name but without Impl,
+    //     then we can just remove the Impl from the types' name, as a type without Impl in the name will also
+    //     generate an Impl type.
+    for (type in typesMap.values) {
+        // We only care about types that end with Impl
+        if (!type.name().endsWith("Impl")) continue
+
+        val nameWithSuffix = type.name()
+        val nameWithoutSuffix = nameWithSuffix.removeSuffix("Impl")
+        val typeWithoutSuffix = typesMap[nameWithoutSuffix]
+        // Case 3
+        if (typeWithoutSuffix == null) {
+            // 1. Update name
+            type.name = nameWithoutSuffix
+            // 2. Update reference
+            type.reference.replace(nameWithSuffix, nameWithoutSuffix)
+            // 3. Update the content
+            type.content.replace(nameWithSuffix, nameWithoutSuffix)
+        } else {
+            // Case 1
+
+            val contentIsEqual =
+                { withoutImpl: KtGenerator.ReferenceType, withImpl: KtGenerator.ReferenceType ->
+                    val withoutImplContent = withoutImpl.content()
+                    val withImplContent = withImpl.content().also {
+                        it.replace(withImpl.name(), withoutImpl.name())
+                    }
+                    withoutImplContent == withImplContent
+                }
+
+
+            if (contentIsEqual(typeWithoutSuffix, type)) {
+                // 1. Update name
+                type.name = nameWithoutSuffix
+                // 2. Update reference
+                type.reference.replace(nameWithSuffix, nameWithoutSuffix)
+                // 3. Update the content
+                type.content.replace(nameWithSuffix, nameWithoutSuffix)
+            } else {
+                // Case 2
+                // 1. Update name
+                type.name = "${nameWithoutSuffix}Implementation"
+                // 2. Update reference
+                type.reference.replace(nameWithSuffix, "${nameWithoutSuffix}Implementation")
+                // 3. Update the content
+                type.content.replace(nameWithSuffix, "${nameWithoutSuffix}Implementation")
+            }
+        }
     }
 }
 
