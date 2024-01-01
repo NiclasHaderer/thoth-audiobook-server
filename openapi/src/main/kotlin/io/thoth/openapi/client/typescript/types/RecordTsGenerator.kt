@@ -1,11 +1,11 @@
 package io.thoth.openapi.client.typescript.types
 
 import io.thoth.openapi.client.common.GenerateType
-import io.thoth.openapi.client.typescript.TsGenerator
+import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging.logger
 
-class RecordTsGenerator : TsGenerator() {
+class RecordTsGenerator : TsTypeGenerator() {
     private val log = logger {}
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {

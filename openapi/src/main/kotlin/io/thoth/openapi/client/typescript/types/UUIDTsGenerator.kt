@@ -1,11 +1,11 @@
 package io.thoth.openapi.client.typescript.types
 
 import io.thoth.openapi.client.common.GenerateType
-import io.thoth.openapi.client.typescript.TsGenerator
+import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
 import java.util.*
 
-class UUIDTsGenerator : TsGenerator() {
+class UUIDTsGenerator : TsTypeGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
         return "type UUID = `\${string}-\${string}-\${string}-\${string}-\${string}`"
     }

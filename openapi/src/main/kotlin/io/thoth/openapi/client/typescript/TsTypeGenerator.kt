@@ -4,7 +4,7 @@ import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.common.ClassType
 
-abstract class TsGenerator : TypeGenerator<TsGenerator.Type>() {
+abstract class TsTypeGenerator : TypeGenerator<TsTypeGenerator.Type>() {
     interface Type : TypeGenerator.Type {
         val parser: ParseMethod
     }

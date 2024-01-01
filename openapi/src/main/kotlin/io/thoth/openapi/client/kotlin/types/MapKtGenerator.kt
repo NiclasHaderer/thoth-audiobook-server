@@ -1,11 +1,11 @@
 package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
-import io.thoth.openapi.client.kotlin.KtGenerator
+import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging.logger
 
-class MapKtGenerator : KtGenerator() {
+class MapKtGenerator : KtTypeGenerator() {
     private val log = logger {}
 
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {

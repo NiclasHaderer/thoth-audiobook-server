@@ -9,8 +9,8 @@ class KtClientFunction(
     val getRouteName: (OpenApiRoute) -> String?,
     val route: OpenApiRoute,
     val clientImports: MutableSet<String>,
-    val typeDefinitions: MutableMap<String, KtGenerator.ReferenceType>,
-    val typeProviders: TypeGenerator.Provider<KtGenerator.Type, KtGenerator>,
+    val typeDefinitions: MutableMap<String, KtTypeGenerator.ReferenceType>,
+    val typeProviders: TypeGenerator.Provider<KtTypeGenerator.Type, KtTypeGenerator>,
 ) {
 
     companion object {

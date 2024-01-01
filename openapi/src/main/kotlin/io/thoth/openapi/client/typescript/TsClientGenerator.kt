@@ -22,13 +22,13 @@ class TsClientGenerator(
     cleanDistPackage: Boolean,
 ) : ClientGenerator(dist, fileWriter, cleanDistPackage) {
     private val log = logger {}
-    private val typeDefinitions = mutableMapOf<String, TsGenerator.ReferenceType>()
+    private val typeDefinitions = mutableMapOf<String, TsTypeGenerator.ReferenceType>()
     private val clientFunctions = mutableListOf<String>()
-    private val requestRunner: String by lazy { getResourceContent("/client.ts") }
-    private val utilityTypes by lazy { getResourceContent("/utility-types.ts") }
+    private val requestRunner: String by lazy { getResourceContent("/typescript/client.ts") }
+    private val utilityTypes by lazy { getResourceContent("/typescript/utility-types.ts") }
     private val typeProvider =
         TypeGenerator.Provider(
-            TsGenerator::class,
+            TsTypeGenerator::class,
             listOf("io.thoth.openapi.client.typescript") + typePackages,
         )
 
@@ -143,8 +143,8 @@ class TsClientGenerator(
         val clientTypes = getClientTypes()
         val clientRequests = getClientRequests()
         return listOf(
-            ClientPart("client.ts", requestRunner),
-            ClientPart("utility-types.ts", utilityTypes),
+            ClientPart("typescript/client.ts", requestRunner),
+            ClientPart("typescript/utility-types.ts", utilityTypes),
             ClientPart("models.ts", clientTypes),
             ClientPart("api-client.ts", clientRequests),
         )

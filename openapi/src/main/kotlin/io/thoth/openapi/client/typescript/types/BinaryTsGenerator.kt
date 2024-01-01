@@ -1,12 +1,12 @@
 package io.thoth.openapi.client.typescript.types
 
 import io.thoth.openapi.client.common.GenerateType
-import io.thoth.openapi.client.typescript.TsGenerator
+import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
 import io.thoth.openapi.ktor.responses.BinaryResponse
 import io.thoth.openapi.ktor.responses.FileResponse
 
-class BinaryTsGenerator : TsGenerator() {
+class BinaryTsGenerator : TsTypeGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType) = "Blob"
 
     override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.BLOB
