@@ -7,7 +7,7 @@ import io.ktor.utils.io.*
 import kotlin.coroutines.CoroutineContext
 
 
-class OpenApiHttpResponse<T>(private val delegate: HttpResponse, val typeInfo: TypeInfo) : HttpResponse() {
+class OpenApiHttpResponse<T: ResponseBodyGetter>(private val delegate: HttpResponse, val typeInfo: TypeInfo) : HttpResponse() {
     override val call: HttpClientCall
         get() = delegate.call
 

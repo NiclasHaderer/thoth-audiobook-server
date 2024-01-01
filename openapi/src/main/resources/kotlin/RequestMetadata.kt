@@ -1,6 +1,6 @@
 import io.ktor.http.*
 
-class RequestMetadata<T>(
+class RequestMetadata<T: RequestBodySetter>(
     val path: String,
     val method: HttpMethod,
     val headers: Headers,

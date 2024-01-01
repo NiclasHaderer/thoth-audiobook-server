@@ -24,9 +24,9 @@ class KotlinClientGenerator(
 ) : ClientGenerator(dist, fileWriter, cleanDistPackage) {
     private val staticFiles by lazy {
         listOf(
-            getResourceContent("/kotlin/RequestRunner.kt"),
-            getResourceContent("/kotlin/RequestMetadata.kt"),
-            getResourceContent("/kotlin/OpenApiHttpResponse.kt"),
+            "RequestRunner" to getResourceContent("/kotlin/RequestRunner.kt"),
+            "RequestMetadata" to getResourceContent("/kotlin/RequestMetadata.kt"),
+            "OpenApiHttpResponse" to getResourceContent("/kotlin/OpenApiHttpResponse.kt"),
         )
     }
     private val clientImports = mutableSetOf<String>()
@@ -79,12 +79,12 @@ class KotlinClientGenerator(
             ),
         )
         addAll(
-                staticFiles.map { file ->
+                staticFiles.map { (name, content) ->
                     ClientPart(
-                            path = "kotlin/RequestRunner.kt",
+                            path = "$name.kt",
                             content = buildString {
                                 append("package $packageName\n\n")
-                                append(file)
+                                append(content)
                             },
                     )
                 },

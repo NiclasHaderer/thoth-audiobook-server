@@ -41,10 +41,9 @@ class KtClientFunction(
 
         val (responseBody, _) = typeProviders.generateTypes(route.responseBodyType)
         val (requestBody, _) = typeProviders.generateTypes(route.requestBodyType)
-        val hookGeneric = "<${requestBody.reference()}, ${responseBody.reference()}>"
         // Hooks to modify the request
-        add("onBeforeRequest: OnBeforeRequest${hookGeneric} = { _, _ -> }, ")
-        add("onAfterRequest: OnAfterRequest${hookGeneric} = { _, _ -> }")
+        add("onBeforeRequest: OnBeforeRequest<${requestBody.reference()}> = { _, _ -> }, ")
+        add("onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}> = { _, _ -> }")
     }
 
     private fun generateContent(): String? {
