@@ -1,10 +1,10 @@
 package io.thoth.openapi.client.typescript.types
 
 import io.thoth.openapi.client.common.GenerateType
-import io.thoth.openapi.client.typescript.TsGenerator
+import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
 
-class AnyTsGenerator : TsGenerator() {
+class AnyTsGenerator : TsTypeGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType): String = "any"
 
     override fun getName(classType: ClassType): String? = null

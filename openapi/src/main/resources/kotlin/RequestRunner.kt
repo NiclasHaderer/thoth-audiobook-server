@@ -7,57 +7,22 @@ import io.ktor.http.content.*
 import io.ktor.util.date.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.*
-import kotlin.coroutines.CoroutineContext
 
+typealias OnBeforeRequest<T> = suspend (metadata: RequestMetadata<T>, requestBuilder: HttpRequestBuilder) -> Unit
+typealias OnAfterRequest<T, R> = suspend (metadata: RequestMetadata<T>, response: OpenApiHttpResponse<R>) -> Unit
 
-class RequestMetadata<T, RESPONSE>(
-    val path: String,
-    val method: HttpMethod,
-    val headers: Headers,
-    val body: T,
-    val shouldLogin: Boolean,
-    val securitySchema: String?
-)
-
-typealias OnBeforeRequest<T, R> = suspend (metadata: RequestMetadata<T, R>, requestBuilder: HttpRequestBuilder) -> Unit
-typealias OnAfterRequest<T, R> = suspend (metadata: RequestMetadata<T, R>, response: HttpResponse) -> Unit
-
-
-class OpenApiHttpResponse<T>(private val delegate: HttpResponse, val typeInfo: TypeInfo) : HttpResponse() {
-    override val call: HttpClientCall
-        get() = delegate.call
-
-    @io.ktor.util.InternalAPI
-    override val content: ByteReadChannel
-        get() = delegate.content
-    override val requestTime: GMTDate
-        get() = delegate.requestTime
-    override val responseTime: GMTDate
-        get() = delegate.responseTime
-    override val status: HttpStatusCode
-        get() = delegate.status
-    override val version: HttpProtocolVersion
-        get() = delegate.version
-    override val headers: Headers
-        get() = delegate.headers
-    override val coroutineContext: CoroutineContext
-        get() = delegate.coroutineContext
-
-    @Suppress("UNCHECKED_CAST")
-    suspend inline fun body(): T = call.body(typeInfo) as T
-}
 
 abstract class RequestRunner(
     protected val baseUrl: Url,
 ) {
-    private val beforeRequestHooks: MutableList<OnBeforeRequest<*, *>> = mutableListOf()
+    private val beforeRequestHooks: MutableList<OnBeforeRequest<*>> = mutableListOf()
     private val afterRequestHooks: MutableList<OnAfterRequest<*, *>> = mutableListOf()
     private val requestFailedHooks: MutableList<OnAfterRequest<*, *>> = mutableListOf()
     private val client: HttpClient by lazy { createHttpClient() }
 
     open fun createHttpClient(): HttpClient = HttpClient()
 
-    fun onBeforeRequest(onBeforeRequest: OnBeforeRequest<*, *>) {
+    fun onBeforeRequest(onBeforeRequest: OnBeforeRequest<*>) {
         beforeRequestHooks.add(onBeforeRequest)
     }
 
@@ -70,10 +35,10 @@ abstract class RequestRunner(
     }
 
     suspend fun <T, R> makeRequest(
-        metadata: RequestMetadata<T, R>,
+        metadata: RequestMetadata<T>,
         requestBody: TypeInfo,
         responseBody: TypeInfo,
-        onBeforeRequest: OnBeforeRequest<T, R>,
+        onBeforeRequest: OnBeforeRequest<T>,
         onAfterRequest: OnAfterRequest<T, R>
     ): OpenApiHttpResponse<R> {
         val finalUrl = URLBuilder(baseUrl).appendEncodedPathSegments(metadata.path).build()
@@ -85,12 +50,13 @@ abstract class RequestRunner(
             beforeRequestHooks.forEach { it(metadata, this) }
         }
 
-        onAfterRequest(metadata, response)
-        afterRequestHooks.forEach { it(metadata, response) }
+        val apiResponse = OpenApiHttpResponse<R>(response, responseBody)
+        onAfterRequest(metadata, apiResponse)
+        afterRequestHooks.forEach { it(metadata, apiResponse) }
         if (!response.status.isSuccess()) {
-            requestFailedHooks.forEach { it(metadata, response) }
+            requestFailedHooks.forEach { it(metadata, apiResponse) }
         }
-        return OpenApiHttpResponse(response, responseBody)
+        return apiResponse
     }
 }
 

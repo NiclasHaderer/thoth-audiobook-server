@@ -3,9 +3,8 @@ package io.thoth.openapi.client.kotlin
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.common.ClassType
-import io.thoth.openapi.common.InternalAPI
 
-abstract class KtGenerator : TypeGenerator<KtGenerator.Type>() {
+abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.Type>() {
     interface Type : TypeGenerator.Type {
         val imports: List<String>
     }

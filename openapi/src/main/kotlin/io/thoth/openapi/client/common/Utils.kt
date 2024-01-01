@@ -1,18 +1,18 @@
 package io.thoth.openapi.client.common
 
-import io.thoth.openapi.client.kotlin.KtGenerator
-import io.thoth.openapi.client.typescript.TsGenerator
+import io.thoth.openapi.client.kotlin.KtTypeGenerator
+import io.thoth.openapi.client.typescript.TsTypeGenerator
 
-fun Iterable<KtGenerator.Type>.ktReference(): List<KtGenerator.ReferenceType> =
-    this.filterIsInstance<KtGenerator.ReferenceType>()
+fun Iterable<KtTypeGenerator.Type>.ktReference(): List<KtTypeGenerator.ReferenceType> =
+    this.filterIsInstance<KtTypeGenerator.ReferenceType>()
 
-fun Iterable<TsGenerator.Type>.tsReference(): List<TsGenerator.ReferenceType> =
-    this.filterIsInstance<TsGenerator.ReferenceType>()
+fun Iterable<TsTypeGenerator.Type>.tsReference(): List<TsTypeGenerator.ReferenceType> =
+    this.filterIsInstance<TsTypeGenerator.ReferenceType>()
 
-fun Iterable<KtGenerator.Type>.mappedKtReference(): Map<String, KtGenerator.ReferenceType> {
+fun Iterable<KtTypeGenerator.Type>.mappedKtReference(): Map<String, KtTypeGenerator.ReferenceType> {
     return ktReference().associateBy { it.name() }
 }
 
-fun Iterable<TsGenerator.Type>.mappedTsReference(): Map<String, TsGenerator.ReferenceType> {
+fun Iterable<TsTypeGenerator.Type>.mappedTsReference(): Map<String, TsTypeGenerator.ReferenceType> {
     return tsReference().associateBy { it.name() }
 }

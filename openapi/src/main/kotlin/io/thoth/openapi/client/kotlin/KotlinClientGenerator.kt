@@ -22,11 +22,17 @@ class KotlinClientGenerator(
     cleanDistPackage: Boolean,
     typePackages: List<String>
 ) : ClientGenerator(dist, fileWriter, cleanDistPackage) {
-    private val requestRunner: String by lazy { getResourceContent("/RequestRunner.kt") }
+    private val staticFiles by lazy {
+        listOf(
+            getResourceContent("/kotlin/RequestRunner.kt"),
+            getResourceContent("/kotlin/RequestMetadata.kt"),
+            getResourceContent("/kotlin/OpenApiHttpResponse.kt"),
+        )
+    }
     private val clientImports = mutableSetOf<String>()
-    private val typeDefinitions = mutableMapOf<String, KtGenerator.ReferenceType>()
+    private val typeDefinitions = mutableMapOf<String, KtTypeGenerator.ReferenceType>()
     private val typeProviders = TypeGenerator.Provider(
-        KtGenerator::class,
+        KtTypeGenerator::class,
         listOf("io.thoth.openapi.client.kotlin") + typePackages,
     )
 
@@ -72,14 +78,16 @@ class KotlinClientGenerator(
                 },
             ),
         )
-        add(
-            ClientPart(
-                path = "RequestRunner.kt",
-                content = buildString {
-                    append("package $packageName\n\n")
-                    append(requestRunner)
+        addAll(
+                staticFiles.map { file ->
+                    ClientPart(
+                            path = "kotlin/RequestRunner.kt",
+                            content = buildString {
+                                append("package $packageName\n\n")
+                                append(file)
+                            },
+                    )
                 },
-            ),
         )
         addAll(
             typeDefinitions.values.map {
@@ -100,7 +108,7 @@ class KotlinClientGenerator(
 }
 
 @OptIn(InternalAPI::class)
-fun cleanupTypes(typesMap: Map<String, KtGenerator.ReferenceType>) {
+fun cleanupTypes(typesMap: Map<String, KtTypeGenerator.ReferenceType>) {
     //  Iterate over all type definitions and check the following:
     //  1. If the type ends with Impl AND there is a type with the same name but without Impl,
     //     then check if the type without Impl has the same properties as the Impl type.
@@ -129,14 +137,13 @@ fun cleanupTypes(typesMap: Map<String, KtGenerator.ReferenceType>) {
         } else {
             // Case 1
 
-            val contentIsEqual =
-                { withoutImpl: KtGenerator.ReferenceType, withImpl: KtGenerator.ReferenceType ->
-                    val withoutImplContent = withoutImpl.content()
-                    val withImplContent = withImpl.content().also {
-                        it.replace(withImpl.name(), withoutImpl.name())
-                    }
-                    withoutImplContent == withImplContent
+            val contentIsEqual = { withoutImpl: KtTypeGenerator.ReferenceType, withImpl: KtTypeGenerator.ReferenceType ->
+                val withoutImplContent = withoutImpl.content()
+                val withImplContent = withImpl.content().also {
+                    it.replace(withImpl.name(), withoutImpl.name())
                 }
+                withoutImplContent == withImplContent
+            }
 
 
             if (contentIsEqual(typeWithoutSuffix, type)) {
