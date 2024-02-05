@@ -7,7 +7,11 @@ import io.ktor.utils.io.*
 import kotlin.coroutines.CoroutineContext
 
 
-class OpenApiHttpResponse<T: ResponseBodyGetter>(private val delegate: HttpResponse, val typeInfo: TypeInfo) : HttpResponse() {
+class OpenApiHttpResponse<T>(
+    private val delegate: HttpResponse,
+    private val responseBodyParser: BodyDeserializer<T>,
+    private val responseBodyType: TypeInfo
+) : HttpResponse() {
     override val call: HttpClientCall
         get() = delegate.call
 
@@ -27,6 +31,5 @@ class OpenApiHttpResponse<T: ResponseBodyGetter>(private val delegate: HttpRespo
     override val coroutineContext: CoroutineContext
         get() = delegate.coroutineContext
 
-    @Suppress("UNCHECKED_CAST")
-    suspend inline fun body(): T = call.body(typeInfo) as T
+    suspend fun body(): T = responseBodyParser(this, responseBodyType)
 }

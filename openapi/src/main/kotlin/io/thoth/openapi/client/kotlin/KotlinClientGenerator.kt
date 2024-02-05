@@ -27,6 +27,7 @@ class KotlinClientGenerator(
             "RequestRunner" to getResourceContent("/kotlin/RequestRunner.kt"),
             "RequestMetadata" to getResourceContent("/kotlin/RequestMetadata.kt"),
             "OpenApiHttpResponse" to getResourceContent("/kotlin/OpenApiHttpResponse.kt"),
+            "SerializationHolder" to getResourceContent("/kotlin/SerializationHolder.kt"),
         )
     }
     private val clientImports = mutableSetOf<String>()
