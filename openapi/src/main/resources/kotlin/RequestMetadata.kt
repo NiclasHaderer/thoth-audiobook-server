@@ -1,6 +1,7 @@
 import io.ktor.http.*
+import kotlin.reflect.KType
 
-class RequestMetadata<T: RequestBodySetter>(
+class RequestMetadata<T>(
     val path: String,
     val method: HttpMethod,
     val headers: Headers,
