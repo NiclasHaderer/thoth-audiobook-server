@@ -4,6 +4,7 @@ import io.thoth.openapi.common.ClassType
 import io.thoth.openapi.common.InternalAPI
 import org.reflections.Reflections
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.full.createInstance
 
@@ -19,7 +20,8 @@ data class Property(
     val nullable: Boolean,
     val type: PropertyType,
     val overwrites: Boolean,
-    val declaredInSuperclass: Boolean
+    val declaredInSuperclass: Boolean,
+    val underlyingProperty: KProperty1<*, *>
 )
 
 @OptIn(InternalAPI::class)
@@ -157,6 +159,7 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
                 type = propertyType,
                 overwrites = overwritesProperty,
                 declaredInSuperclass = declaredInSuperclass,
+                underlyingProperty = property,
             )
         }
     }
