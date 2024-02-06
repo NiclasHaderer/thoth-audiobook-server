@@ -5,7 +5,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.util.reflect.*
-import kotlin.reflect.KType
 
 typealias OnBeforeRequest<T> = suspend (metadata: RequestMetadata<T>, requestBuilder: HttpRequestBuilder) -> Unit
 typealias OnAfterRequest<T, R> = suspend (metadata: RequestMetadata<T>, response: OpenApiHttpResponse<R>) -> Unit
@@ -20,10 +19,11 @@ abstract class RequestRunner(
     private val beforeRequestHooks: MutableList<OnBeforeRequest<*>> = mutableListOf()
     private val afterRequestHooks: MutableList<OnAfterRequest<*, *>> = mutableListOf()
     private val requestFailedHooks: MutableList<OnAfterRequest<*, *>> = mutableListOf()
-    private val client: HttpClient by lazy { createHttpClient() }
+    private val client: HttpClient by lazy { createClient() }
 
     init {
         serialize<Any> { builder, body, typeInfo ->
+            builder.headers.append("Content-Type", "application/json")
             builder.setBody(body, typeInfo)
         }
         deserialize<Any> { response, typeInfo ->
@@ -31,7 +31,9 @@ abstract class RequestRunner(
         }
     }
 
-    open fun createHttpClient(): HttpClient = HttpClient()
+    open fun HttpClientConfig<*>.configureClient() {}
+
+    open fun createClient() = HttpClient { configureClient() }
 
     fun onBeforeRequest(onBeforeRequest: OnBeforeRequest<*>) {
         beforeRequestHooks.add(onBeforeRequest)
@@ -56,9 +58,9 @@ abstract class RequestRunner(
         val finalUrl = URLBuilder(baseUrl).appendEncodedPathSegments(metadata.path).build()
         val response = client.request(finalUrl) {
             this.method = metadata.method
+            val serializer = this@RequestRunner.getClosestSerializer<T>(requestBody.kotlinType!!)
+            serializer(this, metadata.body, requestBody)
             metadata.headers.forEach { key, value -> this.headers.appendAll(key, value) }
-            this@RequestRunner.getClosestSerializer<T>(requestBody.kotlinType!!)
-                .invoke(this, metadata.body, requestBody)
             onBeforeRequest(metadata, this)
             beforeRequestHooks.forEach { it(metadata, this) }
         }

@@ -41,8 +41,8 @@ open class SerializationHolder {
     }
 
     fun <T> getClosestSerializer(type: KType): BodySerializer<T> {
-        return getSerializer<T>(type)?: run {
-            serializers.entries.first { (key, _) -> key.isSubtypeOf(type) }.value as BodySerializer<T>
+        return getSerializer(type) ?: run {
+            serializers.entries.first { (key, _) -> type.isSubtypeOf(key) }.value as BodySerializer<T>
         }
     }
 
@@ -51,8 +51,8 @@ open class SerializationHolder {
     }
 
     fun <T> getClosestDeserializer(type: KType): BodyDeserializer<T> {
-        return getDeserializer<T>(type)?: run {
-            deserializers.entries.first { (key, _) -> key.isSubtypeOf(type) }.value as BodyDeserializer<T>
+        return getDeserializer(type) ?: run {
+            deserializers.entries.first { (key, _) -> type.isSubtypeOf(key) }.value as BodyDeserializer<T>
         }
     }
 }
