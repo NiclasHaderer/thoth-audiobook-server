@@ -2,7 +2,6 @@ package io.thoth.auth.interactions
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.thoth.auth.models.ThothAccessToken
 import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.models.ThothLoginUser
 import io.thoth.auth.models.ThothUserPermissions
@@ -17,7 +16,8 @@ interface ThothLoginParams
 fun RouteHandler.loginUser(
     params: ThothLoginParams,
     loginUser: ThothLoginUser,
-): ThothAccessToken {
+): ThothAccessTokenImpl {
+    // TODO change back
     val config = thothAuthConfig<Any, ThothUserPermissions>()
 
     val user =
