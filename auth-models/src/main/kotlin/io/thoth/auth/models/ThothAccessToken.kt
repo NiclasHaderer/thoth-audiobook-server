@@ -1,6 +1,5 @@
 package io.thoth.auth.models
 
-
 interface ThothAccessToken {
     val accessToken: String
 }

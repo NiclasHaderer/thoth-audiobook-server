@@ -3,7 +3,6 @@ package io.thoth.auth.interactions
 import io.thoth.auth.models.ThothRenameUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserPermissions
-import io.thoth.auth.models.ThothUserImpl
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal

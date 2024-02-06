@@ -2,9 +2,9 @@ package io.thoth.auth.interactions
 
 import io.ktor.server.application.*
 import io.thoth.auth.models.ThothAccessToken
+import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.models.ThothUserPermissions
-import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.generateAccessTokenForUser
 import io.thoth.auth.utils.validateJwt

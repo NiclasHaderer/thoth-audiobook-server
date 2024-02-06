@@ -1,6 +1,5 @@
 package io.thoth.auth.models
 
-
 interface JWKs {
     val keys: List<JWK>
 }

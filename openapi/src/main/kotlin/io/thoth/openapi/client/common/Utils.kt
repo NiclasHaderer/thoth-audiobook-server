@@ -6,13 +6,13 @@ import io.thoth.openapi.client.typescript.TsTypeGenerator
 fun Iterable<KtTypeGenerator.KtType>.ktReference(): List<KtTypeGenerator.KtReferenceType> =
     this.filterIsInstance<KtTypeGenerator.KtReferenceType>()
 
-fun Iterable<TsTypeGenerator.Type>.tsReference(): List<TsTypeGenerator.ReferenceType> =
-    this.filterIsInstance<TsTypeGenerator.ReferenceType>()
+fun Iterable<TsTypeGenerator.TsType>.tsReference(): List<TsTypeGenerator.TsReferenceType> =
+    this.filterIsInstance<TsTypeGenerator.TsReferenceType>()
 
 fun Iterable<KtTypeGenerator.KtType>.mappedKtReference(): Map<String, KtTypeGenerator.KtReferenceType> {
     return ktReference().associateBy { it.name() }
 }
 
-fun Iterable<TsTypeGenerator.Type>.mappedTsReference(): Map<String, TsTypeGenerator.ReferenceType> {
+fun Iterable<TsTypeGenerator.TsType>.mappedTsReference(): Map<String, TsTypeGenerator.TsReferenceType> {
     return tsReference().associateBy { it.name() }
 }

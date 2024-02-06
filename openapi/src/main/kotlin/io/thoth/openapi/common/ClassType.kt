@@ -163,7 +163,6 @@ private constructor(
         return this.superClasses.any { it.properties.any { it.name == prop.name } }
     }
 
-
     /** Create a new ClassType for a member of the current `ClassType.clazz` */
     @OptIn(ExperimentalStdlibApi::class)
     fun forMember(property: KProperty1<*, *>): ClassType {

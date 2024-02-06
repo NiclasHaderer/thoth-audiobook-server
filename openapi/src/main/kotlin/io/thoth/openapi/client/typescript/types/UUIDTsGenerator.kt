@@ -6,15 +6,15 @@ import io.thoth.openapi.common.ClassType
 import java.util.*
 
 class UUIDTsGenerator : TsTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String {
         return "type UUID = `\${string}-\${string}-\${string}-\${string}-\${string}`"
     }
 
-    override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
+    override fun getParsingMethod(classType: ClassType): TsParseMethod = TsParseMethod.TEXT
 
-    override fun getInsertionMode(classType: ClassType) = DataType.COMPLEX
+    override fun getInsertionMode(classType: ClassType) = TsDataType.COMPLEX
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String = "UUID"
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String = "UUID"
 
     override fun getName(classType: ClassType): String = "UUID"
 
