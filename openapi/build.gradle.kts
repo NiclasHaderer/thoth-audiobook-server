@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 val tsGeneratorVersion: String by project
 val ktorVersion: String by project
 val kotlinLoggingVersion: String by project
@@ -13,6 +15,19 @@ plugins {
     kotlin("plugin.serialization")
 }
 
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
+        jvmTarget = "17"
+        apiVersion = "1.8"
+        languageVersion = "1.8"
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")

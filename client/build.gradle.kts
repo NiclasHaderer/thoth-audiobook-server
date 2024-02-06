@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 val ktorVersion: String by project
 val kotlinVersion: String by project
 
@@ -7,9 +9,16 @@ plugins {
     id("maven-publish")
 }
 
-repositories {
-    mavenCentral()
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
+        jvmTarget = "11"
+        apiVersion = "1.8"
+        languageVersion = "1.8"
+    }
 }
+
 
 afterEvaluate {
     publishing {
