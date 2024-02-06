@@ -111,6 +111,44 @@ class InterfaceKtGenerator : KtTypeGenerator() {
         return KtDataType.COMPLEX
     }
 
+    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
+        return classType.memberProperties
+            .flatMap {
+                // If the property is a generic type, we can skip it
+                if (classType.isGenericProperty(it)) emptyList()
+                else {
+                    val type = generateSubType(classType.forMember(it))
+                    type.imports()
+                }
+            }
+            .distinct()
+    }
+
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String {
+        return generateName(
+            classType = classType,
+            resolveGeneric = true,
+            generateSubType = generateSubType,
+            isImpl = false,
+            includeBounds = false,
+        )
+    }
+
+    override fun priority(classType: ClassType): Int = -10
+
+    override fun canGenerate(classType: ClassType): Boolean = true
+
+    override fun generateImplReference(classType: ClassType, generateSubType: GenerateType<KtType>): String =
+        generateName(
+            classType = classType,
+            resolveGeneric = true,
+            generateSubType = generateSubType,
+            isImpl = true,
+            includeBounds = false,
+        )
+
+    override fun getImplName(classType: ClassType): String = classType.simpleName + "Impl"
+
     private fun generateName(
         classType: ClassType,
         resolveGeneric: Boolean,
@@ -162,42 +200,4 @@ class InterfaceKtGenerator : KtTypeGenerator() {
             }
         }"
     }
-
-    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
-        return classType.memberProperties
-            .flatMap {
-                // If the property is a generic type, we can skip it
-                if (classType.isGenericProperty(it)) emptyList()
-                else {
-                    val type = generateSubType(classType.forMember(it))
-                    type.imports()
-                }
-            }
-            .distinct()
-    }
-
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String {
-        return generateName(
-            classType = classType,
-            resolveGeneric = true,
-            generateSubType = generateSubType,
-            isImpl = false,
-            includeBounds = false,
-        )
-    }
-
-    override fun priority(classType: ClassType): Int = -10
-
-    override fun canGenerate(classType: ClassType): Boolean = true
-
-    override fun generateImplReference(classType: ClassType, generateSubType: GenerateType<KtType>): String =
-        generateName(
-            classType = classType,
-            resolveGeneric = true,
-            generateSubType = generateSubType,
-            isImpl = true,
-            includeBounds = false,
-        )
-
-    override fun getImplName(classType: ClassType): String = classType.simpleName + "Impl"
 }

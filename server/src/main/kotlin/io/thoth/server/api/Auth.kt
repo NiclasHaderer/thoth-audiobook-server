@@ -14,6 +14,7 @@ import io.thoth.auth.interactions.registerUser
 import io.thoth.auth.interactions.renameUser
 import io.thoth.auth.models.JWKs
 import io.thoth.auth.models.ThothAccessToken
+import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.models.ThothChangePassword
 import io.thoth.auth.models.ThothLoginUser
 import io.thoth.auth.models.ThothModifyPermissions
@@ -29,7 +30,8 @@ import io.thoth.openapi.ktor.put
 import java.util.*
 
 fun Routing.authRoutes() {
-    post<Api.Auth.Login, ThothLoginUser, ThothAccessToken>(RouteHandler::loginUser)
+    // TODO change back
+    post<Api.Auth.Login, ThothLoginUser, ThothAccessTokenImpl>(RouteHandler::loginUser)
 
     post<Api.Auth.Logout, Unit, Unit>(RouteHandler::logoutUser)
 

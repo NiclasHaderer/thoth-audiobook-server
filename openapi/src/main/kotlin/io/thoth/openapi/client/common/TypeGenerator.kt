@@ -1,7 +1,6 @@
 package io.thoth.openapi.client.common
 
 import io.thoth.openapi.common.ClassType
-import io.thoth.openapi.common.InternalAPI
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.createInstance
@@ -20,55 +19,6 @@ data class Property(
     val underlyingProperty: KProperty1<*, *>
 )
 
-/*
-
-//    interface Type {
-//        @InternalAPI
-//        val reference: String?
-//
-//        @InternalAPI
-//        val name: String
-//
-//        @InternalAPI
-//        val content: String
-//
-//        @InternalAPI
-//        val dataType: DataType
-//
-//        fun reference(): String {
-//            return when (dataType) {
-//                DataType.PRIMITIVE -> content
-//                DataType.COMPLEX -> reference ?: "Reference not found for complex type"
-//            }
-//        }
-//
-//        fun name(): String = name
-//    }
-//
-//    abstract class InlineType(final override var content: String, override var name: String) : Type {
-//        override val dataType: DataType = DataType.PRIMITIVE
-//        override val reference: String
-//            get() = content
-//    }
-//
-//    abstract class ReferenceType(
-//        override var reference: String,
-//        override var content: String,
-//        override var name: String
-//    ) : Type {
-//        override val dataType: DataType = DataType.COMPLEX
-//
-//        fun content(): String = content
-//    }
-//
-//    enum class DataType {
-//        PRIMITIVE,
-//        COMPLEX,
-//    }
-
- */
-
-@OptIn(InternalAPI::class)
 abstract class TypeGenerator<TYPE, DATA_TYPE> {
 
     class Provider<TYPE, DATA_TYPE, GENERATOR : TypeGenerator<TYPE, DATA_TYPE>>(
