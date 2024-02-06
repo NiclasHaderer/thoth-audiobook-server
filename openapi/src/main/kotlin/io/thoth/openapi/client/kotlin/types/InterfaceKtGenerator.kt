@@ -3,8 +3,8 @@ package io.thoth.openapi.client.kotlin.types
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
-import java.lang.reflect.TypeVariable
 import kotlin.reflect.KClass
+import kotlin.reflect.KTypeParameter
 
 class InterfaceKtGenerator : KtTypeGenerator() {
     override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
@@ -59,7 +59,7 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                 val subType = generateSubType(propClassType)
 
                 append("    override val ${it.name}: ")
-                if (it.underlyingProperty.returnType is TypeVariable<*>) {
+                if (it.underlyingProperty.returnType.classifier is KTypeParameter) {
                     append(it.type.name)
                 } else {
                     append(subType.nameImpl())
@@ -68,10 +68,8 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                     append("<")
                     val memberType = it.underlyingProperty.returnType
                     // Iterate over the type arguments. If the type argument is something like
-                    // `Map<T, BookModel> we
-                    // do not have to resolve the first type argument, but we have to resolve the
-                    // second one and make
-                    // it an Impl reference
+                    // `Map<T, BookModel> we do not have to resolve the first type argument,
+                    // but we have to resolve the second one
                     memberType.arguments.map {
                         // This is the case if we have a mix of generic and inline generics
                         // e.g., interface Something<T> { val hello: Map<String, T> }
@@ -139,8 +137,7 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                                         (clazz == Any::class && bound.isMarkedNullable).not()
                                     }
                                     .joinToString(", ") { bound ->
-                                        val subtype = generateSubType(ClassType.create(bound))
-                                        if (isImpl) subtype.referenceImpl() else subtype.reference()
+                                        generateSubType(ClassType.create(bound)).reference()
                                     }
                             } else {
                                 ""
