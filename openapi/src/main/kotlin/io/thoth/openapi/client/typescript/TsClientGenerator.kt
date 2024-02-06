@@ -22,7 +22,7 @@ class TsClientGenerator(
     cleanDistPackage: Boolean,
 ) : ClientGenerator(dist, fileWriter, cleanDistPackage) {
     private val log = logger {}
-    private val typeDefinitions = mutableMapOf<String, TsTypeGenerator.ReferenceType>()
+    private val typeDefinitions = mutableMapOf<String, TsTypeGenerator.TsReferenceType>()
     private val clientFunctions = mutableListOf<String>()
     private val requestRunner: String by lazy { getResourceContent("/typescript/client.ts") }
     private val utilityTypes by lazy { getResourceContent("/typescript/utility-types.ts") }
@@ -88,7 +88,7 @@ class TsClientGenerator(
                             "$routeName(${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> {\n"
                         )
                         append(
-                            "  return _request(${createURL(route)}, \"${route.method.value}\", \"${responseBody.parser.methodName}\", "
+                            "  return _request(${createURL(route)}, \"${route.method.value}\", \"${responseBody.parser().methodName}\", "
                         )
                         append("_mergeHeaders(defaultHeadersImpl, headers), ")
                         append(if (route.requestBodyType.clazz != Unit::class) "body" else "undefined")

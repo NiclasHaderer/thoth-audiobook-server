@@ -9,4 +9,3 @@ data class ThothJwtPairImpl(
     override val accessToken: String,
     override val refreshToken: String,
 ) : ThothJwtPair
-

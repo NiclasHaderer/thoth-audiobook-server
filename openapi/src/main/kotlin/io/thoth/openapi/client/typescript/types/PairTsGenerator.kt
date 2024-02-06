@@ -1,7 +1,6 @@
 package io.thoth.openapi.client.typescript.types
 
 import io.thoth.openapi.client.common.GenerateType
-import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging
@@ -11,7 +10,7 @@ class PairTsGenerator : TsTypeGenerator() {
 
     override fun generateContent(
         classType: ClassType,
-        generateSubType: (classType: ClassType) -> TypeGenerator.Type
+        generateSubType: GenerateType<TsType>,
     ): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Pair type without insufficient arguments" }
@@ -38,11 +37,11 @@ class PairTsGenerator : TsTypeGenerator() {
         }>"
     }
 
-    override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
+    override fun getParsingMethod(classType: ClassType): TsParseMethod = TsParseMethod.JSON
 
-    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
+    override fun getInsertionMode(classType: ClassType) = TsDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String? = null
 
     override fun getName(classType: ClassType): String = "Pair"
 

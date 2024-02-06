@@ -7,7 +7,7 @@ import kotlin.reflect.KClass
 
 class InterfaceTsGenerator : TsTypeGenerator() {
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String {
         val superClasses =
             classType.superClasses
                 .filter { it.memberProperties.isNotEmpty() }
@@ -42,13 +42,17 @@ class InterfaceTsGenerator : TsTypeGenerator() {
         }
     }
 
-    override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.JSON
+    override fun getParsingMethod(classType: ClassType): TsParseMethod = TsParseMethod.JSON
 
-    override fun getInsertionMode(classType: ClassType): DataType {
-        return DataType.COMPLEX
+    override fun getInsertionMode(classType: ClassType): TsDataType {
+        return TsDataType.COMPLEX
     }
 
-    private fun generateName(classType: ClassType, resolveGeneric: Boolean, generateSubType: GenerateType): String {
+    private fun generateName(
+        classType: ClassType,
+        resolveGeneric: Boolean,
+        generateSubType: GenerateType<TsType>
+    ): String {
         val typeParams = classType.typeParameters()
         val typeParamsString =
             typeParams
@@ -99,7 +103,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
         }"
     }
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String {
         return generateName(classType, true, generateSubType)
     }
 

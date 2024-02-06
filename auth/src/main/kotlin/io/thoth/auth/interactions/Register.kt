@@ -49,5 +49,6 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.registerUser(
                 passwordHash = passwordHash,
                 admin = isAdmin,
             ),
-        ).wrap()
+        )
+        .wrap()
 }

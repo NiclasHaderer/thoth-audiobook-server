@@ -20,7 +20,8 @@ class TsGenerationTest {
                 )
             }
         }
-        val models = """
+        val models =
+            """
         import type { Pair } from "./utility-types";
 
         export interface Something {
@@ -60,12 +61,15 @@ class TsGenerationTest {
           someParam: Record<string, T>;
           someParam2: GenericRoute2<T, string>;
         }
-        """.trimIndent().replace("\\{", "{")
+        """
+                .trimIndent()
+                .replace("\\{", "{")
 
         val generatedModels = generatedStuff["models.ts"]
         assertEquals(models, generatedModels)
 
-        val apiClient = """
+        val apiClient =
+            """
         // noinspection JSUnusedGlobalSymbols,ES6UnusedImports
         import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from "./client";
         import type {GenericRoute, GenericRoute2, GenericRoute3, ListRoute, MapRoute, SetRoute, Something, UUID} from "./models";
@@ -94,7 +98,9 @@ class TsGenerationTest {
             }
           } as const;
         }
-        """.trimIndent().replace("\\{", "{")
+        """
+                .trimIndent()
+                .replace("\\{", "{")
 
         val generatedApiClient = generatedStuff["api-client.ts"]
         assertEquals(apiClient, generatedApiClient)

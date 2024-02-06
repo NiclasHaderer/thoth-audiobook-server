@@ -7,9 +7,9 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.util.*
-import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.auth.models.ThothJwtTypes
+import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.openapi.ktor.RouteHandler

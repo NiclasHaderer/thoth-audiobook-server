@@ -44,7 +44,7 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
         override val implReference = content
         override val implName = this.name
         override val reference: String = content
-        override val dataType: KtDataType = KtDataType.PRIMITIVE
+        override val dataType = KtDataType.PRIMITIVE
     }
 
     class KtReferenceType(
@@ -123,7 +123,7 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
                                 argClassifier.name
                             } else {
                                 val subType = generateSubType(ClassType.create(it.type!!))
-                                if (impl) subType.nameImpl() else subType.name()
+                                if (impl) subType.referenceImpl() else subType.reference()
                             }
                         }
                     val parameterizedType = generateSubType(classType.forMember(property))

@@ -32,7 +32,7 @@ interface Something {
     val name: String
 }
 
-class ListRoute(override val name: String, val someParam: List<UUID>): Something
+class ListRoute(override val name: String, val someParam: List<UUID>) : Something
 
 class MapRoute(val name: Boolean, val someParam: Map<String, UUID>)
 

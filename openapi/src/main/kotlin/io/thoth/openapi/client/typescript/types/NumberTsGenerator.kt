@@ -7,15 +7,15 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 class NumberTsGenerator : TsTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String {
         return "number"
     }
 
-    override fun getParsingMethod(classType: ClassType): ParseMethod = ParseMethod.TEXT
+    override fun getParsingMethod(classType: ClassType): TsParseMethod = TsParseMethod.TEXT
 
-    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
+    override fun getInsertionMode(classType: ClassType) = TsDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String? = null
 
     override fun getName(classType: ClassType): String? = null
 

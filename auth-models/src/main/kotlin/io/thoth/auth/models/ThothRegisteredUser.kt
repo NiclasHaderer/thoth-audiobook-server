@@ -11,5 +11,3 @@ data class ThothRegisteredUserImpl(
     override val passwordHash: String,
     override val admin: Boolean,
 ) : ThothRegisteredUser
-
-
