@@ -9,8 +9,8 @@ class KtClientFunction(
     val getRouteName: (OpenApiRoute) -> String?,
     val route: OpenApiRoute,
     val clientImports: MutableSet<String>,
-    val typeDefinitions: MutableMap<String, KtTypeGenerator.ReferenceType>,
-    val typeProviders: TypeGenerator.Provider<KtTypeGenerator.Type, KtTypeGenerator>,
+    val typeDefinitions: MutableMap<String, KtTypeGenerator.KtReferenceType>,
+    val typeProviders: TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
 ) {
 
     companion object {
@@ -23,7 +23,7 @@ class KtClientFunction(
         // Path parameters
         (route.queryParameters + route.pathParameters).forEach { (param) ->
             val (actual, all) = typeProviders.generateTypes(param.type)
-            clientImports.addAll(actual.imports)
+            clientImports.addAll(actual.imports())
             typeDefinitions.putAll(all.mappedKtReference())
             add("${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}, ")
         }
@@ -31,7 +31,7 @@ class KtClientFunction(
         // Body
         if (route.requestBodyType.clazz != Unit::class) {
             val (actual, all) = typeProviders.generateTypes(route.requestBodyType)
-            clientImports.addAll(actual.imports)
+            clientImports.addAll(actual.imports())
             typeDefinitions.putAll(all.mappedKtReference())
             add("body: ${actual.reference()}, ")
         }
@@ -55,14 +55,12 @@ class KtClientFunction(
 
         val (responseBody, all) = typeProviders.generateTypes(route.responseBodyType)
         val (requestBody, _) = typeProviders.generateTypes(route.requestBodyType)
-        clientImports.addAll(responseBody.imports)
-        clientImports.addAll(requestBody.imports)
+        clientImports.addAll(responseBody.imports())
+        clientImports.addAll(requestBody.imports())
         typeDefinitions.putAll(all.mappedKtReference())
         return buildString {
             append("    open suspend fun ${routeName}(\n")
-            getParameters(route).forEach {
-                append("        $it\n")
-            }
+            getParameters(route).forEach { append("        $it\n") }
             append("    ): OpenApiHttpResponse<${responseBody.reference()}> {\n")
             append("        return makeRequest(\n")
             append("            RequestMetadata(\n")

@@ -5,19 +5,16 @@ import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
 import java.lang.reflect.TypeVariable
 import kotlin.reflect.KClass
-import kotlin.reflect.KTypeParameter
-import kotlin.reflect.KTypeProjection
-import kotlin.reflect.jvm.jvmErasure
 
 class InterfaceKtGenerator : KtTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
         val superClasses =
             classType.superClasses
                 .filter { it.memberProperties.isNotEmpty() }
                 .filterNot { it.clazz == Enum::class }
                 .map { generateSubType(it) }
 
-        val ktProperties = interfaceProperties(classType, generateSubType)
+        val ktProperties = interfaceProperties(classType, generateSubType, false)
 
         val classInterface = buildString {
             val interfaceName =
@@ -46,6 +43,7 @@ class InterfaceKtGenerator : KtTypeGenerator() {
             append("}")
         }
 
+        val ktImplProperties = interfaceProperties(classType, generateSubType, true)
         val classInterfaceImpl = buildString {
             val dataClassName =
                 generateName(
@@ -56,9 +54,9 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                     includeBounds = true,
                 )
             append("data class $dataClassName(\n")
-            ktProperties.mapIndexed { i, it ->
+            ktImplProperties.mapIndexed { i, it ->
                 val propClassType = classType.forMember(it.underlyingProperty)
-                val subType = generateSubType(propClassType) as Type
+                val subType = generateSubType(propClassType)
 
                 append("    override val ${it.name}: ")
                 if (it.underlyingProperty.returnType is TypeVariable<*>) {
@@ -69,26 +67,31 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                 if (it.type.typeArguments.isNotEmpty()) {
                     append("<")
                     val memberType = it.underlyingProperty.returnType
-                    // Iterate over the type arguments. If the type argument is something like `Map<T, BookModel> we
-                    // do not have to resolve the first type argument, but we have to resolve the second one and make
+                    // Iterate over the type arguments. If the type argument is something like
+                    // `Map<T, BookModel> we
+                    // do not have to resolve the first type argument, but we have to resolve the
+                    // second one and make
                     // it an Impl reference
                     memberType.arguments.map {
                         // This is the case if we have a mix of generic and inline generics
                         // e.g., interface Something<T> { val hello: Map<String, T> }
-                        val typeName = if (it.type!!.classifier is KClass<*>) {
-                            // This gets called for the inline generics (String) in the example above
-                            (generateSubType(ClassType.create(it.type!!)) as Type).referenceImpl()
-                        } else {
-                            // This gets called for the generics (T) in the example above
-                            it.type.toString()
-                        }
+                        val typeName =
+                            if (it.type!!.classifier is KClass<*>) {
+                                // This gets called for the inline generics (String) in the example
+                                // above
+                                generateSubType(ClassType.create(it.type!!)).referenceImpl()
+                            } else {
+                                // This gets called for the generics (T) in the example above
+                                it.type.toString()
+                            }
                         append(typeName)
                     }
                     append(">")
                 }
                 if (it.nullable) append("?")
-                if (i < ktProperties.size - 1) append(",\n")
+                if (i < ktImplProperties.size - 1) append(",\n")
             }
+
             append("\n")
             val superInterfaceName =
                 generateName(
@@ -106,14 +109,14 @@ class InterfaceKtGenerator : KtTypeGenerator() {
 
     override fun getName(classType: ClassType): String = classType.simpleName
 
-    override fun getInsertionMode(classType: ClassType): DataType {
-        return DataType.COMPLEX
+    override fun getInsertionMode(classType: ClassType): KtDataType {
+        return KtDataType.COMPLEX
     }
 
     private fun generateName(
         classType: ClassType,
         resolveGeneric: Boolean,
-        generateSubType: GenerateType,
+        generateSubType: GenerateType<KtType>,
         isImpl: Boolean,
         includeBounds: Boolean
     ): String {
@@ -123,7 +126,7 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                 .joinToString(", ") {
                     if (resolveGeneric) {
                         val typePar = classType.resolveTypeParameter(it)
-                        val subType = generateSubType.invoke(typePar) as Type
+                        val subType = generateSubType.invoke(typePar)
                         if (isImpl) subType.referenceImpl() else subType.reference()
                     } else {
                         // Check if the generic type has upper bounds
@@ -136,7 +139,7 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                                         (clazz == Any::class && bound.isMarkedNullable).not()
                                     }
                                     .joinToString(", ") { bound ->
-                                        val subtype = generateSubType(ClassType.create(bound)) as Type
+                                        val subtype = generateSubType(ClassType.create(bound))
                                         if (isImpl) subtype.referenceImpl() else subtype.reference()
                                     }
                             } else {
@@ -163,20 +166,20 @@ class InterfaceKtGenerator : KtTypeGenerator() {
         }"
     }
 
-    override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
+    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
         return classType.memberProperties
             .flatMap {
                 // If the property is a generic type, we can skip it
                 if (classType.isGenericProperty(it)) emptyList()
                 else {
-                    val type = generateSubType(classType.forMember(it)) as Type
-                    type.imports
+                    val type = generateSubType(classType.forMember(it))
+                    type.imports()
                 }
             }
             .distinct()
     }
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String {
         return generateName(
             classType = classType,
             resolveGeneric = true,
@@ -190,13 +193,14 @@ class InterfaceKtGenerator : KtTypeGenerator() {
 
     override fun canGenerate(classType: ClassType): Boolean = true
 
-    override fun generateImplReference(classType: ClassType, generateSubType: GenerateType): String = generateName(
-        classType = classType,
-        resolveGeneric = true,
-        generateSubType = generateSubType,
-        isImpl = true,
-        includeBounds = false,
-    )
+    override fun generateImplReference(classType: ClassType, generateSubType: GenerateType<KtType>): String =
+        generateName(
+            classType = classType,
+            resolveGeneric = true,
+            generateSubType = generateSubType,
+            isImpl = true,
+            includeBounds = false,
+        )
 
     override fun getImplName(classType: ClassType): String = classType.simpleName + "Impl"
 }
