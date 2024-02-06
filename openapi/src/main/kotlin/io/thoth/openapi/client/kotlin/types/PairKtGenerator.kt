@@ -1,7 +1,6 @@
 package io.thoth.openapi.client.kotlin.types
 
 import io.thoth.openapi.client.common.GenerateType
-import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
 import mu.KotlinLogging
@@ -11,7 +10,7 @@ class PairKtGenerator : KtTypeGenerator() {
 
     override fun generateContent(
         classType: ClassType,
-        generateSubType: (classType: ClassType) -> TypeGenerator.Type
+        generateSubType: GenerateType<KtType>,
     ): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Pair type without insufficient arguments" }
@@ -40,14 +39,12 @@ class PairKtGenerator : KtTypeGenerator() {
 
     override fun getName(classType: ClassType): String = "Pair"
 
-    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
+    override fun getInsertionMode(classType: ClassType) = KtDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
 
-    override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
-        return classType.genericArguments.flatMap {
-            (generateSubType(it) as Type).imports
-        }
+    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
+        return classType.genericArguments.flatMap { generateSubType(it).imports() }
     }
 
     override fun canGenerate(classType: ClassType): Boolean {

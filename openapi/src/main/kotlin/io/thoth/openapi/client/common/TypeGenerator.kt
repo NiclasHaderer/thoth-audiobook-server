@@ -2,18 +2,14 @@ package io.thoth.openapi.client.common
 
 import io.thoth.openapi.common.ClassType
 import io.thoth.openapi.common.InternalAPI
-import org.reflections.Reflections
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
-import kotlin.reflect.KTypeParameter
 import kotlin.reflect.full.createInstance
+import org.reflections.Reflections
 
-typealias GenerateType = (classType: ClassType) -> TypeGenerator.Type
+typealias GenerateType<T> = (classType: ClassType) -> T
 
-data class PropertyType(
-    val name: String,
-    val typeArguments: List<String>
-)
+data class PropertyType(val name: String, val typeArguments: List<String>)
 
 data class Property(
     val name: String,
@@ -24,22 +20,70 @@ data class Property(
     val underlyingProperty: KProperty1<*, *>
 )
 
-@OptIn(InternalAPI::class)
-abstract class TypeGenerator<T : TypeGenerator.Type> {
+/*
 
-    class Provider<T : Type, G : TypeGenerator<T>>(
-        private val clazz: KClass<G>,
+//    interface Type {
+//        @InternalAPI
+//        val reference: String?
+//
+//        @InternalAPI
+//        val name: String
+//
+//        @InternalAPI
+//        val content: String
+//
+//        @InternalAPI
+//        val dataType: DataType
+//
+//        fun reference(): String {
+//            return when (dataType) {
+//                DataType.PRIMITIVE -> content
+//                DataType.COMPLEX -> reference ?: "Reference not found for complex type"
+//            }
+//        }
+//
+//        fun name(): String = name
+//    }
+//
+//    abstract class InlineType(final override var content: String, override var name: String) : Type {
+//        override val dataType: DataType = DataType.PRIMITIVE
+//        override val reference: String
+//            get() = content
+//    }
+//
+//    abstract class ReferenceType(
+//        override var reference: String,
+//        override var content: String,
+//        override var name: String
+//    ) : Type {
+//        override val dataType: DataType = DataType.COMPLEX
+//
+//        fun content(): String = content
+//    }
+//
+//    enum class DataType {
+//        PRIMITIVE,
+//        COMPLEX,
+//    }
+
+ */
+
+@OptIn(InternalAPI::class)
+abstract class TypeGenerator<TYPE, DATA_TYPE> {
+
+    class Provider<TYPE, DATA_TYPE, GENERATOR : TypeGenerator<TYPE, DATA_TYPE>>(
+        private val clazz: KClass<GENERATOR>,
         private val paths: List<String>,
     ) {
-        private val tsGenerators: List<G> = run {
+        private val generators: List<GENERATOR> = run {
             paths
                 .map { Reflections(it) }
                 .flatMap { ref -> ref.getSubTypesOf(clazz.java).map { it.kotlin.createInstance() }.toList() }
         }
 
-        fun generateTypes(classType: ClassType): Pair<T, List<T>> {
-            val generator = tsGenerators.filter { it.canGenerate(classType) }.maxBy { it.priority(classType) }
-            val generatedSubTypes = mutableListOf<T>()
+        fun generateTypes(classType: ClassType): Pair<TYPE, List<TYPE>> {
+            val generator = generators.filter { it.canGenerate(classType) }.maxBy { it.priority(classType) }
+            val generatedSubTypes = mutableListOf<TYPE>()
             val type =
                 generator.createType(classType) { subType ->
                     val (actual, generatedSubType) = generateTypes(subType)
@@ -51,116 +95,17 @@ abstract class TypeGenerator<T : TypeGenerator.Type> {
         }
     }
 
-    interface Type {
-        @InternalAPI
-        val reference: String?
+    abstract fun generateContent(classType: ClassType, generateSubType: GenerateType<TYPE>): String
 
-        @InternalAPI
-        val name: String
+    abstract fun createType(classType: ClassType, generateSubType: GenerateType<TYPE>): TYPE
 
-        @InternalAPI
-        val content: String
+    abstract fun getInsertionMode(classType: ClassType): DATA_TYPE
 
-        @InternalAPI
-        val dataType: DataType
-
-        fun reference(): String {
-            return when (dataType) {
-                DataType.PRIMITIVE -> content
-                DataType.COMPLEX -> reference ?: "Reference not found for complex type"
-            }
-        }
-
-        fun name(): String = name
-    }
-
-    abstract class InlineType(final override var content: String, override var name: String) : Type {
-        override val dataType: DataType = DataType.PRIMITIVE
-        override val reference: String
-            get() = content
-    }
-
-    abstract class ReferenceType(
-        override var reference: String,
-        override var content: String,
-        override var name: String
-    ) : Type {
-        override val dataType: DataType = DataType.COMPLEX
-
-        fun content(): String = content
-    }
-
-    enum class DataType {
-        PRIMITIVE,
-        COMPLEX,
-    }
-
-    abstract fun generateContent(classType: ClassType, generateSubType: GenerateType): String
-
-    abstract fun createType(classType: ClassType, generateSubType: GenerateType): T
-
-    abstract fun getInsertionMode(classType: ClassType): DataType
-
-    abstract fun generateReference(classType: ClassType, generateSubType: GenerateType): String?
+    abstract fun generateReference(classType: ClassType, generateSubType: GenerateType<TYPE>): String?
 
     abstract fun canGenerate(classType: ClassType): Boolean
 
     abstract fun getName(classType: ClassType): String?
 
     open fun priority(classType: ClassType): Int = 0
-
-    fun interfaceProperties(
-        classType: ClassType,
-        generateSubType: GenerateType
-    ): List<Property> {
-        val properties = classType.memberProperties
-
-        return properties.map { property ->
-            val overwritesProperty = classType.isOverwrittenProperty(property)
-            val propertyName = property.name
-            val declaredInSuperclass = classType.properties.none { it.name == propertyName }
-
-            val propertyType: PropertyType = run {
-                if (classType.isGenericProperty(property)) {
-                    // Fully generic property, example: interface Something<T> { val hello: T }
-                    PropertyType(
-                        name = property.returnType.toString(),
-                        typeArguments = emptyList(),
-                    )
-                } else if (classType.isParameterizedProperty(property)) {
-                    // Parameterized property, example: interface Something<T> { val hello: Map<String, T> }
-                    val typeArgs = property.returnType.arguments.map {
-                        val argClassifier = it.type!!.classifier
-                        if (argClassifier is KTypeParameter) {
-                            argClassifier.name
-                        } else {
-                            generateSubType(ClassType.create(it.type!!)).reference()
-                        }
-                    }
-                    val parameterizedType = generateSubType(classType.forMember(property))
-
-                    PropertyType(
-                        name = parameterizedType.name(),
-                        typeArguments = typeArgs,
-                    )
-                } else {
-                    // Regular property, example: interface Something { val hello: String }
-                    PropertyType(
-                        name = generateSubType(classType.forMember(property)).name(),
-                        typeArguments = emptyList(),
-                    )
-                }
-            }
-
-            val nullable = property.returnType.isMarkedNullable
-            Property(
-                name = propertyName,
-                nullable = nullable,
-                type = propertyType,
-                overwrites = overwritesProperty,
-                declaredInSuperclass = declaredInSuperclass,
-                underlyingProperty = property,
-            )
-        }
-    }
 }

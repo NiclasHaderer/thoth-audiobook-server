@@ -5,15 +5,15 @@ import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
 
 class UnitKtGenerator : KtTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
         return "Unit"
     }
 
-    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
+    override fun getInsertionMode(classType: ClassType) = KtDataType.PRIMITIVE
 
     override fun getName(classType: ClassType): String? = null
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(Unit::class)

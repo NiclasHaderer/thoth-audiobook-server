@@ -8,7 +8,7 @@ import mu.KotlinLogging
 class ArrayKtGenerator : KtTypeGenerator() {
     private val log = KotlinLogging.logger {}
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
         if (classType.genericArguments.isEmpty()) {
             log.warn { "Array type without generic arguments" }
             return "List<*>"
@@ -27,17 +27,15 @@ class ArrayKtGenerator : KtTypeGenerator() {
         }
     }
 
-    override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
-        return classType.genericArguments.flatMap {
-            (generateSubType(it) as Type).imports
-        }
+    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
+        return classType.genericArguments.flatMap { generateSubType(it).imports() }
     }
 
-    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
+    override fun getInsertionMode(classType: ClassType) = KtDataType.PRIMITIVE
 
     override fun getName(classType: ClassType): String = "List"
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.isSubclassOf(

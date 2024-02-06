@@ -5,7 +5,7 @@ import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
 
 class AnyKtGenerator : KtTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
         return "Any"
     }
 
@@ -13,9 +13,9 @@ class AnyKtGenerator : KtTypeGenerator() {
 
     override fun priority(classType: ClassType): Int = -1
 
-    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
+    override fun getInsertionMode(classType: ClassType) = KtDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
         return classType.clazz == Any::class

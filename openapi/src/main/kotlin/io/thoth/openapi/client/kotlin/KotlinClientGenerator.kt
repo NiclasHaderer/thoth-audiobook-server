@@ -4,7 +4,6 @@ import io.ktor.server.application.*
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.client.common.TypeGenerator
-import io.thoth.openapi.common.InternalAPI
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
@@ -31,85 +30,89 @@ class KotlinClientGenerator(
         )
     }
     private val clientImports = mutableSetOf<String>()
-    private val typeDefinitions = mutableMapOf<String, KtTypeGenerator.ReferenceType>()
-    private val typeProviders = TypeGenerator.Provider(
-        KtTypeGenerator::class,
-        listOf("io.thoth.openapi.client.kotlin") + typePackages,
-    )
+    private val typeDefinitions = mutableMapOf<String, KtTypeGenerator.KtReferenceType>()
+    private val typeProviders =
+        TypeGenerator.Provider(
+            KtTypeGenerator::class,
+            listOf("io.thoth.openapi.client.kotlin") + typePackages,
+        )
 
     override fun generateClient(): List<ClientPart> = buildList {
-        cleanupTypes(typeDefinitions)
-
-        val clientFunctions = routes.map {
-            KtClientFunction(
-                getRouteName = this@KotlinClientGenerator::getRouteName,
-                route = it,
-                clientImports = clientImports,
-                typeDefinitions = typeDefinitions,
-                typeProviders = typeProviders,
-            )
-        }
+        val clientFunctions =
+            routes.map {
+                KtClientFunction(
+                    getRouteName = this@KotlinClientGenerator::getRouteName,
+                    route = it,
+                    clientImports = clientImports,
+                    typeDefinitions = typeDefinitions,
+                    typeProviders = typeProviders,
+                )
+            }
         add(
             ClientPart(
                 path = "${apiClientName}.kt",
-                content = buildString {
-                    // Package
-                    append("package $packageName\n\n")
+                content =
+                    buildString {
+                        // Package
+                        append("package $packageName\n\n")
 
-                    // Imports
-                    append("import io.ktor.client.*\n")
-                    append(clientImports.joinToString("\n"))
-                    append("\n")
-                    append("import io.ktor.http.*\n")
-                    append("import io.ktor.util.reflect.*\n")
-                    append("import $packageName.models.*\n")
-                    append("\n\n")
+                        // Imports
+                        append("import io.ktor.client.*\n")
+                        append(clientImports.joinToString("\n"))
+                        append("\n")
+                        append("import io.ktor.http.*\n")
+                        append("import io.ktor.util.reflect.*\n")
+                        append("import $packageName.models.*\n")
+                        append("\n\n")
 
-                    // Class
-                    append("@Suppress(\"unused\")\n")
-                    if (abstract) {
-                        append("abstract class ${apiClientName}(\n")
-                    } else {
-                        append("open class ${apiClientName}(\n")
-                    }
-                    append("    baseUrl: Url\n")
-                    append(") : RequestRunner(baseUrl) {\n")
-                    append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
-                    append("}")
-                },
+                        // Class
+                        append("@Suppress(\"unused\")\n")
+                        if (abstract) {
+                            append("abstract class ${apiClientName}(\n")
+                        } else {
+                            append("open class ${apiClientName}(\n")
+                        }
+                        append("    baseUrl: Url\n")
+                        append(") : RequestRunner(baseUrl) {\n")
+                        append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
+                        append("}")
+                    },
             ),
         )
         addAll(
-                staticFiles.map { (name, content) ->
-                    ClientPart(
-                            path = "$name.kt",
-                            content = buildString {
-                                append("package $packageName\n\n")
-                                append(content)
-                            },
-                    )
-                },
+            staticFiles.map { (name, content) ->
+                ClientPart(
+                    path = "$name.kt",
+                    content =
+                        buildString {
+                            append("package $packageName\n\n")
+                            append(content)
+                        },
+                )
+            },
         )
         addAll(
             typeDefinitions.values.map {
                 ClientPart(
                     path = "models/${it.name()}.kt",
-                    content = buildString {
-                        append("package $packageName.models\n\n")
-                        if (it.imports.isNotEmpty()) {
-                            append(it.imports.joinToString("\n"))
-                            append("\n\n")
-                        }
-                        append(it.content())
-                    },
+                    content =
+                        buildString {
+                            append("package $packageName.models\n\n")
+                            if (it.imports().isNotEmpty()) {
+                                append(it.imports().joinToString("\n"))
+                                append("\n\n")
+                            }
+                            append(it.content())
+                        },
                 )
             },
         )
     }
 }
 
+/*
 @OptIn(InternalAPI::class)
-fun cleanupTypes(typesMap: Map<String, KtTypeGenerator.ReferenceType>) {
+fun cleanupTypes(typesMap: Map<String, KtTypeGenerator.KtReferenceType>) {
     //  Iterate over all type definitions and check the following:
     //  1. If the type ends with Impl AND there is a type with the same name but without Impl,
     //     then check if the type without Impl has the same properties as the Impl type.
@@ -138,7 +141,7 @@ fun cleanupTypes(typesMap: Map<String, KtTypeGenerator.ReferenceType>) {
         } else {
             // Case 1
 
-            val contentIsEqual = { withoutImpl: KtTypeGenerator.ReferenceType, withImpl: KtTypeGenerator.ReferenceType ->
+            val contentIsEqual = { withoutImpl: KtTypeGenerator.KtReferenceType, withImpl: KtTypeGenerator.KtReferenceType ->
                 val withoutImplContent = withoutImpl.content()
                 val withImplContent = withImpl.content().also {
                     it.replace(withImpl.name(), withoutImpl.name())
@@ -166,6 +169,7 @@ fun cleanupTypes(typesMap: Map<String, KtTypeGenerator.ReferenceType>) {
         }
     }
 }
+*/
 
 fun Application.generateKotlinClient(
     packageName: String,
@@ -178,15 +182,16 @@ fun Application.generateKotlinClient(
     cleanDistPackage: Boolean = true
 ) {
     KotlinClientGenerator(
-        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
-        packageName = packageName,
-        dist = dist,
-        apiClientName = apiClientName,
-        fileWriter = fileWriter,
-        typePackages = typePackages,
-        abstract = abstract,
-        cleanDistPackage = cleanDistPackage,
-    ).safeClient()
+            routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+            packageName = packageName,
+            dist = dist,
+            apiClientName = apiClientName,
+            fileWriter = fileWriter,
+            typePackages = typePackages,
+            abstract = abstract,
+            cleanDistPackage = cleanDistPackage,
+        )
+        .safeClient()
 }
 
 fun Application.generateKotlinClient(
@@ -198,13 +203,14 @@ fun Application.generateKotlinClient(
     typePackages: List<String> = emptyList(),
     abstract: Boolean = false,
     cleanDistPackage: Boolean = true
-) = generateKotlinClient(
-    packageName = packageName,
-    dist = Path.of(dist),
-    routes = routes,
-    apiClientName = apiClientName,
-    fileWriter = fileWriter,
-    typePackages = typePackages,
-    abstract = abstract,
-    cleanDistPackage = cleanDistPackage,
-)
+) =
+    generateKotlinClient(
+        packageName = packageName,
+        dist = Path.of(dist),
+        routes = routes,
+        apiClientName = apiClientName,
+        fileWriter = fileWriter,
+        typePackages = typePackages,
+        abstract = abstract,
+        cleanDistPackage = cleanDistPackage,
+    )

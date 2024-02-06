@@ -8,7 +8,7 @@ import mu.KotlinLogging.logger
 class MapKtGenerator : KtTypeGenerator() {
     private val log = logger {}
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType): String {
+    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Record type without generic arguments" }
             return "Map<*, *>"
@@ -32,14 +32,12 @@ class MapKtGenerator : KtTypeGenerator() {
 
     override fun getName(classType: ClassType): String = "Map"
 
-    override fun getInsertionMode(classType: ClassType) = DataType.PRIMITIVE
+    override fun getInsertionMode(classType: ClassType) = KtDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType): String? = null
+    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
 
-    override fun withImports(classType: ClassType, generateSubType: GenerateType): List<String> {
-        return classType.genericArguments.flatMap {
-            (generateSubType(it) as Type).imports
-        }
+    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
+        return classType.genericArguments.flatMap { generateSubType(it).imports() }
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
