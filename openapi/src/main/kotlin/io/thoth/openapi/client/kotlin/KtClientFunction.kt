@@ -6,11 +6,12 @@ import io.thoth.openapi.ktor.OpenApiRoute
 import mu.KotlinLogging.logger
 
 class KtClientFunction(
-    val getRouteName: (OpenApiRoute) -> String?,
-    val route: OpenApiRoute,
-    val clientImports: MutableSet<String>,
-    val typeDefinitions: MutableMap<String, KtTypeGenerator.KtReferenceType>,
-    val typeProviders: TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
+    private val getRouteName: (OpenApiRoute) -> String?,
+    private val route: OpenApiRoute,
+    private val clientImports: MutableSet<String>,
+    private val typeDefinitions: MutableMap<String, KtTypeGenerator.KtReferenceType>,
+    private val typeProviders:
+        TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
 ) {
 
     companion object {
