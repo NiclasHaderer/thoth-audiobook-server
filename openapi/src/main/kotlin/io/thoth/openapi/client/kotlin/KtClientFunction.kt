@@ -12,6 +12,7 @@ class KtClientFunction(
     private val typeDefinitions: MutableMap<String, KtTypeGenerator.KtReferenceType>,
     private val typeProviders:
         TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
+    private val useResultType: Boolean
 ) {
 
     companion object {
@@ -62,8 +63,14 @@ class KtClientFunction(
         return buildString {
             append("    open suspend fun ${routeName}(\n")
             getParameters(route).forEach { append("        $it\n") }
-            append("    ): OpenApiHttpResponse<${responseBody.reference()}> {\n")
-            append("        return makeRequest(\n")
+            var returnType = "OpenApiHttpResponse<${responseBody.reference()}>"
+            var functionRunner = "= run"
+            if (useResultType) {
+                returnType = "Result<$returnType>"
+                functionRunner = "= runCatching"
+            }
+            append("    ): $returnType $functionRunner {\n")
+            append("        makeRequest(\n")
             append("            RequestMetadata(\n")
             append("                path = \"${route.fullPath}\",\n")
             append("                method = HttpMethod(\"${route.method.value}\"),\n")
