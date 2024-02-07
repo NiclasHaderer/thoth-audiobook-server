@@ -1,9 +1,5 @@
 package io.thoth.auth.models
 
-interface ThothUserPermissions {
-    val isAdmin: Boolean
-}
-
-data class ThothUserPermissionsImpl(
-    override val isAdmin: Boolean,
-) : ThothUserPermissions
+open class ThothUserPermissions(
+    val isAdmin: Boolean,
+)
