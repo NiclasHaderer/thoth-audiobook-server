@@ -3,7 +3,7 @@ package io.thoth.openapi.ktor.errors
 import io.ktor.http.*
 import java.util.*
 
-class ErrorResponse(val status: HttpStatusCode, message: String, val details: Any? = null) : Exception(message) {
+class ErrorResponse(val status: HttpStatusCode, val error: String, val details: Any? = null) : Exception(error) {
     companion object {
         fun notFound(thing: String, id: UUID, details: Any? = null): ErrorResponse {
             return notFound(thing, id.toString(), details)
@@ -13,12 +13,12 @@ class ErrorResponse(val status: HttpStatusCode, message: String, val details: An
             return ErrorResponse(HttpStatusCode.NotFound, "$thing with ID:$id not found", details)
         }
 
-        fun userError(message: String, details: Any? = null): ErrorResponse {
-            return ErrorResponse(HttpStatusCode.BadRequest, message, details)
+        fun userError(error: String, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.BadRequest, error, details)
         }
 
-        fun unauthorized(message: String, details: Any? = null): ErrorResponse {
-            return ErrorResponse(HttpStatusCode.Unauthorized, message, details)
+        fun unauthorized(error: String, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.Unauthorized, error, details)
         }
 
         fun forbidden(
@@ -29,12 +29,12 @@ class ErrorResponse(val status: HttpStatusCode, message: String, val details: An
             return ErrorResponse(HttpStatusCode.Forbidden, "Forbidden to $action $resource", details)
         }
 
-        fun notImplemented(message: String, details: Any? = null): ErrorResponse {
-            return ErrorResponse(HttpStatusCode.NotImplemented, message, details)
+        fun notImplemented(error: String, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.NotImplemented, error, details)
         }
 
-        fun internalError(message: String, details: Any? = null): ErrorResponse {
-            return ErrorResponse(HttpStatusCode.InternalServerError, message, details)
+        fun internalError(error: String, details: Any? = null): ErrorResponse {
+            return ErrorResponse(HttpStatusCode.InternalServerError, error, details)
         }
     }
 }
