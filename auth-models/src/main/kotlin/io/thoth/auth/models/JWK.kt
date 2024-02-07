@@ -1,3 +1,9 @@
 package io.thoth.auth.models
 
-open class JWK(val kty: String, val use: String, val kid: String, val n: String, val e: String)
+open class JWK(
+    open val kty: String,
+    open val use: String,
+    open val kid: String,
+    open val n: String,
+    open val e: String
+)

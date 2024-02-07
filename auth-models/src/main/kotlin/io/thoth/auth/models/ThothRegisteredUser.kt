@@ -1,7 +1,7 @@
 package io.thoth.auth.models
 
 open class ThothRegisteredUser(
-    val username: String,
-    val passwordHash: String,
-    val admin: Boolean,
+    open val username: String,
+    open val passwordHash: String,
+    open val admin: Boolean,
 )

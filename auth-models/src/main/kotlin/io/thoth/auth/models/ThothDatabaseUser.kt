@@ -5,8 +5,8 @@ package io.thoth.auth.models
 // user cannot be accidentally leaked by returning it instead of the ThothUser
 
 open class ThothDatabaseUser<ID : Any, PERMISSIONS : ThothUserPermissions>(
-    val id: ID,
-    val username: String,
-    val passwordHash: String,
-    val permissions: PERMISSIONS,
+    open val id: ID,
+    open val username: String,
+    open val passwordHash: String,
+    open val permissions: PERMISSIONS,
 )
