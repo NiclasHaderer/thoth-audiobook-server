@@ -1,5 +1,5 @@
 package io.thoth.auth.models
 
 open class ThothRenameUser(
-    val username: String,
+    open val username: String,
 )

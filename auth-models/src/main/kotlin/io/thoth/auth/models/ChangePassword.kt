@@ -1,6 +1,6 @@
 package io.thoth.auth.models
 
 open class ThothChangePassword(
-    val currentPassword: String,
-    val newPassword: String,
+    open val currentPassword: String,
+    open val newPassword: String,
 )

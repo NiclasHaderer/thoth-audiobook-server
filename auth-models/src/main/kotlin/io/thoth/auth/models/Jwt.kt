@@ -1,6 +1,6 @@
 package io.thoth.auth.models
 
 open class ThothJwtPair(
-    val accessToken: String,
-    val refreshToken: String,
+    open val accessToken: String,
+    open val refreshToken: String,
 )

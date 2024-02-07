@@ -1,5 +1,5 @@
 package io.thoth.auth.models
 
 open class ThothUserPermissions(
-    val isAdmin: Boolean,
+    open val isAdmin: Boolean,
 )

@@ -1,6 +1,6 @@
 package io.thoth.auth.models
 
 open class ThothLoginUser(
-    val username: String,
-    val password: String,
+    open val username: String,
+    open val password: String,
 )
