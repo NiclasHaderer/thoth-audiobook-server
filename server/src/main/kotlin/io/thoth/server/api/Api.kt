@@ -91,7 +91,7 @@ class Api {
     }
 
     @Secured(Guards.Normal)
-    @Summary("Ping server", method = "GET")
+    @Summary("Ping server", method = "POST")
     @Tagged("Server")
     @Resource("ping")
     data class Ping(private val parent: Api)

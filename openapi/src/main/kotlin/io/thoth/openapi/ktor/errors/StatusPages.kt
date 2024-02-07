@@ -30,12 +30,11 @@ fun Application.configureStatusPages() {
             if (call.response.isSent) return@exception
             call.respond(
                 cause.status,
-                hashMapOf("error" to cause.message, "status" to cause.status.value, "details" to cause.details),
+                hashMapOf("error" to cause.error, "status" to cause.status.value, "details" to cause.details),
             )
         }
 
         exception<Throwable>(formatException(HttpStatusCode.InternalServerError) { logger.error(it) })
-
         exception<BadRequestException>(formatException(HttpStatusCode.BadRequest))
         exception<MissingRequestParameterException>(formatException(HttpStatusCode.BadRequest))
     }
