@@ -1,7 +1,7 @@
 package io.thoth.auth.interactions
 
 import io.thoth.auth.models.ThothRegisterUser
-import io.thoth.auth.models.ThothRegisteredUserImpl
+import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
@@ -44,7 +44,7 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.registerUser(
 
     return config
         .createUser(
-            ThothRegisteredUserImpl(
+            ThothRegisteredUser(
                 username = user.username,
                 passwordHash = passwordHash,
                 admin = isAdmin,

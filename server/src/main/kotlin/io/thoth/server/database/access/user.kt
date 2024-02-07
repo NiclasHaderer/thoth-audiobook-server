@@ -7,12 +7,12 @@ import io.thoth.server.database.tables.User
 import java.util.*
 
 fun User.wrap(): ThothDatabaseUser<UUID, UserPermissionsModel> {
-    return object : ThothDatabaseUser<UUID, UserPermissionsModel> {
-        override val id = this@wrap.id.value
-        override val username = this@wrap.username
-        override val passwordHash = this@wrap.passwordHash
-        override val permissions = this@wrap.permissions.toModel()
-    }
+    return ThothDatabaseUser(
+        id = this@wrap.id.value,
+        username = this@wrap.username,
+        passwordHash = this@wrap.passwordHash,
+        permissions = this@wrap.permissions.toModel(),
+    )
 }
 
 fun User.toModel(): UserModel = UserModel(id = id.value, username = username, permissions = permissions.toModel())

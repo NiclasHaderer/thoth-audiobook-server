@@ -26,5 +26,5 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.modifyUserPermis
     val config = thothAuthConfig<ID, PERMISSIONS>()
 
     val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
-    return config.updateUserPermissions(user, body.permissions).let { it.wrap() }
+    return config.updateUserPermissions(user, body.permissions).wrap()
 }

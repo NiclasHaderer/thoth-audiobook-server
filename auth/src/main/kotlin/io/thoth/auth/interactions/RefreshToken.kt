@@ -2,7 +2,6 @@ package io.thoth.auth.interactions
 
 import io.ktor.server.application.*
 import io.thoth.auth.models.ThothAccessToken
-import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
@@ -23,7 +22,7 @@ fun RouteHandler.getRefreshToken(
     val userId = decodedJwt.getClaim("sub").asString()
     val user = config.getUserById(userId) ?: throw ErrorResponse.internalError("User not found")
 
-    return ThothAccessTokenImpl(
+    return ThothAccessToken(
         generateAccessTokenForUser(user, config),
     )
 }
