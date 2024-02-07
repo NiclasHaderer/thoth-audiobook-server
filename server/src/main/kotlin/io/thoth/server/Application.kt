@@ -131,8 +131,8 @@ fun Application.startBackgroundJobs() {
             log.info("Generating clients")
             generateTsClient("gen/client/typescript")
             generateKotlinClient(
-                packageName = "io.thoth.client.gen",
-                dist = "client/src/main/kotlin/io/thoth/client/gen",
+                apiClientPackageName = "io.thoth.client.gen",
+                savePath = "client/src/main/kotlin/io/thoth/client/gen",
                 apiClientName = "ThothClient",
             )
             log.info("Clients generated")

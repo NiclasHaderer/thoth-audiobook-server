@@ -17,10 +17,11 @@ class KotlinClientGenerator(
     private val packageName: String,
     private val apiClientName: String,
     private val abstract: Boolean,
+    private val useResultType: Boolean,
     dist: Path,
     fileWriter: ((File, String) -> Unit)?,
     cleanDistPackage: Boolean,
-    typePackages: List<String>
+    directoryToScanForTypes: List<String>,
 ) : ClientGenerator(dist, fileWriter, cleanDistPackage) {
     private val logger = logger {}
     private val staticFiles by lazy {
@@ -36,7 +37,7 @@ class KotlinClientGenerator(
     private val typeProviders =
         TypeGenerator.Provider(
             KtTypeGenerator::class,
-            listOf("io.thoth.openapi.client.kotlin") + typePackages,
+            listOf("io.thoth.openapi.client.kotlin") + directoryToScanForTypes,
         )
 
     override fun generateClient(): List<ClientPart> = buildList {
@@ -48,6 +49,7 @@ class KotlinClientGenerator(
                     clientImports = clientImports,
                     typeDefinitions = typeDefinitions,
                     typeProviders = typeProviders,
+                    useResultType = useResultType
                 )
             }
         add(
@@ -133,45 +135,49 @@ class KotlinClientGenerator(
 }
 
 fun Application.generateKotlinClient(
-    packageName: String,
+    apiClientPackageName: String,
     apiClientName: String,
-    dist: Path,
+    savePath: Path,
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
-    typePackages: List<String> = emptyList(),
-    abstract: Boolean = false,
-    cleanDistPackage: Boolean = true
+    directoryToScanForTypes: List<String> = emptyList(),
+    abstract: Boolean = true,
+    cleanDistPackage: Boolean = true,
+    useResultType: Boolean = true
 ) {
     KotlinClientGenerator(
             routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
-            packageName = packageName,
-            dist = dist,
+            packageName = apiClientPackageName,
+            dist = savePath,
             apiClientName = apiClientName,
             fileWriter = fileWriter,
-            typePackages = typePackages,
+            directoryToScanForTypes = directoryToScanForTypes,
             abstract = abstract,
             cleanDistPackage = cleanDistPackage,
+            useResultType = useResultType
         )
         .safeClient()
 }
 
 fun Application.generateKotlinClient(
-    packageName: String,
+    apiClientPackageName: String,
     apiClientName: String,
-    dist: String,
+    savePath: String,
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
-    typePackages: List<String> = emptyList(),
-    abstract: Boolean = false,
-    cleanDistPackage: Boolean = true
+    directoryToScanForTypes: List<String> = emptyList(),
+    abstract: Boolean = true,
+    cleanDistPackage: Boolean = true,
+    useResultType: Boolean = true
 ) =
     generateKotlinClient(
-        packageName = packageName,
-        dist = Path.of(dist),
+        apiClientPackageName = apiClientPackageName,
+        savePath = Path.of(savePath),
         routes = routes,
         apiClientName = apiClientName,
         fileWriter = fileWriter,
-        typePackages = typePackages,
+        directoryToScanForTypes = directoryToScanForTypes,
         abstract = abstract,
         cleanDistPackage = cleanDistPackage,
+        useResultType = useResultType
     )
