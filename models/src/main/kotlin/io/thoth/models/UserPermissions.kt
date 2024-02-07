@@ -9,5 +9,5 @@ class LibraryPermissionsModel(
     val canEdit: Boolean,
 )
 
-class UserPermissionsModel(override val isAdmin: Boolean, val libraries: List<LibraryPermissionsModel>) :
-    ThothUserPermissions
+class UserPermissionsModel(isAdmin: Boolean, val libraries: List<LibraryPermissionsModel>) :
+    ThothUserPermissions(isAdmin)

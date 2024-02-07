@@ -3,7 +3,6 @@ package io.thoth.auth.interactions
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.thoth.auth.models.ThothAccessToken
-import io.thoth.auth.models.ThothAccessTokenImpl
 import io.thoth.auth.models.ThothLoginUser
 import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
@@ -43,5 +42,5 @@ fun RouteHandler.loginUser(
         ),
     )
 
-    return ThothAccessTokenImpl(keyPair.accessToken)
+    return ThothAccessToken(keyPair.accessToken)
 }
