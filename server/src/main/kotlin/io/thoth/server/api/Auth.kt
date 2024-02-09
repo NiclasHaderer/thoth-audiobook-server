@@ -37,7 +37,11 @@ fun Routing.authRoutes() {
 
     get<Api.Auth.Jwks, JWKs>(RouteHandler::getJwks)
 
-    put<Api.Auth.User.Id.Permissions, ThothModifyPermissions, ThothUser<UUID, UserPermissionsModel>>(
+    put<
+        Api.Auth.User.Id.Permissions,
+        ThothModifyPermissions<UserPermissionsModel>,
+        ThothUser<UUID, UserPermissionsModel>
+    >(
         RouteHandler::modifyUserPermissions
     )
 

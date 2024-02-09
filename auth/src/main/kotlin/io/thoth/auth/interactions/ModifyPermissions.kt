@@ -16,7 +16,7 @@ interface ThothModifyPermissionsParams<T> {
 
 fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.modifyUserPermissions(
     params: ThothModifyPermissionsParams<ID>,
-    body: ThothModifyPermissions
+    body: ThothModifyPermissions<PERMISSIONS>
 ): ThothUser<ID, PERMISSIONS> {
     val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
 
