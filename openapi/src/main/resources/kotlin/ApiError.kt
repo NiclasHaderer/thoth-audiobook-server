@@ -23,6 +23,10 @@ class ApiError(
         error.details,
         error.body,
     )
+
+    override fun toString(): String {
+        return "ApiError(type=$type, status=$status, error=$error, details=$details, body=$body)"
+    }
 }
 
 
