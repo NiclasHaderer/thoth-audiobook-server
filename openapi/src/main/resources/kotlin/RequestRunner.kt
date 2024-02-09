@@ -23,7 +23,7 @@ abstract class RequestRunner(
 
     init {
         serialize<Any> { builder, body, typeInfo ->
-            builder.headers.append("Content-Type", "application/json")
+            builder.contentType(ContentType.Application.Json)
             builder.setBody(body, typeInfo)
         }
         deserialize<Any> { response, typeInfo ->

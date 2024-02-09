@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.routing.*
+import io.thoth.openapi.client.kotlin.KtErrorHandling
 import io.thoth.openapi.client.kotlin.generateKotlinClient
 import io.thoth.openapi.client.typescript.generateTsClient
 import io.thoth.openapi.ktor.errors.configureStatusPages
@@ -134,6 +135,7 @@ fun Application.startBackgroundJobs() {
                 apiClientPackageName = "io.thoth.client.gen",
                 savePath = "client/src/main/kotlin/io/thoth/client/gen",
                 apiClientName = "ThothClient",
+                errorHandling = KtErrorHandling.Result
             )
             log.info("Clients generated")
         }

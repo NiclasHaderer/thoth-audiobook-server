@@ -11,13 +11,19 @@ import java.io.File
 import java.nio.file.Path
 import mu.KotlinLogging.logger
 
+enum class KtErrorHandling {
+    Result,
+    Exception,
+    Either
+}
+
 class KotlinClientGenerator(
     // TODO  UserPermissionsModel (to many imports)
     override val routes: List<OpenApiRoute>,
     private val packageName: String,
     private val apiClientName: String,
     private val abstract: Boolean,
-    private val useResultType: Boolean,
+    private val errorHandling: KtErrorHandling,
     dist: Path,
     fileWriter: ((File, String) -> Unit)?,
     cleanDistPackage: Boolean,
@@ -27,6 +33,7 @@ class KotlinClientGenerator(
     private val staticFiles by lazy {
         listOf(
             "RequestRunner" to getResourceContent("/kotlin/RequestRunner.kt"),
+            "ApiError" to getResourceContent("/kotlin/ApiError.kt"),
             "RequestMetadata" to getResourceContent("/kotlin/RequestMetadata.kt"),
             "OpenApiHttpResponse" to getResourceContent("/kotlin/OpenApiHttpResponse.kt"),
             "SerializationHolder" to getResourceContent("/kotlin/SerializationHolder.kt"),
@@ -49,7 +56,7 @@ class KotlinClientGenerator(
                     clientImports = clientImports,
                     typeDefinitions = typeDefinitions,
                     typeProviders = typeProviders,
-                    useResultType = useResultType
+                    errorHandling = errorHandling
                 )
             }
         add(
@@ -57,15 +64,28 @@ class KotlinClientGenerator(
                 path = "${apiClientName}.kt",
                 content =
                     buildString {
+                        append("@file:Suppress(\"UnusedImport\")\n\n")
                         // Package
                         append("package $packageName\n\n")
 
                         // Imports
                         append("import io.ktor.client.*\n")
+                        append("import io.ktor.http.*\n")
+                        append("import io.ktor.client.call.*\n")
+                        append("import io.ktor.client.plugins.*\n")
+                        append("import io.ktor.util.reflect.*\n")
+
+                        // Client imports
                         append(clientImports.joinToString("\n"))
                         append("\n")
-                        append("import io.ktor.http.*\n")
-                        append("import io.ktor.util.reflect.*\n")
+
+                        // Optional error handling imports
+                        if (errorHandling == KtErrorHandling.Either) {
+                            append("import arrow.core.Either\n")
+                            append("import java.io.IOException\n")
+                        }
+
+                        // Model imports
                         append("import $packageName.models.*\n")
                         append("\n\n")
 
@@ -79,6 +99,11 @@ class KotlinClientGenerator(
                         append("    baseUrl: Url\n")
                         append(") : RequestRunner(baseUrl) {\n")
                         append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
+                        if (errorHandling == KtErrorHandling.Either) {
+                            val eitherFun = getResourceContent("/kotlin/Either.kt")
+                            // Replace everything up to // -- Start and after // -- End
+                            append(eitherFun.substringAfter("// -- Start").substringBefore("// -- End"))
+                        }
                         append("}")
                     },
             ),
@@ -143,7 +168,7 @@ fun Application.generateKotlinClient(
     directoryToScanForTypes: List<String> = emptyList(),
     abstract: Boolean = true,
     cleanDistPackage: Boolean = true,
-    useResultType: Boolean = true
+    errorHandling: KtErrorHandling = KtErrorHandling.Either
 ) {
     KotlinClientGenerator(
             routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
@@ -154,7 +179,7 @@ fun Application.generateKotlinClient(
             directoryToScanForTypes = directoryToScanForTypes,
             abstract = abstract,
             cleanDistPackage = cleanDistPackage,
-            useResultType = useResultType
+            errorHandling = errorHandling
         )
         .safeClient()
 }
@@ -168,7 +193,7 @@ fun Application.generateKotlinClient(
     directoryToScanForTypes: List<String> = emptyList(),
     abstract: Boolean = true,
     cleanDistPackage: Boolean = true,
-    useResultType: Boolean = true
+    errorHandling: KtErrorHandling = KtErrorHandling.Either
 ) =
     generateKotlinClient(
         apiClientPackageName = apiClientPackageName,
@@ -179,5 +204,5 @@ fun Application.generateKotlinClient(
         directoryToScanForTypes = directoryToScanForTypes,
         abstract = abstract,
         cleanDistPackage = cleanDistPackage,
-        useResultType = useResultType
+        errorHandling = errorHandling
     )
