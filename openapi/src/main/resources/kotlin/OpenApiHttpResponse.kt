@@ -32,4 +32,6 @@ class OpenApiHttpResponse<T>(
         get() = delegate.coroutineContext
 
     suspend fun body(): T = responseBodyParser(this, responseBodyType)
+
+    internal suspend fun error(): InternalApiError = delegate.body<InternalApiError>()
 }

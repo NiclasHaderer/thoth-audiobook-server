@@ -7,6 +7,7 @@ val openApiVersion: String by project
 val swaggerUiVersion: String by project
 val kotlinVersion: String by project
 val reflectVersion: String by project
+val arrowVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -48,6 +49,7 @@ dependencies {
     implementation("org.webjars:swagger-ui:$swaggerUiVersion")
 
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.arrow-kt:arrow-core:$arrowVersion")
 
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")

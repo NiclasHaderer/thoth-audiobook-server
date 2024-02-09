@@ -12,7 +12,7 @@ class KtClientFunction(
     private val typeDefinitions: MutableMap<String, KtTypeGenerator.KtReferenceType>,
     private val typeProviders:
         TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
-    private val useResultType: Boolean
+    private val errorHandling: KtErrorHandling
 ) {
 
     companion object {
@@ -63,13 +63,16 @@ class KtClientFunction(
         return buildString {
             append("    open suspend fun ${routeName}(\n")
             getParameters(route).forEach { append("        $it\n") }
-            var returnType = "OpenApiHttpResponse<${responseBody.reference()}>"
-            var functionRunner = "= run"
-            if (useResultType) {
-                returnType = "Result<$returnType>"
-                functionRunner = "= runCatching"
-            }
-            append("    ): $returnType $functionRunner {\n")
+            val functionRunner =
+                when (errorHandling) {
+                    KtErrorHandling.Result ->
+                        "= runCatching" to "Result<OpenApiHttpResponse<${responseBody.reference()}>>"
+                    KtErrorHandling.Exception -> "= run" to "OpenApiHttpResponse<${responseBody.reference()}>"
+                    KtErrorHandling.Either ->
+                        "= wrapInEither" to "Either<OpenApiHttpResponse<${responseBody.reference()}>, ApiError>"
+                }
+
+            append("    ): ${functionRunner.second} ${functionRunner.first} {\n")
             append("        makeRequest(\n")
             append("            RequestMetadata(\n")
             append("                path = \"${route.fullPath}\",\n")
