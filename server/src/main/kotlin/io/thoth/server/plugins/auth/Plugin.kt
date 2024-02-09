@@ -59,17 +59,17 @@ fun Application.configureAuthentication() {
             }
         }
 
-        getUserByUsername = { username -> User.findOne { TUsers.username eq username }?.wrap() }
+        getUserByUsername { username -> User.findOne { TUsers.username eq username }?.wrap() }
 
-        allowNewSignups = { thothConfig.allowNewSignups }
+        allowNewSignups { thothConfig.allowNewSignups }
 
-        serializePermissions = { serializer.serializeValue(it) }
+        serializePermissions { serializer.serializeValue(it) }
 
-        getUserById = { User.findById(it as UUID)?.wrap() }
+        getUserById { User.findById(it as UUID)?.wrap() }
 
-        isFirstUser = { User.count() == 0L }
+        isFirstUser { User.count() == 0L }
 
-        createUser = { newUser ->
+        createUser { newUser ->
             User.new {
                     username = newUser.username
                     passwordHash = newUser.passwordHash
@@ -78,15 +78,15 @@ fun Application.configureAuthentication() {
                 .wrap()
         }
 
-        listAllUsers = { User.all().map { it.wrap() } }
+        listAllUsers { User.all().map { it.wrap() } }
 
-        deleteUser = { User.findById(it.id)?.delete() }
+        deleteUser { User.findById(it.id)?.delete() }
 
-        renameUser = { user, newName -> User.findById(user.id)!!.also { it.username = newName }.wrap() }
+        renameUser { user, newName -> User.findById(user.id)!!.also { it.username = newName }.wrap() }
 
-        updatePassword = { user, newPassword -> User.findById(user.id)!!.also { it.passwordHash = newPassword }.wrap() }
+        updatePassword { user, newPassword -> User.findById(user.id)!!.also { it.passwordHash = newPassword }.wrap() }
 
-        updateUserPermissions = { user, permissions ->
+        updateUserPermissions { user, permissions ->
             val dbUser = User.findById(user.id)!!
             val dbPermissions = dbUser.permissions
             dbPermissions.isAdmin = permissions.isAdmin

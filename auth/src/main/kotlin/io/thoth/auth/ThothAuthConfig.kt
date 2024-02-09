@@ -20,7 +20,8 @@ internal typealias KeyId = String
 
 internal typealias GetPrincipal<ID, PERMISSIONS> =
     ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal<
-            ID, PERMISSIONS
+            ID,
+            PERMISSIONS,
         >?
 
 internal val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig<*, *>>("ThothAuthPlugin")
@@ -38,27 +39,36 @@ data class JwtError(val error: String, val statusCode: HttpStatusCode)
 
 private val JWT_VALIDATION_FAILED = AttributeKey<JwtError>("JWT_VALIDATION_FAILED")
 
-class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions> {
-    var production = true
-    var ssl = true
-
-    // Default user settings
-    var firstUserIsAdmin = true
-    var realm: String? = null
-
-    // Token expiry times
-    var accessTokenExpiryTime = TimeUnit.MINUTES.toMillis(5)
-    var refreshTokenExpiryTime = TimeUnit.DAYS.toMillis(60)
-
-    // Key pairs
-    val keyPairs: MutableMap<KeyId, KeyPair> = mutableMapOf()
-    lateinit var activeKeyId: KeyId
-
-    // Application paths
-    lateinit var issuer: String
-    lateinit var domain: String
-    lateinit var protocol: URLProtocol
-    lateinit var jwksPath: String
+class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions>(
+    val production: Boolean = true,
+    val ssl: Boolean = true,
+    val firstUserIsAdmin: Boolean = true,
+    val realm: String? = null,
+    val accessTokenExpiryTime: Long,
+    val refreshTokenExpiryTime: Long,
+    val keyPairs: Map<KeyId, KeyPair>,
+    val activeKeyId: KeyId,
+    val issuer: String,
+    val domain: String,
+    val protocol: URLProtocol,
+    val jwksPath: String,
+    val guards: Map<String, GetPrincipal<ID, PERMISSIONS>>,
+    val serializePermissions: (permissions: PERMISSIONS) -> String,
+    val getUserByUsername: (username: String) -> ThothDatabaseUser<ID, PERMISSIONS>?,
+    val allowNewSignups: () -> Boolean,
+    val getUserById: (id: ID) -> ThothDatabaseUser<ID, PERMISSIONS>?,
+    val isFirstUser: () -> Boolean,
+    val createUser: (registeredUser: ThothRegisteredUser) -> ThothDatabaseUser<ID, PERMISSIONS>,
+    val listAllUsers: () -> List<ThothDatabaseUser<ID, PERMISSIONS>>,
+    val deleteUser: (user: ThothDatabaseUser<ID, PERMISSIONS>) -> Unit,
+    val renameUser: (user: ThothDatabaseUser<ID, PERMISSIONS>, newName: String) -> ThothDatabaseUser<ID, PERMISSIONS>,
+    val updatePassword:
+        (user: ThothDatabaseUser<ID, PERMISSIONS>, newPassword: String) -> ThothDatabaseUser<ID, PERMISSIONS>,
+    val updateUserPermissions:
+        (user: ThothDatabaseUser<ID, PERMISSIONS>, newPermissions: PERMISSIONS) -> ThothDatabaseUser<ID, PERMISSIONS>,
+    val passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?>,
+    val usernameMeetsRequirements: (username: String) -> Pair<Boolean, String?>,
+) {
 
     internal val jwkProvider by lazy {
         val url =
@@ -74,26 +84,12 @@ class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions> {
         JwkProviderBuilder(url).cached(10, 24, TimeUnit.HOURS).rateLimited(10, 1, TimeUnit.MINUTES).build()
     }
 
-    private val guards = mutableMapOf<String, GetPrincipal<ID, PERMISSIONS>>()
-
-    internal fun assertAreRsaKeyPairs() {
-        keyPairs.values.forEach { keyPair ->
-            require(keyPair.public.algorithm == "RSA") { "KeyPair ${keyPair.public} is not a RSA key pair" }
-        }
-        require(keyPairs.isNotEmpty()) { "No key pairs configured" }
-        require(keyPairs.containsKey(activeKeyId)) { "Active key ID '$activeKeyId' not found in key pairs" }
-    }
-
-    fun configureGuard(guard: String, getPrincipal: GetPrincipal<ID, PERMISSIONS>) {
-        guards[guard] = getPrincipal
-    }
-
     internal fun Application.applyGuards() {
         install(Authentication) {
             guards.forEach { (guard, getPrincipal) ->
                 jwt(guard) {
                     if (this@ThothAuthConfig.realm != null) {
-                        realm = this@ThothAuthConfig.realm!!
+                        realm = this@ThothAuthConfig.realm
                     }
 
                     verifier(jwkProvider, this@ThothAuthConfig.issuer) { acceptLeeway(3) }
@@ -130,71 +126,167 @@ class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions> {
             }
         }
     }
+}
 
-    // Operations
-    var serializePermissions: (permissions: PERMISSIONS) -> String = { _ ->
-        throw RuntimeException("Operation not implemented by application")
-    }
+class ThothAuthConfigBuilder<ID : Any, PERMISSIONS : ThothUserPermissions> {
+    var production = true
+    var ssl = true
 
-    var getUserByUsername: (username: String) -> ThothDatabaseUser<ID, PERMISSIONS>? = { _ ->
-        throw RuntimeException("Operation not implemented by application")
-    }
+    // Default user settings
+    var firstUserIsAdmin = true
+    var realm: String? = null
 
-    var allowNewSignups: () -> Boolean = { throw RuntimeException("Operation not implemented by application") }
+    // Token expiry times
+    var accessTokenExpiryTime = TimeUnit.MINUTES.toMillis(5)
+    var refreshTokenExpiryTime = TimeUnit.DAYS.toMillis(60)
 
-    var getUserById: (id: Any) -> ThothDatabaseUser<ID, PERMISSIONS>? = { _ ->
-        throw RuntimeException("Operation not implemented by application")
-    }
+    // Key pairs
+    val keyPairs: MutableMap<KeyId, KeyPair> = mutableMapOf()
+    lateinit var activeKeyId: KeyId
 
-    var isFirstUser: () -> Boolean = { throw RuntimeException("Operation not implemented by application") }
+    // Application paths
+    lateinit var issuer: String
+    lateinit var domain: String
+    lateinit var protocol: URLProtocol
+    lateinit var jwksPath: String
 
-    var createUser: (registeredUser: ThothRegisteredUser) -> ThothDatabaseUser<ID, PERMISSIONS> = { _ ->
-        throw RuntimeException("Operation not implemented by application")
-    }
-
-    var listAllUsers: () -> List<ThothDatabaseUser<ID, PERMISSIONS>> = {
-        throw RuntimeException("Operation not implemented by application")
-    }
-
-    var deleteUser: (user: ThothDatabaseUser<ID, PERMISSIONS>) -> Unit = { _ ->
-        throw RuntimeException("Operation not implemented by application")
-    }
-
-    var renameUser: (user: ThothDatabaseUser<ID, PERMISSIONS>, name: String) -> ThothDatabaseUser<ID, PERMISSIONS> =
-        { _, _ ->
-            throw RuntimeException("Operation not implemented by application")
-        }
-
-    var updatePassword:
-        (user: ThothDatabaseUser<ID, PERMISSIONS>, newPassword: String) -> ThothDatabaseUser<ID, PERMISSIONS> =
-        { _, _ ->
-            throw RuntimeException("Operation not implemented by application")
-        }
-
-    var updateUserPermissions:
-        (user: ThothDatabaseUser<ID, PERMISSIONS>, permissions: ThothUserPermissions) -> ThothDatabaseUser<
-                ID,
-                PERMISSIONS,
-            > =
-        { _, _ ->
-            throw RuntimeException("Operation not implemented by application")
-        }
-
-    var passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?> = { password ->
-        if (password.length < 8) {
-            Pair(false, "Password must be at least 8 characters long")
+    // Functionality
+    private lateinit var serializePermissions: (permissions: PERMISSIONS) -> String
+    private lateinit var getUserByUsername: (username: String) -> ThothDatabaseUser<ID, PERMISSIONS>?
+    private lateinit var allowNewSignups: () -> Boolean
+    private lateinit var getUserById: (id: ID) -> ThothDatabaseUser<ID, PERMISSIONS>?
+    private lateinit var isFirstUser: () -> Boolean
+    private lateinit var createUser: (registeredUser: ThothRegisteredUser) -> ThothDatabaseUser<ID, PERMISSIONS>
+    private lateinit var listAllUsers: () -> List<ThothDatabaseUser<ID, PERMISSIONS>>
+    private lateinit var deleteUser: (user: ThothDatabaseUser<ID, PERMISSIONS>) -> Unit
+    private lateinit var renameUser:
+        (user: ThothDatabaseUser<ID, PERMISSIONS>, newName: String) -> ThothDatabaseUser<ID, PERMISSIONS>
+    private lateinit var updatePassword:
+        (user: ThothDatabaseUser<ID, PERMISSIONS>, newPassword: String) -> ThothDatabaseUser<ID, PERMISSIONS>
+    private lateinit var updateUserPermissions:
+        (user: ThothDatabaseUser<ID, PERMISSIONS>, newPermissions: PERMISSIONS) -> ThothDatabaseUser<ID, PERMISSIONS>
+    private var passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?> = { password ->
+        if (password.length < 6) {
+            Pair(false, "Password must be at least 6 characters long")
         } else {
             Pair(true, null)
         }
     }
-
-    var usernameMeetsRequirements: (username: String) -> Pair<Boolean, String?> = { username ->
-        if (username.length < 5) {
-            Pair(false, "Username must be at least 5 characters long")
+    private var usernameMeetsRequirements: (username: String) -> Pair<Boolean, String?> = { username ->
+        if (username.length < 3) {
+            Pair(false, "Username must be at least 3 characters long")
         } else if (!username.matches(Regex("^[a-zA-Z0-9_-]*$"))) {
             Pair(false, "Username must be alphanumeric, including - and _")
         } else {
             Pair(true, null)
         }
+    }
+
+    // Guards
+    private val guards = mutableMapOf<String, GetPrincipal<ID, PERMISSIONS>>()
+
+    fun configureGuard(guard: String, getPrincipal: GetPrincipal<ID, PERMISSIONS>) {
+        guards[guard] = getPrincipal
+    }
+
+    // Builder
+    fun build(): ThothAuthConfig<ID, PERMISSIONS> {
+        keyPairs.values.forEach { keyPair ->
+            require(keyPair.public.algorithm == "RSA") { "KeyPair ${keyPair.public} is not a RSA key pair" }
+        }
+        require(keyPairs.isNotEmpty()) { "No key pairs configured" }
+        require(keyPairs.containsKey(activeKeyId)) { "Active key ID '$activeKeyId' not found in key pairs" }
+
+        return ThothAuthConfig(
+            production = production,
+            ssl = ssl,
+            firstUserIsAdmin = firstUserIsAdmin,
+            realm = realm,
+            accessTokenExpiryTime = accessTokenExpiryTime,
+            refreshTokenExpiryTime = refreshTokenExpiryTime,
+            keyPairs = keyPairs,
+            activeKeyId = activeKeyId,
+            issuer = issuer,
+            domain = domain,
+            protocol = protocol,
+            jwksPath = jwksPath,
+            guards = guards.toMap(),
+            serializePermissions = serializePermissions,
+            getUserByUsername = getUserByUsername,
+            allowNewSignups = allowNewSignups,
+            getUserById = getUserById,
+            isFirstUser = isFirstUser,
+            createUser = createUser,
+            listAllUsers = listAllUsers,
+            deleteUser = deleteUser,
+            renameUser = renameUser,
+            updatePassword = updatePassword,
+            updateUserPermissions = updateUserPermissions,
+            passwordMeetsRequirements = passwordMeetsRequirements,
+            usernameMeetsRequirements = usernameMeetsRequirements
+        )
+    }
+
+    // Operations
+    fun serializePermissions(permissions: (permissions: PERMISSIONS) -> String) {
+        this.serializePermissions = permissions
+    }
+
+    fun getUserByUsername(getUserByUsername: (username: String) -> ThothDatabaseUser<ID, PERMISSIONS>?) {
+        this.getUserByUsername = getUserByUsername
+    }
+
+    fun allowNewSignups(allowNewSignups: () -> Boolean) {
+        this.allowNewSignups = allowNewSignups
+    }
+
+    fun getUserById(getUserById: (id: ID) -> ThothDatabaseUser<ID, PERMISSIONS>?) {
+        this.getUserById = getUserById
+    }
+
+    fun isFirstUser(isFirstUser: () -> Boolean) {
+        this.isFirstUser = isFirstUser
+    }
+
+    fun createUser(createUser: (registeredUser: ThothRegisteredUser) -> ThothDatabaseUser<ID, PERMISSIONS>) {
+        this.createUser = createUser
+    }
+
+    fun listAllUsers(listAllUsers: () -> List<ThothDatabaseUser<ID, PERMISSIONS>>) {
+        this.listAllUsers = listAllUsers
+    }
+
+    fun deleteUser(deleteUser: (user: ThothDatabaseUser<ID, PERMISSIONS>) -> Unit) {
+        this.deleteUser = deleteUser
+    }
+
+    fun renameUser(
+        renameUser: (user: ThothDatabaseUser<ID, PERMISSIONS>, newName: String) -> ThothDatabaseUser<ID, PERMISSIONS>
+    ) {
+        this.renameUser = renameUser
+    }
+
+    fun updatePassword(
+        updatePassword:
+            (user: ThothDatabaseUser<ID, PERMISSIONS>, newPassword: String) -> ThothDatabaseUser<ID, PERMISSIONS>
+    ) {
+        this.updatePassword = updatePassword
+    }
+
+    fun updateUserPermissions(
+        updateUserPermissions:
+            (user: ThothDatabaseUser<ID, PERMISSIONS>, newPermissions: PERMISSIONS) -> ThothDatabaseUser<
+                    ID, PERMISSIONS
+                >
+    ) {
+        this.updateUserPermissions = updateUserPermissions
+    }
+
+    fun passwordMeetsRequirements(passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?>) {
+        this.passwordMeetsRequirements = passwordMeetsRequirements
+    }
+
+    fun usernameMeetsRequirements(usernameMeetsRequirements: (username: String) -> Pair<Boolean, String?>) {
+        this.usernameMeetsRequirements = usernameMeetsRequirements
     }
 }
