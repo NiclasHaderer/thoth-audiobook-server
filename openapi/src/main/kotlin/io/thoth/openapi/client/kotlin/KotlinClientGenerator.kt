@@ -94,7 +94,7 @@ class KotlinClientGenerator(
                     buildString {
                         append(base)
                         // Class
-                        append("interface ${apiClientName} {")
+                        append("interface $apiClientName {\n")
                         append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
                         if (errorHandling == KtErrorHandling.Either) {
                             val eitherFun = getResourceContent("/kotlin/Either.kt")

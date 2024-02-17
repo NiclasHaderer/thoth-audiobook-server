@@ -22,7 +22,7 @@ class KtClientFunction(
     val contentImpl = run { generateContent(true) }
     val content = run { generateContent(false) }
 
-    private fun getParameters(route: OpenApiRoute) = buildList {
+    private fun getParameters(route: OpenApiRoute, impl: Boolean) = buildList {
         // Path parameters
         (route.queryParameters + route.pathParameters).forEach { (param) ->
             val (actual, all) = typeProviders.generateTypes(param.type)
@@ -39,14 +39,16 @@ class KtClientFunction(
             add("body: ${actual.reference()}, ")
         }
 
+        fun withIfNotImpl(str: String) = if (impl) "" else str
+
         // Headers
-        add("headers: Headers = Headers.Empty, ")
+        add("headers: Headers${withIfNotImpl("= Headers.Empty")},")
 
         val (responseBody, _) = typeProviders.generateTypes(route.responseBodyType)
         val (requestBody, _) = typeProviders.generateTypes(route.requestBodyType)
         // Hooks to modify the request
-        add("onBeforeRequest: OnBeforeRequest<${requestBody.reference()}> = { _, _ -> }, ")
-        add("onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}> = { _, _ -> }")
+        add("onBeforeRequest: OnBeforeRequest<${requestBody.reference()}>${withIfNotImpl(" = { _, _ -> }")}, ")
+        add("onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}>${withIfNotImpl(" = { _, _ -> }")}")
     }
 
     private fun generateContent(impl: Boolean): String? {
@@ -62,12 +64,13 @@ class KtClientFunction(
         clientImports.addAll(requestBody.imports())
         typeDefinitions.putAll(all.mappedKtReference())
         return buildString {
-            append("    ${if (impl) "override " else ""}open suspend fun ${routeName}(\n")
-            getParameters(route).forEach { append("        $it\n") }
+            append("    ${if (impl) "override" else ""} suspend fun ${routeName}(\n")
+            getParameters(route, impl).forEach { append("        $it\n") }
             val functionRunner =
                 when (errorHandling) {
                     KtErrorHandling.Result ->
                         "= runCatching" to "Result<OpenApiHttpResponse<${responseBody.reference()}>>"
+
                     KtErrorHandling.Exception -> "= run" to "OpenApiHttpResponse<${responseBody.reference()}>"
                     KtErrorHandling.Either ->
                         "= wrapInEither" to "Either<OpenApiHttpResponse<${responseBody.reference()}>, ApiError>"
