@@ -37,5 +37,18 @@ fun Application.configureStatusPages() {
         exception<Throwable>(formatException(HttpStatusCode.InternalServerError) { logger.error(it) })
         exception<BadRequestException>(formatException(HttpStatusCode.BadRequest))
         exception<MissingRequestParameterException>(formatException(HttpStatusCode.BadRequest))
+        exception<ParameterConversionException>(formatException(HttpStatusCode.BadRequest))
+        exception<ContentTransformationException>(formatException(HttpStatusCode.InternalServerError))
+        exception<CannotTransformContentToTypeException>(formatException(HttpStatusCode.UnsupportedMediaType))
+        exception<UnsupportedMediaTypeException>(formatException(HttpStatusCode.UnsupportedMediaType))
+        exception<MissingRequestParameterException>(formatException(HttpStatusCode.BadRequest))
+
+        val statuses = HttpStatusCode.allStatusCodes.filter { it.value >= 400 }.toTypedArray()
+        status(*statuses) { statusCode ->
+            call.respond(
+                statusCode,
+                hashMapOf("error" to statusCode.description, "status" to statusCode.value, "details" to null),
+            )
+        }
     }
 }
