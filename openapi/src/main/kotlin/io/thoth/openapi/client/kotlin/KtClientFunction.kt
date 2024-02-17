@@ -11,7 +11,7 @@ class KtClientFunction(
     private val clientImports: MutableSet<String>,
     private val typeDefinitions: MutableMap<String, KtTypeGenerator.KtReferenceType>,
     private val typeProviders:
-        TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
+    TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
     private val errorHandling: KtErrorHandling
 ) {
 
@@ -19,7 +19,8 @@ class KtClientFunction(
         private val log = logger {}
     }
 
-    val content = run { generateContent() }
+    val contentImpl = run { generateContent(true) }
+    val content = run { generateContent(false) }
 
     private fun getParameters(route: OpenApiRoute) = buildList {
         // Path parameters
@@ -48,7 +49,7 @@ class KtClientFunction(
         add("onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}> = { _, _ -> }")
     }
 
-    private fun generateContent(): String? {
+    private fun generateContent(impl: Boolean): String? {
         val routeName = getRouteName(route)
         if (routeName == null) {
             log.warn("Route ${route.method}:${route.fullPath} has no summary")
@@ -61,7 +62,7 @@ class KtClientFunction(
         clientImports.addAll(requestBody.imports())
         typeDefinitions.putAll(all.mappedKtReference())
         return buildString {
-            append("    open suspend fun ${routeName}(\n")
+            append("    ${if (impl) "override " else ""}open suspend fun ${routeName}(\n")
             getParameters(route).forEach { append("        $it\n") }
             val functionRunner =
                 when (errorHandling) {
@@ -71,8 +72,12 @@ class KtClientFunction(
                     KtErrorHandling.Either ->
                         "= wrapInEither" to "Either<OpenApiHttpResponse<${responseBody.reference()}>, ApiError>"
                 }
-
-            append("    ): ${functionRunner.second} ${functionRunner.first} {\n")
+            append("    ): ${functionRunner.second}")
+            if (!impl) {
+                append("\n")
+                return@buildString
+            }
+            append(" ${functionRunner.first} {\n")
             append("        makeRequest(\n")
             append("            RequestMetadata(\n")
             append("                path = \"${route.fullPath}\",\n")

@@ -59,46 +59,69 @@ class KotlinClientGenerator(
                     errorHandling = errorHandling
                 )
             }
+
+        val base = buildString {
+            append("@file:Suppress(\"UnusedImport\")\n\n")
+            // Package
+            append("package $packageName\n\n")
+
+            // Imports
+            append("import io.ktor.client.*\n")
+            append("import io.ktor.http.*\n")
+            append("import io.ktor.client.call.*\n")
+            append("import io.ktor.client.plugins.*\n")
+            append("import io.ktor.util.reflect.*\n")
+
+            // Client imports
+            append(clientImports.joinToString("\n"))
+            append("\n")
+
+            // Optional error handling imports
+            if (errorHandling == KtErrorHandling.Either) {
+                append("import arrow.core.Either\n")
+                append("import java.io.IOException\n")
+            }
+
+            // Model imports
+            append("import $packageName.models.*\n")
+            append("\n\n")
+        }
+
         add(
             ClientPart(
                 path = "${apiClientName}.kt",
                 content =
                     buildString {
-                        append("@file:Suppress(\"UnusedImport\")\n\n")
-                        // Package
-                        append("package $packageName\n\n")
-
-                        // Imports
-                        append("import io.ktor.client.*\n")
-                        append("import io.ktor.http.*\n")
-                        append("import io.ktor.client.call.*\n")
-                        append("import io.ktor.client.plugins.*\n")
-                        append("import io.ktor.util.reflect.*\n")
-
-                        // Client imports
-                        append(clientImports.joinToString("\n"))
-                        append("\n")
-
-                        // Optional error handling imports
+                        append(base)
+                        // Class
+                        append("interface ${apiClientName} {")
+                        append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
                         if (errorHandling == KtErrorHandling.Either) {
-                            append("import arrow.core.Either\n")
-                            append("import java.io.IOException\n")
+                            val eitherFun = getResourceContent("/kotlin/Either.kt")
+                            // Replace everything up to // -- Start and after // -- End
+                            append(eitherFun.substringAfter("// -- Start").substringBefore("// -- End"))
                         }
-
-                        // Model imports
-                        append("import $packageName.models.*\n")
-                        append("\n\n")
+                        append("}")
+                    },
+            ),
+        )
+        add(
+            ClientPart(
+                path = "${apiClientName}Impl.kt",
+                content =
+                    buildString {
+                        append(base)
 
                         // Class
                         append("@Suppress(\"unused\")\n")
                         if (abstract) {
-                            append("abstract class ${apiClientName}(\n")
+                            append("abstract class ${apiClientName}Impl(\n")
                         } else {
-                            append("open class ${apiClientName}(\n")
+                            append("open class ${apiClientName}Impl(\n")
                         }
                         append("    baseUrl: Url\n")
-                        append(") : RequestRunner(baseUrl) {\n")
-                        append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
+                        append(") : RequestRunner(baseUrl), ${apiClientName} {\n")
+                        append("${clientFunctions.map { it.contentImpl }.joinToString("\n\n")}\n")
                         if (errorHandling == KtErrorHandling.Either) {
                             val eitherFun = getResourceContent("/kotlin/Either.kt")
                             // Replace everything up to // -- Start and after // -- End
