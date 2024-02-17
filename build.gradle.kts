@@ -27,6 +27,12 @@ subprojects {
         }
     }
 
+    plugins.withType<JavaPlugin> {
+        configure<JavaPluginExtension> {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+        }
+    }
     tasks.withType<KotlinCompile>().configureEach {
         kotlinOptions {
             freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
