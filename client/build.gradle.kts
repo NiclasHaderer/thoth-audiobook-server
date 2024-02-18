@@ -41,5 +41,4 @@ dependencies{
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     implementation("io.arrow-kt:arrow-core:$arrowVersion")
-
 }
