@@ -135,7 +135,7 @@ fun Application.startBackgroundJobs() {
                 apiClientPackageName = "io.thoth.client.gen",
                 savePath = "client/src/main/kotlin/io/thoth/client/gen",
                 apiClientName = "ThothClient",
-                errorHandling = KtErrorHandling.Result
+                errorHandling = KtErrorHandling.Either
             )
             log.info("Clients generated")
         }
