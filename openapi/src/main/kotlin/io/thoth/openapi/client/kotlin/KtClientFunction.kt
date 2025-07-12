@@ -11,7 +11,7 @@ class KtClientFunction(
     private val clientImports: MutableSet<String>,
     private val typeDefinitions: MutableMap<String, KtTypeGenerator.KtReferenceType>,
     private val typeProviders:
-    TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
+        TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
     private val errorHandling: KtErrorHandling
 ) {
 
@@ -48,7 +48,9 @@ class KtClientFunction(
         val (requestBody, _) = typeProviders.generateTypes(route.requestBodyType)
         // Hooks to modify the request
         add("onBeforeRequest: OnBeforeRequest<${requestBody.reference()}>${withIfNotImpl(" = { _, _ -> }")}, ")
-        add("onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}>${withIfNotImpl(" = { _, _ -> }")}")
+        add(
+            "onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}>${withIfNotImpl(" = { _, _ -> }")}"
+        )
     }
 
     private fun generateContent(impl: Boolean): String? {
@@ -70,7 +72,6 @@ class KtClientFunction(
                 when (errorHandling) {
                     KtErrorHandling.Result ->
                         "= runCatching" to "Result<OpenApiHttpResponse<${responseBody.reference()}>>"
-
                     KtErrorHandling.Exception -> "= run" to "OpenApiHttpResponse<${responseBody.reference()}>"
                     KtErrorHandling.Either ->
                         "= wrapInEither" to "Either<OpenApiHttpResponse<${responseBody.reference()}>, ApiError>"
