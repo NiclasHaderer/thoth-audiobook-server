@@ -1,18 +1,7 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm")
     id("com.ncorti.ktfmt.gradle")
     id("maven-publish")
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-        jvmTarget = "17"
-        apiVersion = "1.8"
-        languageVersion = "1.8"
-    }
 }
 
 java {

@@ -9,6 +9,7 @@ import io.thoth.auth.utils.generateAccessTokenForUser
 import io.thoth.auth.utils.validateJwt
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
+import java.util.UUID
 
 interface ThothRefreshTokenParams
 
@@ -17,9 +18,10 @@ fun RouteHandler.getRefreshToken(
     body: Unit,
 ): ThothAccessToken {
     val refreshToken = call.request.cookies["refresh"] ?: throw ErrorResponse.unauthorized("No refresh token")
-    val config = thothAuthConfig<Any, ThothUserPermissions>()
+    val config = thothAuthConfig<UUID, ThothUserPermissions>()
     val decodedJwt = validateJwt(config, refreshToken, ThothJwtTypes.Refresh)
-    val userId = decodedJwt.getClaim("sub").asString()
+    val userIdStr = decodedJwt.getClaim("sub").asString()
+    val userId = UUID.fromString(userIdStr)
     val user = config.getUserById(userId) ?: throw ErrorResponse.internalError("User not found")
 
     return ThothAccessToken(

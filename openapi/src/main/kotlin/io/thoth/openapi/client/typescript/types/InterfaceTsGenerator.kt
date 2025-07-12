@@ -35,7 +35,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
                     if (it.overwrites) append("override ")
                     append("${it.name}: ${it.type.name}")
                     if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
-                    if (it.nullable) append("?")
+                    if (it.nullable) append(" | undefined")
                     append(";\n")
                 }
             append("}")

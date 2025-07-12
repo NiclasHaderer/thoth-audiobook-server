@@ -34,10 +34,9 @@ open class Scheduler : TaskQueueHolder() {
         get() = taskQueue.map { QueuedTask(it.task.name, it.executeAt, it.task.type) }
 
     suspend fun start() {
-        if (started.get()) {
+        if (!started.compareAndExchange(false, true)) {
             return
         }
-        started.set(true)
         internalStart()
     }
 

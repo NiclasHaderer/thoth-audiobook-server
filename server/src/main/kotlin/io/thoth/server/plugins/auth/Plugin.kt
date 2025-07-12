@@ -27,6 +27,7 @@ fun Application.configureAuthentication() {
         production = thothConfig.production
         issuer = "thoth.io"
         domain = thothConfig.domain
+        port = thothConfig.port
         protocol = if (thothConfig.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
         jwksPath = "/api/auth/jwks.json"
         keyPairs["thoth"] = keyPair
@@ -35,11 +36,9 @@ fun Application.configureAuthentication() {
         configureGuard(
             Guards.Normal,
         ) { jwtCredential, setError ->
-            jwtToPrincipal(jwtCredential)
+            jwtToPrincipal(jwtCredential, serializer)
                 ?: return@configureGuard run {
-                    setError(
-                        JwtError(error = "JWT is not valid", statusCode = HttpStatusCode.Unauthorized),
-                    )
+                    setError(JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
                     null
                 }
         }
@@ -47,13 +46,11 @@ fun Application.configureAuthentication() {
         configureGuard(
             Guards.Admin,
         ) { jwtCredential, setError ->
-            jwtToPrincipal(jwtCredential)?.let { principal ->
+            jwtToPrincipal(jwtCredential, serializer)?.let { principal ->
                 if (principal.permissions.isAdmin) {
                     principal
                 } else {
-                    setError(
-                        JwtError(error = "User is not an admin", statusCode = HttpStatusCode.Unauthorized),
-                    )
+                    setError(JwtError("User is not an admin", HttpStatusCode.Unauthorized))
                     null
                 }
             }
@@ -65,7 +62,7 @@ fun Application.configureAuthentication() {
 
         serializePermissions { serializer.serializeValue(it) }
 
-        getUserById { User.findById(it as UUID)?.wrap() }
+        getUserById { User.findById(it)?.wrap() }
 
         isFirstUser { User.count() == 0L }
 

@@ -6,7 +6,7 @@ import io.thoth.models.TitledId
 import io.thoth.server.database.tables.Book
 import org.jetbrains.exposed.sql.SortOrder
 
-fun Book.toModel(order: SortOrder = SortOrder.ASC): BookModel {
+fun Book.toModel(authorOrder: SortOrder = SortOrder.ASC, seriesOrder: SortOrder = SortOrder.ASC): BookModel {
     return BookModel(
         id = id.value,
         title = title,
@@ -24,12 +24,12 @@ fun Book.toModel(order: SortOrder = SortOrder.ASC): BookModel {
             authors
                 .sortedBy { it.name.lowercase() }
                 .map { NamedId(it.id.value, it.name) }
-                .let { if (order == SortOrder.DESC) it.reversed() else it },
+                .let { if (authorOrder == SortOrder.DESC) it.reversed() else it },
         series =
             series
                 .sortedBy { it.title.lowercase() }
                 .map { TitledId(it.id.value, it.title) }
-                .let { if (order == SortOrder.DESC) it.reversed() else it },
+                .let { if (seriesOrder == SortOrder.DESC) it.reversed() else it },
         genres = genres.map { NamedId(it.id.value, it.name) },
         library = TitledId(library.id.value, library.name),
     )

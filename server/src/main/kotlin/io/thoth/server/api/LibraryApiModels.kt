@@ -2,6 +2,9 @@ package io.thoth.server.api
 
 import io.thoth.models.FileScanner
 import io.thoth.models.MetadataAgent
+import io.thoth.openapi.ktor.RouteHandler
+import io.thoth.openapi.ktor.ValidateObject
+import io.thoth.openapi.ktor.errors.ErrorResponse
 
 data class LibraryApiModel(
     val name: String,
@@ -11,11 +14,17 @@ data class LibraryApiModel(
     val metadataScanners: List<MetadataAgent>,
     val fileScanners: List<FileScanner>,
     var language: String
-) {
-    init {
-        require(folders.isNotEmpty())
-        require(metadataScanners.isNotEmpty())
-        require(fileScanners.isNotEmpty())
+) : ValidateObject {
+    override suspend fun RouteHandler.validateBody() {
+        if (folders.isEmpty()) {
+            throw ErrorResponse.userError("Library must have at least one folder")
+        }
+        if (metadataScanners.isEmpty()) {
+            throw ErrorResponse.userError("Library must have at least one metadata scanner")
+        }
+        if (fileScanners.isEmpty()) {
+            throw ErrorResponse.userError("Library must have at least one file scanner")
+        }
         // TODO verify that the metadataScanner exists
         // TODO verify that the fileScanner exists
     }
@@ -29,11 +38,17 @@ data class PartialLibraryApiModel(
     val metadataScanners: List<MetadataAgent>?,
     val fileScanners: List<FileScanner>?,
     val language: String?
-) {
-    init {
-        require(folders == null || folders.isNotEmpty())
-        require(metadataScanners == null || metadataScanners.isNotEmpty())
-        require(fileScanners == null || fileScanners.isNotEmpty())
+) : ValidateObject {
+    override suspend fun RouteHandler.validateBody() {
+        if (folders?.isEmpty() == true) {
+            throw ErrorResponse.userError("Library must have at least one folder")
+        }
+        if (metadataScanners?.isEmpty() == true) {
+            throw ErrorResponse.userError("Library must have at least one metadata scanner")
+        }
+        if (fileScanners?.isEmpty() == true) {
+            throw ErrorResponse.userError("Library must have at least one file scanner")
+        }
         // TODO verify that the metadataScanner exists
         // TODO verify that the fileScanner exists
     }

@@ -4,6 +4,7 @@ import io.thoth.server.common.scheduling.ScheduleCollection
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.tables.Library
 import io.thoth.server.file.scanner.LibraryScanner
+import java.util.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -29,7 +30,7 @@ class ThothSchedules : ScheduleCollection, KoinComponent {
         )
 
     val scanLibraries =
-        event(
+        event<List<UUID>>(
             "Scan libraries",
             callback = { libraryScanner.fullScan(it.data) },
         )
