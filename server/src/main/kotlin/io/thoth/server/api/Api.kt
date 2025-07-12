@@ -1,16 +1,31 @@
 package io.thoth.server.api
 
 import io.ktor.resources.*
-import io.ktor.server.request.*
-import io.thoth.auth.interactions.*
+import io.thoth.auth.interactions.ThothChangePasswordParams
+import io.thoth.auth.interactions.ThothCurrentUserParams
+import io.thoth.auth.interactions.ThothDeleteUserParams
+import io.thoth.auth.interactions.ThothDisplayUserParams
+import io.thoth.auth.interactions.ThothJwksParams
+import io.thoth.auth.interactions.ThothListUserParams
+import io.thoth.auth.interactions.ThothLoginParams
+import io.thoth.auth.interactions.ThothLogoutParams
+import io.thoth.auth.interactions.ThothModifyPermissionsParams
+import io.thoth.auth.interactions.ThothRefreshTokenParams
+import io.thoth.auth.interactions.ThothRegisterParams
+import io.thoth.auth.interactions.ThothRenameUserParams
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
-import io.thoth.openapi.ktor.*
+import io.thoth.openapi.ktor.BeforeBodyParsing
+import io.thoth.openapi.ktor.NotSecured
+import io.thoth.openapi.ktor.RouteHandler
+import io.thoth.openapi.ktor.Secured
+import io.thoth.openapi.ktor.Summary
+import io.thoth.openapi.ktor.Tagged
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import io.thoth.server.database.tables.TLibraries
 import io.thoth.server.plugins.auth.Guards
-import io.thoth.server.plugins.authentication.assertAccessToLibraryId
+import io.thoth.server.plugins.authentication.assertLibraryPermissions
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -87,6 +102,10 @@ class Api {
                         get() = parent.id
                 }
             }
+
+            @Summary("Get current user", method = "GET")
+            @Resource("current")
+            data class Current(private val parent: User) : ThothCurrentUserParams
         }
     }
 
@@ -136,7 +155,7 @@ class Api {
         data class Rescan(private val parent: Libraries) : BeforeBodyParsing {
             override suspend fun RouteHandler.beforeBodyParsing() {
                 val allLibIds = transaction { TLibraries.selectAll().map { it[TLibraries.id].value } }
-                assertAccessToLibraryId(this.context.request.httpMethod, *allLibIds.toTypedArray())
+                assertLibraryPermissions(*allLibIds.toTypedArray())
             }
         }
 
@@ -147,7 +166,7 @@ class Api {
         @Summary("Get library", method = "GET")
         data class Id(val libraryId: UUID_S, private val parent: Libraries) : BeforeBodyParsing {
             override suspend fun RouteHandler.beforeBodyParsing() {
-                assertAccessToLibraryId(this.context.request.httpMethod, libraryId)
+                assertLibraryPermissions(libraryId)
             }
 
             @Summary("Rescan library", method = "POST")
@@ -351,6 +370,7 @@ class Api {
         }
     }
 
+    // TODO secure?
     @Resource("stream")
     @Tagged("Files")
     data class Files(private val parent: Api) {

@@ -46,6 +46,7 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
 ) {
     if (params is BeforeBodyParsing) params.run { beforeBodyParsing() }
     val parsedBody: BODY = call.parseBody()
+    if (parsedBody is ValidateObject) parsedBody.run { validateBody() }
     if (params is AfterBodyParsing) params.run { afterBodyParsing() }
     val response: RESPONSE = this.callback(params, parsedBody)
     if (response is BaseResponse) {

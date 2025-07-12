@@ -98,6 +98,7 @@ class LibraryRepositoryImpl() : LibraryRepository, KoinComponent {
                     preferEmbeddedMetadata = complete.preferEmbeddedMetadata
                     metadataScanners = complete.metadataScanners
                     fileScanners = complete.fileScanners
+                    language = complete.language
                 }
             }
             .also {

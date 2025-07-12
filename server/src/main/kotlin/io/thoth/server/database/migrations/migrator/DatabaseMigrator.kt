@@ -25,8 +25,7 @@ class DatabaseMigrator(
             classes.map { it.kotlin }.map { it.createInstance() }
         } catch (_: ClassCastException) {
             // Caused by hot reloading, so migrations should not be necessary, because the migration
-            // has
-            // already run
+            // has already run
             listOf()
         }
     }

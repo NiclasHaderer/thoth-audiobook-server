@@ -1,3 +1,4 @@
+/* eslint-disable */
 export type ApiError = {
     success: false,
     error: string | object

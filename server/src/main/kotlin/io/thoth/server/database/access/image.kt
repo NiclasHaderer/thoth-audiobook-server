@@ -9,7 +9,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 
 fun Image.Companion.create(imageBytes: ByteArray): Image {
-    return Image.new { blob = ExposedBlob(imageBytes) }
+    return new { blob = ExposedBlob(imageBytes) }
 }
 
 fun Image.areSame(newImageBytes: ByteArray): Boolean {
@@ -27,10 +27,10 @@ fun Image.Companion.getNewImage(
     if (newImage.isUUID()) {
         val newImageUUID = UUID.fromString(newImage)
 
-        return Image.findById(newImageUUID)?.id ?: throw ErrorResponse.notFound("Image", newImageUUID)
+        return findById(newImageUUID)?.id ?: throw ErrorResponse.notFound("Image", newImageUUID)
     }
 
-    val originalImage = if (currentImageID != null) Image.findById(currentImageID) else null
+    val originalImage = if (currentImageID != null) findById(currentImageID) else null
     val newImageBytes = newImage.syncUriToFile()
     val areSameImage = originalImage?.areSame(newImageBytes) ?: false
     return if (areSameImage) {

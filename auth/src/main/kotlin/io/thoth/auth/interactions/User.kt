@@ -26,3 +26,15 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.displayUser(
     val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
     return user.wrap()
 }
+
+interface ThothCurrentUserParams
+
+fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.currentUser(
+    params: ThothCurrentUserParams
+): ThothUser<ID, PERMISSIONS> {
+    val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
+    val config = thothAuthConfig<ID, PERMISSIONS>()
+
+    val user = config.getUserById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
+    return user.wrap()
+}

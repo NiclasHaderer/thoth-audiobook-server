@@ -118,9 +118,11 @@ fun Application.startBackgroundJobs() {
     launch {
         val scheduler = get<Scheduler>()
         val thothSchedules = get<ThothSchedules>()
-        scheduler.register(thothSchedules.scanLibrary)
         scheduler.schedule(thothSchedules.fullScan)
         scheduler.schedule(thothSchedules.retrieveMetadata)
+
+        scheduler.register(thothSchedules.scanLibrary)
+
         scheduler.launchScheduledJob(thothSchedules.fullScan)
         scheduler.launchScheduledJob(thothSchedules.retrieveMetadata)
     }
@@ -135,7 +137,7 @@ fun Application.startBackgroundJobs() {
                 apiClientPackageName = "io.thoth.client.gen",
                 savePath = "client/src/main/kotlin/io/thoth/client/gen",
                 apiClientName = "ThothClient",
-                errorHandling = KtErrorHandling.Either
+                errorHandling = KtErrorHandling.Either,
             )
             log.info("Clients generated")
         }

@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val ktorVersion: String by project
 val jwtVersion: String by project
 val kotlinLoggingVersion: String by project
@@ -15,15 +13,6 @@ plugins {
     id("maven-publish")
 }
 
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-        jvmTarget = "17"
-        apiVersion = "1.8"
-        languageVersion = "1.8"
-    }
-}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17

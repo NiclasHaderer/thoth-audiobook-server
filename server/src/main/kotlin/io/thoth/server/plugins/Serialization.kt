@@ -1,8 +1,10 @@
 package io.thoth.server.plugins
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.StreamReadFeature
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
@@ -21,14 +23,22 @@ fun Application.configureSerialization() {
 
     install(ContentNegotiation) {
         jackson {
-            val module = SimpleModule()
+            this
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
             setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            module.addSerializer(LocalDateTime::class.java, CustomLocalDateTimeSerializer())
-            module.addDeserializer(LocalDateTime::class.java, CustomLocalDateTimeDesSerializer())
-            module.addSerializer(LocalDate::class.java, CustomLocalDateSerializer())
-            module.addDeserializer(LocalDate::class.java, CustomLocalDateDesSerializer())
+
+            factory.configure(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION.mappedFeature(), true)
+
+            jacksonMapperBuilder().enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
+
+            val module =
+                SimpleModule().apply {
+                    addSerializer(LocalDateTime::class.java, CustomLocalDateTimeSerializer())
+                    addDeserializer(LocalDateTime::class.java, CustomLocalDateTimeDesSerializer())
+                    addSerializer(LocalDate::class.java, CustomLocalDateSerializer())
+                    addDeserializer(LocalDate::class.java, CustomLocalDateDesSerializer())
+                }
             registerModule(module)
             serialization.objectMapper = this
         }

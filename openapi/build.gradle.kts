@@ -16,20 +16,6 @@ plugins {
     kotlin("plugin.serialization")
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-        jvmTarget = "17"
-        apiVersion = "1.8"
-        languageVersion = "1.8"
-    }
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
 dependencies {
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
 

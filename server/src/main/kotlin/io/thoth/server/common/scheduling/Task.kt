@@ -1,7 +1,6 @@
 package io.thoth.server.common.scheduling
 
 import com.cronutils.model.Cron
-import io.thoth.server.common.extensions.toCron
 
 enum class TaskType {
     CRON,
@@ -23,28 +22,13 @@ class EventTask<T>(override val name: String, val callback: suspend (Event<T>) -
     }
 }
 
-class ScheduleTask constructor(override val name: String, val cron: Cron, val callback: suspend () -> Unit) : Task {
-
-    constructor(
-        name: String,
-        cronString: String,
-        callback: suspend () -> Unit
-    ) : this(
-        name,
-        cronString.toCron(),
-        callback,
-    )
-
+class ScheduleTask(override val name: String, val cron: Cron, val callback: suspend () -> Unit) : Task {
     override val type: TaskType = TaskType.CRON
 }
 
 interface ScheduleCollection {
     fun <T> event(event: String, callback: suspend (EventTask.Event<T>) -> Unit): EventTask<T> {
         return EventTask(event, callback)
-    }
-
-    fun schedule(cronString: String, name: String, callback: suspend () -> Unit): ScheduleTask {
-        return ScheduleTask(cronString, name, callback)
     }
 
     fun schedule(name: String, cron: Cron, callback: suspend () -> Unit): ScheduleTask {

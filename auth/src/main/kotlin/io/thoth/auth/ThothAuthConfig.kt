@@ -15,6 +15,7 @@ import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import java.security.KeyPair
 import java.util.concurrent.TimeUnit
+import kotlin.properties.Delegates
 
 internal typealias KeyId = String
 
@@ -50,6 +51,7 @@ class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions>(
     val activeKeyId: KeyId,
     val issuer: String,
     val domain: String,
+    val port: Int,
     val protocol: URLProtocol,
     val jwksPath: String,
     val guards: Map<String, GetPrincipal<ID, PERMISSIONS>>,
@@ -76,6 +78,7 @@ class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions>(
                 .apply {
                     protocol = this@ThothAuthConfig.protocol
                     host = this@ThothAuthConfig.domain
+                    port = this@ThothAuthConfig.port
                     encodedPath = this@ThothAuthConfig.jwksPath
                 }
                 .build()
@@ -106,11 +109,6 @@ class ThothAuthConfig<ID : Any, PERMISSIONS : ThothUserPermissions>(
                             )
                             return@validate null
                         }
-
-                        attributes.put(
-                            JWT_VALIDATION_FAILED,
-                            JwtError("JWT is not an access token", HttpStatusCode.Unauthorized),
-                        )
 
                         return@validate principal
                     }
@@ -147,6 +145,7 @@ class ThothAuthConfigBuilder<ID : Any, PERMISSIONS : ThothUserPermissions> {
     // Application paths
     lateinit var issuer: String
     lateinit var domain: String
+    var port by Delegates.notNull<Int>()
     lateinit var protocol: URLProtocol
     lateinit var jwksPath: String
 
@@ -208,6 +207,7 @@ class ThothAuthConfigBuilder<ID : Any, PERMISSIONS : ThothUserPermissions> {
             activeKeyId = activeKeyId,
             issuer = issuer,
             domain = domain,
+            port = port,
             protocol = protocol,
             jwksPath = jwksPath,
             guards = guards.toMap(),

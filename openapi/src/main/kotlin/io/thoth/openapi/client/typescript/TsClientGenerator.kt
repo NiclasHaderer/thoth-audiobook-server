@@ -85,7 +85,7 @@ class TsClientGenerator(
             val function =
                 buildString {
                         append(
-                            "$routeName(${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> {\n"
+                            "$routeName: (${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> => {\n"
                         )
                         append(
                             "  return _request(${createURL(route)}, \"${route.method.value}\", \"${responseBody.parser().methodName}\", "
@@ -113,7 +113,11 @@ class TsClientGenerator(
 
     private fun getClientRequests(): String {
         return buildString {
+            append("/* eslint-disable */\n")
             append("// noinspection JSUnusedGlobalSymbols,ES6UnusedImports\n")
+            append("// noinspection ES6UnusedImports\n")
+            append("// @ts-nocheck\n")
+
             append(createTypeImports())
             append("\n")
             append("export const $apiFactoryName = (\n")
@@ -134,6 +138,8 @@ class TsClientGenerator(
 
     private fun getClientTypes(): String {
         return buildString {
+            append("/* eslint-disable */\n")
+            append("// @ts-nocheck\n")
             append("import type { Pair } from \"./utility-types\";\n\n")
             append(typeDefinitions.values.joinToString("\n\n") { "export ${it.content()}" })
         }
@@ -143,8 +149,8 @@ class TsClientGenerator(
         val clientTypes = getClientTypes()
         val clientRequests = getClientRequests()
         return listOf(
-            ClientPart("typescript/client.ts", requestRunner),
-            ClientPart("typescript/utility-types.ts", utilityTypes),
+            ClientPart("client.ts", requestRunner),
+            ClientPart("utility-types.ts", utilityTypes),
             ClientPart("models.ts", clientTypes),
             ClientPart("api-client.ts", clientRequests),
         )

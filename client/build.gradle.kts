@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val arrowVersion: String by project
@@ -8,16 +6,6 @@ plugins {
     kotlin("jvm")
     id("com.ncorti.ktfmt.gradle")
     id("maven-publish")
-}
-
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-        jvmTarget = "11"
-        apiVersion = "1.8"
-        languageVersion = "1.8"
-    }
 }
 
 
