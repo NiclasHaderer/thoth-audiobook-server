@@ -1,6 +1,5 @@
 val ktorVersion: String by project
 val kotlinVersion: String by project
-val arrowVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -28,5 +27,4 @@ dependencies{
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
-    implementation("io.arrow-kt:arrow-core:$arrowVersion")
 }
