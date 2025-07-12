@@ -16,7 +16,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
 
         val tsProperties = interfaceProperties(classType, generateSubType)
 
-        return kotlin.text.buildString {
+        return buildString {
             val interfaceName =
                 generateName(
                     classType = classType,
