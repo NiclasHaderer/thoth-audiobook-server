@@ -16,7 +16,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
 
         val tsProperties = interfaceProperties(classType, generateSubType)
 
-        return buildString {
+        return kotlin.text.buildString {
             val interfaceName =
                 generateName(
                     classType = classType,
@@ -30,12 +30,13 @@ class InterfaceTsGenerator : TsTypeGenerator() {
             append(" {\n")
             tsProperties
                 .filter { !it.declaredInSuperclass }
-                .mapIndexed { i, it ->
+                .forEach { property ->
                     append("  ")
-                    if (it.overwrites) append("override ")
-                    append("${it.name}: ${it.type.name}")
-                    if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
-                    if (it.nullable) append(" | undefined")
+                    if (property.overwrites) append("override ")
+                    append("${property.name}: ${property.type.name}")
+                    if (property.type.typeArguments.isNotEmpty())
+                        append("<${property.type.typeArguments.joinToString(", ")}>")
+                    if (property.nullable) append(" | undefined")
                     append(";\n")
                 }
             append("}")
