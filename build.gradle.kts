@@ -1,14 +1,14 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val kotlinVersion: String by project
 
 plugins {
     base
-    kotlin("jvm") version "2.2.0" apply false
-    kotlin("plugin.serialization") version "2.2.0" apply false
-    id("com.ncorti.ktfmt.gradle") version "0.13.0"
+    kotlin("jvm") version "2.0.20" apply false
+    kotlin("plugin.serialization") version "2.0.20" apply false
+    id("com.ncorti.ktfmt.gradle") version "0.23.0"
 }
 
 ktfmt { kotlinLangStyle() }
@@ -41,8 +41,8 @@ subprojects {
         compilerOptions {
             freeCompilerArgs.add("-Xopt-in=kotlin.RequiresOptIn")
             jvmTarget.set(JvmTarget.JVM_17)
-            apiVersion.set(KotlinVersion.fromVersion(kotlinVersion))
-            languageVersion.set(KotlinVersion.fromVersion(kotlinVersion))
+            apiVersion.set(KotlinVersion.fromVersion(kotlinVersion.substringBeforeLast('.')))
+            languageVersion.set(KotlinVersion.fromVersion(kotlinVersion.substringBeforeLast('.')))
             optIn.add("kotlin.RequiresOptIn")
         }
     }
