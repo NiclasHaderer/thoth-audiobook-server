@@ -6,8 +6,8 @@ val kotlinVersion: String by project
 
 plugins {
     base
-    kotlin("jvm") version "2.0.20" apply false
-    kotlin("plugin.serialization") version "2.0.20" apply false
+    kotlin("jvm") version "2.2.0" apply false
+    kotlin("plugin.serialization") version "2.2.0" apply false
     id("com.ncorti.ktfmt.gradle") version "0.23.0"
 }
 
