@@ -1,9 +1,13 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+
+val kotlinVersion: String by project
 
 plugins {
     base
-    kotlin("jvm") version "1.9.0" apply false
-    kotlin("plugin.serialization") version "1.9.0" apply false
+    kotlin("jvm") version "2.2.0" apply false
+    kotlin("plugin.serialization") version "2.2.0" apply false
     id("com.ncorti.ktfmt.gradle") version "0.13.0"
 }
 
@@ -34,11 +38,12 @@ subprojects {
         }
     }
     tasks.withType<KotlinCompile>().configureEach {
-        kotlinOptions {
-            freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-            jvmTarget = "17"
-            apiVersion = "1.8"
-            languageVersion = "1.8"
+        compilerOptions {
+            freeCompilerArgs.add("-Xopt-in=kotlin.RequiresOptIn")
+            jvmTarget.set(JvmTarget.JVM_17)
+            apiVersion.set(KotlinVersion.fromVersion(kotlinVersion))
+            languageVersion.set(KotlinVersion.fromVersion(kotlinVersion))
+            optIn.add("kotlin.RequiresOptIn")
         }
     }
 }
