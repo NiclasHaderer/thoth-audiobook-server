@@ -14,7 +14,7 @@ open class AuthorModel(
     val bornIn: String?,
     val birthDate: LocalDate?,
     val deathDate: LocalDate?,
-    val library: TitledId,
+    val library: NamedId,
 )
 
 class DetailedAuthorModel(
@@ -28,7 +28,7 @@ class DetailedAuthorModel(
     bornIn: String?,
     birthDate: LocalDate?,
     deathDate: LocalDate?,
-    library: TitledId,
+    library: NamedId,
     val books: List<BookModel>,
     val series: List<SeriesModel>,
 ) :

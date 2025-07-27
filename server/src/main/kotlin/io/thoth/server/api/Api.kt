@@ -23,11 +23,8 @@ import io.thoth.openapi.ktor.Secured
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.Tagged
 import io.thoth.openapi.serializion.kotlin.UUID_S
-import io.thoth.server.database.tables.TLibraries
 import io.thoth.server.plugins.auth.Guards
 import io.thoth.server.plugins.authentication.assertLibraryPermissions
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
 
 // TODO remove unused methods in the db access layer
 // TODO move companion object functions of user into own thingi
@@ -94,9 +91,9 @@ class Api {
                         get() = parent.id
                 }
 
+                @Secured(Guards.Admin)
                 @Summary("Update permissions", method = "PUT")
                 @Resource("permissions")
-                @Secured(Guards.Admin)
                 data class Permissions(private val parent: Id) : ThothModifyPermissionsParams<UUID_S> {
                     override val id: UUID_S
                         get() = parent.id
@@ -109,7 +106,6 @@ class Api {
         }
     }
 
-    @Secured(Guards.Normal)
     @Summary("Ping server", method = "POST")
     @Tagged("Server")
     @Resource("ping")
@@ -141,21 +137,12 @@ class Api {
             val author: String? = null,
             val book: String? = null,
             val series: String? = null,
-            private val parent: Libraries
+            private val parent: Libraries,
         ) {
             init {
                 require(q != null || author != null || book != null || series != null) {
                     "At least one of the following parameters must be provided: q, author, book, series"
                 }
-            }
-        }
-
-        @Summary("Rescan all libraries", method = "POST")
-        @Resource("rescan")
-        data class Rescan(private val parent: Libraries) : BeforeBodyParsing {
-            override suspend fun RouteHandler.beforeBodyParsing() {
-                val allLibIds = transaction { TLibraries.selectAll().map { it[TLibraries.id].value } }
-                assertLibraryPermissions(*allLibIds.toTypedArray())
             }
         }
 
@@ -245,7 +232,7 @@ class Api {
                     val limit: Int = 20,
                     val offset: Long = 0,
                     val order: Position.Order = Position.Order.ASC,
-                    private val parent: Authors
+                    private val parent: Authors,
                 ) {
                     val libraryId
                         get() = parent.libraryId
@@ -322,7 +309,7 @@ class Api {
                     val limit: Int = 20,
                     val offset: Long = 0,
                     val order: Position.Order = Position.Order.ASC,
-                    private val parent: Series
+                    private val parent: Series,
                 ) {
                     val libraryId
                         get() = parent.libraryId
@@ -347,7 +334,7 @@ class Api {
                     @Resource("position")
                     data class Position(
                         val order: io.thoth.models.Position.Order = io.thoth.models.Position.Order.ASC,
-                        private val parent: Id
+                        private val parent: Id,
                     ) {
                         val libraryId
                             get() = parent.libraryId
@@ -430,7 +417,7 @@ class Api {
                 val q: String,
                 val region: String,
                 val authorName: String? = null,
-                private val parent: Book
+                private val parent: Book,
             )
         }
 
@@ -446,7 +433,7 @@ class Api {
                 val q: String,
                 val region: String,
                 val authorName: String? = null,
-                private val parent: Series
+                private val parent: Series,
             )
         }
     }

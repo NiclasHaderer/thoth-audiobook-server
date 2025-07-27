@@ -1,7 +1,7 @@
 package io.thoth.server.database.access
 
 import io.thoth.models.AuthorModel
-import io.thoth.models.TitledId
+import io.thoth.models.NamedId
 import io.thoth.server.database.tables.Author
 
 fun Author.toModel(): AuthorModel {
@@ -16,6 +16,6 @@ fun Author.toModel(): AuthorModel {
         imageID = imageID?.value,
         website = website,
         providerID = providerID,
-        library = TitledId(library.id.value, library.name),
+        library = NamedId(library.id.value, library.name),
     )
 }

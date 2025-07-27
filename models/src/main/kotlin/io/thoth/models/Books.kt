@@ -19,7 +19,7 @@ open class BookModel(
     val isbn: String?,
     val coverID: UUID?,
     val genres: List<NamedId>,
-    val library: TitledId
+    val library: NamedId,
 )
 
 class DetailedBookModel(
@@ -38,7 +38,7 @@ class DetailedBookModel(
     isbn: String?,
     coverID: UUID?,
     genres: List<NamedId>,
-    library: TitledId,
+    library: NamedId,
     val tracks: List<TrackModel>,
 ) :
     BookModel(

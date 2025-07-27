@@ -12,4 +12,5 @@ data class TrackModel(
     val book: TitledId,
     val path: String,
     val updateTime: LocalDateTime,
+    val library: NamedId,
 )

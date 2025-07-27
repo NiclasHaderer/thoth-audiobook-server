@@ -1,5 +1,6 @@
 package io.thoth.server.database.access
 
+import io.thoth.models.NamedId
 import io.thoth.models.TitledId
 import io.thoth.models.TrackModel
 import io.thoth.server.common.extensions.findOne
@@ -26,4 +27,5 @@ fun Track.toModel() =
         duration = duration,
         accessTime = accessTime,
         book = TitledId(book.id.value, book.title),
+        library = NamedId(library.id.value, library.name),
     )
