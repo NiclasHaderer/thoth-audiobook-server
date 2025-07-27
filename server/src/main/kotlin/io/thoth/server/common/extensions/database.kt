@@ -16,6 +16,7 @@ fun <E : UUIDEntity> UUIDEntityClass<E>.findOne(op: SqlExpressionBuilder.() -> O
 
 fun Transaction.addMissingColumns(vararg tables: Table) {
     val statements = SchemaUtils.addMissingColumnsStatements(*tables)
+
     if (statements.isNotEmpty()) {
         execInBatch(statements)
     }
