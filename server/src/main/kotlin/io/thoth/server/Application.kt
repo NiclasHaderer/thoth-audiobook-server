@@ -36,9 +36,9 @@ import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
 import io.thoth.server.repositories.LibraryRepository
 import io.thoth.server.schedules.ThothSchedules
-import java.util.logging.LogManager
 import kotlinx.coroutines.launch
 import org.slf4j.bridge.SLF4JBridgeHandler
+import java.util.logging.LogManager
 
 fun main() {
     // Force every library using the standard java logger force it to use SLF4J
@@ -47,12 +47,12 @@ fun main() {
 
     // Start the server
     embeddedServer(
-            Netty,
-            port = 8080,
-            watchPaths = emptyList(),
-            host = "0.0.0.0",
-            module = Application::applicationModule,
-        )
+        Netty,
+        port = 8080,
+        watchPaths = emptyList(),
+        host = "0.0.0.0",
+        module = Application::applicationModule,
+    )
         .start(wait = true)
 }
 
@@ -60,14 +60,14 @@ fun Application.applicationModule() {
     // Setup DI with Koin
     setupDependencyInjection()
 
-    // Setup routes
     plugins()
-    routing()
 
     // Connect to database
     val config = get<ThothConfig>()
     connectToDatabase(config.database)
     migrateDatabase(config.database)
+
+    routing()
 
     startBackgroundJobs()
 }
