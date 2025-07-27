@@ -12,6 +12,12 @@ plugins {
     id("com.ncorti.ktfmt.gradle") version "0.23.0"
 }
 
+repositories {
+    mavenCentral()
+    maven("https://plugins.gradle.org/m2/")
+    maven("https://jitpack.io")
+}
+
 ktfmt {
     kotlinLangStyle()
     maxWidth.set(120)
@@ -34,6 +40,11 @@ subprojects {
             maxWidth.set(120)
             removeUnusedImports.set(true)
         }
+    }
+
+    tasks.register<KtfmtFormatTask>("ktfmtPrecommit") {
+        source = project.fileTree(rootDir)
+        include("**/*.kt")
     }
 
     plugins.withType<JavaPlugin> {
