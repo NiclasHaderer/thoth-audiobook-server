@@ -40,6 +40,7 @@ subprojects {
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             freeCompilerArgs.add("-Xopt-in=kotlin.RequiresOptIn")
+            freeCompilerArgs.add("-Xcontext-parameters")
             jvmTarget.set(JvmTarget.JVM_17)
             apiVersion.set(KotlinVersion.fromVersion(kotlinVersion.substringBeforeLast('.')))
             languageVersion.set(KotlinVersion.fromVersion(kotlinVersion.substringBeforeLast('.')))
