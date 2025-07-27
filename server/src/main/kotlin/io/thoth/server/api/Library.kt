@@ -37,11 +37,6 @@ fun Routing.libraryRouting() {
 
     post<Api.Libraries, LibraryApiModel, LibraryModel> { _, postLibrary -> libraryRepository.create(postLibrary) }
 
-    post<Api.Libraries.Rescan, Unit, Unit> { _, _ ->
-        val libsToScan = thothPrincipal().permissions.libraries
-        scheduler.dispatch(schedules.scanLibraries.build(libsToScan.map { it.id }))
-    }
-
     get<Api.Libraries.Search, SearchModel> {
         val libsToSearch = thothPrincipal().permissions.libraries.map { lib -> lib.id }
 
@@ -50,7 +45,7 @@ fun Routing.libraryRouting() {
         }
 
         throw ErrorResponse.notImplemented(
-            "This is still under construction. Currently only the parameter 'q' is supported",
+            "This is still under construction. Currently only the parameter 'q' is supported"
         )
     }
 }
