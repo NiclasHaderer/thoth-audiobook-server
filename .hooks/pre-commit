@@ -7,8 +7,12 @@ if [ -n "$STAGED_FILES" ]; then
     # Run ktfmt on staged files
     ./gradlew ktfmtPrecommit --include-only="$STAGED_FILES_CSV" > /dev/null 2>&1
 
-    # Add formatted files to staging
-    echo "$STAGED_FILES" | xargs git add
-      echo "Formatting lead to changes. Please review the changes and commit again."
-    exit 1
+    # Check if ktfmt made any changes (unstaged changes in staged files)
+    if ! git diff --quiet -- "$STAGED_FILES"; then
+        echo "Ktfmt has made changes to the following files:"
+        echo "$STAGED_FILES"
+        echo "Please review the changes and commit again."
+        echo "$STAGED_FILES" | xargs git add
+        exit 1
+    fi
 fi
