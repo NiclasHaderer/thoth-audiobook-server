@@ -18,7 +18,7 @@ class OpenApiRoute(
     val basePath: String,
     val requestParamsType: ClassType,
     val requestBodyType: ClassType,
-    val responseBodyType: ClassType
+    val responseBodyType: ClassType,
 ) {
 
     constructor(
@@ -26,7 +26,7 @@ class OpenApiRoute(
         route: Route,
         params: ClassType,
         request: ClassType,
-        response: ClassType
+        response: ClassType,
     ) : this(method, route.fullPath(), params, request, response)
 
     interface Parameter {
@@ -36,11 +36,8 @@ class OpenApiRoute(
         val optional: Boolean
     }
 
-    data class PathParameter(
-        override val name: String,
-        override val type: ClassType,
-        override val origin: ClassType,
-    ) : Parameter {
+    data class PathParameter(override val name: String, override val type: ClassType, override val origin: ClassType) :
+        Parameter {
         override val optional = false
     }
 
@@ -48,13 +45,13 @@ class OpenApiRoute(
         override val name: String,
         override val type: ClassType,
         override val origin: ClassType,
-        override val optional: Boolean
+        override val optional: Boolean,
     ) : Parameter
 
     companion object {
         inline fun <reified PARAMS, reified BODY, reified RESPONSE> create(
             method: HttpMethod,
-            route: Route
+            route: Route,
         ): OpenApiRoute {
             return OpenApiRoute(
                 method = method,
@@ -150,7 +147,7 @@ class OpenApiRoute(
         // 1. Every class over params is decorated as @Resource
         paramsClazz.findAnnotation<Resource>()
             ?: throw IllegalStateException(
-                "Class ${paramsClassType.clazz.qualifiedName} is not decorated as a resource",
+                "Class ${paramsClassType.clazz.qualifiedName} is not decorated as a resource"
             )
 
         if (paramsClassType.parent == null) return
@@ -163,7 +160,7 @@ class OpenApiRoute(
         if (!hasDeclaredParent) {
             throw IllegalStateException(
                 "Class ${paramsClazz.qualifiedName} has no property of type ${parentClassType.clazz.qualifiedName}." +
-                    "You have to create an additional property with the parent class as type",
+                    "You have to create an additional property with the parent class as type"
             )
         }
         // 3. Every parent fulfills requirements 1 and 2
@@ -172,7 +169,7 @@ class OpenApiRoute(
 
     private fun extractAllPathParams(
         params: ClassType,
-        takenParams: MutableMap<String, PathParameter> = mutableMapOf()
+        takenParams: MutableMap<String, PathParameter> = mutableMapOf(),
     ): List<PathParameter> {
         val pathParams = extractPathParamsForClass(params)
         for (param in pathParams) {
@@ -180,7 +177,7 @@ class OpenApiRoute(
             if (takenParams.containsKey(param.name)) {
                 throw IllegalStateException(
                     "Class ${params.clazz.qualifiedName} has a duplicate path parameter name ${param.name}. " +
-                        "The parameter is already taken by ${takenParams[param.name]!!.origin.clazz.qualifiedName}",
+                        "The parameter is already taken by ${takenParams[param.name]!!.origin.clazz.qualifiedName}"
                 )
             }
         }
@@ -202,18 +199,16 @@ class OpenApiRoute(
                 params.properties.find { it.name == varName }
                     ?: throw IllegalStateException(
                         "Class ${params.clazz.qualifiedName} has a path parameter $varName which is not declared as a member. " +
-                            "You have to create a property with the name $varName",
+                            "You have to create a property with the name $varName"
                     )
-            pathParams.add(
-                PathParameter(name = varName, type = params.forMember(varMember), origin = params),
-            )
+            pathParams.add(PathParameter(name = varName, type = params.forMember(varMember), origin = params))
         }
         return pathParams
     }
 
     private fun extractAllQueryParams(
         params: ClassType,
-        takenParams: MutableMap<String, QueryParameter> = mutableMapOf()
+        takenParams: MutableMap<String, QueryParameter> = mutableMapOf(),
     ): List<QueryParameter> {
         val queryParams = extractQueryParamsForClass(params)
         for (param in queryParams) {
@@ -221,7 +216,7 @@ class OpenApiRoute(
                 throw IllegalStateException(
                     "Class ${params.clazz.qualifiedName} has a query parameter " +
                         "called ${param.name} which is also used in ${takenParams[param.name]!!.origin.clazz.qualifiedName}. " +
-                        "Do not used duplicate parameters",
+                        "Do not used duplicate parameters"
                 )
             }
         }
@@ -244,12 +239,7 @@ class OpenApiRoute(
                     it.returnType.classifier != params.parent?.clazz
                 }
                 .map {
-                    QueryParameter(
-                        name = it.name,
-                        type = params.forMember(it),
-                        origin = params,
-                        optional = it.optional,
-                    )
+                    QueryParameter(name = it.name, type = params.forMember(it), origin = params, optional = it.optional)
                 }
         return queryParams
     }

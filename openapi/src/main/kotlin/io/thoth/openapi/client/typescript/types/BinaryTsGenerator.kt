@@ -18,10 +18,6 @@ class BinaryTsGenerator : TsTypeGenerator() {
     override fun getName(classType: ClassType): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            BinaryResponse::class,
-            FileResponse::class,
-            ByteArray::class,
-        )
+        return classType.isSubclassOf(BinaryResponse::class, FileResponse::class, ByteArray::class)
     }
 }

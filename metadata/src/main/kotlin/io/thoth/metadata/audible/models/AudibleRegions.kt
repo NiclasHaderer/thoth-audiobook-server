@@ -23,7 +23,7 @@ class AudibleRegionValue(
     val chapterName: String,
     val tld: String,
     val datePattern: String,
-    val titleReplacers: List<Regex> = listOf()
+    val titleReplacers: List<Regex> = listOf(),
 ) {
     fun toHost(): String {
         return "audible.$tld"

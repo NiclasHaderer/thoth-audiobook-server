@@ -13,5 +13,5 @@ data class DatabaseConnectionImpl(
     override val jdbcUrl: String,
     override val maximumPoolSize: Int,
     override val autoCommit: Boolean,
-    override val transactionIsolation: String
+    override val transactionIsolation: String,
 ) : DatabaseConnection

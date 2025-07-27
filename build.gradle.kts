@@ -1,3 +1,4 @@
+import com.ncorti.ktfmt.gradle.tasks.KtfmtFormatTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -11,7 +12,11 @@ plugins {
     id("com.ncorti.ktfmt.gradle") version "0.23.0"
 }
 
-ktfmt { kotlinLangStyle() }
+ktfmt {
+    kotlinLangStyle()
+    maxWidth.set(120)
+    removeUnusedImports.set(true)
+}
 
 subprojects {
     group = "io.thoth"
@@ -50,6 +55,11 @@ subprojects {
 }
 
 tasks.getByName("build").dependsOn("installLocalGitHook")
+
+tasks.register<KtfmtFormatTask>("ktfmtPrecommit") {
+    source = project.fileTree(rootDir)
+    include("**/*.kt")
+}
 
 tasks.register<DefaultTask>("installLocalGitHook") {
     val file = File(rootProject.rootDir, ".hooks/pre-commit")

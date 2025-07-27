@@ -11,10 +11,7 @@ interface ThothDeleteUserParams<T : Any> {
     val id: T
 }
 
-fun <ID : Any> RouteHandler.deleteUser(
-    params: ThothDeleteUserParams<ID>,
-    body: Unit,
-) {
+fun <ID : Any> RouteHandler.deleteUser(params: ThothDeleteUserParams<ID>, body: Unit) {
     val principal = thothPrincipal<ThothPrincipal<ID, ThothUserPermissions>>()
     val config = thothAuthConfig<ID, ThothUserPermissions>()
 

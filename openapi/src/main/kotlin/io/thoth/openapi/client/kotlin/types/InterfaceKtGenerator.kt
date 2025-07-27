@@ -154,7 +154,7 @@ class InterfaceKtGenerator : KtTypeGenerator() {
         resolveGeneric: Boolean,
         generateSubType: GenerateType<KtType>,
         isImpl: Boolean,
-        includeBounds: Boolean
+        includeBounds: Boolean,
     ): String {
         val typeParams = classType.typeParameters()
         val typeParamsString =

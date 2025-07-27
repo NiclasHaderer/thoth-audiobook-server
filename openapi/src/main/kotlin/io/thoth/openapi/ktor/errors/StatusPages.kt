@@ -10,7 +10,7 @@ import mu.KotlinLogging
 
 private fun <T> formatException(
     statusCode: HttpStatusCode,
-    cb: ((cause: T) -> Unit)? = null
+    cb: ((cause: T) -> Unit)? = null,
 ): suspend (call: ApplicationCall, cause: T) -> Unit {
     return { call, cause ->
         if (!call.response.isSent) {

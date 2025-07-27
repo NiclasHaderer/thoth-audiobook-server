@@ -13,11 +13,7 @@ class FileSchemaGenerator : SchemaGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            FileResponse::class,
-            BinaryResponse::class,
-            ByteArray::class,
-        )
+        return classType.isSubclassOf(FileResponse::class, BinaryResponse::class, ByteArray::class)
     }
 
     override fun generateContentType(classType: ClassType): ContentType {

@@ -32,10 +32,7 @@ suspend inline fun <reified BODY : Any> ApplicationCall.parseBody(): BODY {
                 errors.add(errors.last().cause as Exception)
             }
 
-            throw ErrorResponse.userError(
-                e.message ?: "body could not be parsed",
-                errors.map { it.message },
-            )
+            throw ErrorResponse.userError(e.message ?: "body could not be parsed", errors.map { it.message })
         }
     }
 }
@@ -59,19 +56,17 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RouteHan
 
 inline fun <reified PARAMS : Any, reified RESPONSE> Route.wrapRequest(
     method: HttpMethod,
-    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
+    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE,
 ) = wrapRequest<PARAMS, Unit, RESPONSE>(method) { params, _ -> callback(params) }
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wrapRequest(
     method: HttpMethod,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE,
 ) {
 
     val routeCollector = application.attributes[OpenAPIConfigurationKey].routeCollector
 
-    routeCollector.addRoute(
-        OpenApiRoute.create<PARAMS, BODY, RESPONSE>(method, this),
-    )
+    routeCollector.addRoute(OpenApiRoute.create<PARAMS, BODY, RESPONSE>(method, this))
 
     // Check if ktor should secure the route
     val ignoreSecured = PARAMS::class.findAnnotation<NotSecured>() != null
@@ -103,7 +98,7 @@ inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.get(
 
 inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.get(
     path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
+    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE,
 ) {
     route(path) { wrapRequest(HttpMethod.Get, callback) }
 }
@@ -116,7 +111,7 @@ inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.head(
 
 inline fun <reified PARAMS : Any, reified RESPONSE : Any> Route.head(
     path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE
+    noinline callback: suspend RouteHandler.(params: PARAMS) -> RESPONSE,
 ) {
     route(path) { wrapRequest(HttpMethod.Head, callback) }
 }
@@ -129,7 +124,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Ro
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.post(
     path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE,
 ) {
     route(path) { wrapRequest(HttpMethod.Post, callback) }
 }
@@ -142,7 +137,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Ro
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.put(
     path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE,
 ) {
     route(path) { wrapRequest(HttpMethod.Put, callback) }
 }
@@ -155,7 +150,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Ro
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.delete(
     path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE,
 ) {
     route(path) { wrapRequest(HttpMethod.Delete, callback) }
 }
@@ -168,7 +163,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Ro
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.options(
     path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE,
 ) {
     route(path) { wrapRequest(HttpMethod.Options, callback) }
 }
@@ -181,7 +176,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Ro
 
 inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE : Any> Route.patch(
     path: String,
-    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE
+    noinline callback: suspend RouteHandler.(params: PARAMS, body: BODY) -> RESPONSE,
 ) {
     route(path) { wrapRequest(HttpMethod.Patch, callback) }
 }

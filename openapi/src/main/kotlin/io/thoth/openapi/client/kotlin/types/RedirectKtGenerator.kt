@@ -17,8 +17,6 @@ class RedirectKtGenerator : KtTypeGenerator() {
     override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            RedirectResponse::class,
-        )
+        return classType.isSubclassOf(RedirectResponse::class)
     }
 }

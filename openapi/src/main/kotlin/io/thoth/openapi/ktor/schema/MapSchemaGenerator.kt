@@ -18,11 +18,7 @@ class MapSchemaGenerator : SchemaGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            Map::class,
-            HashMap::class,
-            LinkedHashMap::class,
-        )
+        return classType.isSubclassOf(Map::class, HashMap::class, LinkedHashMap::class)
     }
 
     override fun generateContentType(classType: ClassType): ContentType {

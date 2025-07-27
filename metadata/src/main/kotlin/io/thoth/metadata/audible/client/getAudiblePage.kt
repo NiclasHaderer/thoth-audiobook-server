@@ -16,7 +16,7 @@ private val defaultHeaders =
         append(HttpHeaders.UserAgent, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0")
         append(
             HttpHeaders.Accept,
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
         )
         append(HttpHeaders.AcceptLanguage, "en-US;q=0.7,en;q=0.3")
         append("Upgrade-Insecure-Requests", "1")
@@ -31,7 +31,7 @@ private val log = logger {}
 suspend fun getAudiblePage(
     region: AudibleRegions,
     pathSegments: List<String>,
-    parameters: Parameters = Parameters.build {}
+    parameters: Parameters = Parameters.build {},
 ): Document? {
 
     val url =
@@ -39,7 +39,7 @@ suspend fun getAudiblePage(
                 protocol = URLProtocol.HTTPS,
                 host = region.getValue().toHost(),
                 pathSegments = pathSegments,
-                parameters = parameters
+                parameters = parameters,
             )
             .also { it.parameters.append("ipRedirectOverride", "true") }
 

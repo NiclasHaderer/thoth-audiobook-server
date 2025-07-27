@@ -13,7 +13,7 @@ data class LibraryApiModel(
     val preferEmbeddedMetadata: Boolean,
     val metadataScanners: List<MetadataAgent>,
     val fileScanners: List<FileScanner>,
-    var language: String
+    var language: String,
 ) : ValidateObject {
     override suspend fun RouteHandler.validateBody() {
         if (folders.isEmpty()) {
@@ -37,7 +37,7 @@ data class PartialLibraryApiModel(
     val preferEmbeddedMetadata: Boolean?,
     val metadataScanners: List<MetadataAgent>?,
     val fileScanners: List<FileScanner>?,
-    val language: String?
+    val language: String?,
 ) : ValidateObject {
     override suspend fun RouteHandler.validateBody() {
         if (folders?.isEmpty() == true) {

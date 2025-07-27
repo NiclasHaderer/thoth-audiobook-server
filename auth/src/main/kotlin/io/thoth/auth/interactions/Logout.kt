@@ -8,10 +8,7 @@ import io.thoth.openapi.ktor.RouteHandler
 
 interface ThothLogoutParams
 
-fun RouteHandler.logoutUser(
-    params: ThothLogoutParams,
-    body: Unit,
-) {
+fun RouteHandler.logoutUser(params: ThothLogoutParams, body: Unit) {
     val config = thothAuthConfig<Any, ThothUserPermissions>()
     call.response.cookies.append(
         Cookie(
@@ -21,6 +18,6 @@ fun RouteHandler.logoutUser(
             secure = config.production,
             extensions = mapOf("SameSite" to "Strict", "HttpOnly" to "true", "Secure" to config.ssl.toString()),
             maxAge = 0,
-        ),
+        )
     )
 }

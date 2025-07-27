@@ -16,7 +16,7 @@ class PartialBookApiModel(
     val description: String?,
     val narrator: String?,
     val isbn: String?,
-    val cover: String?
+    val cover: String?,
 ) {
     init {
         require(authors?.isNotEmpty() ?: true) { "Authors cannot be empty" }

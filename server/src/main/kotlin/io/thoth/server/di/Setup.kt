@@ -36,20 +36,11 @@ fun setupDependencyInjection() = startKoin {
             single { config }
             single<MetadataProviders> {
                 val allProviders = listOf(AudibleClient())
-                MetadataProviders(
-                    allProviders + MetadataWrapper(allProviders),
-                )
+                MetadataProviders(allProviders + MetadataWrapper(allProviders))
             }
             single<MetadataWrapper> { MetadataWrapper(get<MetadataProviders>()) }
             single<FileTreeWatcher> { FileTreeWatcherImpl() }
-            single<AudioFileAnalyzers> {
-                AudioFileAnalyzers(
-                    listOf(
-                        AudioTagScanner(),
-                        AudioFolderScanner(),
-                    ),
-                )
-            }
+            single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
             single<LibraryScanner> { LibraryScannerImpl() }
             single<Serialization> { JacksonSerialization() }
             single<BookRepository> { BookRepositoryImpl() }
@@ -59,7 +50,7 @@ fun setupDependencyInjection() = startKoin {
             single<TrackManager> { TrackManagerImpl() }
             single { Scheduler() }
             single { ThothSchedules() }
-        },
+        }
     )
     slf4jLogger()
 }

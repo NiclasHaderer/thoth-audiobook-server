@@ -14,9 +14,7 @@ class PairSchemaGenerator : SchemaGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            Pair::class,
-        )
+        return classType.isSubclassOf(Pair::class)
     }
 
     override fun generateContentType(classType: ClassType): ContentType {

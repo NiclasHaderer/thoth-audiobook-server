@@ -19,8 +19,6 @@ class RedirectTsGenerator : TsTypeGenerator() {
     override fun getName(classType: ClassType): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            RedirectResponse::class,
-        )
+        return classType.isSubclassOf(RedirectResponse::class)
     }
 }

@@ -4,7 +4,7 @@ import io.ktor.server.application.*
 
 enum class OpenAPISchemaType(val extension: String) {
     JSON("json"),
-    YAML("yaml")
+    YAML("yaml"),
 }
 
 class WebUiConfig internal constructor() {

@@ -15,9 +15,7 @@ class UUIDSchemaGenerator : SchemaGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            UUID::class,
-        )
+        return classType.isSubclassOf(UUID::class)
     }
 
     override fun generateContentType(classType: ClassType): ContentType {

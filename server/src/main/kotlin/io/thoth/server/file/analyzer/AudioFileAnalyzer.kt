@@ -11,7 +11,7 @@ interface AudioFileAnalyzer {
         filePath: Path,
         attrs: BasicFileAttributes,
         tags: ReadonlyFileTagger,
-        libraryPath: Path
+        libraryPath: Path,
     ): AudioFileAnalysisResult?
 }
 

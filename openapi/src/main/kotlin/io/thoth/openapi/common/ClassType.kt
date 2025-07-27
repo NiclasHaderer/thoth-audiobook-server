@@ -18,10 +18,7 @@ import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.typeOf
 
-class ClassType
-private constructor(
-    @PublishedApi internal val type: KType,
-) {
+class ClassType private constructor(@PublishedApi internal val type: KType) {
     companion object {
         fun create(type: KType): ClassType {
             return ClassType(type)

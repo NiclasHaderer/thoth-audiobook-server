@@ -14,7 +14,7 @@ class AudioTagScanner : AudioFileAnalyzer {
         filePath: Path,
         attrs: BasicFileAttributes,
         tags: ReadonlyFileTagger,
-        libraryPath: Path
+        libraryPath: Path,
     ): AudioFileAnalysisResult? {
         if (tags.authors == null || tags.book == null) return null
         return AudioFileAnalysisResultImpl(

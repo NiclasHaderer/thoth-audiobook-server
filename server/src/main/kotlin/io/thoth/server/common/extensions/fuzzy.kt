@@ -3,10 +3,7 @@ package io.thoth.server.common.extensions
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import org.jetbrains.exposed.sql.SizedIterable
 
-class FuzzyResult<T>(
-    val match: Int,
-    val value: T,
-) {
+class FuzzyResult<T>(val match: Int, val value: T) {
     val matches: Boolean
         get() = match > 80
 }

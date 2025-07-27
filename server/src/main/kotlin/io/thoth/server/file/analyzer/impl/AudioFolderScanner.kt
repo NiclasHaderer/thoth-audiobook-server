@@ -22,7 +22,7 @@ class AudioFolderScanner : AudioFileAnalyzer {
         filePath: Path,
         attrs: BasicFileAttributes,
         tags: ReadonlyFileTagger,
-        libraryPath: Path
+        libraryPath: Path,
     ): AudioFileAnalysisResult? {
         val cleanPath = filePath.replacePart(libraryPath.absolutePathString())
         val parentCount = cleanPath.countParents()

@@ -21,11 +21,7 @@ class ErrorResponse(val status: HttpStatusCode, val error: String, val details: 
             return ErrorResponse(HttpStatusCode.Unauthorized, error, details)
         }
 
-        fun forbidden(
-            action: String,
-            resource: String,
-            details: Any? = null,
-        ): ErrorResponse {
+        fun forbidden(action: String, resource: String, details: Any? = null): ErrorResponse {
             return ErrorResponse(HttpStatusCode.Forbidden, "Forbidden to $action $resource", details)
         }
 

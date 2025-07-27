@@ -19,7 +19,7 @@ fun Image.areSame(newImageBytes: ByteArray): Boolean {
 fun Image.Companion.getNewImage(
     newImage: String?,
     currentImageID: EntityID<UUID>?,
-    default: EntityID<UUID>?
+    default: EntityID<UUID>?,
 ): EntityID<UUID>? {
 
     if (newImage == null) return default

@@ -91,7 +91,7 @@ abstract class MetadataProvider {
     protected abstract suspend fun _getBookByName(
         bookName: String,
         region: String,
-        authorName: String? = null
+        authorName: String? = null,
     ): List<MetadataBook>
 
     suspend fun getSeriesByID(providerId: String, seriesId: String, region: String): MetadataSeries? {
@@ -110,7 +110,7 @@ abstract class MetadataProvider {
     protected abstract suspend fun _getSeriesByName(
         seriesName: String,
         region: String,
-        authorName: String? = null
+        authorName: String? = null,
     ): List<MetadataSeries>
 
     private suspend fun <K, V> getOrSetCache(cache: Cache<K, V>, key: K, getValue: suspend () -> V): V {

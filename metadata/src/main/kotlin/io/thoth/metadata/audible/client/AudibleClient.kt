@@ -42,8 +42,7 @@ class AudibleClient(private val imageSize: Int = 500) : MetadataProvider() {
                 language = if (language != null) AudibleSearchLanguage.from(language) else null,
                 pageSize = if (pageSize != null) AudibleSearchAmount.from(pageSize) else null,
             )
-            ?.filter { it.title != null && it.id.itemID != "search" }
-            ?: listOf()
+            ?.filter { it.title != null && it.id.itemID != "search" } ?: listOf()
     }
 
     override suspend fun _getAuthorByID(providerId: String, authorId: String, region: String): MetadataAuthorImpl? {
@@ -63,11 +62,7 @@ class AudibleClient(private val imageSize: Int = 500) : MetadataProvider() {
                 .map {
                     async {
                         it.referent.authors?.map { author ->
-                            _getAuthorByID(
-                                providerId = uniqueName,
-                                authorId = author.id.itemID,
-                                region = region,
-                            )
+                            _getAuthorByID(providerId = uniqueName, authorId = author.id.itemID, region = region)
                         }
                     }
                 }
@@ -90,13 +85,7 @@ class AudibleClient(private val imageSize: Int = 500) : MetadataProvider() {
         return coroutineScope {
             FuzzySearch.extractSorted(bookName, searchResult) { it.title }
                 .map {
-                    async {
-                        _getBookByID(
-                            providerId = uniqueName,
-                            region = region,
-                            bookId = it.referent.id.itemID,
-                        )
-                    }
+                    async { _getBookByID(providerId = uniqueName, region = region, bookId = it.referent.id.itemID) }
                 }
                 .awaitAll()
                 .distinctBy { it?.id?.itemID }
@@ -112,7 +101,7 @@ class AudibleClient(private val imageSize: Int = 500) : MetadataProvider() {
     override suspend fun _getSeriesByName(
         seriesName: String,
         region: String,
-        authorName: String?
+        authorName: String?,
     ): List<MetadataSeriesImpl> {
         val seriesResult =
             _search(region = region, keywords = seriesName, author = authorName)
@@ -122,13 +111,7 @@ class AudibleClient(private val imageSize: Int = 500) : MetadataProvider() {
         return coroutineScope {
             FuzzySearch.extractSorted(seriesName, seriesResult) { it.title }
                 .map {
-                    async {
-                        _getSeriesByID(
-                            providerId = uniqueName,
-                            region = region,
-                            seriesId = it.referent.id.itemID,
-                        )
-                    }
+                    async { _getSeriesByID(providerId = uniqueName, region = region, seriesId = it.referent.id.itemID) }
                 }
                 .awaitAll()
                 .distinctBy { it?.id?.itemID }

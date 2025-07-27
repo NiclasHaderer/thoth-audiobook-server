@@ -58,11 +58,7 @@ class TrackManagerImpl : TrackManager, KoinComponent {
 
         val analyzer = AudioFileAnalyzerWrapper(libAnalyzer)
         val result =
-            analyzer.analyze(
-                path,
-                path.readAttributes(),
-                libPath,
-            )
+            analyzer.analyze(path, path.readAttributes(), libPath)
                 ?: return log.warn { "Skipped ${path.absolute()} because it contains not enough information" }
         insertScanResult(result, path, library)
     }
@@ -135,7 +131,7 @@ class TrackManagerImpl : TrackManager, KoinComponent {
         book: Book,
         scan: AudioFileAnalysisResult,
         dbAuthors: List<Author>,
-        libraryModel: Library
+        libraryModel: Library,
     ): Book {
         val dbSeries =
             if (scan.series != null) seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthors)

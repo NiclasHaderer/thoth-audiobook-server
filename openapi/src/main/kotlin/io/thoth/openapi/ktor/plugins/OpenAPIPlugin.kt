@@ -18,10 +18,7 @@ val OpenAPIRouting =
     createApplicationPlugin(
         "OpenAPIRouting",
         createConfiguration = {
-            OpenAPIConfiguration(
-                schemaHolder = SchemaHolder(),
-                routeCollector = OpenApiRouteCollector(),
-            )
+            OpenAPIConfiguration(schemaHolder = SchemaHolder(), routeCollector = OpenApiRouteCollector())
         },
     ) {
         application.attributes.put(OpenAPIConfigurationKey, pluginConfig)

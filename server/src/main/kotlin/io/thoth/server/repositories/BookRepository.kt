@@ -55,8 +55,7 @@ class BookRepositoryImpl : BookRepository, KoinComponent {
                         (TAuthorBookMapping.authors inList authorIds) and
                         (TBooks.library eq libraryId)
                 }
-                .firstOrNull()
-                ?: return@transaction null
+                .firstOrNull() ?: return@transaction null
         Book.wrap(rawBook[TBooks.id], rawBook)
     }
 
@@ -169,8 +168,7 @@ class BookRepositoryImpl : BookRepository, KoinComponent {
                         authorName = book.authors.joinToString(", ") { it.name },
                     )
                     .firstOrNull()
-            }
-                ?: return@transaction book.toModel()
+            } ?: return@transaction book.toModel()
 
         modify(
             id,

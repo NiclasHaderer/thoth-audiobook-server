@@ -15,7 +15,7 @@ import java.util.*
 
 fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateJwtPairForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
-    config: ThothAuthConfig<ID, PERMISSIONS>
+    config: ThothAuthConfig<ID, PERMISSIONS>,
 ): ThothJwtPair {
     return ThothJwtPair(
         accessToken = generateAccessTokenForUser(user, config),
@@ -25,7 +25,7 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateJwtPairForUser(
 
 internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateAccessTokenForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
-    config: ThothAuthConfig<ID, PERMISSIONS>
+    config: ThothAuthConfig<ID, PERMISSIONS>,
 ): String {
     val keyPair = config.keyPairs[config.activeKeyId]!!
     val issuer = config.issuer
@@ -42,7 +42,7 @@ internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateAccessTokenF
 
 internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> generateRefreshTokenForUser(
     user: ThothDatabaseUser<ID, PERMISSIONS>,
-    config: ThothAuthConfig<ID, PERMISSIONS>
+    config: ThothAuthConfig<ID, PERMISSIONS>,
 ): String {
     val issuer = config.issuer
     val keyPair = config.keyPairs[config.activeKeyId]!!

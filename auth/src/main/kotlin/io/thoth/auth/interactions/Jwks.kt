@@ -11,9 +11,7 @@ import java.security.interfaces.RSAPublicKey
 
 interface ThothJwksParams
 
-fun RouteHandler.getJwks(
-    params: ThothJwksParams,
-): JWKs {
+fun RouteHandler.getJwks(params: ThothJwksParams): JWKs {
     val config = thothAuthConfig<Any, ThothUserPermissions>()
     val keyPairs = config.keyPairs
 

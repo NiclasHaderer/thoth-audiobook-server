@@ -11,7 +11,7 @@ data class PartialAuthorApiModel(
     val website: String?,
     val bornIn: String?,
     val birthDate: LocalDate?,
-    val deathDate: LocalDate?
+    val deathDate: LocalDate?,
 )
 
 data class AuthorApiModel(
@@ -23,5 +23,5 @@ data class AuthorApiModel(
     val website: String?,
     val bornIn: String?,
     val birthDate: LocalDate?,
-    val deathDate: LocalDate?
+    val deathDate: LocalDate?,
 )

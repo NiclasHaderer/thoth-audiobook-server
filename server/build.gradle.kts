@@ -20,7 +20,6 @@ val bouncyCastleVersion: String by project
 val joseJWTVersion: String by project
 val hikariVersion: String by project
 
-
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
