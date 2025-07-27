@@ -21,12 +21,7 @@ suspend fun getAudibleSeries(region: AudibleRegions, asin: String): MetadataSeri
             it.copy(
                 series =
                     listOf(
-                        MetadataBookSeriesImpl(
-                            id = seriesID,
-                            title = seriesName,
-                            link = seriesLink,
-                            index = index + 1f,
-                        )
+                        MetadataBookSeriesImpl(id = seriesID, title = seriesName, link = seriesLink, index = index + 1f)
                     )
             )
         }

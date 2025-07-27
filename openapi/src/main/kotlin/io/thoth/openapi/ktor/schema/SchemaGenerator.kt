@@ -14,12 +14,7 @@ abstract class SchemaGenerator {
     class WrappedSchema(val schema: Schema<*>, val name: String?, val contentType: ContentType) {
         fun reference(): Schema<*> {
             return if (name != null) {
-                Schema<Any>()
-                    .`$ref`(
-                        RefUtils.constructRef(
-                            name,
-                        ),
-                    )
+                Schema<Any>().`$ref`(RefUtils.constructRef(name))
             } else {
                 schema
             }

@@ -7,7 +7,6 @@ plugins {
     id("maven-publish")
 }
 
-
 afterEvaluate {
     publishing {
         publications {
@@ -22,8 +21,7 @@ afterEvaluate {
     }
 }
 
-
-dependencies{
+dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")

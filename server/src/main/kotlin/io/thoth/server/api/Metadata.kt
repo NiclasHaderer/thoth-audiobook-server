@@ -27,27 +27,16 @@ fun Routing.metadataRouting() {
 
     get<Api.Metadata.Author.Id, MetadataAuthor> {
         metadataProvider.getAuthorByID(providerId = it.provider, authorId = it.id, region = it.region)
-            ?: throw ErrorResponse.notFound(
-                "Author",
-                it.id,
-                "Provider ${it.provider}",
-            )
+            ?: throw ErrorResponse.notFound("Author", it.id, "Provider ${it.provider}")
     }
 
     get<Api.Metadata.Author.Search, List<MetadataAuthor>> {
-        metadataProvider.getAuthorByName(
-            authorName = it.q,
-            region = it.region,
-        )
+        metadataProvider.getAuthorByName(authorName = it.q, region = it.region)
     }
 
     get<Api.Metadata.Book.Id, MetadataBook> {
         metadataProvider.getBookByID(providerId = it.provider, region = it.region, bookId = it.id)
-            ?: throw ErrorResponse.notFound(
-                "Book",
-                it.id,
-                "Provider ${it.provider}",
-            )
+            ?: throw ErrorResponse.notFound("Book", it.id, "Provider ${it.provider}")
     }
 
     get<Api.Metadata.Book.Search, List<MetadataBook>> {
@@ -56,11 +45,7 @@ fun Routing.metadataRouting() {
 
     get<Api.Metadata.Series.Id, MetadataSeries> {
         metadataProvider.getSeriesByID(providerId = it.provider, region = it.region, seriesId = it.id)
-            ?: throw ErrorResponse.notFound(
-                "Series",
-                it.id,
-                "Provider ${it.provider}",
-            )
+            ?: throw ErrorResponse.notFound("Series", it.id, "Provider ${it.provider}")
     }
     get<Api.Metadata.Series.Search, List<MetadataSeries>> {
         metadataProvider.getSeriesByName(seriesName = it.q, region = it.region, authorName = it.authorName)

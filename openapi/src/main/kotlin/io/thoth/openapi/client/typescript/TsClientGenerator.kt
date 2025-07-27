@@ -27,10 +27,7 @@ class TsClientGenerator(
     private val requestRunner: String by lazy { getResourceContent("/typescript/client.ts") }
     private val utilityTypes by lazy { getResourceContent("/typescript/utility-types.ts") }
     private val typeProvider =
-        TypeGenerator.Provider(
-            TsTypeGenerator::class,
-            listOf("io.thoth.openapi.client.typescript") + typePackages,
-        )
+        TypeGenerator.Provider(TsTypeGenerator::class, listOf("io.thoth.openapi.client.typescript") + typePackages)
 
     init {
         generateApiClient()
@@ -163,7 +160,7 @@ fun Application.generateTsClient(
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
     typePackages: List<String> = emptyList(),
-    cleanDistPackage: Boolean = true
+    cleanDistPackage: Boolean = true,
 ) {
     TsClientGenerator(
             routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
@@ -171,7 +168,7 @@ fun Application.generateTsClient(
             fileWriter = fileWriter,
             apiFactoryName = apiFactoryName,
             typePackages = typePackages,
-            cleanDistPackage = cleanDistPackage
+            cleanDistPackage = cleanDistPackage,
         )
         .safeClient()
 }
@@ -182,7 +179,7 @@ fun Application.generateTsClient(
     routes: List<OpenApiRoute>? = null,
     fileWriter: ((File, String) -> Unit)? = null,
     typePackages: List<String> = emptyList(),
-    cleanDistPackage: Boolean = true
+    cleanDistPackage: Boolean = true,
 ) =
     generateTsClient(
         dist = Path.of(dist),
@@ -190,5 +187,5 @@ fun Application.generateTsClient(
         fileWriter = fileWriter,
         apiFactoryName = apiFactoryName,
         typePackages = typePackages,
-        cleanDistPackage = cleanDistPackage
+        cleanDistPackage = cleanDistPackage,
     )

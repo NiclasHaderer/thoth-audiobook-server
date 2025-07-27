@@ -5,5 +5,5 @@ open class JWK(
     open val use: String,
     open val kid: String,
     open val n: String,
-    open val e: String
+    open val e: String,
 )

@@ -18,11 +18,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
 
         return buildString {
             val interfaceName =
-                generateName(
-                    classType = classType,
-                    resolveGeneric = false,
-                    generateSubType = generateSubType,
-                )
+                generateName(classType = classType, resolveGeneric = false, generateSubType = generateSubType)
             append("interface $interfaceName")
             if (superClasses.isNotEmpty()) {
                 append(" extends ${superClasses.joinToString(", ") { it.reference() }}")
@@ -52,7 +48,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
     private fun generateName(
         classType: ClassType,
         resolveGeneric: Boolean,
-        generateSubType: GenerateType<TsType>
+        generateSubType: GenerateType<TsType>,
     ): String {
         val typeParams = classType.typeParameters()
         val typeParamsString =

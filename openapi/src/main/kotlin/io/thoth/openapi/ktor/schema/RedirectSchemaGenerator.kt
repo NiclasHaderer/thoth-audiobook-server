@@ -12,9 +12,7 @@ class RedirectSchemaGenerator : SchemaGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            RedirectResponse::class,
-        )
+        return classType.isSubclassOf(RedirectResponse::class)
     }
 
     override fun generateContentType(classType: ClassType): ContentType {

@@ -13,7 +13,7 @@ private data class MigrationHolder(val version: Int, val migration: Migration)
 
 class DatabaseMigrator(
     private val db: Database,
-    private val packageName: String = "io.thoth.server.database.migrations.history"
+    private val packageName: String = "io.thoth.server.database.migrations.history",
 ) {
     private val log = logger {}
     private val classNameMatcher = "(\\d+)_.*".toRegex()
@@ -35,7 +35,7 @@ class DatabaseMigrator(
             .tap {
                 if (!it::class.java.simpleName.contains(classNameMatcher)) {
                     throw IllegalStateException(
-                        "Migration class name does not match the pattern: ${it::class.java.simpleName}",
+                        "Migration class name does not match the pattern: ${it::class.java.simpleName}"
                     )
                 }
             }

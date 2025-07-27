@@ -12,7 +12,7 @@ class KtClientFunction(
     private val typeDefinitions: MutableMap<String, KtTypeGenerator.KtReferenceType>,
     private val typeProviders:
         TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
-    private val errorHandling: KtErrorHandling
+    private val errorHandling: KtErrorHandling,
 ) {
 
     companion object {

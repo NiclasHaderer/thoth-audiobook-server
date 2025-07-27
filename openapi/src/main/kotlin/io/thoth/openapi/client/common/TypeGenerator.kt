@@ -16,7 +16,7 @@ data class Property(
     val type: PropertyType,
     val overwrites: Boolean,
     val declaredInSuperclass: Boolean,
-    val underlyingProperty: KProperty1<*, *>
+    val underlyingProperty: KProperty1<*, *>,
 )
 
 abstract class TypeGenerator<TYPE, DATA_TYPE> {

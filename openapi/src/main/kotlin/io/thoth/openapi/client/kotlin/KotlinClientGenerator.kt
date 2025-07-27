@@ -14,7 +14,7 @@ import mu.KotlinLogging.logger
 enum class KtErrorHandling {
     Result,
     Exception,
-    Either
+    Either,
 }
 
 class KotlinClientGenerator(
@@ -56,7 +56,7 @@ class KotlinClientGenerator(
                     clientImports = clientImports,
                     typeDefinitions = typeDefinitions,
                     typeProviders = typeProviders,
-                    errorHandling = errorHandling
+                    errorHandling = errorHandling,
                 )
             }
 
@@ -98,7 +98,7 @@ class KotlinClientGenerator(
                         append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
                         append("}")
                     },
-            ),
+            )
         )
         add(
             ClientPart(
@@ -124,7 +124,7 @@ class KotlinClientGenerator(
                         }
                         append("}")
                     },
-            ),
+            )
         )
         addAll(
             staticFiles.map { (name, content) ->
@@ -136,7 +136,7 @@ class KotlinClientGenerator(
                             append(content)
                         },
                 )
-            },
+            }
         )
         addAll(
             typeDefinitions.values.map {
@@ -152,7 +152,7 @@ class KotlinClientGenerator(
                             append(it.content())
                         },
                 )
-            },
+            }
         )
         assertTypeNames(typeDefinitions)
     }
@@ -186,7 +186,7 @@ fun Application.generateKotlinClient(
     directoryToScanForTypes: List<String> = emptyList(),
     abstract: Boolean = true,
     cleanDistPackage: Boolean = true,
-    errorHandling: KtErrorHandling = KtErrorHandling.Either
+    errorHandling: KtErrorHandling = KtErrorHandling.Either,
 ) {
     KotlinClientGenerator(
             routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
@@ -197,7 +197,7 @@ fun Application.generateKotlinClient(
             directoryToScanForTypes = directoryToScanForTypes,
             abstract = abstract,
             cleanDistPackage = cleanDistPackage,
-            errorHandling = errorHandling
+            errorHandling = errorHandling,
         )
         .safeClient()
 }
@@ -211,7 +211,7 @@ fun Application.generateKotlinClient(
     directoryToScanForTypes: List<String> = emptyList(),
     abstract: Boolean = true,
     cleanDistPackage: Boolean = true,
-    errorHandling: KtErrorHandling = KtErrorHandling.Either
+    errorHandling: KtErrorHandling = KtErrorHandling.Either,
 ) =
     generateKotlinClient(
         apiClientPackageName = apiClientPackageName,
@@ -222,5 +222,5 @@ fun Application.generateKotlinClient(
         directoryToScanForTypes = directoryToScanForTypes,
         abstract = abstract,
         cleanDistPackage = cleanDistPackage,
-        errorHandling = errorHandling
+        errorHandling = errorHandling,
     )

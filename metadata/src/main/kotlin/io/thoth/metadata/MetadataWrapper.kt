@@ -7,9 +7,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
-class MetadataWrapper(
-    private val providerList: List<MetadataProvider>,
-) : MetadataProvider() {
+class MetadataWrapper(private val providerList: List<MetadataProvider>) : MetadataProvider() {
 
     companion object {
         fun fromAgents(agents: List<MetadataAgent>, availableAgents: List<MetadataProvider>): MetadataProvider {
@@ -84,13 +82,7 @@ class MetadataWrapper(
             providerList
                 .map {
                     coroutineScope {
-                        async {
-                            it.getBookByName(
-                                bookName = bookName,
-                                region = region,
-                                authorName = authorName,
-                            )
-                        }
+                        async { it.getBookByName(bookName = bookName, region = region, authorName = authorName) }
                     }
                 }
                 .awaitAll()
@@ -102,19 +94,13 @@ class MetadataWrapper(
     override suspend fun _getSeriesByName(
         seriesName: String,
         region: String,
-        authorName: String?
+        authorName: String?,
     ): List<MetadataSeries> {
         val series =
             providerList
                 .map {
                     coroutineScope {
-                        async {
-                            it.getSeriesByName(
-                                seriesName = seriesName,
-                                region = region,
-                                authorName = authorName,
-                            )
-                        }
+                        async { it.getSeriesByName(seriesName = seriesName, region = region, authorName = authorName) }
                     }
                 }
                 .awaitAll()

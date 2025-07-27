@@ -4,7 +4,7 @@ import com.cronutils.model.Cron
 
 enum class TaskType {
     CRON,
-    EVENT
+    EVENT,
 }
 
 interface Task {

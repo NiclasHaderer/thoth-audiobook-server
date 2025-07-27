@@ -16,7 +16,7 @@ interface ThothRenameUserParams<T : Any> {
 
 fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.renameUser(
     params: ThothRenameUserParams<ID>,
-    renamedUser: ThothRenameUser
+    renamedUser: ThothRenameUser,
 ): ThothUser<ID, PERMISSIONS> {
     val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
 

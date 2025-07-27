@@ -19,10 +19,6 @@ class DateTsGenerator : TsTypeGenerator() {
     override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            Date::class,
-            LocalDate::class,
-            LocalDateTime::class,
-        )
+        return classType.isSubclassOf(Date::class, LocalDate::class, LocalDateTime::class)
     }
 }

@@ -38,10 +38,6 @@ class RecordTsGenerator : TsTypeGenerator() {
     override fun getName(classType: ClassType): String = "Record"
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            Map::class,
-            HashMap::class,
-            LinkedHashMap::class,
-        )
+        return classType.isSubclassOf(Map::class, HashMap::class, LinkedHashMap::class)
     }
 }

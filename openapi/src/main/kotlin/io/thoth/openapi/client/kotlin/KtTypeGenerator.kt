@@ -53,7 +53,7 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
         override val name: String,
         override val implReference: String,
         override val implName: String,
-        override val imports: List<String>
+        override val imports: List<String>,
     ) : KtType() {
         override val dataType: KtDataType = KtDataType.COMPLEX
 
@@ -97,7 +97,7 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
     fun interfaceProperties(
         classType: ClassType,
         generateSubType: GenerateType<KtType>,
-        impl: Boolean
+        impl: Boolean,
     ): List<Property> {
         val properties = classType.memberProperties
 
@@ -109,10 +109,7 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
             val propertyType: PropertyType = run {
                 if (classType.isGenericProperty(property)) {
                     // Fully generic property, example: interface Something<T> { val hello: T }
-                    PropertyType(
-                        name = property.returnType.toString(),
-                        typeArguments = emptyList(),
-                    )
+                    PropertyType(name = property.returnType.toString(), typeArguments = emptyList())
                 } else if (classType.isParameterizedProperty(property)) {
                     // Parameterized property, example: interface Something<T> { val hello:
                     // Map<String, T> }
@@ -128,10 +125,7 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
                         }
                     val parameterizedType = generateSubType(classType.forMember(property))
 
-                    PropertyType(
-                        name = parameterizedType.name(),
-                        typeArguments = typeArgs,
-                    )
+                    PropertyType(name = parameterizedType.name(), typeArguments = typeArgs)
                 } else {
                     // Regular property, example: interface Something { val hello: String }
                     PropertyType(

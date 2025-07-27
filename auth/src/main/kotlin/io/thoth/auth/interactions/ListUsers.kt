@@ -12,7 +12,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 interface ThothListUserParams
 
 fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.listUsers(
-    params: ThothListUserParams,
+    params: ThothListUserParams
 ): List<ThothUser<ID, PERMISSIONS>> {
     val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
     if (!principal.permissions.isAdmin) {

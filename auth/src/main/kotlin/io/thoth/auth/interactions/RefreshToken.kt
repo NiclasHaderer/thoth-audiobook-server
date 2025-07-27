@@ -13,10 +13,7 @@ import java.util.UUID
 
 interface ThothRefreshTokenParams
 
-fun RouteHandler.getRefreshToken(
-    params: ThothRefreshTokenParams,
-    body: Unit,
-): ThothAccessToken {
+fun RouteHandler.getRefreshToken(params: ThothRefreshTokenParams, body: Unit): ThothAccessToken {
     val refreshToken = call.request.cookies["refresh"] ?: throw ErrorResponse.unauthorized("No refresh token")
     val config = thothAuthConfig<UUID, ThothUserPermissions>()
     val decodedJwt = validateJwt(config, refreshToken, ThothJwtTypes.Refresh)
@@ -24,7 +21,5 @@ fun RouteHandler.getRefreshToken(
     val userId = UUID.fromString(userIdStr)
     val user = config.getUserById(userId) ?: throw ErrorResponse.internalError("User not found")
 
-    return ThothAccessToken(
-        generateAccessTokenForUser(user, config),
-    )
+    return ThothAccessToken(generateAccessTokenForUser(user, config))
 }

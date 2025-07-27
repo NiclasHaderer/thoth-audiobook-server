@@ -8,7 +8,7 @@ import java.nio.file.Path
 abstract class ClientGenerator(
     private val dist: Path,
     fileWriter: ((File, String) -> Unit)?,
-    private val cleanDistPackage: Boolean
+    private val cleanDistPackage: Boolean,
 ) {
 
     private val fileWriter =

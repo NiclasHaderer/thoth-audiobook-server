@@ -43,7 +43,7 @@ abstract class TsTypeGenerator : TypeGenerator<TsTypeGenerator.TsType, TsTypeGen
         override val reference: String,
         override val content: String,
         override val name: String,
-        override val parser: TsParseMethod
+        override val parser: TsParseMethod,
     ) : TsType() {
         override val dataType = TsDataType.COMPLEX
 
@@ -77,10 +77,7 @@ abstract class TsTypeGenerator : TypeGenerator<TsTypeGenerator.TsType, TsTypeGen
         }
     }
 
-    fun interfaceProperties(
-        classType: ClassType,
-        generateSubType: GenerateType<TsType>,
-    ): List<Property> {
+    fun interfaceProperties(classType: ClassType, generateSubType: GenerateType<TsType>): List<Property> {
         val properties = classType.memberProperties
 
         return properties.map { property ->
@@ -91,10 +88,7 @@ abstract class TsTypeGenerator : TypeGenerator<TsTypeGenerator.TsType, TsTypeGen
             val propertyType: PropertyType = run {
                 if (classType.isGenericProperty(property)) {
                     // Fully generic property, example: interface Something<T> { val hello: T }
-                    PropertyType(
-                        name = property.returnType.toString(),
-                        typeArguments = emptyList(),
-                    )
+                    PropertyType(name = property.returnType.toString(), typeArguments = emptyList())
                 } else if (classType.isParameterizedProperty(property)) {
                     // Parameterized property, example: interface Something<T> { val hello:
                     // Map<String, T> }
@@ -110,10 +104,7 @@ abstract class TsTypeGenerator : TypeGenerator<TsTypeGenerator.TsType, TsTypeGen
                         }
                     val parameterizedType = generateSubType(classType.forMember(property))
 
-                    PropertyType(
-                        name = parameterizedType.name(),
-                        typeArguments = typeArgs,
-                    )
+                    PropertyType(name = parameterizedType.name(), typeArguments = typeArgs)
                 } else {
                     // Regular property, example: interface Something { val hello: String }
                     PropertyType(

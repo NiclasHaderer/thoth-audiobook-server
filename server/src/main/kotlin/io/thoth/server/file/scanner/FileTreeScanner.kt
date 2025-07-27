@@ -26,9 +26,7 @@ private class FileTreeScanner(
 
     override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes?): FileVisitResult {
         val ignoreFile =
-            Paths.get(
-                "${dir.absolutePathString()}${FileSystems.getDefault().separator}${thothConfig.ignoreFile}",
-            )
+            Paths.get("${dir.absolutePathString()}${FileSystems.getDefault().separator}${thothConfig.ignoreFile}")
         return if (!Files.exists(ignoreFile)) {
             FileVisitResult.CONTINUE
         } else {

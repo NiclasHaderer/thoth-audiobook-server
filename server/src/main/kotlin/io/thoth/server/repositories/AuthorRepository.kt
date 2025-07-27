@@ -58,10 +58,7 @@ class AuthorServiceImpl : AuthorRepository, KoinComponent {
 
     override fun getOrCreate(authorName: String, libraryId: UUID): Author = transaction {
         Author.findOne { TAuthors.name like authorName and (TAuthors.library eq libraryId) }
-            ?: create(
-                authorName,
-                libraryId,
-            )
+            ?: create(authorName, libraryId)
     }
 
     override fun create(authorName: String, libraryId: UUID): Author = transaction {

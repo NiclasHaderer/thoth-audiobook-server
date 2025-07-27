@@ -46,7 +46,7 @@ fun Routing.authRoutes() {
         ThothModifyPermissions<UserPermissionsModel>,
         ThothUser<UUID, UserPermissionsModel>,
     >(
-        withTransaction(RouteHandler::modifyUserPermissions),
+        withTransaction(RouteHandler::modifyUserPermissions)
     )
 
     get<Api.Auth.User.Id, ThothUser<UUID, UserPermissionsModel>>(withTransaction(RouteHandler::displayUser))

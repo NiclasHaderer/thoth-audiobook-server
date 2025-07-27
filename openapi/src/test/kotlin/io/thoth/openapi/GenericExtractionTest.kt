@@ -15,7 +15,7 @@ data class TwoListWrapper<A, B, C>(
     val listWrapper: ListWrapper<A, B>,
     val list: List<B>,
     val simpleGeneric: C,
-    val notGeneric: String
+    val notGeneric: String,
 )
 
 class Outer<H>(val a: Map<BigInteger, H>) {

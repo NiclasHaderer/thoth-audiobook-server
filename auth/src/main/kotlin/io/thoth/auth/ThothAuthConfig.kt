@@ -33,7 +33,8 @@ internal fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.thothAu
         throw IllegalStateException("ThothAuthPlugin not installed")
     }
 
-    @Suppress("UNCHECKED_CAST") return call.attributes[PLUGIN_CONFIG_KEY] as ThothAuthConfig<ID, PERMISSIONS>
+    @Suppress("UNCHECKED_CAST")
+    return call.attributes[PLUGIN_CONFIG_KEY] as ThothAuthConfig<ID, PERMISSIONS>
 }
 
 data class JwtError(val error: String, val statusCode: HttpStatusCode)
@@ -223,7 +224,7 @@ class ThothAuthConfigBuilder<ID : Any, PERMISSIONS : ThothUserPermissions> {
             updatePassword = updatePassword,
             updateUserPermissions = updateUserPermissions,
             passwordMeetsRequirements = passwordMeetsRequirements,
-            usernameMeetsRequirements = usernameMeetsRequirements
+            usernameMeetsRequirements = usernameMeetsRequirements,
         )
     }
 
@@ -276,7 +277,8 @@ class ThothAuthConfigBuilder<ID : Any, PERMISSIONS : ThothUserPermissions> {
     fun updateUserPermissions(
         updateUserPermissions:
             (user: ThothDatabaseUser<ID, PERMISSIONS>, newPermissions: PERMISSIONS) -> ThothDatabaseUser<
-                    ID, PERMISSIONS
+                    ID,
+                    PERMISSIONS,
                 >
     ) {
         this.updateUserPermissions = updateUserPermissions

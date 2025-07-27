@@ -41,10 +41,6 @@ class MapKtGenerator : KtTypeGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            Map::class,
-            HashMap::class,
-            LinkedHashMap::class,
-        )
+        return classType.isSubclassOf(Map::class, HashMap::class, LinkedHashMap::class)
     }
 }

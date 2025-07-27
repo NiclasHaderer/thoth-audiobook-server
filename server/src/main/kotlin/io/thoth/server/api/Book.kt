@@ -39,12 +39,7 @@ fun Routing.bookRouting() {
     }
 
     get<Api.Libraries.Id.Books.Id.Position, Position> { route ->
-        val sortOrder =
-            bookRepository.position(
-                libraryId = route.libraryId,
-                id = route.id,
-                order = SortOrder.ASC,
-            )
+        val sortOrder = bookRepository.position(libraryId = route.libraryId, id = route.id, order = SortOrder.ASC)
         Position(sortIndex = sortOrder, id = route.id, order = Position.Order.ASC)
     }
 

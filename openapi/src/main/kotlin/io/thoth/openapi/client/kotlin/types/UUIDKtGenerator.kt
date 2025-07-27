@@ -17,9 +17,7 @@ class UUIDKtGenerator : KtTypeGenerator() {
     override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
 
     override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
-        return listOf(
-            "import java.util.UUID",
-        )
+        return listOf("import java.util.UUID")
     }
 
     override fun canGenerate(classType: ClassType): Boolean {

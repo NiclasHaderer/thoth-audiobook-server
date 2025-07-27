@@ -17,14 +17,10 @@ class DateKtGenerator : KtTypeGenerator() {
     override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
 
     override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
-        return listOf(
-            "import java.util.Date",
-        )
+        return listOf("import java.util.Date")
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            Date::class,
-        )
+        return classType.isSubclassOf(Date::class)
     }
 }

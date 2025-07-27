@@ -15,5 +15,5 @@ data class LibraryModel(
     val folders: List<String>,
     val metadataScanners: List<MetadataAgent>,
     val fileScanners: List<FileScanner>,
-    var language: String
+    var language: String,
 )

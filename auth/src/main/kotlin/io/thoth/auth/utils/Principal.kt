@@ -16,6 +16,6 @@ interface ThothPrincipal<ID : Any, PERMISSIONS : ThothUserPermissions> : Princip
 inline fun <reified TYPE : ThothPrincipal<*, *>> RouteHandler.thothPrincipal(): TYPE {
     return call.principal()
         ?: throw ErrorResponse.internalError(
-            "Route requires user to be logged in, but authentication was not required. Please check your configuration.",
+            "Route requires user to be logged in, but authentication was not required. Please check your configuration."
         )
 }

@@ -13,16 +13,13 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothLoginParams
 
-fun RouteHandler.loginUser(
-    params: ThothLoginParams,
-    loginUser: ThothLoginUser,
-): ThothAccessToken {
+fun RouteHandler.loginUser(params: ThothLoginParams, loginUser: ThothLoginUser): ThothAccessToken {
     val config = thothAuthConfig<Any, ThothUserPermissions>()
 
     val user =
         config.getUserByUsername(loginUser.username)
             ?: throw ErrorResponse.userError(
-                if (config.production) "Could not login user" else "Username does not exist",
+                if (config.production) "Could not login user" else "Username does not exist"
             )
 
     if (!passwordMatches(loginUser.password, user)) {
@@ -39,7 +36,7 @@ fun RouteHandler.loginUser(
             secure = config.production,
             extensions = mapOf("SameSite" to "Strict", "HttpOnly" to "true", "Secure" to config.ssl.toString()),
             maxAge = (config.refreshTokenExpiryTime / 1000).toInt(),
-        ),
+        )
     )
 
     return ThothAccessToken(keyPair.accessToken)

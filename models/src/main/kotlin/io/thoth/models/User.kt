@@ -8,5 +8,5 @@ data class InternalUserModel(
     val id: UUID,
     val username: String,
     val passwordHash: String,
-    val permissions: UserPermissionsModel
+    val permissions: UserPermissionsModel,
 )

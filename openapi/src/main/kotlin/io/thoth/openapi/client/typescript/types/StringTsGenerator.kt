@@ -19,9 +19,6 @@ class StringTsGenerator : TsTypeGenerator() {
     override fun getName(classType: ClassType): String? = null
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            String::class,
-            Char::class,
-        )
+        return classType.isSubclassOf(String::class, Char::class)
     }
 }

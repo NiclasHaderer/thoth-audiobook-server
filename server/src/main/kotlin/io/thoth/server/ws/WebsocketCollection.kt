@@ -6,11 +6,7 @@ import java.util.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.EntityChangeType
 
-@Serializable
-class ChangeEvent(
-    val type: EntityChangeType,
-    val id: String,
-)
+@Serializable class ChangeEvent(val type: EntityChangeType, val id: String)
 
 class WebsocketCollection {
     private val connections = Collections.synchronizedList<DefaultWebSocketServerSession>(mutableListOf())

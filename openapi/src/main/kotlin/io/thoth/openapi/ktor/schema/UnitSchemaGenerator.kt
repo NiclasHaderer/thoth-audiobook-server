@@ -11,9 +11,7 @@ class UnitSchemaGenerator : SchemaGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            Unit::class,
-        )
+        return classType.isSubclassOf(Unit::class)
     }
 
     override fun generateContentType(classType: ClassType): ContentType {

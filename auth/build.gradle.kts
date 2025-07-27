@@ -6,13 +6,11 @@ val bouncyCastleVersion: String by project
 val joseJWTVersion: String by project
 val jwkVersion: String by project
 
-
 plugins {
     kotlin("jvm")
     id("com.ncorti.ktfmt.gradle")
     id("maven-publish")
 }
-
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -34,7 +32,6 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
 
-
     // Security
     implementation("org.springframework.security:spring-security-core:$springSecurityVersion")
     implementation("com.auth0:java-jwt:$jwtVersion")
@@ -43,8 +40,6 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion")
     implementation("org.bouncycastle:bcpkix-jdk15on:$bouncyCastleVersion")
 }
-
-
 
 afterEvaluate {
     publishing {

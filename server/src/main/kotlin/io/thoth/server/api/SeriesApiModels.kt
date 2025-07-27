@@ -13,7 +13,7 @@ data class PartialSeriesApiModel(
     val totalBooks: Int?,
     val primaryWorks: Int?,
     val cover: String?,
-    val description: String?
+    val description: String?,
 ) {
     init {
         require(authors?.isNotEmpty() ?: true) { "Authors must not be empty" }

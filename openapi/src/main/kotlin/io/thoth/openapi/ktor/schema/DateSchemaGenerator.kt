@@ -21,11 +21,7 @@ class DateSchemaGenerator : SchemaGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            Date::class,
-            LocalDate::class,
-            LocalDateTime::class,
-        )
+        return classType.isSubclassOf(Date::class, LocalDate::class, LocalDateTime::class)
     }
 
     override fun generateContentType(classType: ClassType): ContentType {

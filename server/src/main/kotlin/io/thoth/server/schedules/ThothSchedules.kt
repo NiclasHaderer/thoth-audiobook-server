@@ -17,22 +17,10 @@ class ThothSchedules : ScheduleCollection, KoinComponent {
         schedule(
             "Full scan",
             config.fullScanCron,
-            callback = {
-                libraryScanner.fullScan(
-                    transaction { Library.all().map { it.id.value } },
-                )
-            },
+            callback = { libraryScanner.fullScan(transaction { Library.all().map { it.id.value } }) },
         )
-    val scanLibrary =
-        event<Library>(
-            "Scan library",
-            callback = { libraryScanner.scanLibrary(it.data) },
-        )
+    val scanLibrary = event<Library>("Scan library", callback = { libraryScanner.scanLibrary(it.data) })
 
-    val scanLibraries =
-        event<List<UUID>>(
-            "Scan libraries",
-            callback = { libraryScanner.fullScan(it.data) },
-        )
-    val retrieveMetadata = schedule("Retrieve Metadata", config.metadataRefreshCron) { /*TODO*/}
+    val scanLibraries = event<List<UUID>>("Scan libraries", callback = { libraryScanner.fullScan(it.data) })
+    val retrieveMetadata = schedule("Retrieve Metadata", config.metadataRefreshCron) { /*TODO*/ }
 }

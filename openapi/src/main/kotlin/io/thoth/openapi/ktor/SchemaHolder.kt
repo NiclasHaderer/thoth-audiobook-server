@@ -55,14 +55,12 @@ class SchemaHolder {
     private fun addPathAndQueryParameters(operation: Operation, route: OpenApiRoute) {
         for ((param, schema) in route.pathParameters) {
             _api.components.schemas.putAll(schema.second)
-            operation.addParametersItem(
-                Parameter().`in`("path").name(param.name).schema(schema.first.reference()),
-            )
+            operation.addParametersItem(Parameter().`in`("path").name(param.name).schema(schema.first.reference()))
         }
         for ((param, schema) in route.queryParameters) {
             _api.components.schemas.putAll(schema.second)
             operation.addParametersItem(
-                Parameter().`in`("query").name(param.name).schema(schema.first.reference()).required(!param.optional),
+                Parameter().`in`("query").name(param.name).schema(schema.first.reference()).required(!param.optional)
             )
         }
     }
@@ -80,11 +78,8 @@ class SchemaHolder {
                             Content()
                                 .addMediaType(
                                     route.responseContentType.toString(),
-                                    MediaType()
-                                        .schema(
-                                            responseSchema.reference(),
-                                        ),
-                                ),
+                                    MediaType().schema(responseSchema.reference()),
+                                )
                         ),
                 )
     }
@@ -131,14 +126,8 @@ class SchemaHolder {
                 .description(route.bodyDescription?.description)
                 .content(
                     Content()
-                        .addMediaType(
-                            route.requestContentType.toString(),
-                            MediaType()
-                                .schema(
-                                    bodySchema.reference(),
-                                ),
-                        ),
-                ),
+                        .addMediaType(route.requestContentType.toString(), MediaType().schema(bodySchema.reference()))
+                )
         )
     }
 }

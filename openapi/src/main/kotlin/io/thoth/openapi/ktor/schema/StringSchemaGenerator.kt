@@ -11,9 +11,7 @@ class StringSchemaGenerator : SchemaGenerator() {
     }
 
     override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
-            String::class,
-        )
+        return classType.isSubclassOf(String::class)
     }
 
     override fun generateContentType(classType: ClassType): ContentType {

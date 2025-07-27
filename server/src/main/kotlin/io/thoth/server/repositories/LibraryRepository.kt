@@ -152,10 +152,7 @@ class LibraryRepositoryImpl() : LibraryRepository, KoinComponent {
         if (overlaps) {
             throw ErrorResponse.userError(
                 "Folders overlap with existing libraries",
-                mapOf(
-                    "overlaps" to overlapping,
-                    "library" to libraryId,
-                ),
+                mapOf("overlaps" to overlapping, "library" to libraryId),
             )
         }
     }

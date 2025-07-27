@@ -14,7 +14,7 @@ interface ThothRegisterParams
 
 fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.registerUser(
     params: ThothRegisterParams,
-    user: ThothRegisterUser
+    user: ThothRegisterUser,
 ): ThothUser<ID, PERMISSIONS> {
     val config = thothAuthConfig<ID, PERMISSIONS>()
 
@@ -43,12 +43,6 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.registerUser(
     val isAdmin = config.firstUserIsAdmin && config.isFirstUser()
 
     return config
-        .createUser(
-            ThothRegisteredUser(
-                username = user.username,
-                passwordHash = passwordHash,
-                admin = isAdmin,
-            ),
-        )
+        .createUser(ThothRegisteredUser(username = user.username, passwordHash = passwordHash, admin = isAdmin))
         .wrap()
 }

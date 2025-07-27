@@ -33,9 +33,7 @@ fun Application.configureAuthentication() {
         keyPairs["thoth"] = keyPair
         activeKeyId = "thoth"
 
-        configureGuard(
-            Guards.Normal,
-        ) { jwtCredential, setError ->
+        configureGuard(Guards.Normal) { jwtCredential, setError ->
             jwtToPrincipal(jwtCredential, serializer)
                 ?: return@configureGuard run {
                     setError(JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
@@ -43,9 +41,7 @@ fun Application.configureAuthentication() {
                 }
         }
 
-        configureGuard(
-            Guards.Admin,
-        ) { jwtCredential, setError ->
+        configureGuard(Guards.Admin) { jwtCredential, setError ->
             jwtToPrincipal(jwtCredential, serializer)?.let { principal ->
                 if (principal.permissions.isAdmin) {
                     principal

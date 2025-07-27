@@ -169,14 +169,9 @@ class SeriesRepositoryImpl() : SeriesRepository, KoinComponent {
         val seriesMetadata =
             runBlocking {
                 metadataWrapper
-                    .getSeriesByName(
-                        series.title,
-                        library.language,
-                        series.authors.joinToString(", ") { it.name },
-                    )
+                    .getSeriesByName(series.title, library.language, series.authors.joinToString(", ") { it.name })
                     .firstOrNull()
-            }
-                ?: return@transaction series.toModel()
+            } ?: return@transaction series.toModel()
 
         modify(
             id,
