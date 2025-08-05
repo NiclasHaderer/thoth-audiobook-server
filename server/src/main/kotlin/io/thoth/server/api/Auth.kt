@@ -41,14 +41,18 @@ fun Routing.authRoutes() {
     get<Api.Auth.Jwks, JWKs>(withTransaction(RouteHandler::getJwks))
 
     put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UpdatePermissionsModel>, ThothUser>(
-            withTransaction(RouteHandler::modifyUserPermissions),
+        withTransaction(RouteHandler::modifyUserPermissions)
     )
 
     get<Api.Auth.User.Id, ThothUser>(withTransaction(RouteHandler::displayUser))
 
-    get<Api.Auth.User.Current, ThothUserWithPermissions<UserPermissionsModel>>(withTransaction(RouteHandler::currentUser))
+    get<Api.Auth.User.Current, ThothUserWithPermissions<UserPermissionsModel>>(
+        withTransaction(RouteHandler::currentUser)
+    )
 
-    get<Api.Auth.User.All, List<ThothUserWithPermissions<UserPermissionsModel>>>(withTransaction(RouteHandler::listUsers))
+    get<Api.Auth.User.All, List<ThothUserWithPermissions<UserPermissionsModel>>>(
+        withTransaction(RouteHandler::listUsers)
+    )
 
     delete<Api.Auth.User.Id, Unit, Unit>(withTransaction(RouteHandler::deleteUser))
 

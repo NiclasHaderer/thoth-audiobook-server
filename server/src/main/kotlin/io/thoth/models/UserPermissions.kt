@@ -12,4 +12,5 @@ class LibraryPermissionsModel(val id: UUID, val name: String, val permissions: L
 class UserPermissionsModel(val isAdmin: Boolean, val libraries: List<LibraryPermissionsModel>)
 
 class UpdateLibraryPermissionsModel(val id: UUID, val permissions: LibraryPermissions)
+
 class UpdatePermissionsModel(val isAdmin: Boolean, val libraries: List<UpdateLibraryPermissionsModel>)
