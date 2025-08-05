@@ -24,8 +24,7 @@ internal typealias GetPrincipal =
 
 internal val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig<*>>("ThothAuthPlugin")
 
-internal fun <PERMISSIONS> RouteHandler.thothAuthConfig():
-    ThothAuthConfig<PERMISSIONS> {
+internal fun <PERMISSIONS> RouteHandler.thothAuthConfig(): ThothAuthConfig<PERMISSIONS> {
     if (!call.attributes.contains(PLUGIN_CONFIG_KEY)) {
         throw IllegalStateException("ThothAuthPlugin not installed")
     }
@@ -61,13 +60,11 @@ class ThothAuthConfig<PERMISSIONS>(
     val listAllUsers: () -> List<ThothDatabaseUser>,
     val deleteUser: (user: ThothDatabaseUser) -> Unit,
     val renameUser: (user: ThothDatabaseUser, newName: String) -> ThothDatabaseUser,
-    val updatePassword:
-    (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser,
-    val updateUserPermissions:
-    (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser,
+    val updatePassword: (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser,
+    val updateUserPermissions: (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser,
     val passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?>,
     val usernameMeetsRequirements: (username: String) -> Pair<Boolean, String?>,
-    private val isAdminUser: (user: ThothDatabaseUser) -> Boolean
+    private val isAdminUser: (user: ThothDatabaseUser) -> Boolean,
 ) {
 
     internal val jwkProvider by lazy {
@@ -97,12 +94,7 @@ class ThothAuthConfig<PERMISSIONS>(
 
                     validate { jwtCredential ->
                         val principal =
-                            getPrincipal(jwtCredential) { error ->
-                                attributes.put(
-                                    JWT_VALIDATION_FAILED,
-                                    error,
-                                )
-                            }
+                            getPrincipal(jwtCredential) { error -> attributes.put(JWT_VALIDATION_FAILED, error) }
                                 ?: return@validate null
 
                         if (principal.type != ThothJwtTypes.Access) {
@@ -164,10 +156,8 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
     private lateinit var createUser: (registeredUser: ThothRegisteredUser) -> ThothDatabaseUser
     private lateinit var listAllUsers: () -> List<ThothDatabaseUser>
     private lateinit var deleteUser: (user: ThothDatabaseUser) -> Unit
-    private lateinit var renameUser:
-        (user: ThothDatabaseUser, newName: String) -> ThothDatabaseUser
-    private lateinit var updatePassword:
-        (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser
+    private lateinit var renameUser: (user: ThothDatabaseUser, newName: String) -> ThothDatabaseUser
+    private lateinit var updatePassword: (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser
     private lateinit var updateUserPermissions:
         (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser
     private var passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?> = { password ->
@@ -267,22 +257,16 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
         this.deleteUser = deleteUser
     }
 
-    fun renameUser(
-        renameUser: (user: ThothDatabaseUser, newName: String) -> ThothDatabaseUser
-    ) {
+    fun renameUser(renameUser: (user: ThothDatabaseUser, newName: String) -> ThothDatabaseUser) {
         this.renameUser = renameUser
     }
 
-    fun updatePassword(
-        updatePassword:
-        (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser
-    ) {
+    fun updatePassword(updatePassword: (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser) {
         this.updatePassword = updatePassword
     }
 
     fun updateUserPermissions(
-        updateUserPermissions:
-        (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser
+        updateUserPermissions: (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser
     ) {
         this.updateUserPermissions = updateUserPermissions
     }

@@ -14,17 +14,13 @@ interface ThothRenameUserParams {
     val id: UUID
 }
 
-fun RouteHandler.renameUser(
-    params: ThothRenameUserParams,
-    renamedUser: ThothRenameUser,
-): ThothUser {
+fun RouteHandler.renameUser(params: ThothRenameUserParams, renamedUser: ThothRenameUser): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig<Any>()
 
     if (principal.userId != params.id && !config.isAdmin(principal)) {
         throw ErrorResponse.forbidden("Rename", "account")
     }
-
 
     config.usernameMeetsRequirements(renamedUser.username).also { (meetsRequirement, message) ->
         if (!meetsRequirement) {

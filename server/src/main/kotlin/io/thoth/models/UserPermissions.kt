@@ -4,7 +4,7 @@ import java.util.*
 
 enum class LibraryPermissions {
     READONLY,
-    READ_WRITE
+    READ_WRITE,
 }
 
 class LibraryPermissionsModel(val id: UUID, val name: String, val permissions: LibraryPermissions)

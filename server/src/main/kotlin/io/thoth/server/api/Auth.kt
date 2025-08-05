@@ -34,18 +34,12 @@ fun Routing.authRoutes() {
 
     post<Api.Auth.Logout, Unit, Unit>(withTransaction(RouteHandler::logoutUser))
 
-    post<Api.Auth.Register, ThothRegisterUser, ThothUser>(
-        withTransaction(RouteHandler::registerUser),
-    )
+    post<Api.Auth.Register, ThothRegisterUser, ThothUser>(withTransaction(RouteHandler::registerUser))
 
     get<Api.Auth.Jwks, JWKs>(withTransaction(RouteHandler::getJwks))
 
-    put<
-        Api.Auth.User.Id.Permissions,
-        ThothModifyPermissions<UserPermissionsModel>,
-        ThothUser,
-        >(
-        withTransaction(RouteHandler::modifyUserPermissions),
+    put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UserPermissionsModel>, ThothUser>(
+        withTransaction(RouteHandler::modifyUserPermissions)
     )
 
     get<Api.Auth.User.Id, ThothUser>(withTransaction(RouteHandler::displayUser))
@@ -56,9 +50,7 @@ fun Routing.authRoutes() {
 
     delete<Api.Auth.User.Id, Unit, Unit>(withTransaction(RouteHandler::deleteUser))
 
-    post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser>(
-        withTransaction(RouteHandler::renameUser),
-    )
+    post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser>(withTransaction(RouteHandler::renameUser))
 
     post<Api.Auth.User.Id.Password, ThothChangePassword, Unit>(withTransaction(RouteHandler::changeUserPassword))
 

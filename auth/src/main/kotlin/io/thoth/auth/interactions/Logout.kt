@@ -17,6 +17,6 @@ fun RouteHandler.logoutUser(params: ThothLogoutParams, body: Unit) {
             secure = config.production,
             extensions = mapOf("SameSite" to "Strict", "HttpOnly" to "true", "Secure" to config.ssl.toString()),
             maxAge = 0,
-        ),
+        )
     )
 }

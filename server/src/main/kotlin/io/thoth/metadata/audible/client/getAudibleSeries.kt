@@ -11,9 +11,7 @@ suspend fun getAudibleSeries(region: AudibleRegions, asin: String): MetadataSeri
     // Audible does not return 404 if a series is not valid, so...
     document.getElementById("product-list-a11y-skiplink-target") ?: return null
 
-    val seriesID = AudibleProviderWithIDMetadata(
-        audibleAsinFromLink(document.location())
-    )
+    val seriesID = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location()))
     val seriesName = getSeriesName(document)
     val seriesLink = document.location().split("?").first()
     val seriesBooks =
@@ -23,12 +21,7 @@ suspend fun getAudibleSeries(region: AudibleRegions, asin: String): MetadataSeri
             it.copy(
                 series =
                     listOf(
-                        MetadataBookSeriesImpl(
-                            id = seriesID,
-                            title = seriesName,
-                            link = seriesLink,
-                            index = index + 1f
-                        )
+                        MetadataBookSeriesImpl(id = seriesID, title = seriesName, link = seriesLink, index = index + 1f)
                     )
             )
         }
