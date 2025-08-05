@@ -28,17 +28,15 @@ fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
 
 interface ThothCurrentUserParams
 
-fun <PERMISSIONS : Any> RouteHandler.currentUser(params: ThothCurrentUserParams): ThothUserWithPermissions<PERMISSIONS> {
+fun <PERMISSIONS : Any> RouteHandler.currentUser(
+    params: ThothCurrentUserParams
+): ThothUserWithPermissions<PERMISSIONS> {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig<PERMISSIONS>()
 
     val user = config.getUserById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
     return user.let {
         val permissions = config.run { getUserPermissions(user) }
-        ThothUserWithPermissions(
-            id = user.id,
-            username = user.username,
-            permissions = permissions,
-        )
+        ThothUserWithPermissions(id = user.id, username = user.username, permissions = permissions)
     }
 }

@@ -9,7 +9,9 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothListUserParams
 
-fun <PERMISSIONS : Any> RouteHandler.listUsers(params: ThothListUserParams): List<ThothUserWithPermissions<PERMISSIONS>> {
+fun <PERMISSIONS : Any> RouteHandler.listUsers(
+    params: ThothListUserParams
+): List<ThothUserWithPermissions<PERMISSIONS>> {
     val config = thothAuthConfig<PERMISSIONS>()
 
     val principal = thothPrincipal<ThothPrincipal>()
@@ -19,10 +21,6 @@ fun <PERMISSIONS : Any> RouteHandler.listUsers(params: ThothListUserParams): Lis
 
     return config.listAllUsers().map { user ->
         val permissions = config.run { getUserPermissions(user) }
-        ThothUserWithPermissions(
-            id = user.id,
-            username = user.username,
-            permissions = permissions,
-        )
+        ThothUserWithPermissions(id = user.id, username = user.username, permissions = permissions)
     }
 }
