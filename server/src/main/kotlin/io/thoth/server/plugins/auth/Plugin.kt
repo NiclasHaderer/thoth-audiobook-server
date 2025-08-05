@@ -9,15 +9,11 @@ import io.thoth.models.UserPermissionsModel
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.access.toExternalUser
-import io.thoth.server.database.tables.TUserPermissions
 import io.thoth.server.database.tables.TUsers
 import io.thoth.server.database.tables.User
-import io.thoth.server.database.tables.UserPermissions
-import io.thoth.server.plugins.authentication.jwtToPrincipal
-import java.nio.file.Path
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.ktor.ext.inject
+import java.nio.file.Path
 
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
@@ -62,10 +58,10 @@ fun Application.configureAuthentication() {
 
         createUser { newUser ->
             User.new {
-                    username = newUser.username
-                    passwordHash = newUser.passwordHash
-                    permissions = UserPermissions.new { isAdmin = newUser.admin }
-                }
+                username = newUser.username
+                passwordHash = newUser.passwordHash
+                admin = newUser.admin
+            }
                 .toExternalUser()
         }
 
@@ -81,19 +77,18 @@ fun Application.configureAuthentication() {
 
         updateUserPermissions { user, permissions ->
             val dbUser = User.findById(user.id)!!
-            val dbPermissions = dbUser.permissions
             dbUser.toExternalUser()
             TODO("Not implemented yet")
         }
 
         isAdminUser { user: ThothDatabaseUser ->
             transaction {
-                (TUsers innerJoin TUserPermissions)
-                    .select { TUsers.id eq user.id }
-                    .map { UserPermissions.wrap(it[TUsers.id], it) }
-                    .firstOrNull()
-                    ?.isAdmin ?: false
+                User.findById(user.id)?.admin ?: false
             }
+        }
+
+        getUserPermissions { user: ThothDatabaseUser ->
+            thothPrincipal().permissions
         }
     }
 }

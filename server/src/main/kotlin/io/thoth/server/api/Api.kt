@@ -24,7 +24,7 @@ import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.Tagged
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import io.thoth.server.plugins.auth.Guards
-import io.thoth.server.plugins.authentication.assertLibraryPermissions
+import io.thoth.server.plugins.auth.assertLibraryPermissions
 
 // TODO remove unused methods in the db access layer
 // TODO move companion object functions of user into own thingi

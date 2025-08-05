@@ -64,6 +64,7 @@ class ThothAuthConfig<PERMISSIONS>(
     val updateUserPermissions: (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser,
     val passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?>,
     val usernameMeetsRequirements: (username: String) -> Pair<Boolean, String?>,
+    val getUserPermissions: RouteHandler.(user: ThothDatabaseUser) -> PERMISSIONS,
     private val isAdminUser: (user: ThothDatabaseUser) -> Boolean,
 ) {
 
@@ -160,6 +161,7 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
     private lateinit var updatePassword: (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser
     private lateinit var updateUserPermissions:
         (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser
+    private lateinit var getUserPermissions: RouteHandler.(user: ThothDatabaseUser) -> PERMISSIONS
     private var passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?> = { password ->
         if (password.length < 6) {
             Pair(false, "Password must be at least 6 characters long")
@@ -220,6 +222,7 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
             updateUserPermissions = updateUserPermissions,
             passwordMeetsRequirements = passwordMeetsRequirements,
             usernameMeetsRequirements = usernameMeetsRequirements,
+            getUserPermissions = getUserPermissions,
             isAdminUser = isAdminUser,
         )
     }
@@ -269,6 +272,10 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
         updateUserPermissions: (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser
     ) {
         this.updateUserPermissions = updateUserPermissions
+    }
+
+    fun getUserPermissions(getUserPermissions: RouteHandler.(user: ThothDatabaseUser) -> PERMISSIONS) {
+        this.getUserPermissions = getUserPermissions
     }
 
     fun passwordMeetsRequirements(passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?>) {

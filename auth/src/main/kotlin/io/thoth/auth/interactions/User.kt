@@ -1,6 +1,7 @@
 package io.thoth.auth.interactions
 
 import io.thoth.auth.models.ThothUser
+import io.thoth.auth.models.ThothUserWithPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
@@ -27,10 +28,17 @@ fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
 
 interface ThothCurrentUserParams
 
-fun RouteHandler.currentUser(params: ThothCurrentUserParams): ThothUser {
+fun <PERMISSIONS : Any> RouteHandler.currentUser(params: ThothCurrentUserParams): ThothUserWithPermissions<PERMISSIONS> {
     val principal = thothPrincipal<ThothPrincipal>()
-    val config = thothAuthConfig<Any>()
+    val config = thothAuthConfig<PERMISSIONS>()
 
     val user = config.getUserById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
-    return user.wrap()
+    return user.let {
+        val permissions = config.run { getUserPermissions(user) }
+        ThothUserWithPermissions(
+            id = user.id,
+            username = user.username,
+            permissions = permissions,
+        )
+    }
 }

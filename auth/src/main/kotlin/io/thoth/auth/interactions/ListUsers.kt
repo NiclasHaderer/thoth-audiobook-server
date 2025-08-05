@@ -1,22 +1,28 @@
 package io.thoth.auth.interactions
 
-import io.thoth.auth.models.ThothUser
+import io.thoth.auth.models.ThothUserWithPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
-import io.thoth.auth.utils.wrap
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothListUserParams
 
-fun RouteHandler.listUsers(params: ThothListUserParams): List<ThothUser> {
-    val config = thothAuthConfig<Any>()
+fun <PERMISSIONS : Any> RouteHandler.listUsers(params: ThothListUserParams): List<ThothUserWithPermissions<PERMISSIONS>> {
+    val config = thothAuthConfig<PERMISSIONS>()
 
     val principal = thothPrincipal<ThothPrincipal>()
     if (!config.isAdmin(principal)) {
         throw ErrorResponse.userError("User is not admin")
     }
 
-    return config.listAllUsers().map { it.wrap() }
+    return config.listAllUsers().map { user ->
+        val permissions = config.run { getUserPermissions(user) }
+        ThothUserWithPermissions(
+            id = user.id,
+            username = user.username,
+            permissions = permissions,
+        )
+    }
 }
