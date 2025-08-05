@@ -2,8 +2,6 @@ rootProject.name = "thoth-audiobook-server"
 
 include(
     "openapi",
-    "metadata",
-    "models",
     "server",
     "auth",
     "auth-models",
