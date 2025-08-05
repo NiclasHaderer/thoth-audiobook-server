@@ -2,14 +2,13 @@ package io.thoth.auth.interactions
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.openapi.ktor.RouteHandler
 
 interface ThothLogoutParams
 
 fun RouteHandler.logoutUser(params: ThothLogoutParams, body: Unit) {
-    val config = thothAuthConfig<Any, ThothUserPermissions>()
+    val config = thothAuthConfig<Any>()
     call.response.cookies.append(
         Cookie(
             name = "refresh",
@@ -18,6 +17,6 @@ fun RouteHandler.logoutUser(params: ThothLogoutParams, body: Unit) {
             secure = config.production,
             extensions = mapOf("SameSite" to "Strict", "HttpOnly" to "true", "Secure" to config.ssl.toString()),
             maxAge = 0,
-        )
+        ),
     )
 }

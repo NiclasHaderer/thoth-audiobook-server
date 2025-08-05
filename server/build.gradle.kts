@@ -19,6 +19,9 @@ val springSecurityVersion: String by project
 val bouncyCastleVersion: String by project
 val joseJWTVersion: String by project
 val hikariVersion: String by project
+val caffeineVersion: String by project
+val jsoupVersion: String by project
+val jsonVersion: String by project
 
 plugins {
     kotlin("jvm")
@@ -39,11 +42,14 @@ tasks.jar { manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt" 
 
 dependencies {
     // Other projects
-    implementation(project(":models"))
     implementation(project(":openapi"))
-    implementation(project(":metadata"))
     implementation(project(":auth"))
     implementation(project(":auth-models"))
+
+    // Metadata
+    implementation("org.jsoup:jsoup:${jsoupVersion}")
+    implementation("com.github.ben-manes.caffeine:caffeine:${caffeineVersion}")
+    implementation("org.json:json:${jsonVersion}")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -108,6 +114,8 @@ dependencies {
     implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio-jvm:${ktorVersion}")
+
     // Openapi
     implementation("io.swagger.core.v3:swagger-models:$openApiVersion")
     // Tests

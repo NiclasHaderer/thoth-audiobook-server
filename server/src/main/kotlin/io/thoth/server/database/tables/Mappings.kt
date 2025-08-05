@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import io.thoth.models.LibraryPermissions
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 
@@ -38,6 +39,6 @@ object TLibraryUserMapping : Table("LibraryUserMapping") {
     val library = reference("library", TLibraries, onDelete = ReferenceOption.CASCADE)
     val user = reference("user", TUsers, onDelete = ReferenceOption.CASCADE)
 
-    var canEdit = bool("canEdit")
+    var permissions = enumeration<LibraryPermissions>("permissions")
     override val primaryKey = PrimaryKey(library, user)
 }

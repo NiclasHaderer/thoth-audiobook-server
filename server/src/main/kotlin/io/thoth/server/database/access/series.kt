@@ -3,6 +3,7 @@ package io.thoth.server.database.access
 import io.thoth.models.NamedId
 import io.thoth.models.SeriesModel
 import io.thoth.server.database.tables.Series
+import io.thoth.server.database.tables.TAuthors
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
 
@@ -18,7 +19,7 @@ fun Series.toModel(authorOrder: SortOrder = SortOrder.ASC): SeriesModel {
         primaryWorks = primaryWorks,
         totalBooks = totalBooks,
         authors =
-            authors.orderBy(io.thoth.server.database.tables.TAuthors.name.lowerCase() to authorOrder).map {
+            authors.orderBy(TAuthors.name.lowerCase() to authorOrder).map {
                 NamedId(it.id.value, it.name)
             },
         genres = genres.map { NamedId(it.id.value, it.name) },

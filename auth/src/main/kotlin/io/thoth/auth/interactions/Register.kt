@@ -3,7 +3,6 @@ package io.thoth.auth.interactions
 import io.thoth.auth.models.ThothRegisterUser
 import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.models.ThothUser
-import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.hashPassword
 import io.thoth.auth.utils.wrap
@@ -12,11 +11,11 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothRegisterParams
 
-fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.registerUser(
+fun RouteHandler.registerUser(
     params: ThothRegisterParams,
     user: ThothRegisterUser,
-): ThothUser<ID, PERMISSIONS> {
-    val config = thothAuthConfig<ID, PERMISSIONS>()
+): ThothUser {
+    val config = thothAuthConfig<Any>()
 
     if (!config.allowNewSignups()) {
         throw ErrorResponse.userError("New signups are not allowed")

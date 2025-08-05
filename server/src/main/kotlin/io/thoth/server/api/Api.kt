@@ -75,18 +75,18 @@ class Api {
             @Summary("Get user", method = "GET")
             @Summary("Delete user", method = "DELETE")
             data class Id(override val id: UUID_S, private val parent: User) :
-                ThothDeleteUserParams<UUID_S>, ThothDisplayUserParams<UUID_S> {
+                ThothDeleteUserParams, ThothDisplayUserParams {
 
                 @Summary("Update username", method = "POST")
                 @Resource("username")
-                data class Username(private val parent: Id) : ThothRenameUserParams<UUID_S> {
+                data class Username(private val parent: Id) : ThothRenameUserParams {
                     override val id: UUID_S
                         get() = parent.id
                 }
 
                 @Summary("Update password", method = "POST")
                 @Resource("password")
-                data class Password(private val parent: Id) : ThothChangePasswordParams<UUID_S> {
+                data class Password(private val parent: Id) : ThothChangePasswordParams {
                     override val id: UUID_S
                         get() = parent.id
                 }
@@ -94,7 +94,7 @@ class Api {
                 @Secured(Guards.Admin)
                 @Summary("Update permissions", method = "PUT")
                 @Resource("permissions")
-                data class Permissions(private val parent: Id) : ThothModifyPermissionsParams<UUID_S> {
+                data class Permissions(private val parent: Id) : ThothModifyPermissionsParams {
                     override val id: UUID_S
                         get() = parent.id
                 }
@@ -243,7 +243,7 @@ class Api {
                 data class Sorting(
                     val limit: Int = 20,
                     val offset: Long = 0,
-                    val order: Position.Order = io.thoth.models.Position.Order.ASC,
+                    val order: Position.Order = Position.Order.ASC,
                     private val parent: Authors,
                 ) {
                     val libraryId
@@ -268,7 +268,7 @@ class Api {
                     @Summary("Get author position", method = "GET")
                     @Resource("position")
                     data class Position(
-                        val order: io.thoth.models.Position.Order = io.thoth.models.Position.Order.ASC,
+                        val order: Position.Order = io.thoth.models.Position.Order.ASC,
                         private val parent: Id,
                     ) {
                         val libraryId
