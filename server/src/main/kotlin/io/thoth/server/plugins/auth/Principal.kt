@@ -15,13 +15,10 @@ import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.TUserPermissions
 import io.thoth.server.database.tables.UserPermissions
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import org.jetbrains.exposed.sql.transactions.transaction
 
-class ThothPrincipalImpl(
-    override val userId: UUID,
-    override val type: ThothJwtTypes,
-) : ThothPrincipal {
+class ThothPrincipalImpl(override val userId: UUID, override val type: ThothJwtTypes) : ThothPrincipal {
     val permissions: UserPermissionsModel
         get() = transaction {
             UserPermissions.findOne { TUserPermissions.id eq userId }?.toModel()

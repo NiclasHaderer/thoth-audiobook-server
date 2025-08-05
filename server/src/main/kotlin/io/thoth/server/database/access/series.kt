@@ -18,10 +18,7 @@ fun Series.toModel(authorOrder: SortOrder = SortOrder.ASC): SeriesModel {
         coverID = coverID?.value,
         primaryWorks = primaryWorks,
         totalBooks = totalBooks,
-        authors =
-            authors.orderBy(TAuthors.name.lowerCase() to authorOrder).map {
-                NamedId(it.id.value, it.name)
-            },
+        authors = authors.orderBy(TAuthors.name.lowerCase() to authorOrder).map { NamedId(it.id.value, it.name) },
         genres = genres.map { NamedId(it.id.value, it.name) },
         library = NamedId(library.id.value, library.name),
     )

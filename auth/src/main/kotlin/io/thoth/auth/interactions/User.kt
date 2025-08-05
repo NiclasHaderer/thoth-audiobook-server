@@ -13,9 +13,7 @@ interface ThothDisplayUserParams {
     val id: UUID
 }
 
-fun RouteHandler.displayUser(
-    params: ThothDisplayUserParams
-): ThothUser {
+fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig<Any>()
 
@@ -29,9 +27,7 @@ fun RouteHandler.displayUser(
 
 interface ThothCurrentUserParams
 
-fun RouteHandler.currentUser(
-    params: ThothCurrentUserParams
-): ThothUser {
+fun RouteHandler.currentUser(params: ThothCurrentUserParams): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig<Any>()
 

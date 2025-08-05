@@ -12,20 +12,14 @@ import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.*
 
-fun generateJwtPairForUser(
-    user: ThothDatabaseUser,
-    config: ThothAuthConfig<*>,
-): ThothJwtPair {
+fun generateJwtPairForUser(user: ThothDatabaseUser, config: ThothAuthConfig<*>): ThothJwtPair {
     return ThothJwtPair(
         accessToken = generateAccessTokenForUser(user, config),
         refreshToken = generateRefreshTokenForUser(user, config),
     )
 }
 
-internal fun generateAccessTokenForUser(
-    user: ThothDatabaseUser,
-    config: ThothAuthConfig<*>,
-): String {
+internal fun generateAccessTokenForUser(user: ThothDatabaseUser, config: ThothAuthConfig<*>): String {
     val keyPair = config.keyPairs[config.activeKeyId]!!
     val issuer = config.issuer
 
@@ -38,10 +32,7 @@ internal fun generateAccessTokenForUser(
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 }
 
-internal fun generateRefreshTokenForUser(
-    user: ThothDatabaseUser,
-    config: ThothAuthConfig<*>,
-): String {
+internal fun generateRefreshTokenForUser(user: ThothDatabaseUser, config: ThothAuthConfig<*>): String {
     val issuer = config.issuer
     val keyPair = config.keyPairs[config.activeKeyId]!!
 

@@ -1,15 +1,15 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.*
-import io.thoth.openapi.ktor.get
-import io.thoth.openapi.ktor.patch
-import io.thoth.openapi.ktor.post
-import io.thoth.openapi.ktor.put
 import io.thoth.models.BookModel
 import io.thoth.models.DetailedBookModel
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.TitledId
+import io.thoth.openapi.ktor.get
+import io.thoth.openapi.ktor.patch
+import io.thoth.openapi.ktor.post
+import io.thoth.openapi.ktor.put
 import io.thoth.server.repositories.BookRepository
 import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
