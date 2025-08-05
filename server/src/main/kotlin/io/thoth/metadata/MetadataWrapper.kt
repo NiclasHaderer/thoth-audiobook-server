@@ -1,6 +1,11 @@
 package io.thoth.metadata
 
-import io.thoth.metadata.responses.*
+import io.thoth.metadata.responses.MetadataAuthor
+import io.thoth.metadata.responses.MetadataBook
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataSearchBook
+import io.thoth.metadata.responses.MetadataSearchCount
+import io.thoth.metadata.responses.MetadataSeries
 import io.thoth.models.MetadataAgent
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll

@@ -52,7 +52,9 @@ fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<Me
             series = extractBookSeriesInfo(it),
             coverURL = extractImageUrl(it),
             releaseDate = extractReleaseDate(it, regions),
-            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
+            id = AudibleProviderWithIDMetadata(
+                audibleAsinFromLink(link)
+            ),
             narrator = extractNarrator(it),
             language = extractLanguage(it),
         )
@@ -94,7 +96,9 @@ internal fun extractAuthorInfo(element: Element): List<MetadataSearchAuthorImpl>
         MetadataSearchAuthorImpl(
             link = link,
             name = authorLink.text(),
-            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
+            id = AudibleProviderWithIDMetadata(
+                audibleAsinFromLink(link)
+            ),
         )
     }
 }
@@ -123,7 +127,9 @@ internal fun extractBookSeriesInfo(element: Element): List<MetadataBookSeriesImp
         MetadataBookSeriesImpl(
             link = seriesLink,
             title = seriesTitle,
-            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(seriesLink)),
+            id = AudibleProviderWithIDMetadata(
+                audibleAsinFromLink(seriesLink)
+            ),
             index = seriesIndex,
         )
     }

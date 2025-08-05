@@ -27,7 +27,6 @@ import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.ktor.put
-import java.util.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Routing.authRoutes() {
@@ -35,8 +34,8 @@ fun Routing.authRoutes() {
 
     post<Api.Auth.Logout, Unit, Unit>(withTransaction(RouteHandler::logoutUser))
 
-    post<Api.Auth.Register, ThothRegisterUser, ThothUser<UUID, UserPermissionsModel>>(
-        withTransaction(RouteHandler::registerUser)
+    post<Api.Auth.Register, ThothRegisterUser, ThothUser>(
+        withTransaction(RouteHandler::registerUser),
     )
 
     get<Api.Auth.Jwks, JWKs>(withTransaction(RouteHandler::getJwks))
@@ -44,21 +43,21 @@ fun Routing.authRoutes() {
     put<
         Api.Auth.User.Id.Permissions,
         ThothModifyPermissions<UserPermissionsModel>,
-        ThothUser<UUID, UserPermissionsModel>,
-    >(
-        withTransaction(RouteHandler::modifyUserPermissions)
+        ThothUser,
+        >(
+        withTransaction(RouteHandler::modifyUserPermissions),
     )
 
-    get<Api.Auth.User.Id, ThothUser<UUID, UserPermissionsModel>>(withTransaction(RouteHandler::displayUser))
+    get<Api.Auth.User.Id, ThothUser>(withTransaction(RouteHandler::displayUser))
 
-    get<Api.Auth.User.Current, ThothUser<UUID, UserPermissionsModel>>(withTransaction(RouteHandler::currentUser))
+    get<Api.Auth.User.Current, ThothUser>(withTransaction(RouteHandler::currentUser))
 
-    get<Api.Auth.User.All, List<ThothUser<UUID, UserPermissionsModel>>>(withTransaction(RouteHandler::listUsers))
+    get<Api.Auth.User.All, List<ThothUser>>(withTransaction(RouteHandler::listUsers))
 
     delete<Api.Auth.User.Id, Unit, Unit>(withTransaction(RouteHandler::deleteUser))
 
-    post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser<UUID, UserPermissionsModel>>(
-        withTransaction(RouteHandler::renameUser)
+    post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser>(
+        withTransaction(RouteHandler::renameUser),
     )
 
     post<Api.Auth.User.Id.Password, ThothChangePassword, Unit>(withTransaction(RouteHandler::changeUserPassword))

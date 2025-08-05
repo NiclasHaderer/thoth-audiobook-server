@@ -15,7 +15,9 @@ suspend fun getAudibleBook(region: AudibleRegions, asin: String): MetadataBookIm
 
     return MetadataBookImpl(
         link = document.location().split("?").first(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
+        id = AudibleProviderWithIDMetadata(
+            audibleAsinFromLink(document.location())
+        ),
         description = getDescription(document),
         title = extractTitle(document, region),
         coverURL = extractImageUrl(document),

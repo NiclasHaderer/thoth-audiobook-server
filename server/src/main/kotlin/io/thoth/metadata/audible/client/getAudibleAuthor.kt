@@ -11,7 +11,9 @@ suspend fun getAudibleAuthor(regions: AudibleRegions, imageSize: Int, authorAsin
     document.getElementById("product-list-a11y-skiplink-target") ?: return null
     return MetadataAuthorImpl(
         link = document.location().split("?").first(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
+        id = AudibleProviderWithIDMetadata(
+            audibleAsinFromLink(document.location())
+        ),
         name = getAuthorName(document),
         imageURL = getAuthorImage(document, imageSize),
         biography = getAuthorBiography(document),

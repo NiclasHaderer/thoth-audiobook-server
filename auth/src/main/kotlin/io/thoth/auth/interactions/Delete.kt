@@ -1,21 +1,21 @@
 package io.thoth.auth.interactions
 
-import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
+import java.util.*
 
-interface ThothDeleteUserParams<T : Any> {
-    val id: T
+interface ThothDeleteUserParams {
+    val id: UUID
 }
 
-fun <ID : Any> RouteHandler.deleteUser(params: ThothDeleteUserParams<ID>, body: Unit) {
-    val principal = thothPrincipal<ThothPrincipal<ID, ThothUserPermissions>>()
-    val config = thothAuthConfig<ID, ThothUserPermissions>()
+fun RouteHandler.deleteUser(params: ThothDeleteUserParams, body: Unit) {
+    val principal = thothPrincipal<ThothPrincipal>()
+    val config = thothAuthConfig<Any>()
 
-    if (principal.userId != params.id && !principal.permissions.isAdmin) {
+    if (principal.userId != params.id && !config.isAdmin(principal)) {
         throw ErrorResponse.forbidden("Delete", "user")
     }
 

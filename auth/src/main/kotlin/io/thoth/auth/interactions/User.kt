@@ -1,25 +1,25 @@
 package io.thoth.auth.interactions
 
 import io.thoth.auth.models.ThothUser
-import io.thoth.auth.models.ThothUserPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
 import io.thoth.auth.utils.wrap
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
+import java.util.*
 
-interface ThothDisplayUserParams<T : Any> {
-    val id: T
+interface ThothDisplayUserParams {
+    val id: UUID
 }
 
-fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.displayUser(
-    params: ThothDisplayUserParams<ID>
-): ThothUser<ID, PERMISSIONS> {
-    val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
-    val config = thothAuthConfig<ID, PERMISSIONS>()
+fun RouteHandler.displayUser(
+    params: ThothDisplayUserParams
+): ThothUser {
+    val principal = thothPrincipal<ThothPrincipal>()
+    val config = thothAuthConfig<Any>()
 
-    if (principal.userId != params.id && !principal.permissions.isAdmin) {
+    if (principal.userId != params.id && !config.isAdmin(principal)) {
         throw ErrorResponse.forbidden("View", "account")
     }
 
@@ -29,11 +29,11 @@ fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.displayUser(
 
 interface ThothCurrentUserParams
 
-fun <ID : Any, PERMISSIONS : ThothUserPermissions> RouteHandler.currentUser(
+fun RouteHandler.currentUser(
     params: ThothCurrentUserParams
-): ThothUser<ID, PERMISSIONS> {
-    val principal = thothPrincipal<ThothPrincipal<ID, PERMISSIONS>>()
-    val config = thothAuthConfig<ID, PERMISSIONS>()
+): ThothUser {
+    val principal = thothPrincipal<ThothPrincipal>()
+    val config = thothAuthConfig<Any>()
 
     val user = config.getUserById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
     return user.wrap()
