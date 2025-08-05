@@ -1,4 +1,4 @@
-package io.thoth.server.plugins.authentication
+package io.thoth.server.plugins.auth
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -9,20 +9,42 @@ import io.ktor.util.pipeline.*
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.models.LibraryPermissions
+import io.thoth.models.LibraryPermissionsModel
 import io.thoth.models.UserPermissionsModel
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.common.extensions.findOne
-import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.TUserPermissions
-import io.thoth.server.database.tables.UserPermissions
-import java.util.*
+import io.thoth.server.database.tables.TLibraries
+import io.thoth.server.database.tables.TLibraryUserMapping
+import io.thoth.server.database.tables.User
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
 class ThothPrincipalImpl(override val userId: UUID, override val type: ThothJwtTypes) : ThothPrincipal {
     val permissions: UserPermissionsModel
         get() = transaction {
-            UserPermissions.findOne { TUserPermissions.id eq userId }?.toModel()
-                ?: throw ErrorResponse.notFound("User", userId)
+            val user = User.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
+            val permissions: List<LibraryPermissionsModel>
+            if (user.admin) {
+                permissions = TLibraries.selectAll().map {
+                    LibraryPermissionsModel(
+                        id = it[TLibraries.id].value,
+                        permissions = LibraryPermissions.READ_WRITE,
+                        name = it[TLibraries.name],
+                    )
+                }
+            } else {
+                permissions = (TLibraryUserMapping innerJoin TLibraries)
+                    .select { TLibraryUserMapping.user eq userId }
+                    .map {
+                        LibraryPermissionsModel(
+                            id = it[TLibraryUserMapping.library].value,
+                            permissions = it[TLibraryUserMapping.permissions],
+                            name = it[TLibraries.name],
+                        )
+                    }
+            }
+            UserPermissionsModel(isAdmin = user.admin, libraries = permissions)
         }
 }
 

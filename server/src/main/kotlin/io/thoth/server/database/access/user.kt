@@ -12,4 +12,4 @@ fun User.toExternalUser(): ThothDatabaseUser {
     )
 }
 
-fun User.toModel(): UserModel = UserModel(id = id.value, username = username, permissions = permissions.toModel())
+fun User.toModel(): UserModel = UserModel(id = id.value, username = username, admin = admin)

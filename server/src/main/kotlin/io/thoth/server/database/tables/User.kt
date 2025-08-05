@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.ReferenceOption
 object TUsers : UUIDTable("Users") {
     val username = char("username", 256).uniqueIndex()
     val passwordHash = char("passwordHash", 512)
-    val permissions = reference("permissions", TUserPermissions, onDelete = ReferenceOption.CASCADE)
+    val admin = bool("admin").default(false)
 }
 
 class User(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -18,5 +18,5 @@ class User(id: EntityID<UUID>) : UUIDEntity(id) {
 
     var username by TUsers.username
     var passwordHash by TUsers.passwordHash
-    var permissions by UserPermissions referencedOn TUsers.permissions
+    var admin by TUsers.admin
 }

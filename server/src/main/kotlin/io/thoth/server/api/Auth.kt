@@ -21,6 +21,8 @@ import io.thoth.auth.models.ThothModifyPermissions
 import io.thoth.auth.models.ThothRegisterUser
 import io.thoth.auth.models.ThothRenameUser
 import io.thoth.auth.models.ThothUser
+import io.thoth.auth.models.ThothUserWithPermissions
+import io.thoth.models.UpdatePermissionsModel
 import io.thoth.models.UserPermissionsModel
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.delete
@@ -38,15 +40,15 @@ fun Routing.authRoutes() {
 
     get<Api.Auth.Jwks, JWKs>(withTransaction(RouteHandler::getJwks))
 
-    put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UserPermissionsModel>, ThothUser>(
-        withTransaction(RouteHandler::modifyUserPermissions)
+    put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UpdatePermissionsModel>, ThothUser>(
+            withTransaction(RouteHandler::modifyUserPermissions),
     )
 
     get<Api.Auth.User.Id, ThothUser>(withTransaction(RouteHandler::displayUser))
 
-    get<Api.Auth.User.Current, ThothUser>(withTransaction(RouteHandler::currentUser))
+    get<Api.Auth.User.Current, ThothUserWithPermissions<UserPermissionsModel>>(withTransaction(RouteHandler::currentUser))
 
-    get<Api.Auth.User.All, List<ThothUser>>(withTransaction(RouteHandler::listUsers))
+    get<Api.Auth.User.All, List<ThothUserWithPermissions<UserPermissionsModel>>>(withTransaction(RouteHandler::listUsers))
 
     delete<Api.Auth.User.Id, Unit, Unit>(withTransaction(RouteHandler::deleteUser))
 

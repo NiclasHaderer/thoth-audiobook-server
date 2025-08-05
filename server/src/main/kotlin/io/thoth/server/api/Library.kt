@@ -9,7 +9,7 @@ import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.ktor.put
 import io.thoth.server.common.scheduling.Scheduler
-import io.thoth.server.plugins.authentication.thothPrincipal
+import io.thoth.server.plugins.auth.thothPrincipal
 import io.thoth.server.repositories.LibraryRepository
 import io.thoth.server.repositories.SearchRepository
 import io.thoth.server.schedules.ThothSchedules
