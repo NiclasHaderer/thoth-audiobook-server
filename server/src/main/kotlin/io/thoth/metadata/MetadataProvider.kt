@@ -9,8 +9,6 @@ import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
 import java.util.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 
 abstract class MetadataProvider {
     private companion object {
@@ -22,14 +20,13 @@ abstract class MetadataProvider {
         private val authorIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataAuthor>>()
         private val seriesIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataSeries>>()
         private val bookIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataBook>>()
-        private val coroutinesScope = CoroutineScope(Dispatchers.IO)
     }
 
     abstract val uniqueName: String
     abstract val supportedCountryCodes: List<String>
 
     suspend fun search(
-        region: String,
+        region: String, // TODO make enum
         keywords: String? = null,
         title: String? = null,
         author: String? = null,
