@@ -33,6 +33,7 @@ object TLibraries : UUIDTable("Libraries") {
                 throw ErrorResponse.userError("fileScanners must have at least one element")
             }
         }
+    // TODO make enum
     val language = varchar("language", 255)
 }
 

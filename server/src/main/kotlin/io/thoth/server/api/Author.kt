@@ -10,8 +10,8 @@ import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.put
 import io.thoth.server.repositories.AuthorRepository
-import java.util.*
 import org.koin.ktor.ext.inject
+import java.util.*
 
 fun Routing.authorRouting() {
     val authorService by inject<AuthorRepository>()
