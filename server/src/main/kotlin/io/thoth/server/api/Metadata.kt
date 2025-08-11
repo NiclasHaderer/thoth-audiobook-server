@@ -34,38 +34,38 @@ fun Routing.metadataRouting() {
     get<Api.Libraries.Id.Metadata.Author.Id, MetadataAuthor> {
         val library = libraryRepository.raw(it.libraryId)
         val metadataProvider = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
-        metadataProvider.getAuthorByID(providerId = it.provider, authorId = it.id, region = it.region)
+        metadataProvider.getAuthorByID(providerId = it.provider, authorId = it.id, region = library.language)
             ?: throw ErrorResponse.notFound("Author", it.id, "Provider ${it.provider}")
     }
 
     get<Api.Libraries.Id.Metadata.Author.Search, List<MetadataAuthor>> {
         val library = libraryRepository.raw(it.libraryId)
         val metadataProvider = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
-        metadataProvider.getAuthorByName(authorName = it.q, region = it.region)
+        metadataProvider.getAuthorByName(authorName = it.q, region = library.language)
     }
 
     get<Api.Libraries.Id.Metadata.Book.Id, MetadataBook> {
         val library = libraryRepository.raw(it.libraryId)
         val metadataProvider = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
-        metadataProvider.getBookByID(providerId = it.provider, region = it.region, bookId = it.id)
+        metadataProvider.getBookByID(providerId = it.provider, region = library.language, bookId = it.id)
             ?: throw ErrorResponse.notFound("Book", it.id, "Provider ${it.provider}")
     }
 
     get<Api.Libraries.Id.Metadata.Book.Search, List<MetadataBook>> {
         val library = libraryRepository.raw(it.libraryId)
         val metadataProvider = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
-        metadataProvider.getBookByName(bookName = it.q, region = it.region, authorName = it.authorName)
+        metadataProvider.getBookByName(bookName = it.q, region = library.language, authorName = it.authorName)
     }
 
     get<Api.Libraries.Id.Metadata.Series.Id, MetadataSeries> {
         val library = libraryRepository.raw(it.libraryId)
         val metadataProvider = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
-        metadataProvider.getSeriesByID(providerId = it.provider, region = it.region, seriesId = it.id)
+        metadataProvider.getSeriesByID(providerId = it.provider, region = library.language, seriesId = it.id)
             ?: throw ErrorResponse.notFound("Series", it.id, "Provider ${it.provider}")
     }
     get<Api.Libraries.Id.Metadata.Series.Search, List<MetadataSeries>> {
         val library = libraryRepository.raw(it.libraryId)
         val metadataProvider = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
-        metadataProvider.getSeriesByName(seriesName = it.q, region = it.region, authorName = it.authorName)
+        metadataProvider.getSeriesByName(seriesName = it.q, region = library.language, authorName = it.authorName)
     }
 }

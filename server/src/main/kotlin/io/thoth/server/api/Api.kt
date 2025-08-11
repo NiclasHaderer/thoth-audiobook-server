@@ -383,7 +383,6 @@ class Api {
                     @Resource("{id}")
                     data class Id(
                         val id: String,
-                        val region: String,
                         val provider: String,
                         private val parent: Author,
                     ) {
@@ -393,7 +392,7 @@ class Api {
 
                     @Summary("Search author metadata", method = "GET")
                     @Resource("search")
-                    data class Search(val q: String, val region: String, private val parent: Author) {
+                    data class Search(val q: String, private val parent: Author) {
                         val libraryId
                             get() = parent.parent.libraryId
                     }
@@ -403,7 +402,7 @@ class Api {
                 data class Book(private val parent: Metadata) {
                     @Summary("Get book metadata", method = "GET")
                     @Resource("{id}")
-                    data class Id(val id: String, val region: String, val provider: String, private val parent: Book) {
+                    data class Id(val id: String, val provider: String, private val parent: Book) {
                         val libraryId
                             get() = parent.parent.libraryId
                     }
@@ -412,7 +411,6 @@ class Api {
                     @Resource("search")
                     data class Search(
                         val q: String,
-                        val region: String,
                         val authorName: String? = null,
                         private val parent: Book,
                     ) {
@@ -427,7 +425,6 @@ class Api {
                     @Resource("{id}")
                     data class Id(
                         val id: String,
-                        val region: String,
                         val provider: String,
                         private val parent: Series,
                     ) {
@@ -439,7 +436,6 @@ class Api {
                     @Resource("search")
                     data class Search(
                         val q: String,
-                        val region: String,
                         val authorName: String? = null,
                         private val parent: Series,
                     ) {
