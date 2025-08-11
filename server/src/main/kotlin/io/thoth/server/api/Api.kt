@@ -385,7 +385,7 @@ class Api {
                         val id: String,
                         val region: String,
                         val provider: String,
-                        private val parent: Author
+                        private val parent: Author,
                     ) {
                         val libraryId
                             get() = parent.parent.libraryId
@@ -429,7 +429,7 @@ class Api {
                         val id: String,
                         val region: String,
                         val provider: String,
-                        private val parent: Series
+                        private val parent: Series,
                     ) {
                         val libraryId
                             get() = parent.parent.libraryId
