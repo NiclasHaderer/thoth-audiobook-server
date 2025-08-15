@@ -26,7 +26,6 @@ val jsonVersion: String by project
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
-    id("com.ncorti.ktfmt.gradle")
     id("com.github.johnrengelman.shadow") version "7.1.2"
     application
 }

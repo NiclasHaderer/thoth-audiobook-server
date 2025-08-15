@@ -8,7 +8,6 @@ val jwkVersion: String by project
 
 plugins {
     kotlin("jvm")
-    id("com.ncorti.ktfmt.gradle")
     id("maven-publish")
 }
 
