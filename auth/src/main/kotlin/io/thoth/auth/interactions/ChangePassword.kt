@@ -19,7 +19,7 @@ fun RouteHandler.changeUserPassword(
     passwordChange: ThothChangePassword,
 ) {
     val principal = thothPrincipal<ThothPrincipal>()
-    val config = thothAuthConfig<Any>()
+    val config = thothAuthConfig<Any, Any>()
 
     if (principal.userId != params.id && !config.isAdmin(principal)) {
         throw ErrorResponse.forbidden("Change", "password")

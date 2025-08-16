@@ -14,12 +14,12 @@ interface ThothModifyPermissionsParams {
     val id: UUID
 }
 
-fun <PERMISSIONS> RouteHandler.modifyUserPermissions(
+fun <UPDATE_PERMISSIONS> RouteHandler.modifyUserPermissions(
     params: ThothModifyPermissionsParams,
-    body: ThothModifyPermissions<PERMISSIONS>,
+    body: ThothModifyPermissions<UPDATE_PERMISSIONS>,
 ): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
-    val config = thothAuthConfig<PERMISSIONS>()
+    val config = thothAuthConfig<Any, UPDATE_PERMISSIONS>()
 
     if (!config.isAdmin(principal)) {
         throw ErrorResponse.forbidden("Modify", "permissions")

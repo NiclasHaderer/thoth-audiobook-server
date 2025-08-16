@@ -14,7 +14,7 @@ import java.util.Date
 
 fun generateJwtPairForUser(
     user: ThothDatabaseUser,
-    config: ThothAuthConfig<*>,
+    config: ThothAuthConfig<*, *>,
 ): ThothJwtPair =
     ThothJwtPair(
         accessToken = generateAccessTokenForUser(user, config),
@@ -23,7 +23,7 @@ fun generateJwtPairForUser(
 
 internal fun generateAccessTokenForUser(
     user: ThothDatabaseUser,
-    config: ThothAuthConfig<*>,
+    config: ThothAuthConfig<*, *>,
 ): String {
     val keyPair = config.keyPairs[config.activeKeyId]!!
     val issuer = config.issuer
@@ -40,7 +40,7 @@ internal fun generateAccessTokenForUser(
 
 internal fun generateRefreshTokenForUser(
     user: ThothDatabaseUser,
-    config: ThothAuthConfig<*>,
+    config: ThothAuthConfig<*, *>,
 ): String {
     val issuer = config.issuer
     val keyPair = config.keyPairs[config.activeKeyId]!!
@@ -57,7 +57,7 @@ internal fun generateRefreshTokenForUser(
 }
 
 fun validateJwt(
-    authConfig: ThothAuthConfig<*>,
+    authConfig: ThothAuthConfig<*, *>,
     token: String,
     type: ThothJwtTypes,
 ): DecodedJWT {

@@ -7,6 +7,7 @@ import io.ktor.server.application.install
 import io.thoth.auth.JwtError
 import io.thoth.auth.ThothAuthenticationPlugin
 import io.thoth.auth.models.ThothDatabaseUser
+import io.thoth.models.UpdatePermissionsModel
 import io.thoth.models.UserPermissionsModel
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.config.ThothConfig
@@ -21,7 +22,7 @@ fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
     val keyPair = getOrCreateKeyPair(Path.of("${thothConfig.configDirectory}/jwt.pem"))
 
-    install(ThothAuthenticationPlugin.build<UserPermissionsModel>()) {
+    install(ThothAuthenticationPlugin.build<UserPermissionsModel, UpdatePermissionsModel>()) {
         production = thothConfig.production
         issuer = "thoth.io"
         domain = thothConfig.domain

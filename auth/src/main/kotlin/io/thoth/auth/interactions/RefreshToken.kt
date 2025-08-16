@@ -17,7 +17,7 @@ fun RouteHandler.getRefreshToken(
     body: Unit,
 ): ThothAccessToken {
     val refreshToken = call.request.cookies["refresh"] ?: throw ErrorResponse.unauthorized("No refresh token")
-    val config = thothAuthConfig<Any>()
+    val config = thothAuthConfig<Any, Any>()
     val decodedJwt = validateJwt(config, refreshToken, ThothJwtTypes.Refresh)
     val userIdStr = decodedJwt.getClaim("sub").asString()
     val userId = UUID.fromString(userIdStr)
