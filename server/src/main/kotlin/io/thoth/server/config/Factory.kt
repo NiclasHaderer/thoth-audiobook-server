@@ -4,9 +4,7 @@ import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.addResourceOrFileSource
 import java.nio.file.Path
 
-private fun isProduction(): Boolean {
-    return System.getenv("PRODUCTION")?.toBooleanStrictOrNull() ?: false
-}
+private fun isProduction(): Boolean = System.getenv("PRODUCTION")?.toBooleanStrictOrNull() ?: false
 
 private fun getConfigPath(): String {
     val path =
@@ -22,7 +20,8 @@ private fun getConfigPath(): String {
 fun loadPublicConfig(): ThothConfig {
     val configPath = getConfigPath()
 
-    return ConfigLoaderBuilder.default()
+    return ConfigLoaderBuilder
+        .default()
         .addDecoder(CronDecoder())
         .addResourceOrFileSource(configPath)
         .build()

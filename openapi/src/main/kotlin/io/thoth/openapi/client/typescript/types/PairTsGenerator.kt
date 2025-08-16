@@ -8,7 +8,10 @@ import mu.KotlinLogging
 class PairTsGenerator : TsTypeGenerator() {
     private val log = KotlinLogging.logger {}
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String {
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Pair type without insufficient arguments" }
             return "Pair<unknown, unknown>"
@@ -38,11 +41,12 @@ class PairTsGenerator : TsTypeGenerator() {
 
     override fun getInsertionMode(classType: ClassType) = TsDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String? = null
 
     override fun getName(classType: ClassType): String = "Pair"
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(Pair::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean = classType.isSubclassOf(Pair::class)
 }

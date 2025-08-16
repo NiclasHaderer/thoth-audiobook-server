@@ -16,33 +16,77 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Resource("{path}")
-class Routes(val path: UUID_S, val name: String, val someParam: List<Int>) {
-    @Summary(summary = "V1", method = "GET") @Resource("V1") class V1(val parent: Routes)
+class Routes(
+    val path: UUID_S,
+    val name: String,
+    val someParam: List<Int>,
+) {
+    @Summary(summary = "V1", method = "GET")
+    @Resource("V1")
+    class V1(
+        val parent: Routes,
+    )
 
-    @Summary(summary = "V2", method = "GET") @Resource("V2") class V2(val parent: Routes)
+    @Summary(summary = "V2", method = "GET")
+    @Resource("V2")
+    class V2(
+        val parent: Routes,
+    )
 
-    @Summary(summary = "V3", method = "GET") @Resource("V3") class V3(val parent: Routes)
+    @Summary(summary = "V3", method = "GET")
+    @Resource("V3")
+    class V3(
+        val parent: Routes,
+    )
 
-    @Summary(summary = "V4", method = "GET") @Resource("V4") class V4(val parent: Routes)
+    @Summary(summary = "V4", method = "GET")
+    @Resource("V4")
+    class V4(
+        val parent: Routes,
+    )
 
-    @Summary(summary = "V5", method = "POST") @Resource("V5") class V5(val parent: Routes)
+    @Summary(summary = "V5", method = "POST")
+    @Resource("V5")
+    class V5(
+        val parent: Routes,
+    )
 }
 
 interface Something {
     val name: String
 }
 
-class ListRoute(override val name: String, val someParam: List<UUID>) : Something
+class ListRoute(
+    override val name: String,
+    val someParam: List<UUID>,
+) : Something
 
-class MapRoute(val name: Boolean, val someParam: Map<String, UUID>)
+class MapRoute(
+    val name: Boolean,
+    val someParam: Map<String, UUID>,
+)
 
-class SetRoute(val name: Float, val someParam: Set<UUID>)
+class SetRoute(
+    val name: Float,
+    val someParam: Set<UUID>,
+)
 
-class GenericRoute<T>(val name: Pair<Any, UUID>, val someParam: T)
+class GenericRoute<T>(
+    val name: Pair<Any, UUID>,
+    val someParam: T,
+)
 
-class GenericRoute2<T, U>(val name: String, val someParam: T, val someParam2: U)
+class GenericRoute2<T, U>(
+    val name: String,
+    val someParam: T,
+    val someParam2: U,
+)
 
-class GenericRoute3<T>(val name: String, val someParam: Map<String, T>, val someParam2: GenericRoute2<T, String>)
+class GenericRoute3<T>(
+    val name: String,
+    val someParam: Map<String, T>,
+    val someParam2: GenericRoute2<T, String>,
+)
 
 fun Application.testRoutes() {
     install(Routing)

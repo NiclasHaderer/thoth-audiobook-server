@@ -11,7 +11,9 @@ object TSchemaTrackers : IntIdTable("SchemaTrackers") {
     val rollback = text("rollback")
 }
 
-class SchemaTracker(id: EntityID<Int>) : IntEntity(id) {
+class SchemaTracker(
+    id: EntityID<Int>,
+) : IntEntity(id) {
     companion object : IntEntityClass<SchemaTracker>(TSchemaTrackers)
 
     var version by TSchemaTrackers.version

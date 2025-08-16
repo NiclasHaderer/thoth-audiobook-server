@@ -31,8 +31,7 @@ class DetailedAuthorModel(
     library: NamedId,
     val books: List<BookModel>,
     val series: List<SeriesModel>,
-) :
-    AuthorModel(
+) : AuthorModel(
         id = id,
         name = name,
         provider = provider,
@@ -46,21 +45,24 @@ class DetailedAuthorModel(
         library = library,
     ) {
     companion object {
-        fun fromModel(author: AuthorModel, books: List<BookModel>, series: List<SeriesModel>) =
-            DetailedAuthorModel(
-                id = author.id,
-                name = author.name,
-                biography = author.biography,
-                imageID = author.imageID,
-                website = author.website,
-                bornIn = author.bornIn,
-                birthDate = author.birthDate,
-                deathDate = author.deathDate,
-                books = books,
-                series = series,
-                provider = author.provider,
-                providerID = author.providerID,
-                library = author.library,
-            )
+        fun fromModel(
+            author: AuthorModel,
+            books: List<BookModel>,
+            series: List<SeriesModel>,
+        ) = DetailedAuthorModel(
+            id = author.id,
+            name = author.name,
+            biography = author.biography,
+            imageID = author.imageID,
+            website = author.website,
+            bornIn = author.bornIn,
+            birthDate = author.birthDate,
+            deathDate = author.deathDate,
+            books = books,
+            series = series,
+            provider = author.provider,
+            providerID = author.providerID,
+            library = author.library,
+        )
     }
 }

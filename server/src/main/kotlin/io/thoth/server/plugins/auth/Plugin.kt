@@ -11,9 +11,9 @@ import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.access.toExternalUser
 import io.thoth.server.database.tables.TUsers
 import io.thoth.server.database.tables.User
-import java.nio.file.Path
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.ktor.ext.inject
+import java.nio.file.Path
 
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
@@ -57,12 +57,12 @@ fun Application.configureAuthentication() {
         isFirstUser { User.count() == 0L }
 
         createUser { newUser ->
-            User.new {
+            User
+                .new {
                     username = newUser.username
                     passwordHash = newUser.passwordHash
                     admin = newUser.admin
-                }
-                .toExternalUser()
+                }.toExternalUser()
         }
 
         listAllUsers { User.all().map { it.toExternalUser() } }

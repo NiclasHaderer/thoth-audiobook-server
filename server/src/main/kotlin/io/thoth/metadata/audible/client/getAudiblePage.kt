@@ -33,15 +33,13 @@ suspend fun getAudiblePage(
     pathSegments: List<String>,
     parameters: Parameters = Parameters.build {},
 ): Document? {
-
     val url =
         URLBuilder(
-                protocol = URLProtocol.HTTPS,
-                host = region.getValue().toHost(),
-                pathSegments = pathSegments,
-                parameters = parameters,
-            )
-            .also { it.parameters.append("ipRedirectOverride", "true") }
+            protocol = URLProtocol.HTTPS,
+            host = region.getValue().toHost(),
+            pathSegments = pathSegments,
+            parameters = parameters,
+        ).also { it.parameters.append("ipRedirectOverride", "true") }
 
     val response =
         try {
@@ -54,8 +52,7 @@ suspend fun getAudiblePage(
                 Audible crawler error
                 Status: $statusCode
                 Message: $message
-            """
-                    .trimIndent()
+                """.trimIndent()
             }
             return null
         }

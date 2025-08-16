@@ -58,29 +58,55 @@ abstract class MetadataProvider {
         pageSize: MetadataSearchCount? = null,
     ): List<MetadataSearchBook>
 
-    suspend fun getAuthorByID(providerId: String, authorId: String, region: String): MetadataAuthor? {
+    suspend fun getAuthorByID(
+        providerId: String,
+        authorId: String,
+        region: String,
+    ): MetadataAuthor? {
         val cacheKey = getKey(providerId, authorId, region)
         return getOrSetCache(authorIdCache, cacheKey) { _getAuthorByID(providerId, authorId, region).optional() }
             .orElse(null)
     }
 
-    protected abstract suspend fun _getAuthorByID(providerId: String, authorId: String, region: String): MetadataAuthor?
+    protected abstract suspend fun _getAuthorByID(
+        providerId: String,
+        authorId: String,
+        region: String,
+    ): MetadataAuthor?
 
-    suspend fun getAuthorByName(authorName: String, region: String): List<MetadataAuthor> {
+    suspend fun getAuthorByName(
+        authorName: String,
+        region: String,
+    ): List<MetadataAuthor> {
         val cacheKey = getKey(authorName, region)
         return getOrSetCache(authorNameCache, cacheKey) { _getAuthorByName(authorName, region) }
     }
 
-    protected abstract suspend fun _getAuthorByName(authorName: String, region: String): List<MetadataAuthor>
+    protected abstract suspend fun _getAuthorByName(
+        authorName: String,
+        region: String,
+    ): List<MetadataAuthor>
 
-    suspend fun getBookByID(providerId: String, bookId: String, region: String): MetadataBook? {
+    suspend fun getBookByID(
+        providerId: String,
+        bookId: String,
+        region: String,
+    ): MetadataBook? {
         val cacheKey = getKey(providerId, bookId, region)
         return getOrSetCache(bookIdCache, cacheKey) { _getBookByID(providerId, bookId, region).optional() }.orElse(null)
     }
 
-    protected abstract suspend fun _getBookByID(providerId: String, bookId: String, region: String): MetadataBook?
+    protected abstract suspend fun _getBookByID(
+        providerId: String,
+        bookId: String,
+        region: String,
+    ): MetadataBook?
 
-    suspend fun getBookByName(bookName: String, region: String, authorName: String? = null): List<MetadataBook> {
+    suspend fun getBookByName(
+        bookName: String,
+        region: String,
+        authorName: String? = null,
+    ): List<MetadataBook> {
         val cacheKey = getKey(bookName, region, authorName)
         return getOrSetCache(bookNameCache, cacheKey) { _getBookByName(bookName, region, authorName) }
     }
@@ -91,15 +117,27 @@ abstract class MetadataProvider {
         authorName: String? = null,
     ): List<MetadataBook>
 
-    suspend fun getSeriesByID(providerId: String, seriesId: String, region: String): MetadataSeries? {
+    suspend fun getSeriesByID(
+        providerId: String,
+        seriesId: String,
+        region: String,
+    ): MetadataSeries? {
         val cacheKey = getKey(providerId, seriesId, region)
         return getOrSetCache(seriesIdCache, cacheKey) { _getSeriesByID(providerId, region, seriesId).optional() }
             .orElse(null)
     }
 
-    protected abstract suspend fun _getSeriesByID(providerId: String, region: String, seriesId: String): MetadataSeries?
+    protected abstract suspend fun _getSeriesByID(
+        providerId: String,
+        region: String,
+        seriesId: String,
+    ): MetadataSeries?
 
-    suspend fun getSeriesByName(seriesName: String, region: String, authorName: String? = null): List<MetadataSeries> {
+    suspend fun getSeriesByName(
+        seriesName: String,
+        region: String,
+        authorName: String? = null,
+    ): List<MetadataSeries> {
         val cacheKey = getKey(seriesName, region, authorName)
         return getOrSetCache(seriesNameCache, cacheKey) { _getSeriesByName(seriesName, region, authorName) }
     }
@@ -110,7 +148,11 @@ abstract class MetadataProvider {
         authorName: String? = null,
     ): List<MetadataSeries>
 
-    private suspend fun <K, V> getOrSetCache(cache: Cache<K, V>, key: K, getValue: suspend () -> V): V {
+    private suspend fun <K, V> getOrSetCache(
+        cache: Cache<K, V>,
+        key: K,
+        getValue: suspend () -> V,
+    ): V {
         var value = cache.getIfPresent(key)
         if (value != null) return value
 
@@ -119,9 +161,9 @@ abstract class MetadataProvider {
         return value
     }
 
-    private fun getKey(vararg keys: Any?): String {
-        return keys.joinToString { it.toString() + separator }
-    }
+    private fun getKey(vararg keys: Any?): String = keys.joinToString { it.toString() + separator }
 }
 
-class MetadataProviders(private val items: List<MetadataProvider>) : List<MetadataProvider> by items
+class MetadataProviders(
+    private val items: List<MetadataProvider>,
+) : List<MetadataProvider> by items

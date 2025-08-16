@@ -18,15 +18,13 @@ import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.typeOf
 
-class ClassType private constructor(@PublishedApi internal val type: KType) {
+class ClassType private constructor(
+    @PublishedApi internal val type: KType,
+) {
     companion object {
-        fun create(type: KType): ClassType {
-            return ClassType(type)
-        }
+        fun create(type: KType): ClassType = ClassType(type)
 
-        inline fun <reified T> create(): ClassType {
-            return create(typeOf<T>())
-        }
+        inline fun <reified T> create(): ClassType = create(typeOf<T>())
     }
 
     val genericArguments: List<ClassType>
@@ -77,17 +75,11 @@ class ClassType private constructor(@PublishedApi internal val type: KType) {
 
     inline fun <reified T : Annotation> findAnnotation(): T? = this.clazz.findAnnotation<T>()
 
-    inline fun <reified T : Annotation> findAnnotationsFirstUp(): List<T> {
-        return clazz.findAnnotationsFirstUp<T>()
-    }
+    inline fun <reified T : Annotation> findAnnotationsFirstUp(): List<T> = clazz.findAnnotationsFirstUp<T>()
 
-    inline fun <reified T : Annotation> findAnnotationUp(): T? {
-        return clazz.findAnnotationUp()
-    }
+    inline fun <reified T : Annotation> findAnnotationUp(): T? = clazz.findAnnotationUp()
 
-    inline fun <reified T : Annotation> findAnnotations(): List<T> {
-        return clazz.findAnnotations<T>()
-    }
+    inline fun <reified T : Annotation> findAnnotations(): List<T> = clazz.findAnnotations<T>()
 
     fun isSubclassOf(vararg clazz: KClass<*>): Boolean = clazz.any { this.clazz.isSubclassOf(it) }
 
@@ -128,9 +120,7 @@ class ClassType private constructor(@PublishedApi internal val type: KType) {
      * only a part of it type: T
      */
     @OptIn(ExperimentalStdlibApi::class)
-    fun isGenericProperty(prop: KProperty1<*, *>): Boolean {
-        return prop.returnType.javaType is TypeVariable<*>
-    }
+    fun isGenericProperty(prop: KProperty1<*, *>): Boolean = prop.returnType.javaType is TypeVariable<*>
 
     /**
      * Checks if the property is a generic property with a type parameter, an example would be: interface Something<T> {
@@ -156,9 +146,10 @@ class ClassType private constructor(@PublishedApi internal val type: KType) {
      */
     fun isParameterizedProperty(prop: KProperty1<*, *>) = prop.returnType.arguments.isNotEmpty()
 
-    fun isOverwrittenProperty(prop: KProperty1<*, *>): Boolean {
-        return this.superClasses.any { it.properties.any { it.name == prop.name } }
-    }
+    fun isOverwrittenProperty(prop: KProperty1<*, *>): Boolean =
+        this.superClasses.any {
+            it.properties.any { it.name == prop.name }
+        }
 
     /** Create a new ClassType for a member of the current `ClassType.clazz` */
     @OptIn(ExperimentalStdlibApi::class)

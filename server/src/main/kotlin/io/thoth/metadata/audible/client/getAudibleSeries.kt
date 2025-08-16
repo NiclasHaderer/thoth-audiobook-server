@@ -6,7 +6,10 @@ import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSeriesImpl
 import org.jsoup.nodes.Element
 
-suspend fun getAudibleSeries(region: AudibleRegions, asin: String): MetadataSeriesImpl? {
+suspend fun getAudibleSeries(
+    region: AudibleRegions,
+    asin: String,
+): MetadataSeriesImpl? {
     val document = getAudiblePage(region, listOf("series", asin)) ?: return null
     // Audible does not return 404 if a series is not valid, so...
     document.getElementById("product-list-a11y-skiplink-target") ?: return null
@@ -21,8 +24,13 @@ suspend fun getAudibleSeries(region: AudibleRegions, asin: String): MetadataSeri
             it.copy(
                 series =
                     listOf(
-                        MetadataBookSeriesImpl(id = seriesID, title = seriesName, link = seriesLink, index = index + 1f)
-                    )
+                        MetadataBookSeriesImpl(
+                            id = seriesID,
+                            title = seriesName,
+                            link = seriesLink,
+                            index = index + 1f,
+                        ),
+                    ),
             )
         }
     return MetadataSeriesImpl(
@@ -32,7 +40,12 @@ suspend fun getAudibleSeries(region: AudibleRegions, asin: String): MetadataSeri
         description = getSeriesDescription(document),
         totalBooks = getBookCount(document),
         books = seriesBooks,
-        authors = seriesBooks.firstOrNull()?.authors?.mapNotNull { it.name }?.ifEmpty { null } ?: emptyList(),
+        authors =
+            seriesBooks
+                .firstOrNull()
+                ?.authors
+                ?.mapNotNull { it.name }
+                ?.ifEmpty { null } ?: emptyList(),
         coverURL = null,
         primaryWorks = seriesBooks.size,
     )

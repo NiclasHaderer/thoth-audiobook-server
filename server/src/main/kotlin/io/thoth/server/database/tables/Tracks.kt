@@ -1,12 +1,12 @@
 package io.thoth.server.database.tables
 
-import java.time.LocalDateTime
-import java.util.*
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.datetime
+import java.time.LocalDateTime
+import java.util.*
 
 // TODO make sure that two libraries do not cover the same paths, otherwise the path reference will
 // not be unique
@@ -21,7 +21,9 @@ object TTracks : UUIDTable("Tracks") {
     val trackNr = integer("trackNr").nullable()
 }
 
-class Track(id: EntityID<UUID>) : UUIDEntity(id) {
+class Track(
+    id: EntityID<UUID>,
+) : UUIDEntity(id) {
     companion object : UUIDEntityClass<Track>(TTracks)
 
     val library: Library

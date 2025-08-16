@@ -46,9 +46,9 @@ dependencies {
     implementation(project(":auth-models"))
 
     // Metadata
-    implementation("org.jsoup:jsoup:${jsoupVersion}")
-    implementation("com.github.ben-manes.caffeine:caffeine:${caffeineVersion}")
-    implementation("org.json:json:${jsonVersion}")
+    implementation("org.jsoup:jsoup:$jsoupVersion")
+    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
+    implementation("org.json:json:$jsonVersion")
 
     // Database
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -113,7 +113,7 @@ dependencies {
     implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio-jvm:${ktorVersion}")
+    implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
 
     // Openapi
     implementation("io.swagger.core.v3:swagger-models:$openApiVersion")

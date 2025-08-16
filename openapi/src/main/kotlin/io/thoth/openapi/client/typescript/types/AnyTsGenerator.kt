@@ -5,7 +5,10 @@ import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
 
 class AnyTsGenerator : TsTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String = "any"
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String = "any"
 
     override fun getName(classType: ClassType): String? = null
 
@@ -15,5 +18,8 @@ class AnyTsGenerator : TsTypeGenerator() {
 
     override fun canGenerate(classType: ClassType): Boolean = classType.clazz == Any::class
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String? = null
 }

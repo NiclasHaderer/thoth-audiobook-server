@@ -5,7 +5,10 @@ import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
 
 class BooleanTsGenerator : TsTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String = "boolean"
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String = "boolean"
 
     override fun getName(classType: ClassType): String? = null
 
@@ -13,9 +16,10 @@ class BooleanTsGenerator : TsTypeGenerator() {
 
     override fun getInsertionMode(classType: ClassType) = TsDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String? = null
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(Boolean::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean = classType.isSubclassOf(Boolean::class)
 }

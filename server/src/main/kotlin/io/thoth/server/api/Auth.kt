@@ -41,17 +41,17 @@ fun Routing.authRoutes() {
     get<Api.Auth.Jwks, JWKs>(withTransaction(RouteHandler::getJwks))
 
     put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UpdatePermissionsModel>, ThothUser>(
-        withTransaction(RouteHandler::modifyUserPermissions)
+        withTransaction(RouteHandler::modifyUserPermissions),
     )
 
     get<Api.Auth.User.Id, ThothUser>(withTransaction(RouteHandler::displayUser))
 
     get<Api.Auth.User.Current, ThothUserWithPermissions<UserPermissionsModel>>(
-        withTransaction(RouteHandler::currentUser)
+        withTransaction(RouteHandler::currentUser),
     )
 
     get<Api.Auth.User.All, List<ThothUserWithPermissions<UserPermissionsModel>>>(
-        withTransaction(RouteHandler::listUsers)
+        withTransaction(RouteHandler::listUsers),
     )
 
     delete<Api.Auth.User.Id, Unit, Unit>(withTransaction(RouteHandler::deleteUser))
@@ -63,10 +63,16 @@ fun Routing.authRoutes() {
     post<Api.Auth.User.Refresh, Unit, ThothAccessToken>(withTransaction(RouteHandler::getRefreshToken))
 }
 
-private fun <P1, P2, R> withTransaction(func: RouteHandler.(p1: P1, p2: P2) -> R): suspend RouteHandler.(P1, P2) -> R {
-    return { a, b -> transaction { func(a, b) } }
-}
+private fun <P1, P2, R> withTransaction(func: RouteHandler.(p1: P1, p2: P2) -> R): suspend RouteHandler.(P1, P2) -> R =
+    { a, b ->
+        transaction {
+            func(a, b)
+        }
+    }
 
-private fun <P1, R> withTransaction(func: RouteHandler.(p1: P1) -> R): suspend RouteHandler.(P1) -> R {
-    return { a -> transaction { func(a) } }
-}
+private fun <P1, R> withTransaction(func: RouteHandler.(p1: P1) -> R): suspend RouteHandler.(P1) -> R =
+    { a ->
+        transaction {
+            func(a)
+        }
+    }

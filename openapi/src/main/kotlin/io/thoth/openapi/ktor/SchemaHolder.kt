@@ -29,13 +29,9 @@ class SchemaHolder {
     val api: OpenAPI
         get() = _api
 
-    fun json(): String {
-        return Json.mapper().writeValueAsString(_api)
-    }
+    fun json(): String = Json.mapper().writeValueAsString(_api)
 
-    fun yaml(): String {
-        return Yaml.mapper().writeValueAsString(_api)
-    }
+    fun yaml(): String = Yaml.mapper().writeValueAsString(_api)
 
     fun addRouteToApi(route: OpenApiRoute) {
         val operation = getOperation(route)
@@ -43,16 +39,19 @@ class SchemaHolder {
         val method = route.method
         if (
             method != HttpMethod.Get &&
-                method != HttpMethod.Head &&
-                method != HttpMethod.Delete &&
-                method != HttpMethod.Options
+            method != HttpMethod.Head &&
+            method != HttpMethod.Delete &&
+            method != HttpMethod.Options
         ) {
             addRequestBody(route, operation)
         }
         addResponse(route, operation)
     }
 
-    private fun addPathAndQueryParameters(operation: Operation, route: OpenApiRoute) {
+    private fun addPathAndQueryParameters(
+        operation: Operation,
+        route: OpenApiRoute,
+    ) {
         for ((param, schema) in route.pathParameters) {
             _api.components.schemas.putAll(schema.second)
             operation.addParametersItem(Parameter().`in`("path").name(param.name).schema(schema.first.reference()))
@@ -60,12 +59,19 @@ class SchemaHolder {
         for ((param, schema) in route.queryParameters) {
             _api.components.schemas.putAll(schema.second)
             operation.addParametersItem(
-                Parameter().`in`("query").name(param.name).schema(schema.first.reference()).required(!param.optional)
+                Parameter()
+                    .`in`("query")
+                    .name(param.name)
+                    .schema(schema.first.reference())
+                    .required(!param.optional),
             )
         }
     }
 
-    private fun addResponse(route: OpenApiRoute, operation: Operation) {
+    private fun addResponse(
+        route: OpenApiRoute,
+        operation: Operation,
+    ) {
         val (responseSchema, responseNamedSchemas) = route.responseBody
         _api.components.schemas.putAll(responseNamedSchemas)
         operation.responses =
@@ -79,7 +85,7 @@ class SchemaHolder {
                                 .addMediaType(
                                     route.responseContentType.toString(),
                                     MediaType().schema(responseSchema.reference()),
-                                )
+                                ),
                         ),
                 )
     }
@@ -118,7 +124,10 @@ class SchemaHolder {
         return operation
     }
 
-    private fun addRequestBody(route: OpenApiRoute, operation: Operation) {
+    private fun addRequestBody(
+        route: OpenApiRoute,
+        operation: Operation,
+    ) {
         val (bodySchema, bodyNamedSchemas) = route.requestBody
         _api.components.schemas.putAll(bodyNamedSchemas)
         operation.requestBody(
@@ -126,8 +135,8 @@ class SchemaHolder {
                 .description(route.bodyDescription?.description)
                 .content(
                     Content()
-                        .addMediaType(route.requestContentType.toString(), MediaType().schema(bodySchema.reference()))
-                )
+                        .addMediaType(route.requestContentType.toString(), MediaType().schema(bodySchema.reference())),
+                ),
         )
     }
 }

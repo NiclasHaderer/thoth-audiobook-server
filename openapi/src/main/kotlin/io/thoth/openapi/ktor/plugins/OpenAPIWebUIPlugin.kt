@@ -2,7 +2,9 @@ package io.thoth.openapi.ktor.plugins
 
 import io.ktor.server.application.*
 
-enum class OpenAPISchemaType(val extension: String) {
+enum class OpenAPISchemaType(
+    val extension: String,
+) {
     JSON("json"),
     YAML("yaml"),
 }
@@ -50,10 +52,9 @@ val OpenAPIWebUI =
         this.onCall { call -> webUiServer.interceptCall(call) }
     }
 
-private fun String.prependIfMissing(char: Char): String {
-    return if (isNotEmpty() && this[0] != char) {
+private fun String.prependIfMissing(char: Char): String =
+    if (isNotEmpty() && this[0] != char) {
         char + this
     } else {
         this
     }
-}

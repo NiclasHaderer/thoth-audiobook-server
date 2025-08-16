@@ -8,7 +8,10 @@ import mu.KotlinLogging
 class PairKtGenerator : KtTypeGenerator() {
     private val log = KotlinLogging.logger {}
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Pair type without insufficient arguments" }
             return "Pair<*,*>"
@@ -38,13 +41,18 @@ class PairKtGenerator : KtTypeGenerator() {
 
     override fun getInsertionMode(classType: ClassType) = KtDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String? = null
 
-    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
-        return classType.genericArguments.flatMap { generateSubType(it).imports() }
-    }
+    override fun withImports(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): List<String> =
+        classType.genericArguments.flatMap {
+            generateSubType(it).imports()
+        }
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(Pair::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean = classType.isSubclassOf(Pair::class)
 }

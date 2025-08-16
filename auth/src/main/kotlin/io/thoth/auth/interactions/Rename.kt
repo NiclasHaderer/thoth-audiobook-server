@@ -14,7 +14,10 @@ interface ThothRenameUserParams {
     val id: UUID
 }
 
-fun RouteHandler.renameUser(params: ThothRenameUserParams, renamedUser: ThothRenameUser): ThothUser {
+fun RouteHandler.renameUser(
+    params: ThothRenameUserParams,
+    renamedUser: ThothRenameUser,
+): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig<Any>()
 

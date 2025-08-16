@@ -9,10 +9,12 @@ fun Iterable<KtTypeGenerator.KtType>.ktReference(): List<KtTypeGenerator.KtRefer
 fun Iterable<TsTypeGenerator.TsType>.tsReference(): List<TsTypeGenerator.TsReferenceType> =
     this.filterIsInstance<TsTypeGenerator.TsReferenceType>()
 
-fun Iterable<KtTypeGenerator.KtType>.mappedKtReference(): Map<String, KtTypeGenerator.KtReferenceType> {
-    return ktReference().associateBy { it.name() }
-}
+fun Iterable<KtTypeGenerator.KtType>.mappedKtReference(): Map<String, KtTypeGenerator.KtReferenceType> =
+    ktReference().associateBy {
+        it.name()
+    }
 
-fun Iterable<TsTypeGenerator.TsType>.mappedTsReference(): Map<String, TsTypeGenerator.TsReferenceType> {
-    return tsReference().associateBy { it.name() }
-}
+fun Iterable<TsTypeGenerator.TsType>.mappedTsReference(): Map<String, TsTypeGenerator.TsReferenceType> =
+    tsReference().associateBy {
+        it.name()
+    }

@@ -20,7 +20,6 @@ class OpenApiRoute(
     val requestBodyType: ClassType,
     val responseBodyType: ClassType,
 ) {
-
     constructor(
         method: HttpMethod,
         route: Route,
@@ -36,8 +35,11 @@ class OpenApiRoute(
         val optional: Boolean
     }
 
-    data class PathParameter(override val name: String, override val type: ClassType, override val origin: ClassType) :
-        Parameter {
+    data class PathParameter(
+        override val name: String,
+        override val type: ClassType,
+        override val origin: ClassType,
+    ) : Parameter {
         override val optional = false
     }
 
@@ -52,15 +54,14 @@ class OpenApiRoute(
         inline fun <reified PARAMS, reified BODY, reified RESPONSE> create(
             method: HttpMethod,
             route: Route,
-        ): OpenApiRoute {
-            return OpenApiRoute(
+        ): OpenApiRoute =
+            OpenApiRoute(
                 method = method,
                 route = route,
                 params = ClassType.create<PARAMS>(),
                 request = ClassType.create<BODY>(),
                 response = ClassType.create<RESPONSE>(),
             )
-        }
     }
 
     val queryParameters by lazy {
@@ -147,7 +148,7 @@ class OpenApiRoute(
         // 1. Every class over params is decorated as @Resource
         paramsClazz.findAnnotation<Resource>()
             ?: throw IllegalStateException(
-                "Class ${paramsClassType.clazz.qualifiedName} is not decorated as a resource"
+                "Class ${paramsClassType.clazz.qualifiedName} is not decorated as a resource",
             )
 
         if (paramsClassType.parent == null) return
@@ -160,7 +161,7 @@ class OpenApiRoute(
         if (!hasDeclaredParent) {
             throw IllegalStateException(
                 "Class ${paramsClazz.qualifiedName} has no property of type ${parentClassType.clazz.qualifiedName}." +
-                    "You have to create an additional property with the parent class as type"
+                    "You have to create an additional property with the parent class as type",
             )
         }
         // 3. Every parent fulfills requirements 1 and 2
@@ -177,7 +178,7 @@ class OpenApiRoute(
             if (takenParams.containsKey(param.name)) {
                 throw IllegalStateException(
                     "Class ${params.clazz.qualifiedName} has a duplicate path parameter name ${param.name}. " +
-                        "The parameter is already taken by ${takenParams[param.name]!!.origin.clazz.qualifiedName}"
+                        "The parameter is already taken by ${takenParams[param.name]!!.origin.clazz.qualifiedName}",
                 )
             }
         }
@@ -199,7 +200,7 @@ class OpenApiRoute(
                 params.properties.find { it.name == varName }
                     ?: throw IllegalStateException(
                         "Class ${params.clazz.qualifiedName} has a path parameter $varName which is not declared as a member. " +
-                            "You have to create a property with the name $varName"
+                            "You have to create a property with the name $varName",
                     )
             pathParams.add(PathParameter(name = varName, type = params.forMember(varMember), origin = params))
         }
@@ -216,7 +217,7 @@ class OpenApiRoute(
                 throw IllegalStateException(
                     "Class ${params.clazz.qualifiedName} has a query parameter " +
                         "called ${param.name} which is also used in ${takenParams[param.name]!!.origin.clazz.qualifiedName}. " +
-                        "Do not used duplicate parameters"
+                        "Do not used duplicate parameters",
                 )
             }
         }
@@ -233,12 +234,10 @@ class OpenApiRoute(
                 .filter {
                     // Remove path parameters
                     it.name !in pathParams
-                }
-                .filter {
+                }.filter {
                     // Remove injected parent
                     it.returnType.classifier != params.parent?.clazz
-                }
-                .map {
+                }.map {
                     QueryParameter(name = it.name, type = params.forMember(it), origin = params, optional = it.optional)
                 }
         return queryParams

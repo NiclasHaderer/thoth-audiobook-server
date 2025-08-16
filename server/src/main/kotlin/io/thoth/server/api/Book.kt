@@ -11,9 +11,9 @@ import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.ktor.put
 import io.thoth.server.repositories.BookRepository
-import java.util.*
 import org.jetbrains.exposed.sql.SortOrder
 import org.koin.ktor.ext.inject
+import java.util.*
 
 fun Routing.bookRouting() {
     val bookRepository by inject<BookRepository>()

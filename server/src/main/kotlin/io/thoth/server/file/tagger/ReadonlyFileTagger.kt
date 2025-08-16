@@ -1,13 +1,13 @@
 package io.thoth.server.file.tagger
 
+import org.jaudiotagger.audio.AudioFile
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
 import java.io.File
 import java.nio.file.Path
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.io.path.nameWithoutExtension
-import org.jaudiotagger.audio.AudioFile
-import org.jaudiotagger.audio.AudioFileIO
-import org.jaudiotagger.tag.FieldKey
 
 interface ReadonlyFileTagger {
     val title: String
@@ -26,7 +26,9 @@ interface ReadonlyFileTagger {
     val lastModified: Long
 }
 
-open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger {
+open class ReadonlyFileTaggerImpl(
+    private val audioFile: AudioFile,
+) : ReadonlyFileTagger {
     constructor(path: Path) : this(path.toFile())
 
     constructor(file: File) : this(AudioFileIO.read(file))
@@ -57,7 +59,12 @@ open class ReadonlyFileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFi
         }
 
     override val authors: List<String>?
-        get() = audioFile.tag.getFirst(FieldKey.ARTIST).ifEmpty { null }?.split(Char.MIN_VALUE)?.ifEmpty { null }
+        get() =
+            audioFile.tag
+                .getFirst(FieldKey.ARTIST)
+                .ifEmpty { null }
+                ?.split(Char.MIN_VALUE)
+                ?.ifEmpty { null }
 
     override val book: String?
         get() = audioFile.tag.getFirst(FieldKey.ALBUM).ifEmpty { null }

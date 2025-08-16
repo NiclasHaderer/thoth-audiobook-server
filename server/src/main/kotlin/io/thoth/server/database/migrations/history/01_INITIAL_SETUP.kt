@@ -21,21 +21,20 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class `01_Create_Tables` : Migration() {
     private val tables =
         listOf(
-                TAuthors,
-                TBooks,
-                TImages,
-                TSeries,
-                TGenres,
-                TTracks,
-                TUsers,
-                TAuthorBookMapping,
-                TGenreBookMapping,
-                TGenreSeriesMapping,
-                TSeriesBookMapping,
-                TSeriesAuthorMapping,
-                TLibraryUserMapping,
-            )
-            .toTypedArray()
+            TAuthors,
+            TBooks,
+            TImages,
+            TSeries,
+            TGenres,
+            TTracks,
+            TUsers,
+            TAuthorBookMapping,
+            TGenreBookMapping,
+            TGenreSeriesMapping,
+            TSeriesBookMapping,
+            TSeriesAuthorMapping,
+            TLibraryUserMapping,
+        ).toTypedArray()
 
     override fun migrate(db: Database) {
         transaction { SchemaUtils.create(*tables) }

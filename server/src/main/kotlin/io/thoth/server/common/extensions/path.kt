@@ -10,7 +10,12 @@ import kotlin.io.path.name
 fun Path.hasParent() = this.parent != null && this.parent.name.isNotEmpty()
 
 fun Path.replacePart(replaceString: String): Path {
-    val absReplace = Path.of(replaceString).toAbsolutePath().normalize().absolutePathString()
+    val absReplace =
+        Path
+            .of(replaceString)
+            .toAbsolutePath()
+            .normalize()
+            .absolutePathString()
     val absPath = this.toAbsolutePath().normalize().absolutePathString()
     return Path.of(absPath.replace(absReplace, ""))
 }
@@ -39,10 +44,6 @@ fun Path.replaceParts(parts: List<String>): Path {
 
 private val AUDIO_EXTENSIONS = setOf("mp3", "flac", "ogg", "vobis", "m4a", "m4p", "m4b", "aiff", "wav", "wma", "dsf")
 
-fun Path.isAudioFile(): Boolean {
-    return this.isRegularFile(LinkOption.NOFOLLOW_LINKS) && this.hasAudioExtension()
-}
+fun Path.isAudioFile(): Boolean = this.isRegularFile(LinkOption.NOFOLLOW_LINKS) && this.hasAudioExtension()
 
-fun Path.hasAudioExtension(): Boolean {
-    return this.extension.lowercase() in AUDIO_EXTENSIONS
-}
+fun Path.hasAudioExtension(): Boolean = this.extension.lowercase() in AUDIO_EXTENSIONS

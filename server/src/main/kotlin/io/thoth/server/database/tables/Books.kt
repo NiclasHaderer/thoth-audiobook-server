@@ -1,12 +1,12 @@
 package io.thoth.server.database.tables
 
-import java.util.*
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.javatime.date
+import java.util.*
 
 object TBooks : UUIDTable("Books") {
     val title = varchar("title", 255)
@@ -28,7 +28,9 @@ object TBooks : UUIDTable("Books") {
     val library = reference("library", TLibraries, onDelete = ReferenceOption.CASCADE)
 }
 
-class Book(id: EntityID<UUID>) : UUIDEntity(id) {
+class Book(
+    id: EntityID<UUID>,
+) : UUIDEntity(id) {
     companion object : UUIDEntityClass<Book>(TBooks)
 
     var title by TBooks.title

@@ -14,8 +14,10 @@ interface ThothChangePasswordParams {
     val id: UUID
 }
 
-fun RouteHandler.changeUserPassword(params: ThothChangePasswordParams, passwordChange: ThothChangePassword) {
-
+fun RouteHandler.changeUserPassword(
+    params: ThothChangePasswordParams,
+    passwordChange: ThothChangePassword,
+) {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig<Any>()
 

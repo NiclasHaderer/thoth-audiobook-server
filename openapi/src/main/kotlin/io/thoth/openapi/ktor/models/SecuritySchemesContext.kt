@@ -2,8 +2,13 @@ package io.thoth.openapi.ktor.models
 
 import io.swagger.v3.oas.models.security.SecurityScheme
 
-class SecuritySchemesContext(private val securitySchemes: MutableMap<String, SecurityScheme>) {
-    fun apiKey(name: String, configure: SecurityScheme.() -> Unit) {
+class SecuritySchemesContext(
+    private val securitySchemes: MutableMap<String, SecurityScheme>,
+) {
+    fun apiKey(
+        name: String,
+        configure: SecurityScheme.() -> Unit,
+    ) {
         securitySchemes[name] =
             SecurityScheme().apply {
                 type = SecurityScheme.Type.APIKEY
@@ -11,7 +16,10 @@ class SecuritySchemesContext(private val securitySchemes: MutableMap<String, Sec
             }
     }
 
-    fun http(name: String, configure: SecurityScheme.() -> Unit) {
+    fun http(
+        name: String,
+        configure: SecurityScheme.() -> Unit,
+    ) {
         securitySchemes[name] =
             SecurityScheme().apply {
                 type = SecurityScheme.Type.HTTP
@@ -19,7 +27,10 @@ class SecuritySchemesContext(private val securitySchemes: MutableMap<String, Sec
             }
     }
 
-    fun openIdConnect(name: String, configure: SecurityScheme.() -> Unit) {
+    fun openIdConnect(
+        name: String,
+        configure: SecurityScheme.() -> Unit,
+    ) {
         securitySchemes[name] =
             SecurityScheme().apply {
                 type = SecurityScheme.Type.OPENIDCONNECT
@@ -27,7 +38,10 @@ class SecuritySchemesContext(private val securitySchemes: MutableMap<String, Sec
             }
     }
 
-    fun oauth2(name: String, configure: SecurityScheme.() -> Unit) {
+    fun oauth2(
+        name: String,
+        configure: SecurityScheme.() -> Unit,
+    ) {
         securitySchemes[name] =
             SecurityScheme().apply {
                 type = SecurityScheme.Type.OAUTH2

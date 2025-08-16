@@ -33,7 +33,10 @@ internal fun <PERMISSIONS> RouteHandler.thothAuthConfig(): ThothAuthConfig<PERMI
     return call.attributes[PLUGIN_CONFIG_KEY] as ThothAuthConfig<PERMISSIONS>
 }
 
-data class JwtError(val error: String, val statusCode: HttpStatusCode)
+data class JwtError(
+    val error: String,
+    val statusCode: HttpStatusCode,
+)
 
 private val JWT_VALIDATION_FAILED = AttributeKey<JwtError>("JWT_VALIDATION_FAILED")
 
@@ -67,7 +70,6 @@ class ThothAuthConfig<PERMISSIONS>(
     val getUserPermissions: RouteHandler.(user: ThothDatabaseUser) -> PERMISSIONS,
     private val isAdminUser: (user: ThothDatabaseUser) -> Boolean,
 ) {
-
     internal val jwkProvider by lazy {
         val url =
             URLBuilder()
@@ -76,8 +78,7 @@ class ThothAuthConfig<PERMISSIONS>(
                     host = this@ThothAuthConfig.domain
                     port = this@ThothAuthConfig.port
                     encodedPath = this@ThothAuthConfig.jwksPath
-                }
-                .build()
+                }.build()
                 .toURI()
                 .toURL()
         JwkProviderBuilder(url).cached(10, 24, TimeUnit.HOURS).rateLimited(10, 1, TimeUnit.MINUTES).build()
@@ -183,7 +184,10 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
     // Guards
     private val guards = mutableMapOf<String, GetPrincipal>()
 
-    fun configureGuard(guard: String, getPrincipal: GetPrincipal) {
+    fun configureGuard(
+        guard: String,
+        getPrincipal: GetPrincipal,
+    ) {
         guards[guard] = getPrincipal
     }
 
@@ -269,7 +273,7 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
     }
 
     fun updateUserPermissions(
-        updateUserPermissions: (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser
+        updateUserPermissions: (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser,
     ) {
         this.updateUserPermissions = updateUserPermissions
     }

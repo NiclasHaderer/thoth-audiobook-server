@@ -14,7 +14,6 @@ class KtClientFunction(
         TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
     private val errorHandling: KtErrorHandling,
 ) {
-
     companion object {
         private val log = logger {}
     }
@@ -22,7 +21,10 @@ class KtClientFunction(
     val contentImpl = run { generateContent(true) }
     val content = run { generateContent(false) }
 
-    private fun getParameters(route: OpenApiRoute, impl: Boolean) = buildList {
+    private fun getParameters(
+        route: OpenApiRoute,
+        impl: Boolean,
+    ) = buildList {
         // Path parameters
         (route.queryParameters + route.pathParameters).forEach { (param) ->
             val (actual, all) = typeProviders.generateTypes(param.type)
@@ -49,7 +51,9 @@ class KtClientFunction(
         // Hooks to modify the request
         add("onBeforeRequest: OnBeforeRequest<${requestBody.reference()}>${withIfNotImpl(" = { _, _ -> }")}, ")
         add(
-            "onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}>${withIfNotImpl(" = { _, _ -> }")}"
+            "onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}>${withIfNotImpl(
+                " = { _, _ -> }",
+            )}",
         )
     }
 
@@ -66,7 +70,7 @@ class KtClientFunction(
         clientImports.addAll(requestBody.imports())
         typeDefinitions.putAll(all.mappedKtReference())
         return buildString {
-            append("    ${if (impl) "override" else ""} suspend fun ${routeName}(\n")
+            append("    ${if (impl) "override" else ""} suspend fun $routeName(\n")
             getParameters(route, impl).forEach { append("        $it\n") }
             val functionRunner =
                 when (errorHandling) {

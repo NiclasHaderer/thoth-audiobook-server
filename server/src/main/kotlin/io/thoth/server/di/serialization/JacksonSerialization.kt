@@ -15,28 +15,35 @@ class JacksonSerialization : Serialization {
         return objectMapper!!.writeValueAsString(value)
     }
 
-    override fun <T : Any> deserializeValue(value: String, to: KClass<T>): T {
-        return runDeserialization(value, to.java)
-    }
+    override fun <T : Any> deserializeValue(
+        value: String,
+        to: KClass<T>,
+    ): T = runDeserialization(value, to.java)
 
     @OptIn(ExperimentalStdlibApi::class)
-    override fun <T : Any> deserializeValue(value: String, to: KType): T {
-        return runDeserialization(
+    override fun <T : Any> deserializeValue(
+        value: String,
+        to: KType,
+    ): T =
+        runDeserialization(
             value,
             object : TypeReference<T>() {
-                override fun getType(): Type {
-                    return to.javaType
-                }
+                override fun getType(): Type = to.javaType
             },
         )
-    }
 
-    private fun <T : Any> runDeserialization(value: String, to: Class<T>): T {
+    private fun <T : Any> runDeserialization(
+        value: String,
+        to: Class<T>,
+    ): T {
         require(objectMapper != null) { "ObjectMapper not initialized" }
         return objectMapper!!.readValue(value, to)
     }
 
-    private fun <T : Any> runDeserialization(value: String, to: TypeReference<T>): T {
+    private fun <T : Any> runDeserialization(
+        value: String,
+        to: TypeReference<T>,
+    ): T {
         require(objectMapper != null) { "ObjectMapper not initialized" }
         return objectMapper!!.readValue(value, to)
     }

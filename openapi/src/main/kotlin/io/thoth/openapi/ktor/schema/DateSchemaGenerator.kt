@@ -11,20 +11,19 @@ import java.time.LocalDateTime
 import java.util.*
 
 class DateSchemaGenerator : SchemaGenerator() {
-    override fun generateSchema(classType: ClassType, generateSubType: GenerateSchemaSubtype): Schema<*> {
-        return when (classType.clazz) {
+    override fun generateSchema(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): Schema<*> =
+        when (classType.clazz) {
             Date::class -> DateTimeSchema()
             LocalDate::class -> DateSchema()
             LocalDateTime::class -> DateTimeSchema()
             else -> NumberSchema()
         }
-    }
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(Date::class, LocalDate::class, LocalDateTime::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean =
+        classType.isSubclassOf(Date::class, LocalDate::class, LocalDateTime::class)
 
-    override fun generateContentType(classType: ClassType): ContentType {
-        return ContentType.Text.Plain
-    }
+    override fun generateContentType(classType: ClassType): ContentType = ContentType.Text.Plain
 }

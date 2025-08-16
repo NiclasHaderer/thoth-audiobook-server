@@ -15,6 +15,4 @@ inline fun <reified T : Annotation> KClass<*>.findAnnotationsFirstUp(): List<T> 
     return annotations
 }
 
-inline fun <reified T : Annotation> KClass<*>.findAnnotationUp(): T? {
-    return findAnnotationsFirstUp<T>().firstOrNull()
-}
+inline fun <reified T : Annotation> KClass<*>.findAnnotationUp(): T? = findAnnotationsFirstUp<T>().firstOrNull()

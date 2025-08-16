@@ -1,14 +1,17 @@
 package io.thoth.openapi.client.common
 
 import io.thoth.openapi.common.ClassType
+import org.reflections.Reflections
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.createInstance
-import org.reflections.Reflections
 
 typealias GenerateType<T> = (classType: ClassType) -> T
 
-data class PropertyType(val name: String, val typeArguments: List<String>)
+data class PropertyType(
+    val name: String,
+    val typeArguments: List<String>,
+)
 
 data class Property(
     val name: String,
@@ -20,16 +23,16 @@ data class Property(
 )
 
 abstract class TypeGenerator<TYPE, DATA_TYPE> {
-
     class Provider<TYPE, DATA_TYPE, GENERATOR : TypeGenerator<TYPE, DATA_TYPE>>(
         private val clazz: KClass<GENERATOR>,
         private val paths: List<String>,
     ) {
-        private val generators: List<GENERATOR> = run {
-            paths
-                .map { Reflections(it) }
-                .flatMap { ref -> ref.getSubTypesOf(clazz.java).map { it.kotlin.createInstance() }.toList() }
-        }
+        private val generators: List<GENERATOR> =
+            run {
+                paths
+                    .map { Reflections(it) }
+                    .flatMap { ref -> ref.getSubTypesOf(clazz.java).map { it.kotlin.createInstance() }.toList() }
+            }
 
         fun generateTypes(classType: ClassType): Pair<TYPE, List<TYPE>> {
             val generator = generators.filter { it.canGenerate(classType) }.maxBy { it.priority(classType) }
@@ -45,13 +48,22 @@ abstract class TypeGenerator<TYPE, DATA_TYPE> {
         }
     }
 
-    abstract fun generateContent(classType: ClassType, generateSubType: GenerateType<TYPE>): String
+    abstract fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<TYPE>,
+    ): String
 
-    abstract fun createType(classType: ClassType, generateSubType: GenerateType<TYPE>): TYPE
+    abstract fun createType(
+        classType: ClassType,
+        generateSubType: GenerateType<TYPE>,
+    ): TYPE
 
     abstract fun getInsertionMode(classType: ClassType): DATA_TYPE
 
-    abstract fun generateReference(classType: ClassType, generateSubType: GenerateType<TYPE>): String?
+    abstract fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<TYPE>,
+    ): String?
 
     abstract fun canGenerate(classType: ClassType): Boolean
 

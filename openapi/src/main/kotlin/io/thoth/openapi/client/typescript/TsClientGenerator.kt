@@ -9,9 +9,9 @@ import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.common.padLinesStart
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
+import mu.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
-import mu.KotlinLogging.logger
 
 class TsClientGenerator(
     override val routes: List<OpenApiRoute>,
@@ -49,11 +49,14 @@ class TsClientGenerator(
                 val (actual, all) = typeProvider.generateTypes(route.requestBodyType)
                 typeDefinitions.putAll(all.mappedTsReference())
                 "body: ${actual.reference()}"
-            } else ""
+            } else {
+                ""
+            }
 
         return buildString {
-            if (urlParamsStr.isNotEmpty())
+            if (urlParamsStr.isNotEmpty()) {
                 append("$urlParamsDecompositionStr: {${urlParamsStr.joinToString(",") { it }}}, ")
+            }
             if (bodyParamString.isNotEmpty()) append("$bodyParamString, ")
             append("headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []")
         }
@@ -81,35 +84,37 @@ class TsClientGenerator(
 
             val function =
                 buildString {
-                        append(
-                            "$routeName: (${getParameters(route)}): Promise<ApiResponse<${responseBody.reference()}>> => {\n"
-                        )
-                        append(
-                            "  return _request(${createURL(route)}, \"${route.method.value}\", \"${responseBody.parser().methodName}\", "
-                        )
-                        append("_mergeHeaders(defaultHeadersImpl, headers), ")
-                        append(if (route.requestBodyType.clazz != Unit::class) "body" else "undefined")
-                        append(", [...defaultInterceptors, ...interceptors], executor, ${route.secured != null});\n")
-                        append("}")
-                    }
-                    .padLinesStart(' ', 4)
+                    append(
+                        "$routeName: (${getParameters(
+                            route,
+                        )}): Promise<ApiResponse<${responseBody.reference()}>> => {\n",
+                    )
+                    append(
+                        "  return _request(${createURL(
+                            route,
+                        )}, \"${route.method.value}\", \"${responseBody.parser().methodName}\", ",
+                    )
+                    append("_mergeHeaders(defaultHeadersImpl, headers), ")
+                    append(if (route.requestBodyType.clazz != Unit::class) "body" else "undefined")
+                    append(", [...defaultInterceptors, ...interceptors], executor, ${route.secured != null});\n")
+                    append("}")
+                }.padLinesStart(' ', 4)
             clientFunctions.add(function)
         }
     }
 
-    private fun createTypeImports(): String {
-        return buildString {
+    private fun createTypeImports(): String =
+        buildString {
             append(
-                "import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from \"./client\";\n"
+                "import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from \"./client\";\n",
             )
             append("import type {")
             append(typeDefinitions.keys.sorted().joinToString(", "))
             append("} from \"./models\";\n")
         }
-    }
 
-    private fun getClientRequests(): String {
-        return buildString {
+    private fun getClientRequests(): String =
+        buildString {
             append("/* eslint-disable */\n")
             append("// noinspection JSUnusedGlobalSymbols,ES6UnusedImports\n")
             append("// noinspection ES6UnusedImports\n")
@@ -121,7 +126,7 @@ class TsClientGenerator(
             append("  defaultHeaders: HeadersInit = {},\n")
             append("  defaultInterceptors: ApiInterceptor[] = [],\n")
             append(
-                "  executor = (callData: ApiCallData) => fetch(callData.route, {method: callData.method, headers: callData.headers, body: callData.bodySerializer(callData.body)})\n"
+                "  executor = (callData: ApiCallData) => fetch(callData.route, {method: callData.method, headers: callData.headers, body: callData.bodySerializer(callData.body)})\n",
             )
             append(") => {\n")
             append("  const defaultHeadersImpl = new Headers(defaultHeaders)\n")
@@ -131,16 +136,14 @@ class TsClientGenerator(
             append("  } as const;\n")
             append("}")
         }
-    }
 
-    private fun getClientTypes(): String {
-        return buildString {
+    private fun getClientTypes(): String =
+        buildString {
             append("/* eslint-disable */\n")
             append("// @ts-nocheck\n")
             append("import type { Pair } from \"./utility-types\";\n\n")
             append(typeDefinitions.values.joinToString("\n\n") { "export ${it.content()}" })
         }
-    }
 
     override fun generateClient(): List<ClientPart> {
         val clientTypes = getClientTypes()
@@ -163,14 +166,13 @@ fun Application.generateTsClient(
     cleanDistPackage: Boolean = true,
 ) {
     TsClientGenerator(
-            routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
-            dist = dist,
-            fileWriter = fileWriter,
-            apiFactoryName = apiFactoryName,
-            typePackages = typePackages,
-            cleanDistPackage = cleanDistPackage,
-        )
-        .safeClient()
+        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+        dist = dist,
+        fileWriter = fileWriter,
+        apiFactoryName = apiFactoryName,
+        typePackages = typePackages,
+        cleanDistPackage = cleanDistPackage,
+    ).safeClient()
 }
 
 fun Application.generateTsClient(
@@ -180,12 +182,11 @@ fun Application.generateTsClient(
     fileWriter: ((File, String) -> Unit)? = null,
     typePackages: List<String> = emptyList(),
     cleanDistPackage: Boolean = true,
-) =
-    generateTsClient(
-        dist = Path.of(dist),
-        routes = routes,
-        fileWriter = fileWriter,
-        apiFactoryName = apiFactoryName,
-        typePackages = typePackages,
-        cleanDistPackage = cleanDistPackage,
-    )
+) = generateTsClient(
+    dist = Path.of(dist),
+    routes = routes,
+    fileWriter = fileWriter,
+    apiFactoryName = apiFactoryName,
+    typePackages = typePackages,
+    cleanDistPackage = cleanDistPackage,
+)

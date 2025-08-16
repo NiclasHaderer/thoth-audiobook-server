@@ -6,8 +6,11 @@ import io.thoth.models.TitledId
 import io.thoth.server.database.tables.Book
 import org.jetbrains.exposed.sql.SortOrder
 
-fun Book.toModel(authorOrder: SortOrder = SortOrder.ASC, seriesOrder: SortOrder = SortOrder.ASC): BookModel {
-    return BookModel(
+fun Book.toModel(
+    authorOrder: SortOrder = SortOrder.ASC,
+    seriesOrder: SortOrder = SortOrder.ASC,
+): BookModel =
+    BookModel(
         id = id.value,
         title = title,
         description = description,
@@ -33,4 +36,3 @@ fun Book.toModel(authorOrder: SortOrder = SortOrder.ASC, seriesOrder: SortOrder 
         genres = genres.map { NamedId(it.id.value, it.name) },
         library = NamedId(library.id.value, library.name),
     )
-}

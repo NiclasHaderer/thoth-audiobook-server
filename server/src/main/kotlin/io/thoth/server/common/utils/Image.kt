@@ -7,13 +7,12 @@ import java.util.*
 
 private val client by lazy { HttpClient() }
 
-suspend fun imgFromURL(url: String): ByteArray {
-    return if (url.matches("^data://".toRegex())) {
+suspend fun imgFromURL(url: String): ByteArray =
+    if (url.matches("^data://".toRegex())) {
         decodeDataURL(url)
     } else {
         client.get(url).readBytes()
     }
-}
 
 fun decodeDataURL(dataUrl: String): ByteArray {
     val contentStartIndex: Int = dataUrl.indexOf(",") + 1

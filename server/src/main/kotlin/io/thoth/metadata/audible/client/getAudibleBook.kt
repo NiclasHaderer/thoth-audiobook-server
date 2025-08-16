@@ -5,12 +5,15 @@ import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.audible.models.getValue
 import io.thoth.metadata.replaceAll
 import io.thoth.metadata.responses.MetadataBookImpl
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import org.json.JSONArray
 import org.jsoup.nodes.Document
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-suspend fun getAudibleBook(region: AudibleRegions, asin: String): MetadataBookImpl? {
+suspend fun getAudibleBook(
+    region: AudibleRegions,
+    asin: String,
+): MetadataBookImpl? {
     val document = getAudiblePage(region, listOf("pd", asin)) ?: return null
 
     return MetadataBookImpl(
@@ -54,7 +57,10 @@ private fun getDescription(document: Document) = document.selectFirst(".productP
 
 private fun extractImageUrl(document: Document) = document.selectFirst(".hero-content img.bc-pub-block")?.attr("src")
 
-private fun extractTitle(document: Document, region: AudibleRegions): String? {
+private fun extractTitle(
+    document: Document,
+    region: AudibleRegions,
+): String? {
     val title = document.selectFirst("h1.bc-heading")?.text() ?: return null
     return title.replaceAll(region.getValue().titleReplacers, "")
 }

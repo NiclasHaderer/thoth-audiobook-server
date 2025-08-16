@@ -2,8 +2,9 @@ package io.thoth.openapi.ktor.models
 
 import io.swagger.v3.oas.models.Components
 
-class ComponentsContext(private val components: Components) {
-
+class ComponentsContext(
+    private val components: Components,
+) {
     fun securitySchemes(configure: SecuritySchemesContext.() -> Unit) {
         if (components.securitySchemes == null) {
             components.securitySchemes = mutableMapOf()

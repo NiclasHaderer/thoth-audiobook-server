@@ -29,7 +29,7 @@ fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
 interface ThothCurrentUserParams
 
 fun <PERMISSIONS : Any> RouteHandler.currentUser(
-    params: ThothCurrentUserParams
+    params: ThothCurrentUserParams,
 ): ThothUserWithPermissions<PERMISSIONS> {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig<PERMISSIONS>()

@@ -12,7 +12,6 @@ typealias OnAfterRequest<T, R> = suspend (metadata: RequestMetadata<T>, response
 typealias BodySerializer<T> = suspend (builder: HttpRequestBuilder, body: T, typeInfo: TypeInfo) -> Unit
 typealias BodyDeserializer<T> = suspend (httpResponse: HttpResponse, typeInfo: TypeInfo) -> T
 
-
 abstract class RequestRunner(
     protected val baseUrl: Url,
 ) : SerializationHolder() {
@@ -47,29 +46,30 @@ abstract class RequestRunner(
         requestFailedHooks.add(onRequestFailed)
     }
 
-
     suspend fun <T, R> makeRequest(
         metadata: RequestMetadata<T>,
         requestBody: TypeInfo,
         responseBody: TypeInfo,
         onBeforeRequest: OnBeforeRequest<T>,
-        onAfterRequest: OnAfterRequest<T, R>
+        onAfterRequest: OnAfterRequest<T, R>,
     ): OpenApiHttpResponse<R> {
         val finalUrl = URLBuilder(baseUrl).appendEncodedPathSegments(metadata.path).build()
-        val response = client.request(finalUrl) {
-            this.method = metadata.method
-            val serializer = this@RequestRunner.getClosestSerializer<T>(requestBody.kotlinType!!)
-            serializer(this, metadata.body, requestBody)
-            metadata.headers.forEach { key, value -> this.headers.appendAll(key, value) }
-            onBeforeRequest(metadata, this)
-            beforeRequestHooks.forEach { it(metadata, this) }
-        }
+        val response =
+            client.request(finalUrl) {
+                this.method = metadata.method
+                val serializer = this@RequestRunner.getClosestSerializer<T>(requestBody.kotlinType!!)
+                serializer(this, metadata.body, requestBody)
+                metadata.headers.forEach { key, value -> this.headers.appendAll(key, value) }
+                onBeforeRequest(metadata, this)
+                beforeRequestHooks.forEach { it(metadata, this) }
+            }
 
-        val apiResponse = OpenApiHttpResponse<R>(
-            response,
-            this@RequestRunner.getClosestDeserializer(responseBody.kotlinType!!),
-            responseBody,
-        )
+        val apiResponse =
+            OpenApiHttpResponse<R>(
+                response,
+                this@RequestRunner.getClosestDeserializer(responseBody.kotlinType!!),
+                responseBody,
+            )
         onAfterRequest(metadata, apiResponse)
         afterRequestHooks.forEach { it(metadata, apiResponse) }
         if (!response.status.isSuccess()) {
@@ -79,9 +79,11 @@ abstract class RequestRunner(
     }
 }
 
-
 @OptIn(io.ktor.util.InternalAPI::class)
-private fun <T> HttpRequestBuilder.setBody(body: T, typeInfo: TypeInfo) {
+private fun <T> HttpRequestBuilder.setBody(
+    body: T,
+    typeInfo: TypeInfo,
+) {
     when (body) {
         null -> {
             this.body = NullBody

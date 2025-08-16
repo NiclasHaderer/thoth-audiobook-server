@@ -7,8 +7,11 @@ import io.swagger.v3.oas.models.media.Schema
 import io.thoth.openapi.common.ClassType
 
 class ListSchemaGenerator : SchemaGenerator() {
-    override fun generateSchema(classType: ClassType, generateSubType: GenerateSchemaSubtype): Schema<*> {
-        return ArraySchema().also {
+    override fun generateSchema(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): Schema<*> =
+        ArraySchema().also {
             if (classType.genericArguments.isNotEmpty()) {
                 val subSchema = generateSubType(classType.genericArguments[0])
                 it.items = subSchema.reference()
@@ -17,10 +20,9 @@ class ListSchemaGenerator : SchemaGenerator() {
                 it.items = ObjectSchema()
             }
         }
-    }
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
+    override fun canGenerate(classType: ClassType): Boolean =
+        classType.isSubclassOf(
             List::class,
             MutableList::class,
             ArrayList::class,
@@ -30,9 +32,6 @@ class ListSchemaGenerator : SchemaGenerator() {
             LinkedHashSet::class,
             Set::class,
         )
-    }
 
-    override fun generateContentType(classType: ClassType): ContentType {
-        return ContentType.Application.Json
-    }
+    override fun generateContentType(classType: ClassType): ContentType = ContentType.Application.Json
 }

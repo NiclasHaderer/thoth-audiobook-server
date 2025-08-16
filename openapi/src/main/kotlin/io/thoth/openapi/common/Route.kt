@@ -4,7 +4,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 
 internal fun Route.fullPath(): String {
-    var fullPath = "/${selector}"
+    var fullPath = "/$selector"
     var routeParent = parent
     while (routeParent != null) {
         if (routeParent.selector !is AuthenticationRouteSelector) {

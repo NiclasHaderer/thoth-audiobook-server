@@ -8,7 +8,10 @@ import io.thoth.openapi.common.nullable
 import kotlin.reflect.KVisibility
 
 class ObjectSchemaGenerator : SchemaGenerator() {
-    override fun generateSchema(classType: ClassType, generateSubType: GenerateSchemaSubtype): Schema<*> {
+    override fun generateSchema(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): Schema<*> {
         val superClasses =
             classType.superClasses
                 .filter { it.memberProperties.isNotEmpty() }
@@ -32,7 +35,10 @@ class ObjectSchemaGenerator : SchemaGenerator() {
         }
     }
 
-    override fun generateName(classType: ClassType, generateSubType: GenerateSchemaSubtype): String {
+    override fun generateName(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): String {
         var schemaName = classType.simpleName
         if (classType.genericArguments.isNotEmpty()) {
             schemaName += classType.genericArguments.joinToString(prefix = "<", postfix = ">") { it.simpleName }
@@ -40,9 +46,7 @@ class ObjectSchemaGenerator : SchemaGenerator() {
         return schemaName
     }
 
-    override fun generateContentType(classType: ClassType): ContentType {
-        return ContentType.Application.Json
-    }
+    override fun generateContentType(classType: ClassType): ContentType = ContentType.Application.Json
 
     override fun canGenerate(classType: ClassType): Boolean = true
 

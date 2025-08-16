@@ -8,7 +8,10 @@ import java.time.LocalDateTime
 import java.util.*
 
 class DateTsGenerator : TsTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String = "string"
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String = "string"
 
     override fun getName(classType: ClassType): String? = null
 
@@ -16,9 +19,11 @@ class DateTsGenerator : TsTypeGenerator() {
 
     override fun getInsertionMode(classType: ClassType) = TsDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String? = null
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(Date::class, LocalDate::class, LocalDateTime::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean =
+        classType.isSubclassOf(Date::class, LocalDate::class, LocalDateTime::class)
 }

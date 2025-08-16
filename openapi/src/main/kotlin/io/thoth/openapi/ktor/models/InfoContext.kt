@@ -4,7 +4,9 @@ import io.swagger.v3.oas.models.info.Contact
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.info.License
 
-class InfoContext internal constructor(private val info: Info) {
+class InfoContext internal constructor(
+    private val info: Info,
+) {
     var title: String
         get() = info.title
         set(value) {
