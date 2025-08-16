@@ -13,29 +13,26 @@ private object DatabaseFactory {
     private val log = logger {}
     private val dbInstance =
         { config: DatabaseConnection ->
-                log.info { "Initialising database" }
-                Database.connect(
-                    dataSource(config),
-                    databaseConfig = DatabaseConfig.invoke { useNestedTransactions = true },
-                )
-            }
-            .memoize()
+            log.info { "Initialising database" }
+            Database.connect(
+                dataSource(config),
+                databaseConfig = DatabaseConfig.invoke { useNestedTransactions = true },
+            )
+        }.memoize()
 
     private val dataSource =
         { dbConfig: DatabaseConnection ->
-                val config =
-                    HikariConfig()
-                        .apply {
-                            driverClassName = dbConfig.driverClassName
-                            jdbcUrl = dbConfig.jdbcUrl
-                            maximumPoolSize = dbConfig.maximumPoolSize
-                            isAutoCommit = dbConfig.autoCommit
-                            transactionIsolation = dbConfig.transactionIsolation
-                        }
-                        .also { it.validate() }
-                HikariDataSource(config)
-            }
-            .memoize()
+            val config =
+                HikariConfig()
+                    .apply {
+                        driverClassName = dbConfig.driverClassName
+                        jdbcUrl = dbConfig.jdbcUrl
+                        maximumPoolSize = dbConfig.maximumPoolSize
+                        isAutoCommit = dbConfig.autoCommit
+                        transactionIsolation = dbConfig.transactionIsolation
+                    }.also { it.validate() }
+            HikariDataSource(config)
+        }.memoize()
 
     fun connect(config: DatabaseConnection) = dbInstance(config).run {}
 

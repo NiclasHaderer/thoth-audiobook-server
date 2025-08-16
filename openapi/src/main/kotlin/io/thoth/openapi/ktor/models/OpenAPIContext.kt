@@ -6,12 +6,11 @@ import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.servers.Server
 
-open class OpenAPIContext internal constructor(private val api: OpenAPI) {
-
+open class OpenAPIContext internal constructor(
+    private val api: OpenAPI,
+) {
     companion object {
-        fun generate(api: OpenAPI? = null): OpenAPIContext {
-            return OpenAPIContext(api ?: OpenAPI())
-        }
+        fun generate(api: OpenAPI? = null): OpenAPIContext = OpenAPIContext(api ?: OpenAPI())
     }
 
     fun info(configure: InfoContext.() -> Unit) {
@@ -46,7 +45,9 @@ open class OpenAPIContext internal constructor(private val api: OpenAPI) {
 
     fun components(configure: ComponentsContext.() -> Unit) {
         if (api.components == null) {
-            api.components = io.swagger.v3.oas.models.Components()
+            api.components =
+                io.swagger.v3.oas.models
+                    .Components()
         }
         ComponentsContext(api.components).apply(configure)
     }

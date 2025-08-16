@@ -6,4 +6,8 @@ import java.util.UUID
 // internal database
 // user cannot be accidentally leaked by returning it instead of the ThothUser
 
-open class ThothDatabaseUser(open val id: UUID, open val username: String, open val passwordHash: String)
+open class ThothDatabaseUser(
+    open val id: UUID,
+    open val username: String,
+    open val passwordHash: String,
+)

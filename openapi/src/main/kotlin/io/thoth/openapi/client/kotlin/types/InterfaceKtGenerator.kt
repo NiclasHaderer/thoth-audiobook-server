@@ -7,7 +7,10 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KTypeParameter
 
 class InterfaceKtGenerator : KtTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String {
         val superClasses =
             classType.superClasses
                 .filter { it.memberProperties.isNotEmpty() }
@@ -16,129 +19,136 @@ class InterfaceKtGenerator : KtTypeGenerator() {
 
         val ktProperties = interfaceProperties(classType, generateSubType, false)
 
-        val classInterface = buildString {
-            val interfaceName =
-                generateName(
-                    classType = classType,
-                    resolveGeneric = false,
-                    generateSubType = generateSubType,
-                    isImpl = false,
-                    includeBounds = true,
-                )
-            append("interface $interfaceName")
-            if (superClasses.isNotEmpty()) {
-                append(" : ${superClasses.joinToString(", ") { it.reference() }}")
-            }
-            append(" {\n")
-            ktProperties
-                .filter { !it.declaredInSuperclass }
-                .map {
-                    append("    ")
-                    if (it.overwrites) append("override ")
-                    append("val ${it.name}: ${it.type.name}")
-                    if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
-                    if (it.nullable) append("?")
-                    append("\n")
+        val classInterface =
+            buildString {
+                val interfaceName =
+                    generateName(
+                        classType = classType,
+                        resolveGeneric = false,
+                        generateSubType = generateSubType,
+                        isImpl = false,
+                        includeBounds = true,
+                    )
+                append("interface $interfaceName")
+                if (superClasses.isNotEmpty()) {
+                    append(" : ${superClasses.joinToString(", ") { it.reference() }}")
                 }
-            append("}")
-        }
+                append(" {\n")
+                ktProperties
+                    .filter { !it.declaredInSuperclass }
+                    .map {
+                        append("    ")
+                        if (it.overwrites) append("override ")
+                        append("val ${it.name}: ${it.type.name}")
+                        if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
+                        if (it.nullable) append("?")
+                        append("\n")
+                    }
+                append("}")
+            }
 
         val ktImplProperties = interfaceProperties(classType, generateSubType, true)
-        val classInterfaceImpl = buildString {
-            val dataClassName =
-                generateName(
-                    classType = classType,
-                    resolveGeneric = false,
-                    generateSubType = generateSubType,
-                    isImpl = true,
-                    includeBounds = true,
-                )
-            append("data class $dataClassName(\n")
-            ktImplProperties.mapIndexed { i, it ->
-                val propClassType = classType.forMember(it.underlyingProperty)
-                val subType = generateSubType(propClassType)
+        val classInterfaceImpl =
+            buildString {
+                val dataClassName =
+                    generateName(
+                        classType = classType,
+                        resolveGeneric = false,
+                        generateSubType = generateSubType,
+                        isImpl = true,
+                        includeBounds = true,
+                    )
+                append("data class $dataClassName(\n")
+                ktImplProperties.mapIndexed { i, it ->
+                    val propClassType = classType.forMember(it.underlyingProperty)
+                    val subType = generateSubType(propClassType)
 
-                append("    override val ${it.name}: ")
-                if (it.underlyingProperty.returnType.classifier is KTypeParameter) {
-                    append(it.type.name)
-                } else {
-                    append(subType.nameImpl())
-                }
-                if (it.type.typeArguments.isNotEmpty()) {
-                    append("<")
-                    val memberType = it.underlyingProperty.returnType
-                    // Iterate over the type arguments. If the type argument is something like
-                    // `Map<T, BookModel> we do not have to resolve the first type argument,
-                    // but we have to resolve the second one
-                    memberType.arguments.map {
-                        // This is the case if we have a mix of generic and inline generics
-                        // e.g., interface Something<T> { val hello: Map<String, T> }
-                        val typeName =
-                            if (it.type!!.classifier is KClass<*>) {
-                                // This gets called for the inline generics (String) in the example
-                                // above
-                                generateSubType(ClassType.create(it.type!!)).referenceImpl()
-                            } else {
-                                // This gets called for the generics (T) in the example above
-                                it.type.toString()
-                            }
-                        append(typeName)
+                    append("    override val ${it.name}: ")
+                    if (it.underlyingProperty.returnType.classifier is KTypeParameter) {
+                        append(it.type.name)
+                    } else {
+                        append(subType.nameImpl())
                     }
-                    append(">")
+                    if (it.type.typeArguments.isNotEmpty()) {
+                        append("<")
+                        val memberType = it.underlyingProperty.returnType
+                        // Iterate over the type arguments. If the type argument is something like
+                        // `Map<T, BookModel> we do not have to resolve the first type argument,
+                        // but we have to resolve the second one
+                        memberType.arguments.map {
+                            // This is the case if we have a mix of generic and inline generics
+                            // e.g., interface Something<T> { val hello: Map<String, T> }
+                            val typeName =
+                                if (it.type!!.classifier is KClass<*>) {
+                                    // This gets called for the inline generics (String) in the example
+                                    // above
+                                    generateSubType(ClassType.create(it.type!!)).referenceImpl()
+                                } else {
+                                    // This gets called for the generics (T) in the example above
+                                    it.type.toString()
+                                }
+                            append(typeName)
+                        }
+                        append(">")
+                    }
+                    if (it.nullable) append("?")
+                    if (i < ktImplProperties.size - 1) append(",\n")
                 }
-                if (it.nullable) append("?")
-                if (i < ktImplProperties.size - 1) append(",\n")
-            }
 
-            append("\n")
-            val superInterfaceName =
-                generateName(
-                    classType = classType,
-                    resolveGeneric = false,
-                    generateSubType = generateSubType,
-                    isImpl = false,
-                    includeBounds = false,
-                )
-            append(") : $superInterfaceName")
-        }
+                append("\n")
+                val superInterfaceName =
+                    generateName(
+                        classType = classType,
+                        resolveGeneric = false,
+                        generateSubType = generateSubType,
+                        isImpl = false,
+                        includeBounds = false,
+                    )
+                append(") : $superInterfaceName")
+            }
 
         return classInterface + "\n\n" + classInterfaceImpl
     }
 
     override fun getName(classType: ClassType): String = classType.simpleName
 
-    override fun getInsertionMode(classType: ClassType): KtDataType {
-        return KtDataType.COMPLEX
-    }
+    override fun getInsertionMode(classType: ClassType): KtDataType = KtDataType.COMPLEX
 
-    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
-        return classType.memberProperties
+    override fun withImports(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): List<String> =
+        classType.memberProperties
             .flatMap {
                 // If the property is a generic type, we can skip it
-                if (classType.isGenericProperty(it)) emptyList()
-                else {
+                if (classType.isGenericProperty(it)) {
+                    emptyList()
+                } else {
                     val type = generateSubType(classType.forMember(it))
                     type.imports()
                 }
-            }
-            .distinct()
-    }
+            }.distinct()
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String {
-        return generateName(
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String =
+        generateName(
             classType = classType,
             resolveGeneric = true,
             generateSubType = generateSubType,
             isImpl = false,
             includeBounds = false,
         )
-    }
 
     override fun priority(classType: ClassType): Int = -10
 
     override fun canGenerate(classType: ClassType): Boolean = true
 
-    override fun generateImplReference(classType: ClassType, generateSubType: GenerateType<KtType>): String =
+    override fun generateImplReference(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String =
         generateName(
             classType = classType,
             resolveGeneric = true,
@@ -173,8 +183,7 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                                     .filter { bound ->
                                         val clazz = bound.classifier as KClass<*>
                                         (clazz == Any::class && bound.isMarkedNullable).not()
-                                    }
-                                    .joinToString(", ") { bound ->
+                                    }.joinToString(", ") { bound ->
                                         generateSubType(ClassType.create(bound)).reference()
                                     }
                             } else {
@@ -189,8 +198,7 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                             }
                         }"
                     }
-                }
-                .trim()
+                }.trim()
 
         return "${classType.simpleName + if (isImpl) "Impl" else ""}${
             if (typeParams.isNotEmpty()) {

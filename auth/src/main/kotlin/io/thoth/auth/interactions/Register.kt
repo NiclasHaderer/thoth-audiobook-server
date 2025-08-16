@@ -11,7 +11,10 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothRegisterParams
 
-fun RouteHandler.registerUser(params: ThothRegisterParams, user: ThothRegisterUser): ThothUser {
+fun RouteHandler.registerUser(
+    params: ThothRegisterParams,
+    user: ThothRegisterUser,
+): ThothUser {
     val config = thothAuthConfig<Any>()
 
     if (!config.allowNewSignups()) {

@@ -15,39 +15,43 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.tables.TLibraries
 import io.thoth.server.database.tables.TLibraryUserMapping
 import io.thoth.server.database.tables.User
-import java.util.*
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.util.*
 
-class ThothPrincipalImpl(override val userId: UUID, override val type: ThothJwtTypes) : ThothPrincipal {
+class ThothPrincipalImpl(
+    override val userId: UUID,
+    override val type: ThothJwtTypes,
+) : ThothPrincipal {
     val permissions: UserPermissionsModel
-        get() = transaction {
-            val user = User.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
-            val permissions: List<LibraryPermissionsModel>
-            if (user.admin) {
-                permissions =
-                    TLibraries.selectAll().map {
-                        LibraryPermissionsModel(
-                            id = it[TLibraries.id].value,
-                            permissions = LibraryPermissions.READ_WRITE,
-                            name = it[TLibraries.name],
-                        )
-                    }
-            } else {
-                permissions =
-                    (TLibraryUserMapping innerJoin TLibraries)
-                        .select { TLibraryUserMapping.user eq userId }
-                        .map {
+        get() =
+            transaction {
+                val user = User.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
+                val permissions: List<LibraryPermissionsModel>
+                if (user.admin) {
+                    permissions =
+                        TLibraries.selectAll().map {
                             LibraryPermissionsModel(
-                                id = it[TLibraryUserMapping.library].value,
-                                permissions = it[TLibraryUserMapping.permissions],
+                                id = it[TLibraries.id].value,
+                                permissions = LibraryPermissions.READ_WRITE,
                                 name = it[TLibraries.name],
                             )
                         }
+                } else {
+                    permissions =
+                        (TLibraryUserMapping innerJoin TLibraries)
+                            .select { TLibraryUserMapping.user eq userId }
+                            .map {
+                                LibraryPermissionsModel(
+                                    id = it[TLibraryUserMapping.library].value,
+                                    permissions = it[TLibraryUserMapping.permissions],
+                                    name = it[TLibraries.name],
+                                )
+                            }
+                }
+                UserPermissionsModel(isAdmin = user.admin, libraries = permissions)
             }
-            UserPermissionsModel(isAdmin = user.admin, libraries = permissions)
-        }
 }
 
 fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipalImpl? {
@@ -64,10 +68,9 @@ fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipalImpl? {
     return ThothPrincipalImpl(userId = userId, type = enumType)
 }
 
-fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipalImpl {
-    return thothPrincipalOrNull()
+fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipalImpl =
+    thothPrincipalOrNull()
         ?: throw ErrorResponse.internalError("Could not get principal. Route has to be guarded with one of the Guards")
-}
 
 fun PipelineContext<Unit, ApplicationCall>.thothPrincipalOrNull(): ThothPrincipalImpl? = call.principal()
 
@@ -83,12 +86,14 @@ fun PipelineContext<Unit, ApplicationCall>.assertLibraryPermissions(vararg libra
         }
 
         matches =
-            (principal.permissions.libraries.any { allowedLib ->
-                // If the user is not allowed to edit the library
-                allowedLib.permissions == LibraryPermissions.READ_WRITE &&
-                    // The used http method is not the readonlyMethods list
-                    !readonlyMethods.contains(this.context.request.httpMethod)
-            })
+            (
+                principal.permissions.libraries.any { allowedLib ->
+                    // If the user is not allowed to edit the library
+                    allowedLib.permissions == LibraryPermissions.READ_WRITE &&
+                        // The used http method is not the readonlyMethods list
+                        !readonlyMethods.contains(this.context.request.httpMethod)
+                }
+            )
         if (!matches) {
             throw ErrorResponse.forbidden("modify", "Library $libId")
         }

@@ -6,8 +6,11 @@ import io.swagger.v3.oas.models.media.Schema
 import io.thoth.openapi.common.ClassType
 
 class MapSchemaGenerator : SchemaGenerator() {
-    override fun generateSchema(classType: ClassType, generateSubType: GenerateSchemaSubtype): Schema<*> {
-        return ObjectSchema().also {
+    override fun generateSchema(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): Schema<*> =
+        ObjectSchema().also {
             if (classType.genericArguments.size == 2) {
                 val subSchema = generateSubType(classType.genericArguments[1])
                 it.additionalProperties = subSchema
@@ -15,13 +18,9 @@ class MapSchemaGenerator : SchemaGenerator() {
                 log.warn { "Could not resolve generic argument for map" }
             }
         }
-    }
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(Map::class, HashMap::class, LinkedHashMap::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean =
+        classType.isSubclassOf(Map::class, HashMap::class, LinkedHashMap::class)
 
-    override fun generateContentType(classType: ClassType): ContentType {
-        return ContentType.Application.Json
-    }
+    override fun generateContentType(classType: ClassType): ContentType = ContentType.Application.Json
 }

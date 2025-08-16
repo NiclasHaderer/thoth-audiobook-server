@@ -14,7 +14,11 @@ import java.time.ZoneId
 
 class CustomLocalDateTimeSerializer : StdSerializer<LocalDateTime>(LocalDateTime::class.java) {
     @Throws(IOException::class)
-    override fun serialize(value: LocalDateTime, gen: JsonGenerator, sp: SerializerProvider) {
+    override fun serialize(
+        value: LocalDateTime,
+        gen: JsonGenerator,
+        sp: SerializerProvider,
+    ) {
         val epoch = value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         gen.writeNumber(epoch)
     }
@@ -22,7 +26,10 @@ class CustomLocalDateTimeSerializer : StdSerializer<LocalDateTime>(LocalDateTime
 
 class CustomLocalDateTimeDesSerializer : StdDeserializer<LocalDateTime?>(LocalDateTime::class.java) {
     @Throws(IOException::class)
-    override fun deserialize(jsonparser: JsonParser, context: DeserializationContext?): LocalDateTime {
+    override fun deserialize(
+        jsonparser: JsonParser,
+        context: DeserializationContext?,
+    ): LocalDateTime {
         val timestamp = jsonparser.text.toLong()
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())
     }
@@ -30,7 +37,11 @@ class CustomLocalDateTimeDesSerializer : StdDeserializer<LocalDateTime?>(LocalDa
 
 class CustomLocalDateSerializer : StdSerializer<LocalDate>(LocalDate::class.java) {
     @Throws(IOException::class)
-    override fun serialize(value: LocalDate, gen: JsonGenerator, sp: SerializerProvider) {
+    override fun serialize(
+        value: LocalDate,
+        gen: JsonGenerator,
+        sp: SerializerProvider,
+    ) {
         val epoch = value.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         gen.writeNumber(epoch)
     }
@@ -38,7 +49,10 @@ class CustomLocalDateSerializer : StdSerializer<LocalDate>(LocalDate::class.java
 
 class CustomLocalDateDesSerializer : StdDeserializer<LocalDate?>(LocalDate::class.java) {
     @Throws(IOException::class)
-    override fun deserialize(jsonparser: JsonParser, context: DeserializationContext?): LocalDate {
+    override fun deserialize(
+        jsonparser: JsonParser,
+        context: DeserializationContext?,
+    ): LocalDate {
         val timestamp = jsonparser.text.toLong()
         return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
     }

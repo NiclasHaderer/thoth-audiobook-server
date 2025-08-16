@@ -18,12 +18,6 @@ import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.Track
 import io.thoth.server.file.TrackManager
 import io.thoth.server.repositories.LibraryRepository
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.getLastModifiedTime
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
@@ -32,6 +26,12 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.getLastModifiedTime
 
 interface LibraryScanner {
     fun fullScan(libraryIDs: List<UUID>)
@@ -40,7 +40,10 @@ interface LibraryScanner {
 
     fun scanLibrary(library: Library)
 
-    fun scanFolder(folder: Path, library: Library?)
+    fun scanFolder(
+        folder: Path,
+        library: Library?,
+    )
 
     fun unIgnoreFolder(folder: Path)
 
@@ -50,10 +53,15 @@ interface LibraryScanner {
 
     fun isIgnored(folder: Path): Boolean
 
-    suspend fun addOrUpdatePath(path: Path, library: Library?)
+    suspend fun addOrUpdatePath(
+        path: Path,
+        library: Library?,
+    )
 }
 
-class LibraryScannerImpl : LibraryScanner, KoinComponent {
+class LibraryScannerImpl :
+    LibraryScanner,
+    KoinComponent {
     private val trackManager: TrackManager by inject()
     private val libraryRepository: LibraryRepository by inject()
 
@@ -63,9 +71,7 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         private val log = logger {}
     }
 
-    override fun isIgnored(folder: Path): Boolean {
-        return foldersToIgnore.any { it.startsWith(folder) }
-    }
+    override fun isIgnored(folder: Path): Boolean = foldersToIgnore.any { it.startsWith(folder) }
 
     override fun unIgnoreFolder(folder: Path) {
         foldersToIgnore.removeIf { it.absolutePathString() == folder.absolutePathString() }
@@ -110,37 +116,41 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         cleanupLibrary(library)
     }
 
-    private fun cleanupLibrary(library: Library) = transaction {
-        // Remove all tracks that have not been updated
-        Track.find { TTracks.scanIndex less library.scanIndex }.forEach { it.delete() }
-        // Find all books that have no tracks and remove them
-        Book.all().filter { it.tracks.empty() }.forEach { it.delete() }
-        // Find all authors that have no books and remove them
-        Author.all().filter { it.books.empty() }.forEach { it.delete() }
-        // Find all series that have no books and remove them
-        Series.all().filter { it.books.empty() }.forEach { it.delete() }
-        // Remove images that are not used any more
+    private fun cleanupLibrary(library: Library) =
+        transaction {
+            // Remove all tracks that have not been updated
+            Track.find { TTracks.scanIndex less library.scanIndex }.forEach { it.delete() }
+            // Find all books that have no tracks and remove them
+            Book.all().filter { it.tracks.empty() }.forEach { it.delete() }
+            // Find all authors that have no books and remove them
+            Author.all().filter { it.books.empty() }.forEach { it.delete() }
+            // Find all series that have no books and remove them
+            Series.all().filter { it.books.empty() }.forEach { it.delete() }
+            // Remove images that are not used any more
 
-        // Step 1: Find referenced image IDs
-        val referencedImageIds =
-            (TBooks.slice(TBooks.coverID).select { TBooks.coverID.isNotNull() } +
-                    TSeries.slice(TSeries.coverID).select { TSeries.coverID.isNotNull() } +
-                    TAuthors.slice(TAuthors.imageID).select { TAuthors.imageID.isNotNull() })
-                .mapNotNull {
+            // Step 1: Find referenced image IDs
+            val referencedImageIds =
+                (
+                    TBooks.slice(TBooks.coverID).select { TBooks.coverID.isNotNull() } +
+                        TSeries.slice(TSeries.coverID).select { TSeries.coverID.isNotNull() } +
+                        TAuthors.slice(TAuthors.imageID).select { TAuthors.imageID.isNotNull() }
+                ).mapNotNull {
                     it.getOrNull(TBooks.coverID) ?: it.getOrNull(TSeries.coverID) ?: it.getOrNull(TAuthors.imageID)
-                }
-                .distinct()
+                }.distinct()
 
-        // Step 2: Delete unused images
-        TImages.deleteWhere { TImages.id notInList referencedImageIds }
-    }
+            // Step 2: Delete unused images
+            TImages.deleteWhere { TImages.id notInList referencedImageIds }
+        }
 
     override fun scanLibrary(library: LibraryModel) {
         val dbLib = transaction { Library[library.id] }
         scanLibrary(dbLib)
     }
 
-    override fun scanFolder(folder: Path, library: Library?) {
+    override fun scanFolder(
+        folder: Path,
+        library: Library?,
+    ) {
         if (isIgnored(folder)) {
             log.info { "Skipping $folder because it is ignored" }
             return
@@ -163,7 +173,10 @@ class LibraryScannerImpl : LibraryScanner, KoinComponent {
         )
     }
 
-    override suspend fun addOrUpdatePath(path: Path, library: Library?) {
+    override suspend fun addOrUpdatePath(
+        path: Path,
+        library: Library?,
+    ) {
         if (isIgnored(path)) {
             log.info { "Skipping $path because it is in a folder that is ignored" }
             return

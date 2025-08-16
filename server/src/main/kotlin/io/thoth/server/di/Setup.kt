@@ -29,28 +29,29 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.logger.slf4jLogger
 
-fun setupDependencyInjection() = startKoin {
-    val config = loadPublicConfig()
-    modules(
-        module {
-            single { config }
-            single<MetadataProviders> {
-                val allProviders = listOf(AudibleClient())
-                MetadataProviders(allProviders + MetadataWrapper(allProviders))
-            }
-            single<MetadataWrapper> { MetadataWrapper(get<MetadataProviders>()) }
-            single<FileTreeWatcher> { FileTreeWatcherImpl() }
-            single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
-            single<LibraryScanner> { LibraryScannerImpl() }
-            single<Serialization> { JacksonSerialization() }
-            single<BookRepository> { BookRepositoryImpl() }
-            single<AuthorRepository> { AuthorServiceImpl() }
-            single<SeriesRepository> { SeriesRepositoryImpl() }
-            single<LibraryRepository> { LibraryRepositoryImpl() }
-            single<TrackManager> { TrackManagerImpl() }
-            single { Scheduler() }
-            single { ThothSchedules() }
-        }
-    )
-    slf4jLogger()
-}
+fun setupDependencyInjection() =
+    startKoin {
+        val config = loadPublicConfig()
+        modules(
+            module {
+                single { config }
+                single<MetadataProviders> {
+                    val allProviders = listOf(AudibleClient())
+                    MetadataProviders(allProviders + MetadataWrapper(allProviders))
+                }
+                single<MetadataWrapper> { MetadataWrapper(get<MetadataProviders>()) }
+                single<FileTreeWatcher> { FileTreeWatcherImpl() }
+                single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
+                single<LibraryScanner> { LibraryScannerImpl() }
+                single<Serialization> { JacksonSerialization() }
+                single<BookRepository> { BookRepositoryImpl() }
+                single<AuthorRepository> { AuthorServiceImpl() }
+                single<SeriesRepository> { SeriesRepositoryImpl() }
+                single<LibraryRepository> { LibraryRepositoryImpl() }
+                single<TrackManager> { TrackManagerImpl() }
+                single { Scheduler() }
+                single { ThothSchedules() }
+            },
+        )
+        slf4jLogger()
+    }

@@ -5,5 +5,7 @@ interface MetadataProviderWithID {
     val itemID: String
 }
 
-data class MetadataProviderWithIDImpl(override val provider: String, override val itemID: String) :
-    MetadataProviderWithID
+data class MetadataProviderWithIDImpl(
+    override val provider: String,
+    override val itemID: String,
+) : MetadataProviderWithID

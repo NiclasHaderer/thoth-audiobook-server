@@ -5,18 +5,22 @@ import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
 
 class NumberKtGenerator : KtTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
-        return classType.simpleName
-    }
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String = classType.simpleName
 
     override fun getName(classType: ClassType): String? = null
 
     override fun getInsertionMode(classType: ClassType) = KtDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String? = null
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
+    override fun canGenerate(classType: ClassType): Boolean =
+        classType.isSubclassOf(
             Number::class,
             Int::class,
             Long::class,
@@ -29,5 +33,4 @@ class NumberKtGenerator : KtTypeGenerator() {
             UShort::class,
             UByte::class,
         )
-    }
 }

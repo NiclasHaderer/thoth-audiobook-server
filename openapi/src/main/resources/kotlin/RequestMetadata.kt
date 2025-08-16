@@ -7,5 +7,5 @@ class RequestMetadata<T>(
     val headers: Headers,
     val body: T,
     val shouldLogin: Boolean,
-    val securitySchema: String?
+    val securitySchema: String?,
 )

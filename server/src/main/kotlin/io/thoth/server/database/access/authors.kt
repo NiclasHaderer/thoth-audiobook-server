@@ -4,8 +4,8 @@ import io.thoth.models.AuthorModel
 import io.thoth.models.NamedId
 import io.thoth.server.database.tables.Author
 
-fun Author.toModel(): AuthorModel {
-    return AuthorModel(
+fun Author.toModel(): AuthorModel =
+    AuthorModel(
         id = id.value,
         name = name,
         biography = biography,
@@ -18,4 +18,3 @@ fun Author.toModel(): AuthorModel {
         providerID = providerID,
         library = NamedId(library.id.value, library.name),
     )
-}

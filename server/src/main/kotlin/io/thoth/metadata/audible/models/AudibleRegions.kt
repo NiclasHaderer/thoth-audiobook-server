@@ -10,12 +10,11 @@ enum class AudibleRegions {
     it,
     jp,
     us,
-    uk;
+    uk,
+    ;
 
     companion object {
-        fun from(region: String): AudibleRegions {
-            return values().firstOrNull { it.name == region } ?: us
-        }
+        fun from(region: String): AudibleRegions = values().firstOrNull { it.name == region } ?: us
     }
 }
 
@@ -25,9 +24,7 @@ class AudibleRegionValue(
     val datePattern: String,
     val titleReplacers: List<Regex> = listOf(),
 ) {
-    fun toHost(): String {
-        return "audible.$tld"
-    }
+    fun toHost(): String = "audible.$tld"
 }
 
 private const val audibleChapterName = "Chapter"

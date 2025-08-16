@@ -10,7 +10,6 @@ abstract class ClientGenerator(
     fileWriter: ((File, String) -> Unit)?,
     private val cleanDistPackage: Boolean,
 ) {
-
     private val fileWriter =
         fileWriter
             ?: { file, content ->
@@ -48,8 +47,7 @@ abstract class ClientGenerator(
                         it.toString()
                     }
                 }
-            }
-            .joinToString("")
+            }.joinToString("")
             .replace(Regex("[^A-Za-z0-9]"), "")
     }
 }

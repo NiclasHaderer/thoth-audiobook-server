@@ -7,9 +7,8 @@ import io.thoth.server.database.tables.TAuthors
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
 
-fun Series.toModel(authorOrder: SortOrder = SortOrder.ASC): SeriesModel {
-
-    return SeriesModel(
+fun Series.toModel(authorOrder: SortOrder = SortOrder.ASC): SeriesModel =
+    SeriesModel(
         id = id.value,
         title = title,
         description = description,
@@ -22,4 +21,3 @@ fun Series.toModel(authorOrder: SortOrder = SortOrder.ASC): SeriesModel {
         genres = genres.map { NamedId(it.id.value, it.name) },
         library = NamedId(library.id.value, library.name),
     )
-}

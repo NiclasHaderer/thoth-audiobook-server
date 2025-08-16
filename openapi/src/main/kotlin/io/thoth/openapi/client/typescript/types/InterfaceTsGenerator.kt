@@ -6,8 +6,10 @@ import io.thoth.openapi.common.ClassType
 import kotlin.reflect.KClass
 
 class InterfaceTsGenerator : TsTypeGenerator() {
-
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String {
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String {
         val superClasses =
             classType.superClasses
                 .filter { it.memberProperties.isNotEmpty() }
@@ -30,8 +32,9 @@ class InterfaceTsGenerator : TsTypeGenerator() {
                     append("  ")
                     if (property.overwrites) append("override ")
                     append("${property.name}: ${property.type.name}")
-                    if (property.type.typeArguments.isNotEmpty())
+                    if (property.type.typeArguments.isNotEmpty()) {
                         append("<${property.type.typeArguments.joinToString(", ")}>")
+                    }
                     if (property.nullable) append(" | undefined")
                     append(";\n")
                 }
@@ -41,9 +44,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
 
     override fun getParsingMethod(classType: ClassType): TsParseMethod = TsParseMethod.JSON
 
-    override fun getInsertionMode(classType: ClassType): TsDataType {
-        return TsDataType.COMPLEX
-    }
+    override fun getInsertionMode(classType: ClassType): TsDataType = TsDataType.COMPLEX
 
     private fun generateName(
         classType: ClassType,
@@ -67,8 +68,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
                                     .filter { bound ->
                                         val clazz = bound.classifier as KClass<*>
                                         (clazz == Any::class && bound.isMarkedNullable).not()
-                                    }
-                                    .joinToString(" & ") { bound ->
+                                    }.joinToString(" & ") { bound ->
                                         val clazz = bound.classifier as KClass<*>
                                         if (clazz == Any::class) {
                                             "NonNullable<any>"
@@ -88,8 +88,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
                             }
                         }"
                     }
-                }
-                .trim()
+                }.trim()
 
         return "${classType.simpleName}${
             if (typeParams.isNotEmpty()) {
@@ -100,9 +99,10 @@ class InterfaceTsGenerator : TsTypeGenerator() {
         }"
     }
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String {
-        return generateName(classType, true, generateSubType)
-    }
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String = generateName(classType, true, generateSubType)
 
     override fun getName(classType: ClassType): String = classType.simpleName
 

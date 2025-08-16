@@ -8,7 +8,6 @@ import io.thoth.openapi.common.ClassType
 import kotlin.reflect.KTypeParameter
 
 abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType>() {
-
     enum class KtDataType {
         PRIMITIVE,
         COMPLEX,
@@ -23,12 +22,11 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
         protected abstract val content: String
         protected abstract val dataType: KtDataType
 
-        fun reference(): String {
-            return when (dataType) {
+        fun reference(): String =
+            when (dataType) {
                 KtDataType.PRIMITIVE -> content
                 KtDataType.COMPLEX -> reference ?: "Reference not found for complex type"
             }
-        }
 
         fun referenceImpl() = implReference
 
@@ -39,7 +37,11 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
         fun imports(): List<String> = imports
     }
 
-    class KtInlineType(override val content: String, name: String?, override val imports: List<String>) : KtType() {
+    class KtInlineType(
+        override val content: String,
+        name: String?,
+        override val imports: List<String>,
+    ) : KtType() {
         override val name = name ?: content
         override val implReference = content
         override val implName = this.name
@@ -60,13 +62,22 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
         fun content() = content
     }
 
-    open fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> = emptyList()
+    open fun withImports(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): List<String> = emptyList()
 
-    open fun generateImplReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
+    open fun generateImplReference(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String? = null
 
     open fun getImplName(classType: ClassType): String? = null
 
-    override fun createType(classType: ClassType, generateSubType: GenerateType<KtType>): KtType {
+    override fun createType(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): KtType {
         val content = generateContent(classType, generateSubType)
         val reference = generateReference(classType, generateSubType)
         val insertionMode = getInsertionMode(classType)
@@ -106,34 +117,35 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
             val propertyName = property.name
             val declaredInSuperclass = classType.properties.none { it.name == propertyName }
 
-            val propertyType: PropertyType = run {
-                if (classType.isGenericProperty(property)) {
-                    // Fully generic property, example: interface Something<T> { val hello: T }
-                    PropertyType(name = property.returnType.toString(), typeArguments = emptyList())
-                } else if (classType.isParameterizedProperty(property)) {
-                    // Parameterized property, example: interface Something<T> { val hello:
-                    // Map<String, T> }
-                    val typeArgs =
-                        property.returnType.arguments.map {
-                            val argClassifier = it.type!!.classifier
-                            if (argClassifier is KTypeParameter) {
-                                argClassifier.name
-                            } else {
-                                val subType = generateSubType(ClassType.create(it.type!!))
-                                if (impl) subType.referenceImpl() else subType.reference()
+            val propertyType: PropertyType =
+                run {
+                    if (classType.isGenericProperty(property)) {
+                        // Fully generic property, example: interface Something<T> { val hello: T }
+                        PropertyType(name = property.returnType.toString(), typeArguments = emptyList())
+                    } else if (classType.isParameterizedProperty(property)) {
+                        // Parameterized property, example: interface Something<T> { val hello:
+                        // Map<String, T> }
+                        val typeArgs =
+                            property.returnType.arguments.map {
+                                val argClassifier = it.type!!.classifier
+                                if (argClassifier is KTypeParameter) {
+                                    argClassifier.name
+                                } else {
+                                    val subType = generateSubType(ClassType.create(it.type!!))
+                                    if (impl) subType.referenceImpl() else subType.reference()
+                                }
                             }
-                        }
-                    val parameterizedType = generateSubType(classType.forMember(property))
+                        val parameterizedType = generateSubType(classType.forMember(property))
 
-                    PropertyType(name = parameterizedType.name(), typeArguments = typeArgs)
-                } else {
-                    // Regular property, example: interface Something { val hello: String }
-                    PropertyType(
-                        name = generateSubType(classType.forMember(property)).name(),
-                        typeArguments = emptyList(),
-                    )
+                        PropertyType(name = parameterizedType.name(), typeArguments = typeArgs)
+                    } else {
+                        // Regular property, example: interface Something { val hello: String }
+                        PropertyType(
+                            name = generateSubType(classType.forMember(property)).name(),
+                            typeArguments = emptyList(),
+                        )
+                    }
                 }
-            }
 
             val nullable = property.returnType.isMarkedNullable
             Property(

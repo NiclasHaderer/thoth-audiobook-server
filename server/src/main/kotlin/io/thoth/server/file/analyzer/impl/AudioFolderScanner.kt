@@ -31,7 +31,11 @@ class AudioFolderScanner : AudioFileAnalyzer {
         return this.getInformation(cleanPath, parentCount, tags)
     }
 
-    private fun getInformation(path: Path, parentCount: Int, tags: ReadonlyFileTagger): AudioFileAnalysisResult {
+    private fun getInformation(
+        path: Path,
+        parentCount: Int,
+        tags: ReadonlyFileTagger,
+    ): AudioFileAnalysisResult {
         val book = path.parentName().replaceAll(bookPrefixes, "")
         val author = if (parentCount == 2) path.grandParentName() else path.grandGrandParentName()
         val series = if (parentCount == 2) null else path.grandParentName()

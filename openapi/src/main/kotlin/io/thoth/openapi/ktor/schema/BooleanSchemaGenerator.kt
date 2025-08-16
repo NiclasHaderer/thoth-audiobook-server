@@ -6,15 +6,12 @@ import io.swagger.v3.oas.models.media.Schema
 import io.thoth.openapi.common.ClassType
 
 class BooleanSchemaGenerator : SchemaGenerator() {
-    override fun generateSchema(classType: ClassType, generateSubType: GenerateSchemaSubtype): Schema<*> {
-        return BooleanSchema()
-    }
+    override fun generateSchema(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): Schema<*> = BooleanSchema()
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(Boolean::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean = classType.isSubclassOf(Boolean::class)
 
-    override fun generateContentType(classType: ClassType): ContentType {
-        return ContentType.Text.Plain
-    }
+    override fun generateContentType(classType: ClassType): ContentType = ContentType.Text.Plain
 }

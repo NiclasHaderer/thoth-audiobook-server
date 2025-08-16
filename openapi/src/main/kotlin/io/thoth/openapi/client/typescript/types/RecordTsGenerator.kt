@@ -8,8 +8,10 @@ import mu.KotlinLogging.logger
 class RecordTsGenerator : TsTypeGenerator() {
     private val log = logger {}
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String {
-
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Record type without generic arguments" }
             return "Record<unknown, unknown>"
@@ -33,11 +35,13 @@ class RecordTsGenerator : TsTypeGenerator() {
 
     override fun getInsertionMode(classType: ClassType) = TsDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String? = null
 
     override fun getName(classType: ClassType): String = "Record"
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(Map::class, HashMap::class, LinkedHashMap::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean =
+        classType.isSubclassOf(Map::class, HashMap::class, LinkedHashMap::class)
 }

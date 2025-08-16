@@ -1,5 +1,8 @@
 enum class ApiErrorType {
-    HTTP, Connection, ClientSerialization, Unknown,
+    HTTP,
+    Connection,
+    ClientSerialization,
+    Unknown,
 }
 
 open class InternalApiError(
@@ -24,13 +27,7 @@ class ApiError(
         error.body,
     )
 
-    override fun toString(): String {
-        return "ApiError(type=$type, status=$status, error=$error, details=$details, body=$body)"
-    }
+    override fun toString(): String = "ApiError(type=$type, status=$status, error=$error, details=$details, body=$body)"
 }
 
-
-fun InternalApiError.wrap(type: ApiErrorType): ApiError {
-    return ApiError(type, this)
-}
-
+fun InternalApiError.wrap(type: ApiErrorType): ApiError = ApiError(type, this)

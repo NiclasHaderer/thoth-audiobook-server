@@ -40,8 +40,7 @@ class DetailedBookModel(
     genres: List<NamedId>,
     library: NamedId,
     val tracks: List<TrackModel>,
-) :
-    BookModel(
+) : BookModel(
         id = id,
         title = title,
         releaseDate = releaseDate,
@@ -60,8 +59,10 @@ class DetailedBookModel(
         library = library,
     ) {
     companion object {
-        fun fromModel(book: BookModel, tracks: List<TrackModel>): DetailedBookModel {
-
+        fun fromModel(
+            book: BookModel,
+            tracks: List<TrackModel>,
+        ): DetailedBookModel {
             val sortedTracks =
                 if (tracks.any { it.trackNr == null }) {
                     tracks.sortedBy { it.path }

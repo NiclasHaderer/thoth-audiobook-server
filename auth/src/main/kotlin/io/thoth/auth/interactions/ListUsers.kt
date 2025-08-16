@@ -10,7 +10,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 interface ThothListUserParams
 
 fun <PERMISSIONS : Any> RouteHandler.listUsers(
-    params: ThothListUserParams
+    params: ThothListUserParams,
 ): List<ThothUserWithPermissions<PERMISSIONS>> {
     val config = thothAuthConfig<PERMISSIONS>()
 

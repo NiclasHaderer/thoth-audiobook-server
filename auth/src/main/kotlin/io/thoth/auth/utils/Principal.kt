@@ -12,9 +12,8 @@ interface ThothPrincipal : Principal {
     val type: ThothJwtTypes
 }
 
-inline fun <reified TYPE : ThothPrincipal> RouteHandler.thothPrincipal(): TYPE {
-    return call.principal()
+inline fun <reified TYPE : ThothPrincipal> RouteHandler.thothPrincipal(): TYPE =
+    call.principal()
         ?: throw ErrorResponse.internalError(
-            "Route requires user to be logged in, but authentication was not required. Please check your configuration."
+            "Route requires user to be logged in, but authentication was not required. Please check your configuration.",
         )
-}

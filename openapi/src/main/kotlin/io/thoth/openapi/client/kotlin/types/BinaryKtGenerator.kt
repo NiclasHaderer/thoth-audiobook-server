@@ -7,21 +7,25 @@ import io.thoth.openapi.ktor.responses.BinaryResponse
 import io.thoth.openapi.ktor.responses.FileResponse
 
 class BinaryKtGenerator : KtTypeGenerator() {
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
-        return "ByteArrayInputStream"
-    }
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String = "ByteArrayInputStream"
 
     override fun getName(classType: ClassType): String? = null
 
     override fun getInsertionMode(classType: ClassType) = KtDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String? = null
 
-    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
-        return listOf("import java.io.ByteArrayInputStream")
-    }
+    override fun withImports(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): List<String> = listOf("import java.io.ByteArrayInputStream")
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(BinaryResponse::class, FileResponse::class, ByteArray::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean =
+        classType.isSubclassOf(BinaryResponse::class, FileResponse::class, ByteArray::class)
 }

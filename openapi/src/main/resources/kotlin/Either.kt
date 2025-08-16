@@ -6,7 +6,9 @@ import java.io.IOException
 
 abstract class `--` {
     // -- Start
-    protected open suspend fun <T> wrapInEither(cb: suspend () -> OpenApiHttpResponse<T>): Either<OpenApiHttpResponse<T>, ApiError> =
+    protected open suspend fun <T> wrapInEither(
+        cb: suspend () -> OpenApiHttpResponse<T>,
+    ): Either<OpenApiHttpResponse<T>, ApiError> =
         runCatching {
             try {
                 val response = cb()
@@ -47,10 +49,11 @@ abstract class `--` {
 
                 val serializationClassName = e.javaClass.name
                 val isSerializationException =
-                    serializationClassName.startsWith("kotlinx.serialization.") || serializationClassName.startsWith("com.fasterxml.jackson.databind.") || serializationClassName.startsWith(
-                        "com.google.gson.",
-                    )
-
+                    serializationClassName.startsWith("kotlinx.serialization.") ||
+                        serializationClassName.startsWith("com.fasterxml.jackson.databind.") ||
+                        serializationClassName.startsWith(
+                            "com.google.gson.",
+                        )
 
                 if (!isSerializationException) throw e
 
@@ -64,12 +67,13 @@ abstract class `--` {
                 )
             }
         }.getOrElse {
-            val error = ApiError(
-                ApiErrorType.Unknown,
-                0,
-                "\"${it.javaClass.simpleName}\" was thrown while processing the response",
-                it.message,
-            )
+            val error =
+                ApiError(
+                    ApiErrorType.Unknown,
+                    0,
+                    "\"${it.javaClass.simpleName}\" was thrown while processing the response",
+                    it.message,
+                )
             Either.Right(error)
         }
     // -- End

@@ -11,27 +11,38 @@ typealias GenerateSchemaSubtype = (ClassType) -> SchemaGenerator.WrappedSchema
 abstract class SchemaGenerator {
     protected val log = logger {}
 
-    class WrappedSchema(val schema: Schema<*>, val name: String?, val contentType: ContentType) {
-        fun reference(): Schema<*> {
-            return if (name != null) {
+    class WrappedSchema(
+        val schema: Schema<*>,
+        val name: String?,
+        val contentType: ContentType,
+    ) {
+        fun reference(): Schema<*> =
+            if (name != null) {
                 Schema<Any>().`$ref`(RefUtils.constructRef(name))
             } else {
                 schema
             }
-        }
     }
 
-    fun createSchema(classType: ClassType, generateSubType: GenerateSchemaSubtype): WrappedSchema {
-        return WrappedSchema(
+    fun createSchema(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): WrappedSchema =
+        WrappedSchema(
             generateSchema(classType, generateSubType),
             generateName(classType, generateSubType),
             generateContentType(classType),
         )
-    }
 
-    abstract fun generateSchema(classType: ClassType, generateSubType: GenerateSchemaSubtype): Schema<*>
+    abstract fun generateSchema(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): Schema<*>
 
-    open fun generateName(classType: ClassType, generateSubType: GenerateSchemaSubtype): String? = null
+    open fun generateName(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): String? = null
 
     abstract fun canGenerate(classType: ClassType): Boolean
 

@@ -9,8 +9,10 @@ import io.thoth.openapi.ktor.OpenApiRouteCollector
 import io.thoth.openapi.ktor.SchemaHolder
 import io.thoth.openapi.ktor.models.OpenAPIContext
 
-class OpenAPIConfiguration(val schemaHolder: SchemaHolder, val routeCollector: OpenApiRouteCollector) :
-    OpenAPIContext(schemaHolder.api)
+class OpenAPIConfiguration(
+    val schemaHolder: SchemaHolder,
+    val routeCollector: OpenApiRouteCollector,
+) : OpenAPIContext(schemaHolder.api)
 
 val OpenAPIConfigurationKey = AttributeKey<OpenAPIConfiguration>(name = "OpenAPIConfiguration")
 

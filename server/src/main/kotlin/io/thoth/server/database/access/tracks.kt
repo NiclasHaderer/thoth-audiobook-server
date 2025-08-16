@@ -7,9 +7,7 @@ import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.Track
 
-fun Track.Companion.getByPath(path: String): Track? {
-    return Track.findOne { TTracks.path like path }
-}
+fun Track.Companion.getByPath(path: String): Track? = Track.findOne { TTracks.path like path }
 
 fun Track.markAsTouched() {
     scanIndex = library.scanIndex

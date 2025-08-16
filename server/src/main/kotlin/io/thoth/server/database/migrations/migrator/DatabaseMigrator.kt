@@ -1,15 +1,18 @@
 package io.thoth.server.database.migrations.migrator
 
 import io.thoth.server.common.extensions.tap
-import kotlin.reflect.full.createInstance
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.reflections.Reflections
+import kotlin.reflect.full.createInstance
 
-private data class MigrationHolder(val version: Int, val migration: Migration)
+private data class MigrationHolder(
+    val version: Int,
+    val migration: Migration,
+)
 
 class DatabaseMigrator(
     private val db: Database,
@@ -35,21 +38,23 @@ class DatabaseMigrator(
             .tap {
                 if (!it::class.java.simpleName.contains(classNameMatcher)) {
                     throw IllegalStateException(
-                        "Migration class name does not match the pattern: ${it::class.java.simpleName}"
+                        "Migration class name does not match the pattern: ${it::class.java.simpleName}",
                     )
                 }
-            }
-            .filter { migration -> migration::class.java.simpleName.contains(classNameMatcher) }
+            }.filter { migration -> migration::class.java.simpleName.contains(classNameMatcher) }
             .map { migration ->
                 val version = getVersionFromString(migration::class.java.simpleName)
                 MigrationHolder(version, migration)
-            }
-            .sortedBy { it.version }
+            }.sortedBy { it.version }
     }
 
     private fun getLatestVersion(): Int? =
         transaction(db = db) {
-            SchemaTracker.all().orderBy(TSchemaTrackers.version to SortOrder.DESC).firstOrNull()?.version
+            SchemaTracker
+                .all()
+                .orderBy(TSchemaTrackers.version to SortOrder.DESC)
+                .firstOrNull()
+                ?.version
         }
 
     fun updateDatabase() {
@@ -86,7 +91,8 @@ class DatabaseMigrator(
     }
 
     private fun runRollback(latestDbVersion: Int) {
-        SchemaTracker.find { TSchemaTrackers.version greater latestDbVersion }
+        SchemaTracker
+            .find { TSchemaTrackers.version greater latestDbVersion }
             .orderBy(TSchemaTrackers.version to SortOrder.DESC)
             .forEach {
                 log.info("Rolling back migration ${it.version}")

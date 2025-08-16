@@ -4,11 +4,11 @@ import io.thoth.models.FileScanner
 import io.thoth.models.MetadataAgent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.extensions.json
-import java.util.*
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import java.util.*
 
 object TLibraries : UUIDTable("Libraries") {
     val name = varchar("name", 255)
@@ -33,11 +33,14 @@ object TLibraries : UUIDTable("Libraries") {
                 throw ErrorResponse.userError("fileScanners must have at least one element")
             }
         }
+
     // TODO make enum
     val language = varchar("language", 255)
 }
 
-class Library(id: EntityID<UUID>) : UUIDEntity(id) {
+class Library(
+    id: EntityID<UUID>,
+) : UUIDEntity(id) {
     companion object : UUIDEntityClass<Library>(TLibraries)
 
     var name by TLibraries.name

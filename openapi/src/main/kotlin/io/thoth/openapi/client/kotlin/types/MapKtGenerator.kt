@@ -8,7 +8,10 @@ import mu.KotlinLogging.logger
 class MapKtGenerator : KtTypeGenerator() {
     private val log = logger {}
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Record type without generic arguments" }
             return "Map<*, *>"
@@ -21,7 +24,7 @@ class MapKtGenerator : KtTypeGenerator() {
 
         val className = classType.simpleName
 
-        return "${className}<${keyType.reference()} ${
+        return "$className<${keyType.reference()} ${
             if (keyClassType.isNullable) {
                 "?"
             } else {
@@ -34,13 +37,19 @@ class MapKtGenerator : KtTypeGenerator() {
 
     override fun getInsertionMode(classType: ClassType) = KtDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String? = null
 
-    override fun withImports(classType: ClassType, generateSubType: GenerateType<KtType>): List<String> {
-        return classType.genericArguments.flatMap { generateSubType(it).imports() }
-    }
+    override fun withImports(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): List<String> =
+        classType.genericArguments.flatMap {
+            generateSubType(it).imports()
+        }
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(Map::class, HashMap::class, LinkedHashMap::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean =
+        classType.isSubclassOf(Map::class, HashMap::class, LinkedHashMap::class)
 }

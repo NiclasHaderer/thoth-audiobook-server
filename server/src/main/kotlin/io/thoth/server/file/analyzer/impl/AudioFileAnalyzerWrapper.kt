@@ -3,15 +3,21 @@ package io.thoth.server.file.analyzer.impl
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.tagger.ReadonlyFileTaggerImpl
+import mu.KotlinLogging.logger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.absolute
-import mu.KotlinLogging.logger
 
-class AudioFileAnalyzerWrapper(private val analyzers: List<AudioFileAnalyzer>) {
+class AudioFileAnalyzerWrapper(
+    private val analyzers: List<AudioFileAnalyzer>,
+) {
     private val log = logger {}
 
-    fun analyze(filePath: Path, attrs: BasicFileAttributes, libraryPath: Path): AudioFileAnalysisResult? {
+    fun analyze(
+        filePath: Path,
+        attrs: BasicFileAttributes,
+        libraryPath: Path,
+    ): AudioFileAnalysisResult? {
         val tags = ReadonlyFileTaggerImpl(filePath)
         for (analyzer in analyzers) {
             try {

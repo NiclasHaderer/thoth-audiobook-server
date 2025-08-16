@@ -14,8 +14,12 @@ import io.thoth.server.common.extensions.toCron
 import kotlin.reflect.KType
 
 class CronDecoder : Decoder<Cron> {
-    override fun decode(node: Node, type: KType, context: DecoderContext): ConfigResult<Cron> {
-        return when (node) {
+    override fun decode(
+        node: Node,
+        type: KType,
+        context: DecoderContext,
+    ): ConfigResult<Cron> =
+        when (node) {
             is StringNode -> {
                 try {
                     node.value.toCron().valid()
@@ -25,9 +29,6 @@ class CronDecoder : Decoder<Cron> {
             }
             else -> ConfigFailure.DecodeError(node, type).invalid()
         }
-    }
 
-    override fun supports(type: KType): Boolean {
-        return type.classifier == Cron::class
-    }
+    override fun supports(type: KType): Boolean = type.classifier == Cron::class
 }

@@ -6,11 +6,10 @@ import io.ktor.util.reflect.*
 import io.ktor.utils.io.*
 import kotlin.coroutines.CoroutineContext
 
-
 class OpenApiHttpResponse<T>(
     private val delegate: HttpResponse,
     private val responseBodyParser: BodyDeserializer<T>,
-    private val responseBodyType: TypeInfo
+    private val responseBodyType: TypeInfo,
 ) : HttpResponse() {
     override val call: HttpClientCall
         get() = delegate.call

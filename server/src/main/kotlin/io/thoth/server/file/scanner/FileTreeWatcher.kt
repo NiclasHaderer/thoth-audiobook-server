@@ -5,12 +5,12 @@ import io.methvin.watcher.DirectoryWatcher
 import io.methvin.watcher.hashing.FileHasher
 import io.thoth.server.common.extensions.hasAudioExtension
 import io.thoth.server.config.ThothConfig
-import java.nio.file.Path
-import kotlin.io.path.isRegularFile
-import kotlin.io.path.name
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.nio.file.Path
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.name
 
 interface FileTreeWatcher {
     fun watch(folders: List<Path>)
@@ -18,7 +18,9 @@ interface FileTreeWatcher {
     fun stop()
 }
 
-class FileTreeWatcherImpl : FileTreeWatcher, KoinComponent {
+class FileTreeWatcherImpl :
+    FileTreeWatcher,
+    KoinComponent {
     private val thothConfig by inject<ThothConfig>()
     private val libraryScanner by inject<LibraryScanner>()
 
@@ -54,7 +56,8 @@ class FileTreeWatcherImpl : FileTreeWatcher, KoinComponent {
         }
 
         watcher =
-            DirectoryWatcher.builder()
+            DirectoryWatcher
+                .builder()
                 .paths(folders)
                 .listener(this::contentChanged)
                 .fileHasher(FileHasher.LAST_MODIFIED_TIME)

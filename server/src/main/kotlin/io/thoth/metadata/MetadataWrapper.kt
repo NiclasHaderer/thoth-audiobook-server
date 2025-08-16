@@ -12,10 +12,14 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
-class MetadataWrapper(private val providerList: List<MetadataProvider>) : MetadataProvider() {
-
+class MetadataWrapper(
+    private val providerList: List<MetadataProvider>,
+) : MetadataProvider() {
     companion object {
-        fun fromAgents(agents: List<MetadataAgent>, availableAgents: List<MetadataProvider>): MetadataProvider {
+        fun fromAgents(
+            agents: List<MetadataAgent>,
+            availableAgents: List<MetadataProvider>,
+        ): MetadataProvider {
             val agentsToUse =
                 availableAgents.filter { agentInstance -> agents.any { it.name == agentInstance.uniqueName } }
             return MetadataWrapper(agentsToUse)
@@ -36,8 +40,8 @@ class MetadataWrapper(private val providerList: List<MetadataProvider>) : Metada
         narrator: String?,
         language: MetadataLanguage?,
         pageSize: MetadataSearchCount?,
-    ): List<MetadataSearchBook> {
-        return providerList
+    ): List<MetadataSearchBook> =
+        providerList
             .map {
                 coroutineScope {
                     async {
@@ -52,27 +56,40 @@ class MetadataWrapper(private val providerList: List<MetadataProvider>) : Metada
                         )
                     }
                 }
-            }
-            .awaitAll()
+            }.awaitAll()
             .flatten()
-    }
 
-    override suspend fun _getAuthorByID(providerId: String, authorId: String, region: String): MetadataAuthor? {
+    override suspend fun _getAuthorByID(
+        providerId: String,
+        authorId: String,
+        region: String,
+    ): MetadataAuthor? {
         val provider = getProvider(authorId) ?: return null
         return provider.getAuthorByID(providerId = providerId, region = region, authorId = authorId)
     }
 
-    override suspend fun _getBookByID(providerId: String, bookId: String, region: String): MetadataBook? {
+    override suspend fun _getBookByID(
+        providerId: String,
+        bookId: String,
+        region: String,
+    ): MetadataBook? {
         val provider = getProvider(bookId) ?: return null
         return provider.getBookByID(providerId = providerId, region = region, bookId = bookId)
     }
 
-    override suspend fun _getSeriesByID(providerId: String, region: String, seriesId: String): MetadataSeries? {
+    override suspend fun _getSeriesByID(
+        providerId: String,
+        region: String,
+        seriesId: String,
+    ): MetadataSeries? {
         val provider = getProvider(seriesId) ?: return null
         return provider.getSeriesByID(providerId = providerId, region = region, seriesId = seriesId)
     }
 
-    override suspend fun _getAuthorByName(authorName: String, region: String): List<MetadataAuthor> {
+    override suspend fun _getAuthorByName(
+        authorName: String,
+        region: String,
+    ): List<MetadataAuthor> {
         val authors =
             providerList
                 .map { coroutineScope { async { it.getAuthorByName(authorName = authorName, region = region) } } }
@@ -82,15 +99,18 @@ class MetadataWrapper(private val providerList: List<MetadataProvider>) : Metada
         return FuzzySearch.extractSorted(authorName, authors) { it.name }.map { it.referent }
     }
 
-    override suspend fun _getBookByName(bookName: String, region: String, authorName: String?): List<MetadataBook> {
+    override suspend fun _getBookByName(
+        bookName: String,
+        region: String,
+        authorName: String?,
+    ): List<MetadataBook> {
         val books =
             providerList
                 .map {
                     coroutineScope {
                         async { it.getBookByName(bookName = bookName, region = region, authorName = authorName) }
                     }
-                }
-                .awaitAll()
+                }.awaitAll()
                 .flatten()
                 .filter { it.title != null }
         return FuzzySearch.extractSorted(bookName, books) { it.title }.map { it.referent }
@@ -107,14 +127,11 @@ class MetadataWrapper(private val providerList: List<MetadataProvider>) : Metada
                     coroutineScope {
                         async { it.getSeriesByName(seriesName = seriesName, region = region, authorName = authorName) }
                     }
-                }
-                .awaitAll()
+                }.awaitAll()
                 .flatten()
                 .filter { it.title != null }
         return FuzzySearch.extractSorted(seriesName, series) { it.title }.map { it.referent }
     }
 
-    private fun getProvider(providerID: String): MetadataProvider? {
-        return providerMap[providerID]
-    }
+    private fun getProvider(providerID: String): MetadataProvider? = providerMap[providerID]
 }

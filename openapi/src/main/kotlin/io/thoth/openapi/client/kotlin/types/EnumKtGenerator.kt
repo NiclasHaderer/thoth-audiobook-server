@@ -8,7 +8,10 @@ import mu.KotlinLogging
 class EnumKtGenerator : KtTypeGenerator() {
     private val log = KotlinLogging.logger {}
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<KtType>): String {
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String {
         val enumValues = classType.enumValues()
         if (enumValues?.run { isNotEmpty() } != true) {
             log.warn { "Enum type without values" }
@@ -24,10 +27,10 @@ class EnumKtGenerator : KtTypeGenerator() {
 
     override fun getInsertionMode(classType: ClassType) = KtDataType.COMPLEX
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<KtType>): String =
-        classType.simpleName
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String = classType.simpleName
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isEnum()
-    }
+    override fun canGenerate(classType: ClassType): Boolean = classType.isEnum()
 }

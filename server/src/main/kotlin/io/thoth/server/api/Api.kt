@@ -31,62 +31,86 @@ import io.thoth.server.plugins.auth.assertLibraryPermissions
 // TODO make sure that users only have access to the libraries they are allowed to access
 @Resource("api")
 class Api {
-
     @Secured(Guards.Normal)
     @Resource("fs")
     @Summary("List folders at a certain path", method = "GET")
     @Tagged("Filesystem")
-    data class FileSystem(val path: String, val showHidden: Boolean = false, private val parent: Api)
+    data class FileSystem(
+        val path: String,
+        val showHidden: Boolean = false,
+        private val parent: Api,
+    )
 
     @Resource("auth")
     @Tagged("Auth")
-    data class Auth(private val parent: Api) {
+    data class Auth(
+        private val parent: Api,
+    ) {
         @Summary("Login user", method = "POST")
         @Resource("login")
-        data class Login(private val parent: Auth) : ThothLoginParams
+        data class Login(
+            private val parent: Auth,
+        ) : ThothLoginParams
 
         @Summary("Logout user", method = "POST")
         @Resource("logout")
-        data class Logout(private val parent: Auth) : ThothLogoutParams
+        data class Logout(
+            private val parent: Auth,
+        ) : ThothLogoutParams
 
         @Summary("Register user", method = "POST")
         @Resource("register")
-        data class Register(private val parent: Auth) : ThothRegisterParams
+        data class Register(
+            private val parent: Auth,
+        ) : ThothRegisterParams
 
         @Summary("Retrieve Jwks", method = "GET")
         @Resource("jwks.json")
-        data class Jwks(private val parent: Auth) : ThothJwksParams
+        data class Jwks(
+            private val parent: Auth,
+        ) : ThothJwksParams
 
         @Secured(Guards.Normal)
         @Resource("user")
-        data class User(private val parent: Auth) {
-
+        data class User(
+            private val parent: Auth,
+        ) {
             @Summary("List users", method = "GET")
             @Secured(Guards.Admin)
             @Resource("")
-            data class All(private val parent: User) : ThothListUserParams
+            data class All(
+                private val parent: User,
+            ) : ThothListUserParams
 
             @NotSecured
             @Summary("Refresh access token", method = "POST")
             @Resource("refresh")
-            data class Refresh(private val parent: User) : ThothRefreshTokenParams
+            data class Refresh(
+                private val parent: User,
+            ) : ThothRefreshTokenParams
 
             @Resource("{id}")
             @Summary("Get user", method = "GET")
             @Summary("Delete user", method = "DELETE")
-            data class Id(override val id: UUID_S, private val parent: User) :
-                ThothDeleteUserParams, ThothDisplayUserParams {
-
+            data class Id(
+                override val id: UUID_S,
+                private val parent: User,
+            ) : ThothDeleteUserParams,
+                ThothDisplayUserParams {
                 @Summary("Update username", method = "POST")
                 @Resource("username")
-                data class Username(private val parent: Id) : ThothRenameUserParams {
+                data class Username(
+                    private val parent: Id,
+                ) : ThothRenameUserParams {
                     override val id: UUID_S
                         get() = parent.id
                 }
 
                 @Summary("Update password", method = "POST")
                 @Resource("password")
-                data class Password(private val parent: Id) : ThothChangePasswordParams {
+                data class Password(
+                    private val parent: Id,
+                ) : ThothChangePasswordParams {
                     override val id: UUID_S
                         get() = parent.id
                 }
@@ -94,7 +118,9 @@ class Api {
                 @Secured(Guards.Admin)
                 @Summary("Update permissions", method = "PUT")
                 @Resource("permissions")
-                data class Permissions(private val parent: Id) : ThothModifyPermissionsParams {
+                data class Permissions(
+                    private val parent: Id,
+                ) : ThothModifyPermissionsParams {
                     override val id: UUID_S
                         get() = parent.id
                 }
@@ -102,34 +128,43 @@ class Api {
 
             @Summary("Get current user", method = "GET")
             @Resource("current")
-            data class Current(private val parent: User) : ThothCurrentUserParams
+            data class Current(
+                private val parent: User,
+            ) : ThothCurrentUserParams
         }
     }
 
     @Summary("Ping server", method = "POST")
     @Tagged("Server")
     @Resource("ping")
-    data class Ping(private val parent: Api)
+    data class Ping(
+        private val parent: Api,
+    )
 
     @Secured(Guards.Normal)
     @Summary("List file scanners", method = "GET")
     @Tagged("Scanner")
     @Resource("scanners")
-    data class Scanners(private val parent: Api)
+    data class Scanners(
+        private val parent: Api,
+    )
 
     @Secured(Guards.Normal)
     @Summary("List metadata agents", method = "GET")
     @Tagged("Scanner")
     @Resource("metadata-agents")
-    data class MetadataScanners(private val parent: Api)
+    data class MetadataScanners(
+        private val parent: Api,
+    )
 
     @Secured(Guards.Normal)
     @Summary("List libraries", method = "GET")
     @Summary("Create library", method = "POST")
     @Resource("libraries")
     @Tagged("Library")
-    data class Libraries(private val parent: Api) {
-
+    data class Libraries(
+        private val parent: Api,
+    ) {
         @Summary("Search in all libraries", method = "GET")
         @Resource("search")
         data class Search(
@@ -151,41 +186,59 @@ class Api {
         @Summary("Delete library", method = "DELETE")
         @Summary("Update library", method = "PATCH")
         @Summary("Get library", method = "GET")
-        data class Id(val libraryId: UUID_S, private val parent: Libraries) : BeforeBodyParsing {
+        data class Id(
+            val libraryId: UUID_S,
+            private val parent: Libraries,
+        ) : BeforeBodyParsing {
             override suspend fun RouteHandler.beforeBodyParsing() {
                 assertLibraryPermissions(libraryId)
             }
 
             @Summary("Rescan library", method = "POST")
             @Resource("rescan")
-            data class Rescan(private val parent: Id) {
+            data class Rescan(
+                private val parent: Id,
+            ) {
                 val libraryId
                     get() = parent.libraryId
             }
 
             @Resource("books")
             @Tagged("Books")
-            data class Books(private val parent: Libraries.Id) {
+            data class Books(
+                private val parent: Libraries.Id,
+            ) {
                 val libraryId
                     get() = parent.libraryId
 
                 @Summary("List books", method = "GET")
                 @Resource("")
-                data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Books) {
+                data class All(
+                    val limit: Int = 20,
+                    val offset: Long = 0,
+                    private val parent: Books,
+                ) {
                     val libraryId
                         get() = parent.libraryId
                 }
 
                 @Summary("List book sorting", method = "GET")
                 @Resource("sorting")
-                data class Sorting(val limit: Int = 20, val offset: Long = 0, private val parent: Books) {
+                data class Sorting(
+                    val limit: Int = 20,
+                    val offset: Long = 0,
+                    private val parent: Books,
+                ) {
                     val libraryId
                         get() = parent.libraryId
                 }
 
                 @Summary("Get book autocomplete", method = "GET")
                 @Resource("autocomplete")
-                data class Autocomplete(val q: String, private val parent: Books) {
+                data class Autocomplete(
+                    val q: String,
+                    private val parent: Books,
+                ) {
                     val libraryId
                         get() = parent.libraryId
                 }
@@ -194,13 +247,18 @@ class Api {
                 @Summary("Update book", method = "PATCH")
                 @Summary("Replace book", method = "PUT")
                 @Resource("{id}")
-                data class Id(val id: UUID_S, private val parent: Books) {
+                data class Id(
+                    val id: UUID_S,
+                    private val parent: Books,
+                ) {
                     val libraryId
                         get() = parent.libraryId
 
                     @Summary("Get book position", method = "GET")
                     @Resource("position")
-                    data class Position(private val parent: Id) {
+                    data class Position(
+                        private val parent: Id,
+                    ) {
                         val libraryId
                             get() = parent.libraryId
 
@@ -210,7 +268,9 @@ class Api {
 
                     @Summary("Auto match book", method = "POST")
                     @Resource("automatch")
-                    data class AutoMatch(private val parent: Id) {
+                    data class AutoMatch(
+                        private val parent: Id,
+                    ) {
                         val libraryId
                             get() = parent.libraryId
 
@@ -222,7 +282,9 @@ class Api {
 
             @Resource("authors")
             @Tagged("Authors")
-            data class Authors(private val parent: Libraries.Id) {
+            data class Authors(
+                private val parent: Libraries.Id,
+            ) {
                 val libraryId
                     get() = parent.libraryId
 
@@ -252,7 +314,10 @@ class Api {
 
                 @Summary("Get author autocomplete", method = "GET")
                 @Resource("autocomplete")
-                data class Autocomplete(val q: String, private val parent: Authors) {
+                data class Autocomplete(
+                    val q: String,
+                    private val parent: Authors,
+                ) {
                     val libraryId
                         get() = parent.libraryId
                 }
@@ -261,7 +326,10 @@ class Api {
                 @Summary("Update author", method = "PATCH")
                 @Summary("Replace author", method = "PUT")
                 @Resource("{id}")
-                data class Id(val id: UUID_S, private val parent: Authors) {
+                data class Id(
+                    val id: UUID_S,
+                    private val parent: Authors,
+                ) {
                     val libraryId
                         get() = parent.libraryId
 
@@ -280,7 +348,9 @@ class Api {
 
                     @Summary("Auto match book", method = "POST")
                     @Resource("automatch")
-                    data class AutoMatch(private val parent: Id) {
+                    data class AutoMatch(
+                        private val parent: Id,
+                    ) {
                         val libraryId
                             get() = parent.libraryId
 
@@ -292,13 +362,19 @@ class Api {
 
             @Resource("series")
             @Tagged("Series")
-            data class Series(private val parent: Libraries.Id) {
+            data class Series(
+                private val parent: Libraries.Id,
+            ) {
                 val libraryId
                     get() = parent.libraryId
 
                 @Summary("List series", method = "GET")
                 @Resource("")
-                data class All(val limit: Int = 20, val offset: Long = 0, private val parent: Series) {
+                data class All(
+                    val limit: Int = 20,
+                    val offset: Long = 0,
+                    private val parent: Series,
+                ) {
                     val libraryId
                         get() = parent.libraryId
                 }
@@ -317,7 +393,10 @@ class Api {
 
                 @Summary("Get series autocomplete", method = "GET")
                 @Resource("autocomplete")
-                data class Autocomplete(val q: String, private val parent: Series) {
+                data class Autocomplete(
+                    val q: String,
+                    private val parent: Series,
+                ) {
                     val libraryId
                         get() = parent.libraryId
                 }
@@ -326,7 +405,10 @@ class Api {
                 @Summary("Update series", method = "PATCH")
                 @Summary("Replace series", method = "PUT")
                 @Resource("{id}")
-                data class Id(val id: UUID_S, private val parent: Series) {
+                data class Id(
+                    val id: UUID_S,
+                    private val parent: Series,
+                ) {
                     val libraryId
                         get() = parent.libraryId
 
@@ -345,7 +427,9 @@ class Api {
 
                     @Summary("Auto match book", method = "POST")
                     @Resource("automatch")
-                    data class AutoMatch(private val parent: Id) {
+                    data class AutoMatch(
+                        private val parent: Id,
+                    ) {
                         val libraryId
                             get() = parent.libraryId
 
@@ -358,7 +442,9 @@ class Api {
             @Secured(Guards.Normal)
             @Resource("metadata")
             @Tagged("Metadata")
-            data class Metadata(private val parent: Id) {
+            data class Metadata(
+                private val parent: Id,
+            ) {
                 val libraryId
                     get() = parent.libraryId
 
@@ -378,51 +464,80 @@ class Api {
                 }
 
                 @Resource("author")
-                data class Author(private val parent: Metadata) {
+                data class Author(
+                    private val parent: Metadata,
+                ) {
                     @Summary("Get author metadata", method = "GET")
                     @Resource("{id}")
-                    data class Id(val id: String, val provider: String, private val parent: Author) {
+                    data class Id(
+                        val id: String,
+                        val provider: String,
+                        private val parent: Author,
+                    ) {
                         val libraryId
                             get() = parent.parent.libraryId
                     }
 
                     @Summary("Search author metadata", method = "GET")
                     @Resource("search")
-                    data class Search(val q: String, private val parent: Author) {
+                    data class Search(
+                        val q: String,
+                        private val parent: Author,
+                    ) {
                         val libraryId
                             get() = parent.parent.libraryId
                     }
                 }
 
                 @Resource("book")
-                data class Book(private val parent: Metadata) {
+                data class Book(
+                    private val parent: Metadata,
+                ) {
                     @Summary("Get book metadata", method = "GET")
                     @Resource("{id}")
-                    data class Id(val id: String, val provider: String, private val parent: Book) {
+                    data class Id(
+                        val id: String,
+                        val provider: String,
+                        private val parent: Book,
+                    ) {
                         val libraryId
                             get() = parent.parent.libraryId
                     }
 
                     @Summary("Search book metadata", method = "GET")
                     @Resource("search")
-                    data class Search(val q: String, val authorName: String? = null, private val parent: Book) {
+                    data class Search(
+                        val q: String,
+                        val authorName: String? = null,
+                        private val parent: Book,
+                    ) {
                         val libraryId
                             get() = parent.parent.libraryId
                     }
                 }
 
                 @Resource("series")
-                data class Series(private val parent: Metadata) {
+                data class Series(
+                    private val parent: Metadata,
+                ) {
                     @Summary("Get series metadata", method = "GET")
                     @Resource("{id}")
-                    data class Id(val id: String, val provider: String, private val parent: Series) {
+                    data class Id(
+                        val id: String,
+                        val provider: String,
+                        private val parent: Series,
+                    ) {
                         val libraryId
                             get() = parent.parent.libraryId
                     }
 
                     @Summary("Search series metadata", method = "GET")
                     @Resource("search")
-                    data class Search(val q: String, val authorName: String? = null, private val parent: Series) {
+                    data class Search(
+                        val q: String,
+                        val authorName: String? = null,
+                        private val parent: Series,
+                    ) {
                         val libraryId
                             get() = parent.parent.libraryId
                     }
@@ -434,19 +549,31 @@ class Api {
     // TODO secure?
     @Resource("stream")
     @Tagged("Files")
-    data class Files(private val parent: Api) {
+    data class Files(
+        private val parent: Api,
+    ) {
         @Resource("audio")
-        data class Audio(private val parent: Files) {
+        data class Audio(
+            private val parent: Files,
+        ) {
             @Summary("Get audio file", method = "GET")
             @Resource("{id}")
-            data class Id(val id: UUID_S, private val parent: Audio)
+            data class Id(
+                val id: UUID_S,
+                private val parent: Audio,
+            )
         }
 
         @Resource("images")
-        data class Images(private val parent: Files) {
+        data class Images(
+            private val parent: Files,
+        ) {
             @Summary("Get image file", method = "GET")
             @Resource("{id}")
-            data class Id(val id: UUID_S, private val parent: Images)
+            data class Id(
+                val id: UUID_S,
+                private val parent: Images,
+            )
         }
     }
 }

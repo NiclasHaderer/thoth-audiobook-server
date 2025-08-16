@@ -3,7 +3,11 @@ package io.thoth.server.common.scheduling
 import java.time.Duration
 import java.time.LocalDateTime
 
-abstract class ScheduledTask(open val task: Task, val executeAt: LocalDateTime, val cause: String) {
+abstract class ScheduledTask(
+    open val task: Task,
+    val executeAt: LocalDateTime,
+    val cause: String,
+) {
     fun schedulesIn(): Long {
         val now = LocalDateTime.now()
         return try {
@@ -26,8 +30,10 @@ class ScheduledCronTask(
     }
 }
 
-class ScheduledEventTask<T>(override val task: EventTask<T>, val event: EventTask.Event<T>) :
-    ScheduledTask(task, LocalDateTime.now(), event.name) {
+class ScheduledEventTask<T>(
+    override val task: EventTask<T>,
+    val event: EventTask.Event<T>,
+) : ScheduledTask(task, LocalDateTime.now(), event.name) {
     override suspend fun run() {
         task.callback(event)
     }

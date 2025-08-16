@@ -7,9 +7,9 @@ import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
+import mu.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
-import mu.KotlinLogging.logger
 
 enum class KtErrorHandling {
     Result,
@@ -47,115 +47,117 @@ class KotlinClientGenerator(
             listOf("io.thoth.openapi.client.kotlin") + directoryToScanForTypes,
         )
 
-    override fun generateClient(): List<ClientPart> = buildList {
-        val clientFunctions =
-            routes.map {
-                KtClientFunction(
-                    getRouteName = this@KotlinClientGenerator::getRouteName,
-                    route = it,
-                    clientImports = clientImports,
-                    typeDefinitions = typeDefinitions,
-                    typeProviders = typeProviders,
-                    errorHandling = errorHandling,
-                )
-            }
+    override fun generateClient(): List<ClientPart> =
+        buildList {
+            val clientFunctions =
+                routes.map {
+                    KtClientFunction(
+                        getRouteName = this@KotlinClientGenerator::getRouteName,
+                        route = it,
+                        clientImports = clientImports,
+                        typeDefinitions = typeDefinitions,
+                        typeProviders = typeProviders,
+                        errorHandling = errorHandling,
+                    )
+                }
 
-        val base = buildString {
-            append("@file:Suppress(\"UnusedImport\")\n\n")
-            // Package
-            append("package $packageName\n\n")
+            val base =
+                buildString {
+                    append("@file:Suppress(\"UnusedImport\")\n\n")
+                    // Package
+                    append("package $packageName\n\n")
 
-            // Imports
-            append("import io.ktor.client.*\n")
-            append("import io.ktor.http.*\n")
-            append("import io.ktor.client.call.*\n")
-            append("import io.ktor.client.plugins.*\n")
-            append("import io.ktor.util.reflect.*\n")
+                    // Imports
+                    append("import io.ktor.client.*\n")
+                    append("import io.ktor.http.*\n")
+                    append("import io.ktor.client.call.*\n")
+                    append("import io.ktor.client.plugins.*\n")
+                    append("import io.ktor.util.reflect.*\n")
 
-            // Client imports
-            append(clientImports.joinToString("\n"))
-            append("\n")
+                    // Client imports
+                    append(clientImports.joinToString("\n"))
+                    append("\n")
 
-            // Optional error handling imports
-            if (errorHandling == KtErrorHandling.Either) {
-                append("import arrow.core.Either\n")
-                append("import java.io.IOException\n")
-            }
+                    // Optional error handling imports
+                    if (errorHandling == KtErrorHandling.Either) {
+                        append("import arrow.core.Either\n")
+                        append("import java.io.IOException\n")
+                    }
 
-            // Model imports
-            append("import $packageName.models.*\n")
-            append("\n\n")
-        }
+                    // Model imports
+                    append("import $packageName.models.*\n")
+                    append("\n\n")
+                }
 
-        add(
-            ClientPart(
-                path = "${apiClientName}.kt",
-                content =
-                    buildString {
-                        append(base)
-                        // Class
-                        append("interface $apiClientName {\n")
-                        append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
-                        append("}")
-                    },
-            )
-        )
-        add(
-            ClientPart(
-                path = "${apiClientName}Impl.kt",
-                content =
-                    buildString {
-                        append(base)
-
-                        // Class
-                        append("@Suppress(\"unused\")\n")
-                        if (abstract) {
-                            append("abstract class ${apiClientName}Impl(\n")
-                        } else {
-                            append("open class ${apiClientName}Impl(\n")
-                        }
-                        append("    baseUrl: Url\n")
-                        append(") : RequestRunner(baseUrl), ${apiClientName} {\n")
-                        append("${clientFunctions.map { it.contentImpl }.joinToString("\n\n")}\n")
-                        if (errorHandling == KtErrorHandling.Either) {
-                            val eitherFun = getResourceContent("/kotlin/Either.kt")
-                            // Replace everything up to // -- Start and after // -- End
-                            append(eitherFun.substringAfter("// -- Start").substringBefore("// -- End"))
-                        }
-                        append("}")
-                    },
-            )
-        )
-        addAll(
-            staticFiles.map { (name, content) ->
+            add(
                 ClientPart(
-                    path = "$name.kt",
+                    path = "$apiClientName.kt",
                     content =
                         buildString {
-                            append("package $packageName\n\n")
-                            append(content)
+                            append(base)
+                            // Class
+                            append("interface $apiClientName {\n")
+                            append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
+                            append("}")
                         },
-                )
-            }
-        )
-        addAll(
-            typeDefinitions.values.map {
+                ),
+            )
+            add(
                 ClientPart(
-                    path = "models/${it.name()}.kt",
+                    path = "${apiClientName}Impl.kt",
                     content =
                         buildString {
-                            append("package $packageName.models\n\n")
-                            if (it.imports().isNotEmpty()) {
-                                append(it.imports().joinToString("\n"))
-                                append("\n\n")
+                            append(base)
+
+                            // Class
+                            append("@Suppress(\"unused\")\n")
+                            if (abstract) {
+                                append("abstract class ${apiClientName}Impl(\n")
+                            } else {
+                                append("open class ${apiClientName}Impl(\n")
                             }
-                            append(it.content())
+                            append("    baseUrl: Url\n")
+                            append(") : RequestRunner(baseUrl), $apiClientName {\n")
+                            append("${clientFunctions.map { it.contentImpl }.joinToString("\n\n")}\n")
+                            if (errorHandling == KtErrorHandling.Either) {
+                                val eitherFun = getResourceContent("/kotlin/Either.kt")
+                                // Replace everything up to // -- Start and after // -- End
+                                append(eitherFun.substringAfter("// -- Start").substringBefore("// -- End"))
+                            }
+                            append("}")
                         },
-                )
-            }
-        )
-        assertTypeNames(typeDefinitions)
-    }
+                ),
+            )
+            addAll(
+                staticFiles.map { (name, content) ->
+                    ClientPart(
+                        path = "$name.kt",
+                        content =
+                            buildString {
+                                append("package $packageName\n\n")
+                                append(content)
+                            },
+                    )
+                },
+            )
+            addAll(
+                typeDefinitions.values.map {
+                    ClientPart(
+                        path = "models/${it.name()}.kt",
+                        content =
+                            buildString {
+                                append("package $packageName.models\n\n")
+                                if (it.imports().isNotEmpty()) {
+                                    append(it.imports().joinToString("\n"))
+                                    append("\n\n")
+                                }
+                                append(it.content())
+                            },
+                    )
+                },
+            )
+            assertTypeNames(typeDefinitions)
+        }
 
     private fun assertTypeNames(typeDefinitions: MutableMap<String, KtTypeGenerator.KtReferenceType>) {
         for (type in typeDefinitions.values) {
@@ -189,17 +191,16 @@ fun Application.generateKotlinClient(
     errorHandling: KtErrorHandling = KtErrorHandling.Either,
 ) {
     KotlinClientGenerator(
-            routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
-            packageName = apiClientPackageName,
-            dist = savePath,
-            apiClientName = apiClientName,
-            fileWriter = fileWriter,
-            directoryToScanForTypes = directoryToScanForTypes,
-            abstract = abstract,
-            cleanDistPackage = cleanDistPackage,
-            errorHandling = errorHandling,
-        )
-        .safeClient()
+        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+        packageName = apiClientPackageName,
+        dist = savePath,
+        apiClientName = apiClientName,
+        fileWriter = fileWriter,
+        directoryToScanForTypes = directoryToScanForTypes,
+        abstract = abstract,
+        cleanDistPackage = cleanDistPackage,
+        errorHandling = errorHandling,
+    ).safeClient()
 }
 
 fun Application.generateKotlinClient(
@@ -212,15 +213,14 @@ fun Application.generateKotlinClient(
     abstract: Boolean = true,
     cleanDistPackage: Boolean = true,
     errorHandling: KtErrorHandling = KtErrorHandling.Either,
-) =
-    generateKotlinClient(
-        apiClientPackageName = apiClientPackageName,
-        savePath = Path.of(savePath),
-        routes = routes,
-        apiClientName = apiClientName,
-        fileWriter = fileWriter,
-        directoryToScanForTypes = directoryToScanForTypes,
-        abstract = abstract,
-        cleanDistPackage = cleanDistPackage,
-        errorHandling = errorHandling,
-    )
+) = generateKotlinClient(
+    apiClientPackageName = apiClientPackageName,
+    savePath = Path.of(savePath),
+    routes = routes,
+    apiClientName = apiClientName,
+    fileWriter = fileWriter,
+    directoryToScanForTypes = directoryToScanForTypes,
+    abstract = abstract,
+    cleanDistPackage = cleanDistPackage,
+    errorHandling = errorHandling,
+)

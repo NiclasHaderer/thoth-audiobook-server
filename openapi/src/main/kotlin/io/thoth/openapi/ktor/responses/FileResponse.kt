@@ -11,7 +11,9 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 
-class FileResponse(val path: Path) : BaseResponse {
+class FileResponse(
+    val path: Path,
+) : BaseResponse {
     constructor(path: String) : this(Path.of(path))
 
     init {
@@ -25,10 +27,6 @@ class FileResponse(val path: Path) : BaseResponse {
     }
 }
 
-fun RouteHandler.fileResponse(path: Path): FileResponse {
-    return FileResponse(path)
-}
+fun RouteHandler.fileResponse(path: Path): FileResponse = FileResponse(path)
 
-fun RouteHandler.fileResponse(path: String): FileResponse {
-    return FileResponse(path)
-}
+fun RouteHandler.fileResponse(path: String): FileResponse = FileResponse(path)

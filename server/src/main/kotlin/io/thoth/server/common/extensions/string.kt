@@ -7,18 +7,17 @@ import com.cronutils.parser.CronParser
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import java.util.*
 import kotlinx.coroutines.runBlocking
+import java.util.*
 
 private val client = HttpClient()
 
-private suspend fun imageFromString(url: String): ByteArray {
-    return if (url.matches("^data://".toRegex())) {
+private suspend fun imageFromString(url: String): ByteArray =
+    if (url.matches("^data://".toRegex())) {
         decodeDataURL(url)
     } else {
         client.get(url).readBytes()
     }
-}
 
 private fun decodeDataURL(dataUrl: String): ByteArray {
     val contentStartIndex: Int = dataUrl.indexOf(",") + 1
@@ -30,7 +29,10 @@ fun String.syncUriToFile(): ByteArray = runBlocking { imageFromString(this@syncU
 
 suspend fun String.uriToFile(): ByteArray = imageFromString(this@uriToFile)
 
-fun String.replaceAll(values: List<Regex>, newValue: String): String {
+fun String.replaceAll(
+    values: List<Regex>,
+    newValue: String,
+): String {
     var result = this
     values.forEach { result = result.replace(it, newValue) }
     return result

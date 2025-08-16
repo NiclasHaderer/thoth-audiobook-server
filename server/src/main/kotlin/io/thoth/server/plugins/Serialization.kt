@@ -14,12 +14,13 @@ import io.thoth.openapi.serializion.jackson.CustomLocalDateTimeDesSerializer
 import io.thoth.openapi.serializion.jackson.CustomLocalDateTimeSerializer
 import io.thoth.server.di.serialization.JacksonSerialization
 import io.thoth.server.di.serialization.Serialization
+import org.koin.ktor.ext.inject
 import java.time.LocalDate
 import java.time.LocalDateTime
-import org.koin.ktor.ext.inject
 
 fun Application.configureSerialization() {
-    @Suppress("UNCHECKED_CAST") val serialization by inject<Serialization>() as Lazy<JacksonSerialization>
+    @Suppress("UNCHECKED_CAST")
+    val serialization by inject<Serialization>() as Lazy<JacksonSerialization>
 
     install(ContentNegotiation) {
         jackson {

@@ -17,9 +17,12 @@ fun RouteHandler.getJwks(params: ThothJwksParams): JWKs {
     val jwks =
         keyPairs.entries
             .map { (keyId, keyPair) ->
-                RSAKey.Builder(keyPair.public as RSAPublicKey).keyUse(KeyUse.SIGNATURE).keyID(keyId).build()
-            }
-            .map { rsaKey ->
+                RSAKey
+                    .Builder(keyPair.public as RSAPublicKey)
+                    .keyUse(KeyUse.SIGNATURE)
+                    .keyID(keyId)
+                    .build()
+            }.map { rsaKey ->
                 JWK(
                     kty = rsaKey.keyType.toString(),
                     use = rsaKey.keyUse.toString(),

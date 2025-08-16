@@ -1,15 +1,18 @@
 package io.thoth.openapi
 
 import io.thoth.openapi.common.ClassType
+import org.junit.Test
 import java.math.BigInteger
 import kotlin.test.expect
-import org.junit.Test
 
 class InnerType
 
 class SecondInnerType
 
-data class ListWrapper<D, E>(val noListGeneric: D, val listGeneric: List<E>)
+data class ListWrapper<D, E>(
+    val noListGeneric: D,
+    val listGeneric: List<E>,
+)
 
 data class TwoListWrapper<A, B, C>(
     val listWrapper: ListWrapper<A, B>,
@@ -18,16 +21,21 @@ data class TwoListWrapper<A, B, C>(
     val notGeneric: String,
 )
 
-class Outer<H>(val a: Map<BigInteger, H>) {
-    class InnerTwo<F, G>(val b: Map<F, G>)
+class Outer<H>(
+    val a: Map<BigInteger, H>,
+) {
+    class InnerTwo<F, G>(
+        val b: Map<F, G>,
+    )
 }
 
-abstract class SomeInterface<I>(val i: I)
+abstract class SomeInterface<I>(
+    val i: I,
+)
 
 class FinalType : SomeInterface<String>("")
 
 class GenericExtractionTest {
-
     @Test
     fun testClassType() {
         val type = ClassType.create<TwoListWrapper<InnerType, SecondInnerType, String>>()
@@ -54,7 +62,12 @@ class GenericExtractionTest {
 
     @Test
     fun testSomething() {
-        data class HardToResolve<LONG_TYPE_PARAM>(val a: LONG_TYPE_PARAM, val b: List<LONG_TYPE_PARAM>, val c: String)
+        data class HardToResolve<LONG_TYPE_PARAM>(
+            val a: LONG_TYPE_PARAM,
+            val b: List<LONG_TYPE_PARAM>,
+            val c: String,
+        )
+
         class Unique
 
         val classType = ClassType.create<HardToResolve<List<Unique>>>()
@@ -76,7 +89,9 @@ class GenericExtractionTest {
 
     @Test
     fun testMissingParametersAndInlineGenerics() {
-        class TestClass<T>(val b: Map<String, T>)
+        class TestClass<T>(
+            val b: Map<String, T>,
+        )
 
         val classType = ClassType.create<TestClass<Int>>()
 

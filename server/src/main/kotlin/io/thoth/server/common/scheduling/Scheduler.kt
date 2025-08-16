@@ -2,12 +2,12 @@ package io.thoth.server.common.scheduling
 
 import io.thoth.server.common.extensions.nextExecution
 import io.thoth.server.common.extensions.toHumanReadable
+import kotlinx.coroutines.coroutineScope
+import mu.KotlinLogging.logger
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlinx.coroutines.coroutineScope
-import mu.KotlinLogging.logger
 
 abstract class TaskQueueHolder {
     private val _taskQueue = mutableListOf<ScheduledTask>()
@@ -23,7 +23,11 @@ abstract class TaskQueueHolder {
 }
 
 open class Scheduler : TaskQueueHolder() {
-    data class QueuedTask(val name: String, val executeAt: LocalDateTime, val type: TaskType)
+    data class QueuedTask(
+        val name: String,
+        val executeAt: LocalDateTime,
+        val type: TaskType,
+    )
 
     private var currentExecution: DelayedExecution? = null
     private val schedules = mutableListOf<Task>()
@@ -88,50 +92,51 @@ open class Scheduler : TaskQueueHolder() {
         currentExecution = null
     }
 
-    private suspend fun internalStart() = coroutineScope {
-        while (true) {
-            // Get the task with the next execution time. This time can also be in the past if the
-            // task is overdue.
-            val scheduledTask = taskQueue.minByOrNull { it.executeAt }
+    private suspend fun internalStart() =
+        coroutineScope {
+            while (true) {
+                // Get the task with the next execution time. This time can also be in the past if the
+                // task is overdue.
+                val scheduledTask = taskQueue.minByOrNull { it.executeAt }
 
-            if (scheduledTask == null) {
-                log.debug { "No tasks in queue. Waiting for new tasks to be scheduled" }
-                val currentExecution = DelayedExecution(Long.MAX_VALUE) {}
+                if (scheduledTask == null) {
+                    log.debug { "No tasks in queue. Waiting for new tasks to be scheduled" }
+                    val currentExecution = DelayedExecution(Long.MAX_VALUE) {}
+                    currentExecution.runInBackground(this@coroutineScope)
+                    this@Scheduler.currentExecution = currentExecution
+                    currentExecution.join()
+                    continue
+                }
+
+                log.debug {
+                    "Next task '${scheduledTask.task.name}' will be executed in ${
+                        Duration.of(scheduledTask.schedulesIn(), ChronoUnit.MILLIS).toHumanReadable()
+                    }. " +
+                        "Triggered by ${scheduledTask.task.type}:${scheduledTask.cause}"
+                }
+
+                // Schedule the task for execution
+                val currentExecution = DelayedExecution(scheduledTask.schedulesIn(), scheduledTask::run)
                 currentExecution.runInBackground(this@coroutineScope)
                 this@Scheduler.currentExecution = currentExecution
+                // Wait for the task to be executed
                 currentExecution.join()
-                continue
-            }
 
-            log.debug {
-                "Next task '${scheduledTask.task.name}' will be executed in ${
-                    Duration.of(scheduledTask.schedulesIn(), ChronoUnit.MILLIS).toHumanReadable()
-                }. " +
-                    "Triggered by ${scheduledTask.task.type}:${scheduledTask.cause}"
-            }
-
-            // Schedule the task for execution
-            val currentExecution = DelayedExecution(scheduledTask.schedulesIn(), scheduledTask::run)
-            currentExecution.runInBackground(this@coroutineScope)
-            this@Scheduler.currentExecution = currentExecution
-            // Wait for the task to be executed
-            currentExecution.join()
-
-            if (currentExecution.executedSuccessfully()) {
-                // Task has been executed successfully
-                // Task can therefore be removed from the queue
-                log.debug { "Scheduled task '${scheduledTask.task.name}' was executed successfully" }
-                modifyQueue { filter { it == scheduledTask }.forEach { remove(it) } }
-                // If the task was a cron task, it should be rescheduled
-                if (scheduledTask is ScheduledCronTask) {
-                    queueTask(scheduledTask.task)
+                if (currentExecution.executedSuccessfully()) {
+                    // Task has been executed successfully
+                    // Task can therefore be removed from the queue
+                    log.debug { "Scheduled task '${scheduledTask.task.name}' was executed successfully" }
+                    modifyQueue { filter { it == scheduledTask }.forEach { remove(it) } }
+                    // If the task was a cron task, it should be rescheduled
+                    if (scheduledTask is ScheduledCronTask) {
+                        queueTask(scheduledTask.task)
+                    }
+                } else {
+                    // Task was canceled
+                    // This can happen if a new task is added to the schedule or an event is dispatched
+                    // In this case just look for the next task to run by checking the queue again
+                    log.debug { "Waiting for scheduled task was canceled. Looking for the next task to run" }
                 }
-            } else {
-                // Task was canceled
-                // This can happen if a new task is added to the schedule or an event is dispatched
-                // In this case just look for the next task to run by checking the queue again
-                log.debug { "Waiting for scheduled task was canceled. Looking for the next task to run" }
             }
         }
-    }
 }

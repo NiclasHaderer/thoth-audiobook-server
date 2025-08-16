@@ -11,26 +11,35 @@ import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapper
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
-import java.nio.file.Path
-import kotlin.io.path.absolute
-import kotlin.io.path.isDirectory
-import kotlin.io.path.readAttributes
 import kotlinx.coroutines.sync.Semaphore
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.nio.file.Path
+import kotlin.io.path.absolute
+import kotlin.io.path.isDirectory
+import kotlin.io.path.readAttributes
 
 interface TrackManager {
-    suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: Library)
+    suspend fun insertScanResult(
+        scan: AudioFileAnalysisResult,
+        path: Path,
+        library: Library,
+    )
 
-    suspend fun addPath(path: Path, library: Library)
+    suspend fun addPath(
+        path: Path,
+        library: Library,
+    )
 
     fun removePath(path: Path)
 }
 
-class TrackManagerImpl : TrackManager, KoinComponent {
+class TrackManagerImpl :
+    TrackManager,
+    KoinComponent {
     private val bookRepository by inject<BookRepository>()
     private val seriesRepository by inject<SeriesRepository>()
     private val authorRepository by inject<AuthorRepository>()
@@ -39,7 +48,10 @@ class TrackManagerImpl : TrackManager, KoinComponent {
     private val semaphore = Semaphore(1)
     private val log = logger {}
 
-    override suspend fun addPath(path: Path, library: Library) {
+    override suspend fun addPath(
+        path: Path,
+        library: Library,
+    ) {
         if (path.isDirectory()) {
             log.warn { "Skipped ${path.absolute()} because it is a directory" }
             return
@@ -63,7 +75,11 @@ class TrackManagerImpl : TrackManager, KoinComponent {
         insertScanResult(result, path, library)
     }
 
-    override suspend fun insertScanResult(scan: AudioFileAnalysisResult, path: Path, library: Library) {
+    override suspend fun insertScanResult(
+        scan: AudioFileAnalysisResult,
+        path: Path,
+        library: Library,
+    ) {
         this.semaphore.acquire()
         try {
             transaction { insertOrUpdateTrack(scan, library) }
@@ -72,11 +88,15 @@ class TrackManagerImpl : TrackManager, KoinComponent {
         }
     }
 
-    override fun removePath(path: Path) = transaction {
-        Track.find { TTracks.path like "${path.absolute()}%" }.forEach { it.delete() }
-    }
+    override fun removePath(path: Path) =
+        transaction {
+            Track.find { TTracks.path like "${path.absolute()}%" }.forEach { it.delete() }
+        }
 
-    private fun insertOrUpdateTrack(scan: AudioFileAnalysisResult, library: Library): Track {
+    private fun insertOrUpdateTrack(
+        scan: AudioFileAnalysisResult,
+        library: Library,
+    ): Track {
         val track = Track.getByPath(scan.path)
         return if (track != null) {
             updateTrack(track, scan, library).also { track.markAsTouched() }
@@ -85,7 +105,10 @@ class TrackManagerImpl : TrackManager, KoinComponent {
         }
     }
 
-    private fun createTrack(scan: AudioFileAnalysisResult, libraryModel: Library): Track {
+    private fun createTrack(
+        scan: AudioFileAnalysisResult,
+        libraryModel: Library,
+    ): Track {
         val dbBook = getOrCreateBook(scan, libraryModel)
         return Track.new {
             title = scan.title
@@ -98,7 +121,11 @@ class TrackManagerImpl : TrackManager, KoinComponent {
         }
     }
 
-    private fun updateTrack(track: Track, scan: AudioFileAnalysisResult, libraryModel: Library): Track {
+    private fun updateTrack(
+        track: Track,
+        scan: AudioFileAnalysisResult,
+        libraryModel: Library,
+    ): Track {
         val dbBook = getOrCreateBook(scan, libraryModel)
         return track.apply {
             title = scan.title
@@ -111,7 +138,10 @@ class TrackManagerImpl : TrackManager, KoinComponent {
         }
     }
 
-    private fun getOrCreateBook(scan: AudioFileAnalysisResult, libraryModel: Library): Book {
+    private fun getOrCreateBook(
+        scan: AudioFileAnalysisResult,
+        libraryModel: Library,
+    ): Book {
         val authors = getOrCreateAuthors(scan, libraryModel)
         val book =
             bookRepository.findByName(
@@ -134,8 +164,11 @@ class TrackManagerImpl : TrackManager, KoinComponent {
         libraryModel: Library,
     ): Book {
         val dbSeries =
-            if (scan.series != null) seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthors)
-            else null
+            if (scan.series != null) {
+                seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthors)
+            } else {
+                null
+            }
         val dbImage = if (scan.cover != null && book.coverID == null) Image.create(scan.cover!!).id else book.coverID
 
         return book.apply {
@@ -149,10 +182,17 @@ class TrackManagerImpl : TrackManager, KoinComponent {
         }
     }
 
-    private fun createBook(scan: AudioFileAnalysisResult, dbAuthor: List<Author>, libraryModel: Library): Book {
+    private fun createBook(
+        scan: AudioFileAnalysisResult,
+        dbAuthor: List<Author>,
+        libraryModel: Library,
+    ): Book {
         val dbSeries =
-            if (scan.series != null) seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthor)
-            else null
+            if (scan.series != null) {
+                seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthor)
+            } else {
+                null
+            }
         val dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
         val dbSeriesList = if (dbSeries != null) listOf(dbSeries) else listOf()
 
@@ -168,8 +208,11 @@ class TrackManagerImpl : TrackManager, KoinComponent {
         }
     }
 
-    private fun getOrCreateAuthors(scan: AudioFileAnalysisResult, libraryModel: Library): List<Author> {
-        return scan.authors.map { author ->
+    private fun getOrCreateAuthors(
+        scan: AudioFileAnalysisResult,
+        libraryModel: Library,
+    ): List<Author> =
+        scan.authors.map { author ->
             authorRepository.findByName(author, libraryModel.id.value)
                 ?: run {
                     log.info("Created author: ${scan.authors}")
@@ -179,5 +222,4 @@ class TrackManagerImpl : TrackManager, KoinComponent {
                     }
                 }
         }
-    }
 }

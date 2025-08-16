@@ -1,13 +1,16 @@
 package io.thoth.server.common.scheduling
 
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
-class DelayedExecution(private val delay: Long, private val task: suspend () -> Unit) {
+class DelayedExecution(
+    private val delay: Long,
+    private val task: suspend () -> Unit,
+) {
     private val isRunning = AtomicBoolean(false)
     private var ranSuccessful = false
 
@@ -29,17 +32,11 @@ class DelayedExecution(private val delay: Long, private val task: suspend () -> 
             }
     }
 
-    fun isRunning(): Boolean {
-        return isRunning.get()
-    }
+    fun isRunning(): Boolean = isRunning.get()
 
-    fun isWaiting(): Boolean {
-        return !isRunning.get()
-    }
+    fun isWaiting(): Boolean = !isRunning.get()
 
-    fun executedSuccessfully(): Boolean {
-        return ranSuccessful
-    }
+    fun executedSuccessfully(): Boolean = ranSuccessful
 
     suspend fun join() {
         job.join()

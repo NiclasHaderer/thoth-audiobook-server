@@ -8,7 +8,10 @@ import mu.KotlinLogging
 class ArrayTsGenerator : TsTypeGenerator() {
     private val log = KotlinLogging.logger {}
 
-    override fun generateContent(classType: ClassType, generateSubType: GenerateType<TsType>): String {
+    override fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String {
         if (classType.genericArguments.isEmpty()) {
             log.warn { "Array type without generic arguments" }
             return "Array<unknown>"
@@ -31,12 +34,15 @@ class ArrayTsGenerator : TsTypeGenerator() {
 
     override fun getInsertionMode(classType: ClassType) = TsDataType.PRIMITIVE
 
-    override fun generateReference(classType: ClassType, generateSubType: GenerateType<TsType>): String? = null
+    override fun generateReference(
+        classType: ClassType,
+        generateSubType: GenerateType<TsType>,
+    ): String? = null
 
     override fun getName(classType: ClassType): String = "Array"
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(
+    override fun canGenerate(classType: ClassType): Boolean =
+        classType.isSubclassOf(
             List::class,
             Array::class,
             Collection::class,
@@ -45,5 +51,4 @@ class ArrayTsGenerator : TsTypeGenerator() {
             LinkedHashSet::class,
             Set::class,
         )
-    }
 }

@@ -2,11 +2,14 @@ package io.thoth.server.ws
 
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import java.util.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.EntityChangeType
+import java.util.*
 
-@Serializable class ChangeEvent(val type: EntityChangeType, val id: String)
+@Serializable class ChangeEvent(
+    val type: EntityChangeType,
+    val id: String,
+)
 
 class WebsocketCollection {
     private val connections = Collections.synchronizedList<DefaultWebSocketServerSession>(mutableListOf())

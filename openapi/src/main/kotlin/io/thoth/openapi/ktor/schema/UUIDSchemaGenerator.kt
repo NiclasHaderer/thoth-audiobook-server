@@ -7,18 +7,16 @@ import io.thoth.openapi.common.ClassType
 import java.util.*
 
 class UUIDSchemaGenerator : SchemaGenerator() {
-    override fun generateSchema(classType: ClassType, generateSubType: GenerateSchemaSubtype): Schema<*> {
-        return StringSchema()
+    override fun generateSchema(
+        classType: ClassType,
+        generateSubType: GenerateSchemaSubtype,
+    ): Schema<*> =
+        StringSchema()
             .pattern("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
             .minLength(36)
             .maxLength(36)
-    }
 
-    override fun canGenerate(classType: ClassType): Boolean {
-        return classType.isSubclassOf(UUID::class)
-    }
+    override fun canGenerate(classType: ClassType): Boolean = classType.isSubclassOf(UUID::class)
 
-    override fun generateContentType(classType: ClassType): ContentType {
-        return ContentType.Text.Plain
-    }
+    override fun generateContentType(classType: ClassType): ContentType = ContentType.Text.Plain
 }

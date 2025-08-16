@@ -12,11 +12,11 @@ import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.metadata.saveSubList
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 suspend fun getAudibleSearchResult(
     regions: AudibleRegions,
@@ -41,7 +41,10 @@ suspend fun getAudibleSearchResult(
     return getAudibleSearchResult(document, regions)
 }
 
-fun getAudibleSearchResult(document: Document, regions: AudibleRegions): List<MetadataSearchBookImpl> {
+fun getAudibleSearchResult(
+    document: Document,
+    regions: AudibleRegions,
+): List<MetadataSearchBookImpl> {
     val searchResultItems = extractSearchResults(document)
     return searchResultItems.map {
         val link = extractLink(it)
@@ -64,9 +67,17 @@ private fun extractSearchResults(document: Document): Elements = document.select
 private fun extractNarrator(element: Element): String? = element.selectFirst(".narratorLabel a")?.text()
 
 private fun extractLanguage(element: Element): String? =
-    element.selectFirst(".languageLabel > *")?.text()?.split(":")?.last()?.trim()
+    element
+        .selectFirst(".languageLabel > *")
+        ?.text()
+        ?.split(":")
+        ?.last()
+        ?.trim()
 
-private fun extractReleaseDate(element: Element, regions: AudibleRegions): LocalDate? {
+private fun extractReleaseDate(
+    element: Element,
+    regions: AudibleRegions,
+): LocalDate? {
     var date = element.selectFirst(".releaseDateLabel > *")?.text() ?: return null
     date = date.split(" ").last()
     val regionsValue = regions.getValue()
@@ -85,7 +96,6 @@ private fun extractImageUrl(element: Element): String? {
 }
 
 internal fun extractAuthorInfo(element: Element): List<MetadataSearchAuthorImpl>? {
-
     val authorElements = element.select(".authorLabel a")
     if (authorElements.isEmpty()) return null
 
@@ -99,10 +109,17 @@ internal fun extractAuthorInfo(element: Element): List<MetadataSearchAuthorImpl>
     }
 }
 
-private fun extractTitle(element: Element, regions: AudibleRegions): String? =
-    element.selectFirst("h3 a")?.text()?.replaceAll(regions.getValue().titleReplacers, "")
+private fun extractTitle(
+    element: Element,
+    regions: AudibleRegions,
+): String? = element.selectFirst("h3 a")?.text()?.replaceAll(regions.getValue().titleReplacers, "")
 
-private fun extractLink(element: Element): String? = element.selectFirst("h3 a")?.absUrl("href")?.split("?")?.first()
+private fun extractLink(element: Element): String? =
+    element
+        .selectFirst("h3 a")
+        ?.absUrl("href")
+        ?.split("?")
+        ?.first()
 
 internal fun extractBookSeriesInfo(element: Element): List<MetadataBookSeriesImpl> {
     val seriesElement: Element = element.selectFirst(".seriesLabel") ?: return listOf()
@@ -118,7 +135,12 @@ internal fun extractBookSeriesInfo(element: Element): List<MetadataBookSeriesImp
         val seriesIndexText = seriesIndexElements.getOrNull(index)?.text()
         val floatRegex = Regex("[0-9]+(\\.[0-9]+)?")
         // Find the last number in the string
-        val seriesIndex = floatRegex.findAll(seriesIndexText ?: "").lastOrNull()?.value?.toFloatOrNull()
+        val seriesIndex =
+            floatRegex
+                .findAll(seriesIndexText ?: "")
+                .lastOrNull()
+                ?.value
+                ?.toFloatOrNull()
 
         MetadataBookSeriesImpl(
             link = seriesLink,

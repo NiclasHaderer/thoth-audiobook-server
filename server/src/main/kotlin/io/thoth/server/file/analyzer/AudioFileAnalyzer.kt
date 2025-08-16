@@ -15,4 +15,6 @@ interface AudioFileAnalyzer {
     ): AudioFileAnalysisResult?
 }
 
-class AudioFileAnalyzers(private val items: List<AudioFileAnalyzer>) : List<AudioFileAnalyzer> by items
+class AudioFileAnalyzers(
+    private val items: List<AudioFileAnalyzer>,
+) : List<AudioFileAnalyzer> by items

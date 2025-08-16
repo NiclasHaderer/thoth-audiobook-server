@@ -45,7 +45,7 @@ fun Routing.libraryRouting() {
         }
 
         throw ErrorResponse.notImplemented(
-            "This is still under construction. Currently only the parameter 'q' is supported"
+            "This is still under construction. Currently only the parameter 'q' is supported",
         )
     }
 }

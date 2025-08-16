@@ -11,8 +11,8 @@ import mu.KotlinLogging
 private fun <T> formatException(
     statusCode: HttpStatusCode,
     cb: ((cause: T) -> Unit)? = null,
-): suspend (call: ApplicationCall, cause: T) -> Unit {
-    return { call, cause ->
+): suspend (call: ApplicationCall, cause: T) -> Unit =
+    { call, cause ->
         if (!call.response.isSent) {
             call.respond(
                 statusCode,
@@ -21,7 +21,6 @@ private fun <T> formatException(
         }
         cb?.invoke(cause)
     }
-}
 
 fun Application.configureStatusPages() {
     val logger = KotlinLogging.logger {}

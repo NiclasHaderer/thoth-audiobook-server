@@ -7,7 +7,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import java.net.URL
 
-internal class WebUiServer(private val config: WebUiConfig) {
+internal class WebUiServer(
+    private val config: WebUiConfig,
+) {
     private val notFound = mutableSetOf<String>()
     private val content = mutableMapOf<String, WebUiResource>()
 
@@ -29,7 +31,10 @@ internal class WebUiServer(private val config: WebUiConfig) {
         }
     }
 
-    private suspend fun respondWithSchema(call: ApplicationCall, pluginConfig: OpenAPIConfiguration) {
+    private suspend fun respondWithSchema(
+        call: ApplicationCall,
+        pluginConfig: OpenAPIConfiguration,
+    ) {
         when (config.schemaType) {
             OpenAPISchemaType.JSON -> {
                 call.respondText(ContentType.Application.Json, HttpStatusCode.OK) { pluginConfig.schemaHolder.json() }
@@ -80,16 +85,16 @@ internal class WebUiServer(private val config: WebUiConfig) {
         return fileName
             .ifEmpty {
                 return "index.html"
-            }
-            .trimStart('/')
+            }.trimStart('/')
     }
 }
 
-internal class WebUiResource(private val bytes: ByteArray, override val contentType: ContentType) :
-    OutgoingContent.ByteArrayContent() {
-
+internal class WebUiResource(
+    private val bytes: ByteArray,
+    override val contentType: ContentType,
+) : OutgoingContent.ByteArrayContent() {
     constructor(
-        url: URL
+        url: URL,
     ) : this(
         url.readBytes(),
         url.run {
@@ -108,8 +113,8 @@ internal class WebUiResource(private val bytes: ByteArray, override val contentT
                 "png" to ContentType.Image.PNG,
             )
 
-        fun index(openapiURL: String): WebUiResource {
-            return WebUiResource(
+        fun index(openapiURL: String): WebUiResource =
+            WebUiResource(
                 // language=HTML
                 """
                 <!-- HTML for static distribution bundle build -->
@@ -144,12 +149,10 @@ internal class WebUiResource(private val bytes: ByteArray, override val contentT
                     </script>
                   </body>
                 </html>
-            """
-                    .trimIndent()
+                """.trimIndent()
                     .toByteArray(),
                 ContentType.Text.Html,
             )
-        }
     }
 
     override val contentLength: Long by lazy { bytes.size.toLong() }

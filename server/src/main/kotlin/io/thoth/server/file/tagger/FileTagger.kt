@@ -1,10 +1,6 @@
 package io.thoth.server.file.tagger
 
 import io.thoth.server.database.tables.Track
-import java.io.File
-import java.nio.file.Path
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -13,6 +9,10 @@ import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.images.ArtworkFactory
+import java.io.File
+import java.nio.file.Path
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 interface FileTagger : ReadonlyFileTagger {
     override var title: String
@@ -30,7 +30,10 @@ interface FileTagger : ReadonlyFileTagger {
     fun save()
 }
 
-open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTaggerImpl(audioFile), FileTagger {
+open class FileTaggerImpl(
+    private val audioFile: AudioFile,
+) : ReadonlyFileTaggerImpl(audioFile),
+    FileTagger {
     constructor(path: Path) : this(path.toFile())
 
     constructor(file: File) : this(AudioFileIO.read(file))
@@ -100,7 +103,10 @@ open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger
         AudioFileIO.write(this.audioFile)
     }
 
-    private fun setOrDelete(key: FieldKey, value: String?) {
+    private fun setOrDelete(
+        key: FieldKey,
+        value: String?,
+    ) {
         if (value == null || value.isEmpty()) {
             audioFile.tag.deleteField(key)
         } else {
@@ -108,19 +114,24 @@ open class FileTaggerImpl(private val audioFile: AudioFile) : ReadonlyFileTagger
         }
     }
 
-    private fun setOrDelete(key: FieldKey, value: Int?) {
+    private fun setOrDelete(
+        key: FieldKey,
+        value: Int?,
+    ) {
         setOrDelete(key, value.toString())
     }
 }
 
-fun List<FileTagger>.saveToFile() = runBlocking {
-    val parent = Job()
-    this@saveToFile.forEach { launch(parent) { it.save() } }
-    parent.children.forEach { it.join() }
-}
+fun List<FileTagger>.saveToFile() =
+    runBlocking {
+        val parent = Job()
+        this@saveToFile.forEach { launch(parent) { it.save() } }
+        parent.children.forEach { it.join() }
+    }
 
-fun List<Track>.toTrackModel() = runBlocking {
-    val parent = Job()
-    val t = this@toTrackModel.map { async(parent) { FileTaggerImpl(it.path) } }
-    t.map { it.await() }
-}
+fun List<Track>.toTrackModel() =
+    runBlocking {
+        val parent = Job()
+        val t = this@toTrackModel.map { async(parent) { FileTaggerImpl(it.path) } }
+        t.map { it.await() }
+    }

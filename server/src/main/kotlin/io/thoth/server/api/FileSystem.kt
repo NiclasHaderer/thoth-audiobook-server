@@ -18,8 +18,7 @@ fun Routing.fileSystemRouting() {
             .filter {
                 val hasChildren = it.listFiles()?.isNotEmpty() ?: false
                 hasChildren
-            }
-            .map { FileSystemItem(name = it.name, path = it.path, parent = it.parentFile?.path) }
+            }.map { FileSystemItem(name = it.name, path = it.path, parent = it.parentFile?.path) }
             .sortedBy { it.name }
     }
 }

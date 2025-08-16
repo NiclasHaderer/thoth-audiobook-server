@@ -3,8 +3,8 @@ package io.thoth.server.database.access
 import io.thoth.models.LibraryModel
 import io.thoth.server.database.tables.Library
 
-fun Library.toModel(): LibraryModel {
-    return LibraryModel(
+fun Library.toModel(): LibraryModel =
+    LibraryModel(
         id = id.value,
         name = name,
         icon = icon,
@@ -15,4 +15,3 @@ fun Library.toModel(): LibraryModel {
         fileScanners = fileScanners,
         language = language,
     )
-}

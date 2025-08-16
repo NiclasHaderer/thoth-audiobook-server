@@ -2,7 +2,9 @@ package io.thoth.metadata.audible.models
 
 import io.thoth.metadata.responses.MetadataLanguage
 
-enum class AudibleSearchLanguage(val language: Long) {
+enum class AudibleSearchLanguage(
+    val language: Long,
+) {
     Spanish(16290345031),
     English(16290310031),
     German(16290314031),
@@ -12,11 +14,12 @@ enum class AudibleSearchLanguage(val language: Long) {
     Finnish(16290312031),
     Norwegian(16290333031),
     Swedish(16290346031),
-    Russian(16290340031);
+    Russian(16290340031),
+    ;
 
     companion object {
-        fun from(language: MetadataLanguage): AudibleSearchLanguage {
-            return when (language) {
+        fun from(language: MetadataLanguage): AudibleSearchLanguage =
+            when (language) {
                 MetadataLanguage.Danish -> Danish
                 MetadataLanguage.English -> English
                 MetadataLanguage.Finnish -> Finnish
@@ -28,6 +31,5 @@ enum class AudibleSearchLanguage(val language: Long) {
                 MetadataLanguage.Swedish -> Swedish
                 MetadataLanguage.Russian -> Russian
             }
-        }
     }
 }

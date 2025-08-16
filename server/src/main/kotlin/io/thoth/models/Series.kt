@@ -16,7 +16,10 @@ open class SeriesModel(
     val library: NamedId,
 )
 
-data class YearRange(val start: Int, val end: Int)
+data class YearRange(
+    val start: Int,
+    val end: Int,
+)
 
 class DetailedSeriesModel(
     id: UUID,
@@ -33,8 +36,7 @@ class DetailedSeriesModel(
     val yearRange: YearRange?,
     val narrators: List<String>,
     val books: List<BookModel>,
-) :
-    SeriesModel(
+) : SeriesModel(
         id = id,
         title = title,
         authors = authors,
@@ -48,7 +50,10 @@ class DetailedSeriesModel(
         library = library,
     ) {
     companion object {
-        fun fromModel(series: SeriesModel, books: List<BookModel>): DetailedSeriesModel {
+        fun fromModel(
+            series: SeriesModel,
+            books: List<BookModel>,
+        ): DetailedSeriesModel {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
             val years = books.mapNotNull { it.releaseDate }
             val startDate = years.minOrNull()
