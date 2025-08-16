@@ -11,7 +11,7 @@ fun RouteHandler.logoutUser(
     params: ThothLogoutParams,
     body: Unit,
 ) {
-    val config = thothAuthConfig<Any>()
+    val config = thothAuthConfig<Any, Any>()
     call.response.cookies.append(
         Cookie(
             name = "refresh",

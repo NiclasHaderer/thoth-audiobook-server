@@ -16,7 +16,7 @@ interface ThothDisplayUserParams {
 
 fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
-    val config = thothAuthConfig<Any>()
+    val config = thothAuthConfig<Any, Any>()
 
     if (principal.userId != params.id && !config.isAdmin(principal)) {
         throw ErrorResponse.forbidden("View", "account")
@@ -32,7 +32,7 @@ fun <PERMISSIONS : Any> RouteHandler.currentUser(
     params: ThothCurrentUserParams,
 ): ThothUserWithPermissions<PERMISSIONS> {
     val principal = thothPrincipal<ThothPrincipal>()
-    val config = thothAuthConfig<PERMISSIONS>()
+    val config = thothAuthConfig<PERMISSIONS, Any>()
 
     val user = config.getUserById(principal.userId) ?: throw ErrorResponse.notFound("User", principal.userId)
     return user.let {

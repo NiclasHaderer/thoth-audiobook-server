@@ -12,7 +12,7 @@ interface ThothListUserParams
 fun <PERMISSIONS : Any> RouteHandler.listUsers(
     params: ThothListUserParams,
 ): List<ThothUserWithPermissions<PERMISSIONS>> {
-    val config = thothAuthConfig<PERMISSIONS>()
+    val config = thothAuthConfig<PERMISSIONS, Any>()
 
     val principal = thothPrincipal<ThothPrincipal>()
     if (!config.isAdmin(principal)) {

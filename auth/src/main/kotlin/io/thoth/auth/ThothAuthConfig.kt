@@ -30,15 +30,15 @@ internal typealias KeyId = String
 internal typealias GetPrincipal =
     ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal?
 
-internal val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig<*>>("ThothAuthPlugin")
+internal val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig<*, *>>("ThothAuthPlugin")
 
-internal fun <PERMISSIONS> RouteHandler.thothAuthConfig(): ThothAuthConfig<PERMISSIONS> {
+internal fun <PERMISSIONS, UPDATE_PERMISSIONS> RouteHandler.thothAuthConfig(): ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS> {
     if (!call.attributes.contains(PLUGIN_CONFIG_KEY)) {
         throw IllegalStateException("ThothAuthPlugin not installed")
     }
 
     @Suppress("UNCHECKED_CAST")
-    return call.attributes[PLUGIN_CONFIG_KEY] as ThothAuthConfig<PERMISSIONS>
+    return call.attributes[PLUGIN_CONFIG_KEY] as ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>
 }
 
 data class JwtError(
@@ -48,7 +48,7 @@ data class JwtError(
 
 private val JWT_VALIDATION_FAILED = AttributeKey<JwtError>("JWT_VALIDATION_FAILED")
 
-class ThothAuthConfig<PERMISSIONS>(
+class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
     val production: Boolean = true,
     val ssl: Boolean = true,
     val firstUserIsAdmin: Boolean = true,
@@ -72,7 +72,7 @@ class ThothAuthConfig<PERMISSIONS>(
     val deleteUser: (user: ThothDatabaseUser) -> Unit,
     val renameUser: (user: ThothDatabaseUser, newName: String) -> ThothDatabaseUser,
     val updatePassword: (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser,
-    val updateUserPermissions: (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser,
+    val updateUserPermissions: (user: ThothDatabaseUser, newPermissions: UPDATE_PERMISSIONS) -> ThothDatabaseUser,
     val passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?>,
     val usernameMeetsRequirements: (username: String) -> Pair<Boolean, String?>,
     val getUserPermissions: RouteHandler.(user: ThothDatabaseUser) -> PERMISSIONS,
@@ -135,7 +135,7 @@ class ThothAuthConfig<PERMISSIONS>(
     }
 }
 
-class ThothAuthConfigBuilder<PERMISSIONS> {
+class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
     var production = true
     var ssl = true
 
@@ -169,7 +169,7 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
     private lateinit var renameUser: (user: ThothDatabaseUser, newName: String) -> ThothDatabaseUser
     private lateinit var updatePassword: (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser
     private lateinit var updateUserPermissions:
-        (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser
+        (user: ThothDatabaseUser, newPermissions: UPDATE_PERMISSIONS) -> ThothDatabaseUser
     private lateinit var getUserPermissions: RouteHandler.(user: ThothDatabaseUser) -> PERMISSIONS
     private var passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?> = { password ->
         if (password.length < 6) {
@@ -200,7 +200,7 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
     }
 
     // Builder
-    fun build(): ThothAuthConfig<PERMISSIONS> {
+    fun build(): ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS> {
         keyPairs.values.forEach { keyPair ->
             require(keyPair.public.algorithm == "RSA") { "KeyPair ${keyPair.public} is not a RSA key pair" }
         }
@@ -281,7 +281,7 @@ class ThothAuthConfigBuilder<PERMISSIONS> {
     }
 
     fun updateUserPermissions(
-        updateUserPermissions: (user: ThothDatabaseUser, newPermissions: PERMISSIONS) -> ThothDatabaseUser,
+        updateUserPermissions: (user: ThothDatabaseUser, newPermissions: UPDATE_PERMISSIONS) -> ThothDatabaseUser,
     ) {
         this.updateUserPermissions = updateUserPermissions
     }

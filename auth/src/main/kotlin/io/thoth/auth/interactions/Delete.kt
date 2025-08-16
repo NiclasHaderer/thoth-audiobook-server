@@ -16,7 +16,7 @@ fun RouteHandler.deleteUser(
     body: Unit,
 ) {
     val principal = thothPrincipal<ThothPrincipal>()
-    val config = thothAuthConfig<Any>()
+    val config = thothAuthConfig<Any, Any>()
 
     if (principal.userId != params.id && !config.isAdmin(principal)) {
         throw ErrorResponse.forbidden("Delete", "user")

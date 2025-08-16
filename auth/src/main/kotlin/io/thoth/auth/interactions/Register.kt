@@ -15,7 +15,7 @@ fun RouteHandler.registerUser(
     params: ThothRegisterParams,
     user: ThothRegisterUser,
 ): ThothUser {
-    val config = thothAuthConfig<Any>()
+    val config = thothAuthConfig<Any, Any>()
 
     if (!config.allowNewSignups()) {
         throw ErrorResponse.userError("New signups are not allowed")

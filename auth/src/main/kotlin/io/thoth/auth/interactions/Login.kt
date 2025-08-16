@@ -16,7 +16,7 @@ fun RouteHandler.loginUser(
     params: ThothLoginParams,
     loginUser: ThothLoginUser,
 ): ThothAccessToken {
-    val config = thothAuthConfig<Any>()
+    val config = thothAuthConfig<Any, Any>()
 
     val user =
         config.getUserByUsername(loginUser.username)

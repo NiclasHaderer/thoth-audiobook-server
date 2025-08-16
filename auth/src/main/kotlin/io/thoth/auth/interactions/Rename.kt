@@ -19,7 +19,7 @@ fun RouteHandler.renameUser(
     renamedUser: ThothRenameUser,
 ): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
-    val config = thothAuthConfig<Any>()
+    val config = thothAuthConfig<Any, Any>()
 
     if (principal.userId != params.id && !config.isAdmin(principal)) {
         throw ErrorResponse.forbidden("Rename", "account")
