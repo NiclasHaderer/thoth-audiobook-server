@@ -1,6 +1,6 @@
 package io.thoth.server.api
 
-import io.ktor.resources.*
+import io.ktor.resources.Resource
 import io.thoth.auth.interactions.ThothChangePasswordParams
 import io.thoth.auth.interactions.ThothCurrentUserParams
 import io.thoth.auth.interactions.ThothDeleteUserParams

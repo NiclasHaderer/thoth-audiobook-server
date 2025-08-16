@@ -1,6 +1,6 @@
 package io.thoth.server.api
 
-import io.ktor.server.routing.*
+import io.ktor.server.routing.Routing
 import io.thoth.auth.interactions.changeUserPassword
 import io.thoth.auth.interactions.currentUser
 import io.thoth.auth.interactions.deleteUser

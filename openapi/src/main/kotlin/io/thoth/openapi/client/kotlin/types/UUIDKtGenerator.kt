@@ -3,7 +3,7 @@ package io.thoth.openapi.client.kotlin.types
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
-import java.util.*
+import java.util.UUID
 
 class UUIDKtGenerator : KtTypeGenerator() {
     override fun generateContent(

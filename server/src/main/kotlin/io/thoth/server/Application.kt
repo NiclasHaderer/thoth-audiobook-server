@@ -1,9 +1,10 @@
 package io.thoth.server
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.routing.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.log
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.routing.routing
 import io.thoth.openapi.client.kotlin.KtErrorHandling
 import io.thoth.openapi.client.kotlin.generateKotlinClient
 import io.thoth.openapi.client.typescript.generateTsClient

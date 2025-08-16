@@ -1,6 +1,6 @@
 package io.thoth.server.api
 
-import io.ktor.server.routing.*
+import io.ktor.server.routing.Routing
 import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.metadata.responses.MetadataAuthor

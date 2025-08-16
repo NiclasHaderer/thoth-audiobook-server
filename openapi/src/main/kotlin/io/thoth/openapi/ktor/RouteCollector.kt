@@ -1,7 +1,5 @@
 package io.thoth.openapi.ktor
 
-import kotlin.collections.set
-
 class OpenApiRouteCollector {
     private val routes = mutableMapOf<String, MutableList<OpenApiRoute>>()
 

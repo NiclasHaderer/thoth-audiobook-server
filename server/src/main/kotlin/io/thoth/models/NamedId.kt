@@ -1,6 +1,6 @@
 package io.thoth.models
 
-import java.util.*
+import java.util.UUID
 
 data class NamedId(
     val id: UUID,

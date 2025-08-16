@@ -1,9 +1,9 @@
 package io.thoth.server.common.utils
 
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import java.util.*
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.statement.readBytes
+import java.util.Base64
 
 private val client by lazy { HttpClient() }
 

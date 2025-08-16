@@ -10,13 +10,26 @@ import io.thoth.server.api.PartialBookApiModel
 import io.thoth.server.common.extensions.toSizedIterable
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.*
+import io.thoth.server.database.tables.Author
+import io.thoth.server.database.tables.Book
+import io.thoth.server.database.tables.Image
+import io.thoth.server.database.tables.Series
+import io.thoth.server.database.tables.TAuthorBookMapping
+import io.thoth.server.database.tables.TAuthors
+import io.thoth.server.database.tables.TBooks
+import io.thoth.server.database.tables.TTracks
+import io.thoth.server.database.tables.Track
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.*
+import java.util.UUID
 
 interface BookRepository : Repository<Book, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
     fun findByName(

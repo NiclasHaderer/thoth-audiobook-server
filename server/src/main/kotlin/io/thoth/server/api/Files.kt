@@ -1,9 +1,10 @@
 package io.thoth.server.api
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.ContentDisposition
+import io.ktor.http.HttpHeaders
+import io.ktor.server.application.call
+import io.ktor.server.response.header
+import io.ktor.server.routing.Routing
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.responses.BinaryResponse

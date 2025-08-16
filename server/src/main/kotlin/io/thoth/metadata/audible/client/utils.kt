@@ -1,6 +1,6 @@
 package io.thoth.metadata.audible.client
 
-import io.ktor.http.*
+import io.ktor.http.Url
 
 fun audibleAsinFromLink(link: String?): String {
     if (link == null) return "invalid"

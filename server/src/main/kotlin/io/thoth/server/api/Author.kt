@@ -1,6 +1,6 @@
 package io.thoth.server.api
 
-import io.ktor.server.routing.*
+import io.ktor.server.routing.Routing
 import io.thoth.models.AuthorModel
 import io.thoth.models.DetailedAuthorModel
 import io.thoth.models.NamedId
@@ -11,7 +11,7 @@ import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.put
 import io.thoth.server.repositories.AuthorRepository
 import org.koin.ktor.ext.inject
-import java.util.*
+import java.util.UUID
 
 fun Routing.authorRouting() {
     val authorService by inject<AuthorRepository>()

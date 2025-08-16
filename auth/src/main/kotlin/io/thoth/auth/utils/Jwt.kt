@@ -10,7 +10,7 @@ import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
-import java.util.*
+import java.util.Date
 
 fun generateJwtPairForUser(
     user: ThothDatabaseUser,

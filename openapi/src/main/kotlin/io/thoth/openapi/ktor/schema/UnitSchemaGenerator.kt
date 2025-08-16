@@ -1,6 +1,6 @@
 package io.thoth.openapi.ktor.schema
 
-import io.ktor.http.*
+import io.ktor.http.ContentType
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.media.StringSchema
 import io.thoth.openapi.common.ClassType

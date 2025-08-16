@@ -1,7 +1,7 @@
 package io.thoth.models
 
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 open class BookModel(
     val id: UUID,

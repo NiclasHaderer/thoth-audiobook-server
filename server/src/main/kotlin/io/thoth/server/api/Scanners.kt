@@ -1,6 +1,6 @@
 package io.thoth.server.api
 
-import io.ktor.server.routing.*
+import io.ktor.server.routing.Routing
 import io.thoth.models.FileScanner
 import io.thoth.openapi.ktor.get
 import io.thoth.server.file.analyzer.AudioFileAnalyzers

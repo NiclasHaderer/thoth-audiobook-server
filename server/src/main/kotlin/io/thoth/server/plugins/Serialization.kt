@@ -5,9 +5,10 @@ import com.fasterxml.jackson.core.StreamReadFeature
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
-import io.ktor.serialization.jackson.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.serialization.jackson.jackson
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.thoth.openapi.serializion.jackson.CustomLocalDateDesSerializer
 import io.thoth.openapi.serializion.jackson.CustomLocalDateSerializer
 import io.thoth.openapi.serializion.jackson.CustomLocalDateTimeDesSerializer

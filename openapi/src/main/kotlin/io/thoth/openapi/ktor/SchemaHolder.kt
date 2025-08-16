@@ -1,6 +1,6 @@
 package io.thoth.openapi.ktor
 
-import io.ktor.http.*
+import io.ktor.http.HttpMethod
 import io.swagger.v3.core.util.Json
 import io.swagger.v3.core.util.Yaml
 import io.swagger.v3.oas.models.Components

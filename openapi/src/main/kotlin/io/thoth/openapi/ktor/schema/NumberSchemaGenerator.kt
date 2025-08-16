@@ -1,6 +1,6 @@
 package io.thoth.openapi.ktor.schema
 
-import io.ktor.http.*
+import io.ktor.http.ContentType
 import io.swagger.v3.oas.models.media.NumberSchema
 import io.swagger.v3.oas.models.media.Schema
 import io.thoth.openapi.common.ClassType
@@ -16,15 +16,19 @@ class NumberSchemaGenerator : SchemaGenerator() {
             UByte::class,
             Byte::class,
             -> NumberSchema().format("int8")
+
             UShort::class,
             Short::class,
             -> NumberSchema().format("int16")
+
             Int::class,
             UInt::class,
             -> NumberSchema().format("int32")
+
             Long::class,
             ULong::class,
             -> NumberSchema().format("int64")
+
             BigInteger::class -> NumberSchema().format("int64")
             BigDecimal::class -> NumberSchema().format("decimal")
             Float::class -> NumberSchema().format("float")

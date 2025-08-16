@@ -11,7 +11,7 @@ import io.thoth.server.database.tables.TAuthors
 import io.thoth.server.database.tables.TBooks
 import io.thoth.server.database.tables.TSeries
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
+import java.util.UUID
 
 object SearchRepository {
     fun everywhere(

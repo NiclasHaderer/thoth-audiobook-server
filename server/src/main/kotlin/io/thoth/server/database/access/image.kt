@@ -6,7 +6,7 @@ import io.thoth.server.common.extensions.syncUriToFile
 import io.thoth.server.database.tables.Image
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
-import java.util.*
+import java.util.UUID
 
 fun Image.Companion.create(imageBytes: ByteArray): Image = new { blob = ExposedBlob(imageBytes) }
 

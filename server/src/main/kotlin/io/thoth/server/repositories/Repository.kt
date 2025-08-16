@@ -1,7 +1,7 @@
 package io.thoth.server.repositories
 
 import org.jetbrains.exposed.sql.SortOrder
-import java.util.*
+import java.util.UUID
 
 interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API, COMPLETE_API> {
     val searchLimit: Int

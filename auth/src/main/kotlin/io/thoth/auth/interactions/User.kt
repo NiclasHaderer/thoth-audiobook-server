@@ -8,7 +8,7 @@ import io.thoth.auth.utils.thothPrincipal
 import io.thoth.auth.utils.wrap
 import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import java.util.*
+import java.util.UUID
 
 interface ThothDisplayUserParams {
     val id: UUID

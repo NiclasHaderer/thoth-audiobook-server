@@ -1,10 +1,11 @@
 package io.thoth.openapi.ktor.plugins
 
-import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.dataconversion.*
-import io.ktor.server.resources.*
-import io.ktor.util.*
+import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.plugin
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.dataconversion.DataConversion
+import io.ktor.server.resources.Resources
+import io.ktor.util.AttributeKey
 import io.thoth.openapi.ktor.OpenApiRouteCollector
 import io.thoth.openapi.ktor.SchemaHolder
 import io.thoth.openapi.ktor.models.OpenAPIContext

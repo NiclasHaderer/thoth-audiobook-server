@@ -1,7 +1,7 @@
 package io.thoth.server.ws
 
-import io.ktor.server.routing.*
-import io.ktor.server.websocket.*
+import io.ktor.server.routing.Route
+import io.ktor.server.websocket.webSocket
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.dao.EntityChangeType
 import org.jetbrains.exposed.dao.EntityHook

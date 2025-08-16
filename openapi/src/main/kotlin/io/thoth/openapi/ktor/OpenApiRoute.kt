@@ -1,8 +1,9 @@
 package io.thoth.openapi.ktor
 
-import io.ktor.http.*
-import io.ktor.resources.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.resources.Resource
+import io.ktor.server.routing.Route
 import io.thoth.openapi.common.ClassType
 import io.thoth.openapi.common.InternalAPI
 import io.thoth.openapi.common.fullPath

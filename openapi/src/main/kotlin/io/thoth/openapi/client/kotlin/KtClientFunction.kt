@@ -51,9 +51,11 @@ class KtClientFunction(
         // Hooks to modify the request
         add("onBeforeRequest: OnBeforeRequest<${requestBody.reference()}>${withIfNotImpl(" = { _, _ -> }")}, ")
         add(
-            "onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}>${withIfNotImpl(
-                " = { _, _ -> }",
-            )}",
+            "onAfterRequest: OnAfterRequest<${requestBody.reference()}, ${responseBody.reference()}>${
+                withIfNotImpl(
+                    " = { _, _ -> }",
+                )
+            }",
         )
     }
 
@@ -76,6 +78,7 @@ class KtClientFunction(
                 when (errorHandling) {
                     KtErrorHandling.Result ->
                         "= runCatching" to "Result<OpenApiHttpResponse<${responseBody.reference()}>>"
+
                     KtErrorHandling.Exception -> "= run" to "OpenApiHttpResponse<${responseBody.reference()}>"
                     KtErrorHandling.Either ->
                         "= wrapInEither" to "Either<OpenApiHttpResponse<${responseBody.reference()}>, ApiError>"

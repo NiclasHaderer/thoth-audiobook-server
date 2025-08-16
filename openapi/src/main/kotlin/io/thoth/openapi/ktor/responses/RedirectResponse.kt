@@ -2,8 +2,8 @@
 
 package io.thoth.openapi.ktor.responses
 
-import io.ktor.server.application.*
-import io.ktor.server.response.*
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.response.respondRedirect
 import io.thoth.openapi.ktor.RouteHandler
 
 class RedirectResponse(

@@ -1,6 +1,6 @@
 package io.thoth.openapi.client.typescript
 
-import io.ktor.server.application.*
+import io.ktor.server.application.Application
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.client.common.TypeGenerator
@@ -85,14 +85,18 @@ class TsClientGenerator(
             val function =
                 buildString {
                     append(
-                        "$routeName: (${getParameters(
-                            route,
-                        )}): Promise<ApiResponse<${responseBody.reference()}>> => {\n",
+                        "$routeName: (${
+                            getParameters(
+                                route,
+                            )
+                        }): Promise<ApiResponse<${responseBody.reference()}>> => {\n",
                     )
                     append(
-                        "  return _request(${createURL(
-                            route,
-                        )}, \"${route.method.value}\", \"${responseBody.parser().methodName}\", ",
+                        "  return _request(${
+                            createURL(
+                                route,
+                            )
+                        }, \"${route.method.value}\", \"${responseBody.parser().methodName}\", ",
                     )
                     append("_mergeHeaders(defaultHeadersImpl, headers), ")
                     append(if (route.requestBodyType.clazz != Unit::class) "body" else "undefined")

@@ -1,7 +1,7 @@
 package io.thoth.metadata
 
-import io.ktor.http.*
-import java.util.*
+import io.ktor.http.ParametersBuilder
+import java.util.Optional
 
 internal fun String.replaceAll(
     values: List<Regex>,

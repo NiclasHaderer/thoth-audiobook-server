@@ -5,7 +5,7 @@ import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Date
 
 class DateTsGenerator : TsTypeGenerator() {
     override fun generateContent(
