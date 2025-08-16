@@ -1,10 +1,14 @@
 package io.thoth.openapi.ktor.plugins
 
-import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.OutgoingContent
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.path
+import io.ktor.server.request.uri
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondRedirect
+import io.ktor.server.response.respondText
 import java.net.URL
 
 internal class WebUiServer(
@@ -39,6 +43,7 @@ internal class WebUiServer(
             OpenAPISchemaType.JSON -> {
                 call.respondText(ContentType.Application.Json, HttpStatusCode.OK) { pluginConfig.schemaHolder.json() }
             }
+
             OpenAPISchemaType.YAML -> {
                 call.respondText(ContentType.Text.Plain, HttpStatusCode.OK) { pluginConfig.schemaHolder.yaml() }
             }
@@ -64,6 +69,7 @@ internal class WebUiServer(
                 content[fileName] = WebUiResource.index(config.schemaPath)
                 return true
             }
+
             else -> {
                 val resource =
                     this::class.java.getResource("/META-INF/resources/webjars/swagger-ui/$webUiVersion/$fileName")

@@ -1,7 +1,7 @@
 package io.thoth.models
 
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 open class AuthorModel(
     val id: UUID,

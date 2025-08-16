@@ -1,6 +1,6 @@
 package io.thoth.metadata.audible.client
 
-import io.ktor.http.*
+import io.ktor.http.Parameters
 import io.thoth.metadata.appendOptional
 import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
 import io.thoth.metadata.audible.models.AudibleRegions

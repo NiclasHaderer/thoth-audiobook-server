@@ -1,7 +1,9 @@
 package io.thoth.server.plugins.auth
 
-import io.ktor.http.*
-import io.ktor.server.application.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLProtocol
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.thoth.auth.JwtError
 import io.thoth.auth.ThothAuthenticationPlugin
 import io.thoth.auth.models.ThothDatabaseUser

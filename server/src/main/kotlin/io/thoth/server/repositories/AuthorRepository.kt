@@ -10,7 +10,11 @@ import io.thoth.server.api.PartialAuthorApiModel
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.*
+import io.thoth.server.database.tables.Author
+import io.thoth.server.database.tables.Image
+import io.thoth.server.database.tables.TAuthors
+import io.thoth.server.database.tables.TBooks
+import io.thoth.server.database.tables.TSeries
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
@@ -18,7 +22,7 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.*
+import java.util.UUID
 
 interface AuthorRepository :
     Repository<Author, AuthorModel, DetailedAuthorModel, PartialAuthorApiModel, AuthorApiModel> {

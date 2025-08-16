@@ -4,7 +4,12 @@ import io.thoth.server.common.extensions.add
 import io.thoth.server.database.access.create
 import io.thoth.server.database.access.getByPath
 import io.thoth.server.database.access.markAsTouched
-import io.thoth.server.database.tables.*
+import io.thoth.server.database.tables.Author
+import io.thoth.server.database.tables.Book
+import io.thoth.server.database.tables.Image
+import io.thoth.server.database.tables.Library
+import io.thoth.server.database.tables.TTracks
+import io.thoth.server.database.tables.Track
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapper

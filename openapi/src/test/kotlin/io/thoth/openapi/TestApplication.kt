@@ -1,11 +1,13 @@
 package io.thoth.openapi
 
-import io.ktor.resources.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.dataconversion.*
+import io.ktor.resources.Resource
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.dataconversion.DataConversion
 import io.ktor.server.resources.Resources
-import io.ktor.server.routing.*
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.routing
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.plugins.OpenAPIRouting
@@ -13,7 +15,7 @@ import io.thoth.openapi.ktor.post
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 @Resource("{path}")
 class Routes(

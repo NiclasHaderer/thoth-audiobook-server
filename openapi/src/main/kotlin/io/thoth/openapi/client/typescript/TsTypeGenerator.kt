@@ -76,6 +76,7 @@ abstract class TsTypeGenerator : TypeGenerator<TsTypeGenerator.TsType, TsTypeGen
                 require(reference == null) { "Reference must be null for primitive types" }
                 TsInlineType(content = content, name = name, parser = parser)
             }
+
             TsDataType.COMPLEX -> {
                 require(reference != null) { "Reference must not be null for complex types" }
                 require(name != null) { "Name must not be null for complex types" }

@@ -1,19 +1,27 @@
 package io.thoth.auth
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.response.*
-import io.ktor.util.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLBuilder
+import io.ktor.http.URLProtocol
+import io.ktor.http.encodedPath
+import io.ktor.http.toURI
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.jwt.JWTCredential
+import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.response.respond
+import io.ktor.util.AttributeKey
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.openapi.ktor.RouteHandler
 import java.security.KeyPair
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 

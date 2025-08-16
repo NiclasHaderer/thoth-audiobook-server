@@ -1,7 +1,7 @@
 package io.thoth.openapi.common
 
-import io.ktor.server.auth.*
-import io.ktor.server.routing.*
+import io.ktor.server.auth.AuthenticationRouteSelector
+import io.ktor.server.routing.Route
 
 internal fun Route.fullPath(): String {
     var fullPath = "/$selector"

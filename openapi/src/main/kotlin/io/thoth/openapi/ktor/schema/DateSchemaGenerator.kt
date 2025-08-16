@@ -1,6 +1,6 @@
 package io.thoth.openapi.ktor.schema
 
-import io.ktor.http.*
+import io.ktor.http.ContentType
 import io.swagger.v3.oas.models.media.DateSchema
 import io.swagger.v3.oas.models.media.DateTimeSchema
 import io.swagger.v3.oas.models.media.NumberSchema
@@ -8,7 +8,7 @@ import io.swagger.v3.oas.models.media.Schema
 import io.thoth.openapi.common.ClassType
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Date
 
 class DateSchemaGenerator : SchemaGenerator() {
     override fun generateSchema(

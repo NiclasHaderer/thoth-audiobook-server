@@ -1,11 +1,12 @@
 package io.thoth.server.plugins.auth
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.request.*
-import io.ktor.util.pipeline.*
+import io.ktor.http.HttpMethod
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
+import io.ktor.server.auth.jwt.JWTCredential
+import io.ktor.server.auth.principal
+import io.ktor.server.request.httpMethod
+import io.ktor.util.pipeline.PipelineContext
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.models.LibraryPermissions
@@ -18,7 +19,7 @@ import io.thoth.server.database.tables.User
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.util.*
+import java.util.UUID
 
 class ThothPrincipalImpl(
     override val userId: UUID,

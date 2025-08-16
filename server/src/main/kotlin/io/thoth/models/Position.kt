@@ -1,7 +1,7 @@
 package io.thoth.models
 
 import org.jetbrains.exposed.sql.SortOrder
-import java.util.*
+import java.util.UUID
 
 data class Position(
     val sortIndex: Long,

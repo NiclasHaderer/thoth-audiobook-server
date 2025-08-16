@@ -2,14 +2,18 @@
 
 package io.thoth.openapi.ktor
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.request.*
-import io.ktor.server.resources.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.util.pipeline.*
+import io.ktor.http.HttpMethod
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
+import io.ktor.server.request.receive
+import io.ktor.server.resources.resource
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.application
+import io.ktor.server.routing.method
+import io.ktor.server.routing.route
+import io.ktor.util.pipeline.PipelineContext
 import io.thoth.openapi.common.findAnnotationUp
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey

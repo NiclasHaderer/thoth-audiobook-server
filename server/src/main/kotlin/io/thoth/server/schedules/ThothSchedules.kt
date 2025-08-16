@@ -7,7 +7,7 @@ import io.thoth.server.file.scanner.LibraryScanner
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.*
+import java.util.UUID
 
 class ThothSchedules :
     ScheduleCollection,

@@ -8,7 +8,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
-import java.util.*
+import java.util.UUID
 
 object TLibraries : UUIDTable("Libraries") {
     val name = varchar("name", 255)

@@ -1,7 +1,7 @@
 package io.thoth.models
 
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 data class TrackModel(
     val id: UUID,

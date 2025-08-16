@@ -1,6 +1,6 @@
 package io.thoth.openapi.client.kotlin
 
-import io.ktor.server.application.*
+import io.ktor.server.application.Application
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
 import io.thoth.openapi.client.common.TypeGenerator

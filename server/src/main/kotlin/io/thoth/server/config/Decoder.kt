@@ -27,6 +27,7 @@ class CronDecoder : Decoder<Cron> {
                     ThrowableFailure(e).invalid()
                 }
             }
+
             else -> ConfigFailure.DecodeError(node, type).invalid()
         }
 

@@ -1,11 +1,18 @@
 package io.thoth.openapi.ktor.errors
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
-import io.ktor.util.logging.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.install
+import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.CannotTransformContentToTypeException
+import io.ktor.server.plugins.ContentTransformationException
+import io.ktor.server.plugins.MissingRequestParameterException
+import io.ktor.server.plugins.ParameterConversionException
+import io.ktor.server.plugins.UnsupportedMediaTypeException
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respond
+import io.ktor.util.logging.error
 import mu.KotlinLogging
 
 private fun <T> formatException(

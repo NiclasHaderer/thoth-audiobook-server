@@ -1,6 +1,6 @@
 package io.thoth.openapi
 
-import io.ktor.server.testing.*
+import io.ktor.server.testing.testApplication
 import io.thoth.openapi.client.typescript.generateTsClient
 import kotlin.test.Test
 import kotlin.test.assertEquals

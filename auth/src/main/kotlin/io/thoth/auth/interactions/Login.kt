@@ -1,7 +1,7 @@
 package io.thoth.auth.interactions
 
-import io.ktor.http.*
-import io.ktor.server.application.*
+import io.ktor.http.Cookie
+import io.ktor.server.application.call
 import io.thoth.auth.models.ThothAccessToken
 import io.thoth.auth.models.ThothLoginUser
 import io.thoth.auth.thothAuthConfig

@@ -19,7 +19,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Path
-import java.util.*
+import java.util.UUID
 
 interface LibraryRepository {
     fun raw(id: UUID): Library

@@ -8,7 +8,7 @@ import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
-import java.util.*
+import java.util.Optional
 
 abstract class MetadataProvider {
     private companion object {

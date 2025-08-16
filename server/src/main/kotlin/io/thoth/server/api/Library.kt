@@ -1,6 +1,6 @@
 package io.thoth.server.api
 
-import io.ktor.server.routing.*
+import io.ktor.server.routing.Routing
 import io.thoth.models.LibraryModel
 import io.thoth.models.SearchModel
 import io.thoth.openapi.ktor.errors.ErrorResponse

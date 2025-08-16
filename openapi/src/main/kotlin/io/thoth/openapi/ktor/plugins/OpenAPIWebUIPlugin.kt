@@ -1,6 +1,8 @@
 package io.thoth.openapi.ktor.plugins
 
-import io.ktor.server.application.*
+import io.ktor.server.application.ApplicationStarted
+import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.log
 
 enum class OpenAPISchemaType(
     val extension: String,

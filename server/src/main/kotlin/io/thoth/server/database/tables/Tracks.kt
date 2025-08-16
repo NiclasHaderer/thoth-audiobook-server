@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.datetime
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 // TODO make sure that two libraries do not cover the same paths, otherwise the path reference will
 // not be unique

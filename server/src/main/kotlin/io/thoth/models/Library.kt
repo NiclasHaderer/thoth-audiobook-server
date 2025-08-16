@@ -1,6 +1,6 @@
 package io.thoth.models
 
-import java.util.*
+import java.util.UUID
 
 data class MetadataAgent(
     var name: String,

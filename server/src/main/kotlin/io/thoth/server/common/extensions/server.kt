@@ -1,7 +1,8 @@
 package io.thoth.server.common.extensions
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopPreparing
+import io.ktor.server.engine.ApplicationEngineEnvironment
 import kotlin.system.exitProcess
 
 fun Application.shutdown(): Nothing {

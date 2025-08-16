@@ -1,7 +1,7 @@
 package io.thoth.openapi.ktor.errors
 
-import io.ktor.http.*
-import java.util.*
+import io.ktor.http.HttpStatusCode
+import java.util.UUID
 
 class ErrorResponse(
     val status: HttpStatusCode,

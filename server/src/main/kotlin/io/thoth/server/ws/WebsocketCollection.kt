@@ -1,12 +1,15 @@
 package io.thoth.server.ws
 
-import io.ktor.server.websocket.*
-import io.ktor.websocket.*
+import io.ktor.server.websocket.DefaultWebSocketServerSession
+import io.ktor.server.websocket.sendSerialized
+import io.ktor.websocket.CloseReason
+import io.ktor.websocket.close
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.EntityChangeType
-import java.util.*
+import java.util.Collections
 
-@Serializable class ChangeEvent(
+@Serializable
+class ChangeEvent(
     val type: EntityChangeType,
     val id: String,
 )

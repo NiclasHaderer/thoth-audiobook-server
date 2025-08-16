@@ -1,6 +1,7 @@
 package io.thoth.auth
 
-import io.ktor.server.application.*
+import io.ktor.server.application.ApplicationPlugin
+import io.ktor.server.application.createApplicationPlugin
 
 object ThothAuthenticationPlugin {
     fun <PERMISSIONS> build(): ApplicationPlugin<ThothAuthConfigBuilder<PERMISSIONS>> =
