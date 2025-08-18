@@ -3,6 +3,7 @@ package io.thoth.server.plugins
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.StreamReadFeature
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import io.ktor.serialization.jackson.jackson
@@ -19,7 +20,7 @@ import org.koin.ktor.ext.inject
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-fun Application.configureSerialization() {
+fun Application.configureSerialization(): ObjectMapper {
     @Suppress("UNCHECKED_CAST")
     val serialization by inject<Serialization>() as Lazy<JacksonSerialization>
 
@@ -45,4 +46,6 @@ fun Application.configureSerialization() {
             serialization.objectMapper = this
         }
     }
+    assert(serialization.objectMapper != null) { "ObjectMapper is not initialized in ContentNegotiation" }
+    return serialization.objectMapper!!
 }

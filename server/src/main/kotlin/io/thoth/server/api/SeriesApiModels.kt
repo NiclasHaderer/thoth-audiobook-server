@@ -1,9 +1,7 @@
 package io.thoth.server.api
 
 import io.thoth.openapi.serializion.kotlin.UUID_S
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class PartialSeriesApiModel(
     val title: String?,
     val authors: List<UUID_S>?,
@@ -21,7 +19,6 @@ data class PartialSeriesApiModel(
     }
 }
 
-@Serializable
 data class SeriesApiModel(
     val title: String,
     val authors: List<UUID_S>,
