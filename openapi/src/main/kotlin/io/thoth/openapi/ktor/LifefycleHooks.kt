@@ -1,17 +1,19 @@
 package io.thoth.openapi.ktor
 
+import io.ktor.server.routing.RoutingContext
+
 interface BeforeBodyParsing {
-    suspend fun RouteHandler.beforeBodyParsing()
+    suspend fun RoutingContext.beforeBodyParsing()
 }
 
 interface AfterBodyParsing {
-    suspend fun RouteHandler.afterBodyParsing()
+    suspend fun RoutingContext.afterBodyParsing()
 }
 
 interface ValidateObject {
-    suspend fun RouteHandler.validateBody()
+    suspend fun RoutingContext.validateBody()
 }
 
 interface AfterResponse {
-    suspend fun RouteHandler.afterResponse()
+    suspend fun RoutingContext.afterResponse()
 }

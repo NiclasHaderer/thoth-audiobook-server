@@ -1,9 +1,9 @@
 package io.thoth.server.common.extensions
 
-import io.ktor.util.extension
 import java.nio.file.LinkOption
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.extension
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 

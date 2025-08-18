@@ -1,8 +1,8 @@
 package io.thoth.server.api
 
+import io.ktor.server.routing.RoutingContext
 import io.thoth.models.FileScanner
 import io.thoth.models.MetadataAgent
-import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.ValidateObject
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
@@ -15,7 +15,7 @@ data class LibraryApiModel(
     val fileScanners: List<FileScanner>,
     var language: String,
 ) : ValidateObject {
-    override suspend fun RouteHandler.validateBody() {
+    override suspend fun RoutingContext.validateBody() {
         if (folders.isEmpty()) {
             throw ErrorResponse.userError("Library must have at least one folder")
         }
@@ -39,7 +39,7 @@ data class PartialLibraryApiModel(
     val fileScanners: List<FileScanner>?,
     val language: String?,
 ) : ValidateObject {
-    override suspend fun RouteHandler.validateBody() {
+    override suspend fun RoutingContext.validateBody() {
         if (folders?.isEmpty() == true) {
             throw ErrorResponse.userError("Library must have at least one folder")
         }

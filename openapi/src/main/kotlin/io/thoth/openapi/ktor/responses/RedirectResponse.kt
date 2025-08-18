@@ -4,7 +4,7 @@ package io.thoth.openapi.ktor.responses
 
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respondRedirect
-import io.thoth.openapi.ktor.RouteHandler
+import io.ktor.server.routing.RoutingContext
 
 class RedirectResponse(
     val url: String,
@@ -14,4 +14,4 @@ class RedirectResponse(
     }
 }
 
-fun RouteHandler.redirectResponse(url: String): RedirectResponse = RedirectResponse(url)
+fun RoutingContext.redirectResponse(url: String): RedirectResponse = RedirectResponse(url)

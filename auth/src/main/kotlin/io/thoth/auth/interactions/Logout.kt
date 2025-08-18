@@ -1,13 +1,12 @@
 package io.thoth.auth.interactions
 
 import io.ktor.http.Cookie
-import io.ktor.server.application.call
+import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.thothAuthConfig
-import io.thoth.openapi.ktor.RouteHandler
 
 interface ThothLogoutParams
 
-fun RouteHandler.logoutUser(
+fun RoutingContext.logoutUser(
     params: ThothLogoutParams,
     body: Unit,
 ) {

@@ -8,18 +8,17 @@ import io.ktor.http.encodedPath
 import io.ktor.http.toURI
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.response.respond
+import io.ktor.server.routing.RoutingContext
 import io.ktor.util.AttributeKey
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.utils.ThothPrincipal
-import io.thoth.openapi.ktor.RouteHandler
 import java.security.KeyPair
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -32,7 +31,7 @@ internal typealias GetPrincipal =
 
 internal val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig<*, *>>("ThothAuthPlugin")
 
-internal fun <PERMISSIONS, UPDATE_PERMISSIONS> RouteHandler.thothAuthConfig(): ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS> {
+internal fun <PERMISSIONS, UPDATE_PERMISSIONS> RoutingContext.thothAuthConfig(): ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS> {
     if (!call.attributes.contains(PLUGIN_CONFIG_KEY)) {
         throw IllegalStateException("ThothAuthPlugin not installed")
     }
@@ -75,7 +74,7 @@ class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
     val updateUserPermissions: (user: ThothDatabaseUser, newPermissions: UPDATE_PERMISSIONS) -> ThothDatabaseUser,
     val passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?>,
     val usernameMeetsRequirements: (username: String) -> Pair<Boolean, String?>,
-    val getUserPermissions: RouteHandler.(user: ThothDatabaseUser) -> PERMISSIONS,
+    val getUserPermissions: RoutingContext.(user: ThothDatabaseUser) -> PERMISSIONS,
     private val isAdminUser: (user: ThothDatabaseUser) -> Boolean,
 ) {
     internal val jwkProvider by lazy {
@@ -170,7 +169,7 @@ class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
     private lateinit var updatePassword: (user: ThothDatabaseUser, newPassword: String) -> ThothDatabaseUser
     private lateinit var updateUserPermissions:
         (user: ThothDatabaseUser, newPermissions: UPDATE_PERMISSIONS) -> ThothDatabaseUser
-    private lateinit var getUserPermissions: RouteHandler.(user: ThothDatabaseUser) -> PERMISSIONS
+    private lateinit var getUserPermissions: RoutingContext.(user: ThothDatabaseUser) -> PERMISSIONS
     private var passwordMeetsRequirements: (password: String) -> Pair<Boolean, String?> = { password ->
         if (password.length < 6) {
             Pair(false, "Password must be at least 6 characters long")
@@ -286,7 +285,7 @@ class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
         this.updateUserPermissions = updateUserPermissions
     }
 
-    fun getUserPermissions(getUserPermissions: RouteHandler.(user: ThothDatabaseUser) -> PERMISSIONS) {
+    fun getUserPermissions(getUserPermissions: RoutingContext.(user: ThothDatabaseUser) -> PERMISSIONS) {
         this.getUserPermissions = getUserPermissions
     }
 
