@@ -1,17 +1,17 @@
 package io.thoth.auth.interactions
 
+import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothRegisterUser
 import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.hashPassword
 import io.thoth.auth.utils.wrap
-import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothRegisterParams
 
-fun RouteHandler.registerUser(
+fun RoutingContext.registerUser(
     params: ThothRegisterParams,
     user: ThothRegisterUser,
 ): ThothUser {

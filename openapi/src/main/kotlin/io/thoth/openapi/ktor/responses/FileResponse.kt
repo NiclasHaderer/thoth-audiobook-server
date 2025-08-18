@@ -5,7 +5,7 @@ package io.thoth.openapi.ktor.responses
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respondFile
-import io.thoth.openapi.ktor.RouteHandler
+import io.ktor.server.routing.RoutingContext
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -27,6 +27,6 @@ class FileResponse(
     }
 }
 
-fun RouteHandler.fileResponse(path: Path): FileResponse = FileResponse(path)
+fun RoutingContext.fileResponse(path: Path): FileResponse = FileResponse(path)
 
-fun RouteHandler.fileResponse(path: String): FileResponse = FileResponse(path)
+fun RoutingContext.fileResponse(path: String): FileResponse = FileResponse(path)

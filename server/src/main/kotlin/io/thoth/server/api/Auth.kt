@@ -1,6 +1,7 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.Routing
+import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.interactions.changeUserPassword
 import io.thoth.auth.interactions.currentUser
 import io.thoth.auth.interactions.deleteUser
@@ -24,7 +25,6 @@ import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserWithPermissions
 import io.thoth.models.UpdatePermissionsModel
 import io.thoth.models.UserPermissionsModel
-import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.post
@@ -32,45 +32,47 @@ import io.thoth.openapi.ktor.put
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 fun Routing.authRoutes() {
-    post<Api.Auth.Login, ThothLoginUser, ThothAccessToken>(withTransaction(RouteHandler::loginUser))
+    post<Api.Auth.Login, ThothLoginUser, ThothAccessToken>(withTransaction(RoutingContext::loginUser))
 
-    post<Api.Auth.Logout, Unit, Unit>(withTransaction(RouteHandler::logoutUser))
+    post<Api.Auth.Logout, Unit, Unit>(withTransaction(RoutingContext::logoutUser))
 
-    post<Api.Auth.Register, ThothRegisterUser, ThothUser>(withTransaction(RouteHandler::registerUser))
+    post<Api.Auth.Register, ThothRegisterUser, ThothUser>(withTransaction(RoutingContext::registerUser))
 
-    get<Api.Auth.Jwks, JWKs>(withTransaction(RouteHandler::getJwks))
+    get<Api.Auth.Jwks, JWKs>(withTransaction(RoutingContext::getJwks))
 
     put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UpdatePermissionsModel>, ThothUser>(
-        withTransaction(RouteHandler::modifyUserPermissions),
+        withTransaction(RoutingContext::modifyUserPermissions),
     )
 
-    get<Api.Auth.User.Id, ThothUser>(withTransaction(RouteHandler::displayUser))
+    get<Api.Auth.User.Id, ThothUser>(withTransaction(RoutingContext::displayUser))
 
     get<Api.Auth.User.Current, ThothUserWithPermissions<UserPermissionsModel>>(
-        withTransaction(RouteHandler::currentUser),
+        withTransaction(RoutingContext::currentUser),
     )
 
     get<Api.Auth.User.All, List<ThothUserWithPermissions<UserPermissionsModel>>>(
-        withTransaction(RouteHandler::listUsers),
+        withTransaction(RoutingContext::listUsers),
     )
 
-    delete<Api.Auth.User.Id, Unit, Unit>(withTransaction(RouteHandler::deleteUser))
+    delete<Api.Auth.User.Id, Unit, Unit>(withTransaction(RoutingContext::deleteUser))
 
-    post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser>(withTransaction(RouteHandler::renameUser))
+    post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser>(withTransaction(RoutingContext::renameUser))
 
-    post<Api.Auth.User.Id.Password, ThothChangePassword, Unit>(withTransaction(RouteHandler::changeUserPassword))
+    post<Api.Auth.User.Id.Password, ThothChangePassword, Unit>(withTransaction(RoutingContext::changeUserPassword))
 
-    post<Api.Auth.User.Refresh, Unit, ThothAccessToken>(withTransaction(RouteHandler::getRefreshToken))
+    post<Api.Auth.User.Refresh, Unit, ThothAccessToken>(withTransaction(RoutingContext::getRefreshToken))
 }
 
-private fun <P1, P2, R> withTransaction(func: RouteHandler.(p1: P1, p2: P2) -> R): suspend RouteHandler.(P1, P2) -> R =
+private fun <P1, P2, R> withTransaction(
+    func: RoutingContext.(p1: P1, p2: P2) -> R,
+): suspend RoutingContext.(P1, P2) -> R =
     { a, b ->
         transaction {
             func(a, b)
         }
     }
 
-private fun <P1, R> withTransaction(func: RouteHandler.(p1: P1) -> R): suspend RouteHandler.(P1) -> R =
+private fun <P1, R> withTransaction(func: RoutingContext.(p1: P1) -> R): suspend RoutingContext.(P1) -> R =
     { a ->
         transaction {
             func(a)

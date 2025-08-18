@@ -1,15 +1,15 @@
 package io.thoth.auth.interactions
 
+import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothUserWithPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
-import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothListUserParams
 
-fun <PERMISSIONS : Any> RouteHandler.listUsers(
+fun <PERMISSIONS : Any> RoutingContext.listUsers(
     params: ThothListUserParams,
 ): List<ThothUserWithPermissions<PERMISSIONS>> {
     val config = thothAuthConfig<PERMISSIONS, Any>()

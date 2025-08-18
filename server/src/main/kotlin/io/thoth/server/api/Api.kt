@@ -1,6 +1,7 @@
 package io.thoth.server.api
 
 import io.ktor.resources.Resource
+import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.interactions.ThothChangePasswordParams
 import io.thoth.auth.interactions.ThothCurrentUserParams
 import io.thoth.auth.interactions.ThothDeleteUserParams
@@ -18,7 +19,6 @@ import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.models.Position
 import io.thoth.openapi.ktor.BeforeBodyParsing
 import io.thoth.openapi.ktor.NotSecured
-import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.Secured
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.Tagged
@@ -190,7 +190,7 @@ class Api {
             val libraryId: UUID_S,
             private val parent: Libraries,
         ) : BeforeBodyParsing {
-            override suspend fun RouteHandler.beforeBodyParsing() {
+            override suspend fun RoutingContext.beforeBodyParsing() {
                 assertLibraryPermissions(libraryId)
             }
 

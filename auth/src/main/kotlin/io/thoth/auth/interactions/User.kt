@@ -1,12 +1,12 @@
 package io.thoth.auth.interactions
 
+import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserWithPermissions
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
 import io.thoth.auth.utils.wrap
-import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.util.UUID
 
@@ -14,7 +14,7 @@ interface ThothDisplayUserParams {
     val id: UUID
 }
 
-fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
+fun RoutingContext.displayUser(params: ThothDisplayUserParams): ThothUser {
     val principal = thothPrincipal<ThothPrincipal>()
     val config = thothAuthConfig<Any, Any>()
 
@@ -28,7 +28,7 @@ fun RouteHandler.displayUser(params: ThothDisplayUserParams): ThothUser {
 
 interface ThothCurrentUserParams
 
-fun <PERMISSIONS : Any> RouteHandler.currentUser(
+fun <PERMISSIONS : Any> RoutingContext.currentUser(
     params: ThothCurrentUserParams,
 ): ThothUserWithPermissions<PERMISSIONS> {
     val principal = thothPrincipal<ThothPrincipal>()

@@ -1,18 +1,17 @@
 package io.thoth.auth.interactions
 
-import io.ktor.server.application.call
+import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothAccessToken
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.utils.generateAccessTokenForUser
 import io.thoth.auth.utils.validateJwt
-import io.thoth.openapi.ktor.RouteHandler
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.util.UUID
 
 interface ThothRefreshTokenParams
 
-fun RouteHandler.getRefreshToken(
+fun RoutingContext.getRefreshToken(
     params: ThothRefreshTokenParams,
     body: Unit,
 ): ThothAccessToken {

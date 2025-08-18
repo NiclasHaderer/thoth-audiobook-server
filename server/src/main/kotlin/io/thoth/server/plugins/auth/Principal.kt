@@ -6,6 +6,7 @@ import io.ktor.server.application.call
 import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.principal
 import io.ktor.server.request.httpMethod
+import io.ktor.server.routing.RoutingContext
 import io.ktor.util.pipeline.PipelineContext
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.utils.ThothPrincipal
@@ -58,13 +59,13 @@ fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipalImpl? {
     return ThothPrincipalImpl(userId = userId, type = enumType)
 }
 
-fun PipelineContext<Unit, ApplicationCall>.thothPrincipal(): ThothPrincipalImpl =
+fun RoutingContext.thothPrincipal(): ThothPrincipalImpl =
     thothPrincipalOrNull()
         ?: throw ErrorResponse.internalError("Could not get principal. Route has to be guarded with one of the Guards")
 
-fun PipelineContext<Unit, ApplicationCall>.thothPrincipalOrNull(): ThothPrincipalImpl? = call.principal()
+fun RoutingContext.thothPrincipalOrNull(): ThothPrincipalImpl? = call.principal()
 
-fun PipelineContext<Unit, ApplicationCall>.assertLibraryPermissions(vararg libraryIds: UUID) {
+fun RoutingContext.assertLibraryPermissions(vararg libraryIds: UUID) {
     val principal = thothPrincipal()
 
     val readonlyMethods = listOf(HttpMethod.Head, HttpMethod.Get, HttpMethod.Options)
@@ -81,7 +82,7 @@ fun PipelineContext<Unit, ApplicationCall>.assertLibraryPermissions(vararg libra
                     // If the user is not allowed to edit the library
                     allowedLib.permissions == LibraryPermissions.READ_WRITE &&
                         // The used http method is not the readonlyMethods list
-                        !readonlyMethods.contains(this.context.request.httpMethod)
+                        !readonlyMethods.contains(this.call.request.httpMethod)
                 }
             )
         if (!matches) {
