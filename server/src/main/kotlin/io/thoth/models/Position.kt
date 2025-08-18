@@ -1,6 +1,6 @@
 package io.thoth.models
 
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.v1.core.SortOrder
 import java.util.UUID
 
 data class Position(

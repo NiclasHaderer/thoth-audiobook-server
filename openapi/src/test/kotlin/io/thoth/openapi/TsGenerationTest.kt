@@ -21,6 +21,8 @@ class TsGenerationTest {
         }
         val models =
             """
+            /* eslint-disable */
+            // @ts-nocheck
             import type { Pair } from "./utility-types";
 
             export interface Something {
@@ -67,8 +69,11 @@ class TsGenerationTest {
         assertEquals(models, generatedModels)
 
         val apiClient =
-            """
+            $$"""
+            /* eslint-disable */
             // noinspection JSUnusedGlobalSymbols,ES6UnusedImports
+            // noinspection ES6UnusedImports
+            // @ts-nocheck
             import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from "./client";
             import type {GenericRoute, GenericRoute2, GenericRoute3, ListRoute, MapRoute, SetRoute, Something, UUID} from "./models";
             
@@ -79,20 +84,20 @@ class TsGenerationTest {
             ) => {
               const defaultHeadersImpl = new Headers(defaultHeaders)
               return {
-                v1({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<ListRoute>> {
-                  return _request(_createUrl(`/$\{path}/V1`, {name, someParam}), "GET", "json", _mergeHeaders(defaultHeadersImpl, headers), undefined, [...defaultInterceptors, ...interceptors], executor, false);
+                v1: ({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<ListRoute>> => {
+                  return _request(_createUrl(`/${path}/V1`, {name, someParam}), "GET", "json", _mergeHeaders(defaultHeadersImpl, headers), undefined, [...defaultInterceptors, ...interceptors], executor, false);
                 },
-                v2({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<MapRoute>> {
-                  return _request(_createUrl(`/$\{path}/V2`, {name, someParam}), "GET", "json", _mergeHeaders(defaultHeadersImpl, headers), undefined, [...defaultInterceptors, ...interceptors], executor, false);
+                v2: ({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<MapRoute>> => {
+                  return _request(_createUrl(`/${path}/V2`, {name, someParam}), "GET", "json", _mergeHeaders(defaultHeadersImpl, headers), undefined, [...defaultInterceptors, ...interceptors], executor, false);
                 },
-                v3({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<SetRoute>> {
-                  return _request(_createUrl(`/$\{path}/V3`, {name, someParam}), "GET", "json", _mergeHeaders(defaultHeadersImpl, headers), undefined, [...defaultInterceptors, ...interceptors], executor, false);
+                v3: ({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<SetRoute>> => {
+                  return _request(_createUrl(`/${path}/V3`, {name, someParam}), "GET", "json", _mergeHeaders(defaultHeadersImpl, headers), undefined, [...defaultInterceptors, ...interceptors], executor, false);
                 },
-                v4({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<GenericRoute<UUID>>> {
-                  return _request(_createUrl(`/$\{path}/V4`, {name, someParam}), "GET", "json", _mergeHeaders(defaultHeadersImpl, headers), undefined, [...defaultInterceptors, ...interceptors], executor, false);
+                v4: ({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<GenericRoute<UUID>>> => {
+                  return _request(_createUrl(`/${path}/V4`, {name, someParam}), "GET", "json", _mergeHeaders(defaultHeadersImpl, headers), undefined, [...defaultInterceptors, ...interceptors], executor, false);
                 },
-                v5({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, body: GenericRoute2<string, UUID>, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<GenericRoute3<string>>> {
-                  return _request(_createUrl(`/$\{path}/V5`, {name, someParam}), "POST", "json", _mergeHeaders(defaultHeadersImpl, headers), body, [...defaultInterceptors, ...interceptors], executor, false);
+                v5: ({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, body: GenericRoute2<string, UUID>, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<GenericRoute3<string>>> => {
+                  return _request(_createUrl(`/${path}/V5`, {name, someParam}), "POST", "json", _mergeHeaders(defaultHeadersImpl, headers), body, [...defaultInterceptors, ...interceptors], executor, false);
                 }
               } as const;
             }

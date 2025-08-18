@@ -14,9 +14,9 @@ import io.thoth.server.database.tables.TSeriesAuthorMapping
 import io.thoth.server.database.tables.TSeriesBookMapping
 import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.TUsers
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class `01_Create_Tables` : Migration() {
     private val tables =

@@ -2,10 +2,10 @@ package io.thoth.server.database.migrations.migrator
 
 import io.thoth.server.common.extensions.tap
 import mu.KotlinLogging.logger
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.reflections.Reflections
 import kotlin.reflect.full.createInstance
 

@@ -1,6 +1,6 @@
 package io.thoth.server.repositories
 
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.v1.core.SortOrder
 import java.util.UUID
 
 interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API, COMPLETE_API> {

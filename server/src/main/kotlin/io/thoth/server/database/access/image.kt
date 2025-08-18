@@ -4,8 +4,8 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.extensions.isUUID
 import io.thoth.server.common.extensions.syncUriToFile
 import io.thoth.server.database.tables.Image
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.statements.api.ExposedBlob
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import java.util.UUID
 
 fun Image.Companion.create(imageBytes: ByteArray): Image = new { blob = ExposedBlob(imageBytes) }

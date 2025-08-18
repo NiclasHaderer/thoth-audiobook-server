@@ -4,7 +4,7 @@ import io.thoth.server.common.scheduling.ScheduleCollection
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.tables.Library
 import io.thoth.server.file.scanner.LibraryScanner
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID

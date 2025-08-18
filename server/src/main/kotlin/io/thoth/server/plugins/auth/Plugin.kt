@@ -12,9 +12,14 @@ import io.thoth.models.UserPermissionsModel
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.access.toExternalUser
+import io.thoth.server.database.tables.Library
+import io.thoth.server.database.tables.LibraryUserMappingEntity
+import io.thoth.server.database.tables.TLibraryUserMapping
 import io.thoth.server.database.tables.TUsers
 import io.thoth.server.database.tables.User
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.ktor.ext.inject
 import java.nio.file.Path
 
@@ -33,11 +38,10 @@ fun Application.configureAuthentication() {
         activeKeyId = "thoth"
 
         configureGuard(Guards.Normal) { jwtCredential, setError ->
-            jwtToPrincipal(jwtCredential)
-                ?: return@configureGuard run {
-                    setError(JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
-                    null
-                }
+            jwtToPrincipal(jwtCredential) ?: return@configureGuard run {
+                setError(JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
+                null
+            }
         }
 
         configureGuard(Guards.Admin) { jwtCredential, setError ->
@@ -75,13 +79,26 @@ fun Application.configureAuthentication() {
         renameUser { user, newName -> User.findById(user.id)!!.also { it.username = newName }.toExternalUser() }
 
         updatePassword { user, newPassword ->
-            User.findById(user.id)!!.also { it.passwordHash = newPassword }.toExternalUser()
+            transaction {
+                User.findById(user.id)!!.also { it.passwordHash = newPassword }.toExternalUser()
+            }
         }
 
-        updateUserPermissions { user, permissions ->
-            val dbUser = User.findById(user.id)!!
-            dbUser.toExternalUser()
-            TODO("Not implemented yet")
+        updateUserPermissions { currentUser, permissions ->
+            transaction {
+                val dbUser = User.findById(currentUser.id)!!
+                dbUser.admin = permissions.isAdmin
+                TLibraryUserMapping.deleteWhere { TLibraryUserMapping.user eq currentUser.id }
+                permissions.libraries.forEach { permission ->
+                    val library = Library.findById(permission.id)!!
+                    LibraryUserMappingEntity.new {
+                        this.user = dbUser
+                        this.library = library
+                        this.permissions = permission.permissions
+                    }
+                }
+                dbUser.toExternalUser()
+            }
         }
 
         isAdminUser { user: ThothDatabaseUser -> transaction { User.findById(user.id)?.admin ?: false } }

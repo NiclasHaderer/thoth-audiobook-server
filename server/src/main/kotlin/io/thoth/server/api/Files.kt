@@ -13,7 +13,7 @@ import io.thoth.openapi.ktor.responses.binaryResponse
 import io.thoth.openapi.ktor.responses.fileResponse
 import io.thoth.server.database.tables.Image
 import io.thoth.server.database.tables.Track
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile

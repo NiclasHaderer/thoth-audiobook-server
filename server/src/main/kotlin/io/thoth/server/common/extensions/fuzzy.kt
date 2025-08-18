@@ -1,7 +1,7 @@
 package io.thoth.server.common.extensions
 
 import me.xdrop.fuzzywuzzy.FuzzySearch
-import org.jetbrains.exposed.sql.SizedIterable
+import org.jetbrains.exposed.v1.jdbc.SizedIterable
 
 class FuzzyResult<T>(
     val match: Int,

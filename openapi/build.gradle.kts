@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 val ktorVersion: String by project
 val kotlinLoggingVersion: String by project
 val openApiVersion: String by project

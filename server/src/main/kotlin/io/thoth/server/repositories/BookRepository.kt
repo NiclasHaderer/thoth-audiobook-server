@@ -20,13 +20,13 @@ import io.thoth.server.database.tables.TBooks
 import io.thoth.server.database.tables.TTracks
 import io.thoth.server.database.tables.Track
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
@@ -73,7 +73,8 @@ class BookRepositoryImpl :
             Book
                 .find { TBooks.library eq libraryId }
                 .orderBy(TBooks.title.lowerCase() to order)
-                .limit(limit, offset)
+                .offset(offset)
+                .limit(limit)
                 .map { it.toModel() }
         }
 
@@ -96,7 +97,8 @@ class BookRepositoryImpl :
                 TBooks
                     .join(TAuthorBookMapping, JoinType.INNER, TBooks.id, TAuthorBookMapping.book)
                     .join(TAuthors, JoinType.INNER, TAuthorBookMapping.authors, TAuthors.id)
-                    .select {
+                    .selectAll()
+                    .where {
                         (TBooks.title like bookTitle) and
                             (TAuthorBookMapping.authors inList authorIds) and
                             (TBooks.library eq libraryId)
@@ -127,7 +129,8 @@ class BookRepositoryImpl :
         transaction {
             val book = get(id, libraryId)
             TBooks
-                .select { TBooks.title.lowerCase() less book.title.lowercase() and (TBooks.library eq libraryId) }
+                .selectAll()
+                .where { TBooks.title.lowerCase() less book.title.lowercase() and (TBooks.library eq libraryId) }
                 .orderBy(TBooks.title.lowerCase() to order)
                 .count()
         }
@@ -140,9 +143,11 @@ class BookRepositoryImpl :
     ): List<UUID> =
         transaction {
             TBooks
-                .select { TBooks.library eq libraryId }
+                .selectAll()
+                .where { TBooks.library eq libraryId }
                 .orderBy(TBooks.title.lowerCase() to order)
-                .limit(limit, offset)
+                .offset(offset)
+                .limit(limit)
                 .map { it[TBooks.id].value }
         }
 

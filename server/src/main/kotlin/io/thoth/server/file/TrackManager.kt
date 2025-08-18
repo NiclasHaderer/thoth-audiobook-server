@@ -18,8 +18,8 @@ import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
 import kotlinx.coroutines.sync.Semaphore
 import mu.KotlinLogging.logger
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Path

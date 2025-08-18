@@ -29,7 +29,7 @@ import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.ktor.put
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 fun Routing.authRoutes() {
     post<Api.Auth.Login, ThothLoginUser, ThothAccessToken>(withTransaction(RouteHandler::loginUser))

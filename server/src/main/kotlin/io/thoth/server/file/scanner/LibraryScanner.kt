@@ -20,10 +20,10 @@ import io.thoth.server.file.TrackManager
 import io.thoth.server.repositories.LibraryRepository
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging.logger
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.notInList
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Path
@@ -131,9 +131,9 @@ class LibraryScannerImpl :
             // Step 1: Find referenced image IDs
             val referencedImageIds =
                 (
-                    TBooks.slice(TBooks.coverID).select { TBooks.coverID.isNotNull() } +
-                        TSeries.slice(TSeries.coverID).select { TSeries.coverID.isNotNull() } +
-                        TAuthors.slice(TAuthors.imageID).select { TAuthors.imageID.isNotNull() }
+                    TBooks.select(TBooks.coverID).where { TBooks.coverID.isNotNull() } +
+                        TSeries.select(TSeries.coverID).where { TSeries.coverID.isNotNull() } +
+                        TAuthors.select(TAuthors.imageID).where { TAuthors.imageID.isNotNull() }
                 ).mapNotNull {
                     it.getOrNull(TBooks.coverID) ?: it.getOrNull(TSeries.coverID) ?: it.getOrNull(TAuthors.imageID)
                 }.distinct()

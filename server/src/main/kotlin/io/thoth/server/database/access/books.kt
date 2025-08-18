@@ -4,7 +4,7 @@ import io.thoth.models.BookModel
 import io.thoth.models.NamedId
 import io.thoth.models.TitledId
 import io.thoth.server.database.tables.Book
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.v1.core.SortOrder
 
 fun Book.toModel(
     authorOrder: SortOrder = SortOrder.ASC,
