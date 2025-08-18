@@ -4,10 +4,10 @@ import io.thoth.models.FileScanner
 import io.thoth.models.MetadataAgent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.extensions.json
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.dao.UUIDEntity
+import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import java.util.UUID
 
 object TLibraries : UUIDTable("Libraries") {

@@ -4,8 +4,8 @@ import io.thoth.models.NamedId
 import io.thoth.models.SeriesModel
 import io.thoth.server.database.tables.Series
 import io.thoth.server.database.tables.TAuthors
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.lowerCase
 
 fun Series.toModel(authorOrder: SortOrder = SortOrder.ASC): SeriesModel =
     SeriesModel(

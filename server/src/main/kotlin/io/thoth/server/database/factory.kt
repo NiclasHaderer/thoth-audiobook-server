@@ -6,8 +6,8 @@ import io.thoth.server.common.utils.memoize
 import io.thoth.server.config.DatabaseConnection
 import io.thoth.server.database.migrations.migrator.DatabaseMigrator
 import mu.KotlinLogging.logger
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.jdbc.Database
 
 private object DatabaseFactory {
     private val log = logger {}

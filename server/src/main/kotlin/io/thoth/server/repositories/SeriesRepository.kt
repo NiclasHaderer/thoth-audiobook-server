@@ -17,11 +17,11 @@ import io.thoth.server.database.tables.Series
 import io.thoth.server.database.tables.TSeries
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging.logger
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
@@ -98,7 +98,8 @@ class SeriesRepositoryImpl :
             Series
                 .find { TSeries.library eq libraryId }
                 .orderBy(TSeries.title.lowerCase() to order)
-                .limit(limit, offset)
+                .offset(offset)
+                .limit(limit)
                 .map { it.toModel() }
         }
 
@@ -161,7 +162,8 @@ class SeriesRepositoryImpl :
             Series
                 .find { TSeries.library eq libraryId }
                 .orderBy(TSeries.title.lowerCase() to order)
-                .limit(limit, offset)
+                .offset(offset)
+                .limit(limit)
                 .map { it.id.value }
         }
 

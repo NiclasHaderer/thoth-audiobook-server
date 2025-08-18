@@ -1,6 +1,6 @@
 package io.thoth.server.database.migrations.migrator
 
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 
 abstract class Migration {
     abstract fun migrate(db: Database)

@@ -3,9 +3,9 @@ package io.thoth.server.ws
 import io.ktor.server.routing.Route
 import io.ktor.server.websocket.webSocket
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.dao.EntityChangeType
-import org.jetbrains.exposed.dao.EntityHook
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.dao.EntityChangeType
+import org.jetbrains.exposed.v1.dao.EntityHook
 
 enum class NotificationType(
     val changeType: Set<EntityChangeType>,

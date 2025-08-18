@@ -5,7 +5,7 @@ import io.ktor.server.websocket.sendSerialized
 import io.ktor.websocket.CloseReason
 import io.ktor.websocket.close
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.dao.EntityChangeType
+import org.jetbrains.exposed.v1.dao.EntityChangeType
 import java.util.Collections
 
 @Serializable

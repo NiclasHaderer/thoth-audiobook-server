@@ -1,19 +1,19 @@
 package io.thoth.server.common.extensions
 
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SizedIterable
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.dao.UUIDEntity
+import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.SizedIterable
 
 fun <E : UUIDEntity> UUIDEntityClass<E>.findOne(op: SqlExpressionBuilder.() -> Op<Boolean>): E? =
     this.find(op).limit(1).firstOrNull()
 
-fun Transaction.addMissingColumns(vararg tables: Table) {
+fun JdbcTransaction.addMissingColumns(vararg tables: Table) {
     val statements = SchemaUtils.addMissingColumnsStatements(*tables)
 
     if (statements.isNotEmpty()) {
