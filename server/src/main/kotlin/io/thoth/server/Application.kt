@@ -75,10 +75,10 @@ fun Application.applicationModule() {
 fun Application.plugins() {
     configureStatusPages()
     configureRouting()
-    configureSerialization()
+    val mapper = configureSerialization()
     configureOpenApi()
     configurePartialContent()
-    configureSockets()
+    configureSockets(mapper)
     configureMonitoring()
     configureAuthentication()
 }

@@ -4,11 +4,9 @@ import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.server.websocket.sendSerialized
 import io.ktor.websocket.CloseReason
 import io.ktor.websocket.close
-import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.dao.EntityChangeType
 import java.util.Collections
 
-@Serializable
 class ChangeEvent(
     val type: EntityChangeType,
     val id: String,
