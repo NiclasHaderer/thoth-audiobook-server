@@ -12,18 +12,33 @@ object TAuthorBookMapping : CompositeIdTable("AuthorBookMapping") {
     val authors = reference("author", TAuthors, onDelete = ReferenceOption.CASCADE)
     val book = reference("book", TBooks, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(authors, book)
+
+    init {
+        addIdColumn(book)
+        addIdColumn(authors)
+    }
 }
 
 object TGenreBookMapping : CompositeIdTable("GenreBookMapping") {
     val genre = reference("genre", TGenres, onDelete = ReferenceOption.CASCADE)
     val book = reference("book", TBooks, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(genre, book)
+
+    init {
+        addIdColumn(book)
+        addIdColumn(genre)
+    }
 }
 
 object TGenreSeriesMapping : CompositeIdTable("GenreSeriesMapping") {
     val genre = reference("genre", TGenres, onDelete = ReferenceOption.CASCADE)
     val series = reference("Series", TSeries, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(genre, series)
+
+    init {
+        addIdColumn(series)
+        addIdColumn(genre)
+    }
 }
 
 object TSeriesBookMapping : CompositeIdTable("SeriesBookMapping") {
@@ -31,12 +46,22 @@ object TSeriesBookMapping : CompositeIdTable("SeriesBookMapping") {
     val book = reference("book", TBooks, onDelete = ReferenceOption.CASCADE)
     val seriesIndex = float("index").nullable()
     override val primaryKey = PrimaryKey(series, book)
+
+    init {
+        addIdColumn(book)
+        addIdColumn(series)
+    }
 }
 
 object TSeriesAuthorMapping : CompositeIdTable("SeriesAuthorMapping") {
     val series = reference("series", TSeries, onDelete = ReferenceOption.CASCADE)
     val author = reference("author", TAuthors, onDelete = ReferenceOption.CASCADE)
     override val primaryKey = PrimaryKey(series, author)
+
+    init {
+        addIdColumn(author)
+        addIdColumn(series)
+    }
 }
 
 object TLibraryUserMapping : CompositeIdTable("LibraryUserMapping") {
@@ -44,6 +69,11 @@ object TLibraryUserMapping : CompositeIdTable("LibraryUserMapping") {
     val user = reference("user", TUsers, onDelete = ReferenceOption.CASCADE)
     var permissions = enumeration<LibraryPermissions>("permissions")
     override val primaryKey = PrimaryKey(library, user)
+
+    init {
+        addIdColumn(user)
+        addIdColumn(library)
+    }
 }
 
 class LibraryUserMappingEntity(
