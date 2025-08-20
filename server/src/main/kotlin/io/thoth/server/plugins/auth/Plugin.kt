@@ -9,6 +9,7 @@ import io.thoth.auth.ThothAuthenticationPlugin
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.models.UpdatePermissionsModel
 import io.thoth.models.UserPermissionsModel
+import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.access.toExternalUser
@@ -19,6 +20,7 @@ import io.thoth.server.database.tables.TUsers
 import io.thoth.server.database.tables.User
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.ktor.ext.inject
 import java.nio.file.Path
@@ -86,6 +88,10 @@ fun Application.configureAuthentication() {
 
         updateUserPermissions { currentUser, permissions ->
             transaction {
+                if (!permissions.isAdmin && TUsers.selectAll().where { TUsers.admin eq true }.count() == 1L) {
+                    throw ErrorResponse.userError("Cannot remove admin permissions from the only admin user.")
+                }
+
                 val dbUser = User.findById(currentUser.id)!!
                 dbUser.admin = permissions.isAdmin
                 TLibraryUserMapping.deleteWhere { TLibraryUserMapping.user eq currentUser.id }

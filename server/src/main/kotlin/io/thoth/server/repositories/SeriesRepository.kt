@@ -14,6 +14,7 @@ import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.Author
 import io.thoth.server.database.tables.Image
 import io.thoth.server.database.tables.Series
+import io.thoth.server.database.tables.TBooks
 import io.thoth.server.database.tables.TSeries
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging.logger
@@ -70,21 +71,19 @@ class SeriesRepositoryImpl :
         id: UUID,
         libraryId: UUID,
     ): Series =
-        transaction {
-            Series.find { TSeries.id eq id and (TSeries.library eq libraryId) }.firstOrNull()
-                ?: throw ErrorResponse.notFound("Series", id)
-        }
+        Series.find { TSeries.id eq id and (TSeries.library eq libraryId) }.firstOrNull()
+            ?: throw ErrorResponse.notFound("Series", id)
 
     override fun get(
         id: UUID,
         libraryId: UUID,
     ): DetailedSeriesModel =
         transaction {
-            val series = raw(id, libraryId)
+            val series = raw(id = id, libraryId = libraryId)
 
             DetailedSeriesModel.fromModel(
                 series = series.toModel(),
-                books = series.books.orderBy(TSeries.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
+                books = series.books.orderBy(TBooks.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
             )
         }
 

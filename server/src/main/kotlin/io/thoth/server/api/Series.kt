@@ -18,15 +18,25 @@ fun Routing.seriesRouting() {
     val seriesRepository by inject<SeriesRepository>()
     get<Api.Libraries.Id.Series.All, PaginatedResponse<SeriesModel>> {
         PaginatedResponse(
-            seriesRepository.getAll(it.libraryId, SortOrder.ASC, it.limit, it.offset),
+            seriesRepository.getAll(
+                libraryId = it.libraryId,
+                order = SortOrder.ASC,
+                limit = it.limit,
+                offset = it.offset,
+            ),
             offset = it.offset,
             limit = it.limit,
-            total = seriesRepository.total(it.libraryId),
+            total = seriesRepository.total(libraryId = it.libraryId),
         )
     }
 
     get<Api.Libraries.Id.Series.Sorting, List<UUID>> {
-        seriesRepository.sorting(it.libraryId, order = it.order.toSortOrder(), limit = it.limit, offset = it.offset)
+        seriesRepository.sorting(
+            libraryId = it.libraryId,
+            order = it.order.toSortOrder(),
+            limit = it.limit,
+            offset = it.offset,
+        )
     }
 
     get<Api.Libraries.Id.Series.Id.Position, Position> {
@@ -37,17 +47,19 @@ fun Routing.seriesRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Series.Id, DetailedSeriesModel> { seriesRepository.get(it.libraryId, it.id) }
+    get<Api.Libraries.Id.Series.Id, DetailedSeriesModel> { seriesRepository.get(id = it.id, libraryId = it.libraryId) }
 
     get<Api.Libraries.Id.Series.Autocomplete, List<TitledId>> {
-        seriesRepository.search(it.q, it.libraryId).map { series -> TitledId(series.id, series.title) }
+        seriesRepository
+            .search(query = it.q, libraryId = it.libraryId)
+            .map { series -> TitledId(id = series.id, title = series.title) }
     }
 
     patch<Api.Libraries.Id.Series.Id, PartialSeriesApiModel, SeriesModel> { id, patchSeries ->
-        seriesRepository.modify(id.id, id.libraryId, patchSeries)
+        seriesRepository.modify(id = id.id, libraryId = id.libraryId, partial = patchSeries)
     }
 
     put<Api.Libraries.Id.Series.Id, SeriesApiModel, SeriesModel> { id, putSeries ->
-        seriesRepository.replace(id.id, id.libraryId, putSeries)
+        seriesRepository.replace(id = id.id, libraryId = id.libraryId, complete = putSeries)
     }
 }

@@ -32,6 +32,7 @@ dependencies {
     implementation("org.webjars:swagger-ui:$swaggerUiVersion")
 
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-jackson:3.2.3")
 
     // Tests
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")

@@ -19,7 +19,7 @@ class ErrorResponse(
             thing: String,
             id: Any,
             details: Any? = null,
-        ): ErrorResponse = ErrorResponse(HttpStatusCode.NotFound, "$thing with ID:$id not found", details)
+        ): ErrorResponse = ErrorResponse(HttpStatusCode.NotFound, "$thing with ID '$id' not found", details)
 
         fun userError(
             error: String,
