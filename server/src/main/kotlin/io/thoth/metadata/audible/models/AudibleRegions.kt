@@ -1,20 +1,23 @@
 package io.thoth.metadata.audible.models
 
-enum class AudibleRegions {
-    au,
-    ca,
-    de,
-    es,
-    fr,
-    `in`,
-    it,
-    jp,
-    us,
-    uk,
+enum class AudibleRegions(
+    val value: String,
+) {
+    AU("au"),
+    CA("ca"),
+    DE("de"),
+    ES("es"),
+    FR("fr"),
+    IN("in"),
+    IT("it"),
+    JP("jp"),
+    US("us"),
+    UK("uk"),
     ;
 
     companion object {
-        fun from(region: String): AudibleRegions = values().firstOrNull { it.name == region } ?: us
+        fun from(region: String): AudibleRegions =
+            entries.firstOrNull { it.name.lowercase() == region.lowercase() } ?: US
     }
 }
 
@@ -27,28 +30,28 @@ class AudibleRegionValue(
     fun toHost(): String = "audible.$tld"
 }
 
-private const val audibleChapterName = "Chapter"
-private val titleReplacers = listOf(", Book .*".toRegex())
-private const val datePattern = "MM-dd-yy"
+private const val AUDIBLE_CHAPTER_NAME = "Chapter"
+private val TITLE_REPLACER = listOf(", Book .*".toRegex())
+private const val DATE_PATTERN = "MM-dd-yy"
 
 private val RegionMappings =
     mutableMapOf(
-        AudibleRegions.au to
-            AudibleRegionValue(chapterName = audibleChapterName, tld = "com.au", datePattern, titleReplacers),
-        AudibleRegions.ca to
-            AudibleRegionValue(chapterName = audibleChapterName, tld = "ca", datePattern, titleReplacers),
-        AudibleRegions.de to
+        AudibleRegions.AU to
+            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "com.au", DATE_PATTERN, TITLE_REPLACER),
+        AudibleRegions.CA to
+            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "ca", DATE_PATTERN, TITLE_REPLACER),
+        AudibleRegions.DE to
             AudibleRegionValue(chapterName = "Kapitel", tld = "de", "dd.MM.yyyy", listOf(" - Gesprochen .*".toRegex())),
-        AudibleRegions.es to AudibleRegionValue(chapterName = "Capítulo", tld = "es", datePattern),
-        AudibleRegions.fr to AudibleRegionValue(chapterName = "Chapitre", tld = "fr", datePattern),
-        AudibleRegions.`in` to
-            AudibleRegionValue(chapterName = audibleChapterName, tld = "in", datePattern, titleReplacers),
-        AudibleRegions.it to AudibleRegionValue(chapterName = "Capitolo", tld = "it", datePattern),
-        AudibleRegions.jp to AudibleRegionValue(chapterName = "章", tld = "co.jp", datePattern),
-        AudibleRegions.us to
-            AudibleRegionValue(chapterName = audibleChapterName, tld = "com", datePattern, titleReplacers),
-        AudibleRegions.uk to
-            AudibleRegionValue(chapterName = audibleChapterName, tld = "co.uk", datePattern, titleReplacers),
+        AudibleRegions.ES to AudibleRegionValue(chapterName = "Capítulo", tld = "es", DATE_PATTERN),
+        AudibleRegions.FR to AudibleRegionValue(chapterName = "Chapitre", tld = "fr", DATE_PATTERN),
+        AudibleRegions.IN to
+            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "in", DATE_PATTERN, TITLE_REPLACER),
+        AudibleRegions.IT to AudibleRegionValue(chapterName = "Capitolo", tld = "it", DATE_PATTERN),
+        AudibleRegions.JP to AudibleRegionValue(chapterName = "章", tld = "co.jp", DATE_PATTERN),
+        AudibleRegions.US to
+            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "com", DATE_PATTERN, TITLE_REPLACER),
+        AudibleRegions.UK to
+            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "co.uk", DATE_PATTERN, TITLE_REPLACER),
     )
 
 fun AudibleRegions.getValue(): AudibleRegionValue = RegionMappings[this]!!
