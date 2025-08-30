@@ -12,7 +12,6 @@ import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.access.toExternalUser
 import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.database.tables.LibraryUserEntity
 import io.thoth.server.database.tables.LibraryUserTable

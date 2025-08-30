@@ -1,8 +1,8 @@
 package io.thoth.server.file
 
 import io.thoth.server.common.extensions.add
+import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.create
-import io.thoth.server.database.access.getByPath
 import io.thoth.server.database.access.markAsTouched
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.BookEntity
@@ -12,98 +12,65 @@ import io.thoth.server.database.tables.TrackEntity
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
-import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapper
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
-import kotlinx.coroutines.sync.Semaphore
 import mu.KotlinLogging.logger
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Path
 import kotlin.io.path.absolute
-import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
 import kotlin.io.path.readAttributes
 
-interface TrackManager {
-    suspend fun insertScanResult(
-        scan: AudioFileAnalysisResult,
-        path: Path,
-        library: LibraryEntity,
-    )
-
-    suspend fun addPath(
-        path: Path,
-        library: LibraryEntity,
-    )
-
-    fun removePath(path: Path)
-}
-
-class TrackManagerImpl :
-    TrackManager,
-    KoinComponent {
+class TrackManager : KoinComponent {
     private val bookRepository by inject<BookRepository>()
     private val seriesRepository by inject<SeriesRepository>()
     private val authorRepository by inject<AuthorRepository>()
     private val analyzers by inject<AudioFileAnalyzers>()
 
-    private val semaphore = Semaphore(1)
     private val log = logger {}
 
-    override suspend fun addPath(
+    fun addPath(
         path: Path,
         library: LibraryEntity,
     ) {
-        if (path.isDirectory()) {
-            log.warn { "Skipped ${path.absolute()} because it is a directory" }
-            return
+        transaction {
+            require(path.isRegularFile()) { "Cannot add folder to library" }
+            val libPath = library.folders.map { Path.of(it) }.first { path.startsWith(it) }
+            val analyzer = analyzers.forLibrary(library)
+            val result =
+                analyzer.analyze(path, path.readAttributes(), libPath)
+                    ?: return@transaction log.warn {
+                        "Could not extract al necessary information for '${path.absolute()}'"
+                    }
+            insertScanResult(result, library)
         }
-        val libPath = library.folders.map { Path.of(it) }.first { path.startsWith(it) }
-        val libAnalyzer =
-            analyzers.filter { analyzer -> analyzer.name in library.fileScanners.map { libScanner -> libScanner.name } }
+    }
 
-        if (libAnalyzer.isEmpty()) {
-            return log.warn {
-                "Skipped ${path.absolute()} because it is not supported by any scanner"
-                " (available scanners: ${analyzers.map { it.name }})"
-                " (library scanners: ${library.fileScanners.map { it.name }})"
+    fun removeFolder(
+        path: Path,
+        library: LibraryEntity,
+    ) {
+        transaction {
+            TracksTable.deleteWhere {
+                TracksTable.path like "${path.absolute()}%" and (TracksTable.library eq library.id)
             }
         }
-
-        val analyzer = AudioFileAnalyzerWrapper(libAnalyzer)
-        val result =
-            analyzer.analyze(path, path.readAttributes(), libPath)
-                ?: return log.warn { "Skipped ${path.absolute()} because it contains not enough information" }
-        insertScanResult(result, path, library)
     }
 
-    override suspend fun insertScanResult(
+    private fun insertScanResult(
         scan: AudioFileAnalysisResult,
-        path: Path,
         library: LibraryEntity,
     ) {
-        this.semaphore.acquire()
-        try {
-            transaction { insertOrUpdateTrack(scan, library) }
-        } finally {
-            this.semaphore.release()
-        }
-    }
-
-    override fun removePath(path: Path) =
-        transaction {
-            TrackEntity.find { TracksTable.path like "${path.absolute()}%" }.forEach { it.delete() }
-        }
-
-    private fun insertOrUpdateTrack(
-        scan: AudioFileAnalysisResult,
-        library: LibraryEntity,
-    ): TrackEntity {
-        val track = TrackEntity.getByPath(scan.path)
-        return if (track != null) {
+        val track = TrackEntity.findOne { TracksTable.path like scan.path }
+        if (track != null) {
             updateTrack(track, scan, library).also { track.markAsTouched() }
         } else {
             createTrack(scan, library)
@@ -175,9 +142,7 @@ class TrackManagerImpl :
                 null
             }
         val dbImage =
-            if (scan.cover != null &&
-                book.coverID == null
-            ) {
+            if (scan.cover != null && book.coverID == null) {
                 ImageEntity.create(scan.cover!!).id
             } else {
                 book.coverID
@@ -208,6 +173,7 @@ class TrackManagerImpl :
         val dbImage = if (scan.cover != null) ImageEntity.create(scan.cover!!) else null
         val dbSeriesList = if (dbSeries != null) listOf(dbSeries) else listOf()
 
+        log.info("Creating book ${scan.book}")
         return BookEntity.new {
             title = scan.book
             authors = SizedCollection(dbAuthor)
@@ -225,13 +191,13 @@ class TrackManagerImpl :
         libraryModel: LibraryEntity,
     ): List<AuthorEntity> =
         scan.authors.map { author ->
-            authorRepository.findByName(author, libraryModel.id.value)
-                ?: run {
-                    log.info("Created author: ${scan.authors}")
-                    AuthorEntity.new {
+            authorRepository.findByName(author, libraryModel.id.value) ?: run {
+                log.info("Creating author: $author")
+                AuthorEntity
+                    .new {
                         name = author
                         library = libraryModel
                     }
-                }
+            }
         }
 }

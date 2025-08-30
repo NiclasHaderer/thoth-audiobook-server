@@ -16,10 +16,10 @@ class ErrorResponse private constructor(
         ): ErrorResponse = notFound(thing, id.toString(), details)
 
         fun notFound(
-            thing: String,
-            id: Any,
+            type: String,
+            actual: String,
             details: Any? = null,
-        ): ErrorResponse = ErrorResponse(HttpStatusCode.NotFound, "$thing with ID '$id' not found", details)
+        ): ErrorResponse = ErrorResponse(HttpStatusCode.NotFound, "$type '$actual' not found", details)
 
         fun userError(
             error: String,

@@ -3,7 +3,6 @@ package io.thoth.server.repositories
 import io.thoth.models.LibrarySearchResult
 import io.thoth.server.common.extensions.fuzzy
 import io.thoth.server.common.extensions.saveTo
-import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookEntity

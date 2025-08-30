@@ -6,7 +6,7 @@ import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
-import io.ktor.client.statement.readBytes
+import io.ktor.client.statement.readRawBytes
 import kotlinx.coroutines.runBlocking
 import java.util.Base64
 import java.util.UUID
@@ -17,7 +17,7 @@ private suspend fun imageFromString(url: String): ByteArray =
     if (url.matches("^data://".toRegex())) {
         decodeDataURL(url)
     } else {
-        client.get(url).readBytes()
+        client.get(url).readRawBytes()
     }
 
 private fun decodeDataURL(dataUrl: String): ByteArray {

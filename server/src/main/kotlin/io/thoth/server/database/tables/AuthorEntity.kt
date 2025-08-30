@@ -1,5 +1,7 @@
 package io.thoth.server.database.tables
 
+import io.thoth.models.AuthorModel
+import io.thoth.models.NamedId
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
@@ -27,4 +29,19 @@ class AuthorEntity(
     var books by BookEntity via AuthorBookTable
     var series by SeriesEntity via SeriesAuthorTable
     var library by LibraryEntity referencedOn AuthorTable.library
+
+    fun toModel(): AuthorModel =
+        AuthorModel(
+            id = id.value,
+            name = name,
+            biography = biography,
+            provider = provider,
+            birthDate = birthDate,
+            bornIn = bornIn,
+            deathDate = deathDate,
+            imageID = imageID?.value,
+            website = website,
+            providerID = providerID,
+            library = NamedId(library.id.value, library.name),
+        )
 }

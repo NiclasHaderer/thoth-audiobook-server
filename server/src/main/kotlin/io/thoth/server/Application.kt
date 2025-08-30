@@ -24,9 +24,8 @@ import io.thoth.server.api.seriesRouting
 import io.thoth.server.common.extensions.get
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.connectToDatabaseAndMigrate
+import io.thoth.server.database.DatabaseConnector
 import io.thoth.server.di.setupDependencyInjection
-import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.plugins.auth.configureAuthentication
 import io.thoth.server.plugins.configureMonitoring
 import io.thoth.server.plugins.configureOpenApi
@@ -34,7 +33,6 @@ import io.thoth.server.plugins.configurePartialContent
 import io.thoth.server.plugins.configureRouting
 import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
-import io.thoth.server.repositories.LibraryRepository
 import io.thoth.server.schedules.ThothSchedules
 import kotlinx.coroutines.launch
 import org.slf4j.bridge.SLF4JBridgeHandler
@@ -59,7 +57,7 @@ fun Application.applicationModule() {
     setupDependencyInjection()
 
     plugins()
-    connectToDatabaseAndMigrate()
+    DatabaseConnector.connect()
     routing()
     startBackgroundJobs()
 }
@@ -133,10 +131,5 @@ fun Application.startBackgroundJobs() {
             )
             log.info("Clients generated")
         }
-    }
-
-    launch {
-        val libraryRepository = get<LibraryRepository>()
-        get<FileTreeWatcher>().watch(libraryRepository.allFolders())
     }
 }

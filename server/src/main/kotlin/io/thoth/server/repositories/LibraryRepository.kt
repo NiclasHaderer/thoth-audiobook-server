@@ -5,16 +5,10 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.PartialUpdateLibrary
 import io.thoth.server.api.UpdateLibrary
 import io.thoth.server.common.scheduling.Scheduler
-import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryEntity
-import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.schedules.ThothSchedules
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging.logger
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -22,7 +16,7 @@ import java.nio.file.Path
 import java.util.UUID
 
 interface LibraryRepository {
-    fun raw(id: UUID): Library
+    fun raw(id: UUID): LibraryEntity
 
     fun rescan(id: UUID)
 
@@ -41,27 +35,15 @@ interface LibraryRepository {
         id: UUID,
         complete: UpdateLibrary,
     ): Library
-
-    fun overlappingFolders(
-        id: UUID?,
-        folders: List<String>,
-    ): Pair<Boolean, List<Path>>
-
-    fun allFolders(): List<Path>
-
-    fun getMatching(path: Path): Library?
 }
 
 class LibraryRepositoryImpl :
     LibraryRepository,
     KoinComponent {
-    private val fileWatcher by inject<FileTreeWatcher>()
     private val scheduler by inject<Scheduler>()
     private val schedules by inject<ThothSchedules>()
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
-    private val log = logger {}
 
-    override fun raw(id: UUID): Library =
+    override fun raw(id: UUID): LibraryEntity =
         transaction {
             LibraryEntity.find { LibrariesTable.id eq id }.firstOrNull() ?: throw ErrorResponse.notFound("Library", id)
         }
@@ -97,7 +79,6 @@ class LibraryRepositoryImpl :
         }.also {
             if (partial.folders != null || partial.metadataScanners != null || partial.fileScanners != null) {
                 runBlocking { scheduler.dispatch(schedules.scanLibrary.build(it)) }
-                coroutineScope.launch { fileWatcher.watch(allFolders()) }
             }
         }.toModel()
 
@@ -115,7 +96,6 @@ class LibraryRepositoryImpl :
             }
         }.also {
             runBlocking { scheduler.dispatch(schedules.scanLibrary.build(it)) }
-            coroutineScope.launch { fileWatcher.watch(allFolders()) }
         }.toModel()
 
     override fun replace(
@@ -136,10 +116,9 @@ class LibraryRepositoryImpl :
             }
         }.also {
             runBlocking { scheduler.dispatch(schedules.scanLibrary.build(it)) }
-            coroutineScope.launch { fileWatcher.watch(allFolders()) }
         }.toModel()
 
-    override fun overlappingFolders(
+    fun overlappingFolders(
         id: UUID?,
         folders: List<String>,
     ): Pair<Boolean, List<Path>> =
@@ -149,19 +128,6 @@ class LibraryRepositoryImpl :
             val overlaps = newFolders.filter { newFolder -> allFolders.any { newFolder.startsWith(it) } }
 
             Pair(overlaps.isNotEmpty(), overlaps)
-        }
-
-    override fun allFolders(): List<Path> =
-        transaction { LibraryEntity.all().flatMap { it.folders }.map { Path.of(it) } }
-
-    override fun getMatching(path: Path): Library? =
-        transaction {
-            val potentialLibraries =
-                LibraryEntity.all().filter { lib -> lib.folders.map { Path.of(it) }.any { path.startsWith(it) } }
-            if (potentialLibraries.isEmpty()) return@transaction null
-            if (potentialLibraries.size == 1) return@transaction potentialLibraries.first()
-            log.error { "Multiple libraries match path $path" }
-            return@transaction null
         }
 
     private fun raiseForOverlaps(

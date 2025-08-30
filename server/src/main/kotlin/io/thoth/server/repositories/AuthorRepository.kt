@@ -9,7 +9,6 @@ import io.thoth.server.api.AuthorApiModel
 import io.thoth.server.api.PartialAuthorApiModel
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.getNewImage
-import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable

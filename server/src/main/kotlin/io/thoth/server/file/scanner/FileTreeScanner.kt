@@ -6,7 +6,6 @@ import mu.KotlinLogging.logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException
-import java.nio.file.FileSystems
 import java.nio.file.FileVisitResult
 import java.nio.file.FileVisitor
 import java.nio.file.Files
@@ -17,8 +16,7 @@ import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
 
 private class FileTreeScanner(
-    private val ignoredSubtree: (Path) -> Unit,
-    private val shouldUpdateFile: (Path) -> Boolean,
+    private val ignoreFolder: (Path) -> Unit,
     private val addOrUpdate: (file: Path, attrs: BasicFileAttributes) -> Unit,
 ) : FileVisitor<Path>,
     KoinComponent {
@@ -27,14 +25,13 @@ private class FileTreeScanner(
 
     override fun preVisitDirectory(
         dir: Path,
-        attrs: BasicFileAttributes?,
+        attrs: BasicFileAttributes,
     ): FileVisitResult {
-        val ignoreFile =
-            Paths.get("${dir.absolutePathString()}${FileSystems.getDefault().separator}${thothConfig.ignoreFile}")
+        val ignoreFile = Paths.get(dir.absolutePathString(), thothConfig.ignoreFile)
         return if (!Files.exists(ignoreFile)) {
             FileVisitResult.CONTINUE
         } else {
-            ignoredSubtree(dir.absolute().normalize())
+            ignoreFolder(dir.absolute().normalize())
             log.debug { "Ignoring directory ${dir.absolute().normalize()}" }
             FileVisitResult.SKIP_SUBTREE
         }
@@ -44,7 +41,7 @@ private class FileTreeScanner(
         file: Path,
         attrs: BasicFileAttributes,
     ): FileVisitResult {
-        if (file.isAudioFile() && shouldUpdateFile(file.normalize())) {
+        if (file.isAudioFile()) {
             addOrUpdate(file.absolute().normalize(), attrs)
         }
         return FileVisitResult.CONTINUE
@@ -52,7 +49,7 @@ private class FileTreeScanner(
 
     override fun visitFileFailed(
         file: Path,
-        exc: IOException?,
+        exc: IOException,
     ) = FileVisitResult.CONTINUE
 
     override fun postVisitDirectory(
@@ -62,11 +59,10 @@ private class FileTreeScanner(
 }
 
 fun walkFiles(
-    startingDirectory: Path,
-    ignoredSubtree: (Path) -> Unit,
-    shouldUpdateFile: (Path) -> Boolean,
+    rootDirectory: Path,
+    ignoreFolder: (Path) -> Unit,
     addOrUpdate: (file: Path, attrs: BasicFileAttributes) -> Unit,
 ) {
-    val fileTreeScanner = FileTreeScanner(ignoredSubtree, shouldUpdateFile, addOrUpdate)
-    Files.walkFileTree(startingDirectory, fileTreeScanner)
+    val fileTreeScanner = FileTreeScanner(ignoreFolder, addOrUpdate)
+    Files.walkFileTree(rootDirectory, fileTreeScanner)
 }

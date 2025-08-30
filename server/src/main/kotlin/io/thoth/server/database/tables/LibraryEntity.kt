@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import io.thoth.models.Library
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
@@ -18,4 +19,17 @@ class LibraryEntity(
     var metadataScanners by LibrariesTable.metadataScanners
     var fileScanners by LibrariesTable.fileScanners
     var language by LibrariesTable.language
+
+    fun toModel(): Library =
+        Library(
+            id = id.value,
+            name = name,
+            icon = icon,
+            scanIndex = scanIndex,
+            preferEmbeddedMetadata = preferEmbeddedMetadata,
+            folders = folders,
+            metadataScanners = metadataScanners,
+            fileScanners = fileScanners,
+            language = language,
+        )
 }
