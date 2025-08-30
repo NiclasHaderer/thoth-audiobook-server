@@ -13,7 +13,7 @@ import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BookeEntity
+import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageEntity
 import io.thoth.server.database.tables.SeriesEntity
@@ -31,26 +31,26 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
 
-interface BookRepository : Repository<BookeEntity, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
+interface BookRepository : Repository<BookEntity, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
     fun findByName(
         bookTitle: String,
         authorIds: List<UUID>,
         libraryId: UUID,
-    ): BookeEntity?
+    ): BookEntity?
 
     fun getOrCreate(
         bookName: String,
         libraryId: UUID,
         authors: List<AuthorEntity>,
         series: List<SeriesEntity>,
-    ): BookeEntity
+    ): BookEntity
 
     fun create(
         bookName: String,
         libraryId: UUID,
         authors: List<AuthorEntity>,
         series: List<SeriesEntity>,
-    ): BookeEntity
+    ): BookEntity
 }
 
 class BookRepositoryImpl :
@@ -61,7 +61,7 @@ class BookRepositoryImpl :
     private val libraryRepository by inject<LibraryRepository>()
     private val metadataProviders by inject<MetadataProviders>()
 
-    override fun total(libraryId: UUID) = transaction { BookeEntity.find { BooksTable.library eq libraryId }.count() }
+    override fun total(libraryId: UUID) = transaction { BookEntity.find { BooksTable.library eq libraryId }.count() }
 
     override fun getAll(
         libraryId: UUID,
@@ -70,7 +70,7 @@ class BookRepositoryImpl :
         offset: Long,
     ): List<BookModel> =
         transaction {
-            BookeEntity
+            BookEntity
                 .find { BooksTable.library eq libraryId }
                 .orderBy(BooksTable.title.lowerCase() to order)
                 .offset(offset)
@@ -81,9 +81,9 @@ class BookRepositoryImpl :
     override fun raw(
         id: UUID,
         libraryId: UUID,
-    ): BookeEntity =
+    ): BookEntity =
         transaction {
-            BookeEntity.find { BooksTable.id eq id and (BooksTable.library eq libraryId) }.firstOrNull()
+            BookEntity.find { BooksTable.id eq id and (BooksTable.library eq libraryId) }.firstOrNull()
                 ?: throw ErrorResponse.notFound("Book", id)
         }
 
@@ -91,7 +91,7 @@ class BookRepositoryImpl :
         bookTitle: String,
         authorIds: List<UUID>,
         libraryId: UUID,
-    ): BookeEntity? =
+    ): BookEntity? =
         transaction {
             val rawBook =
                 BooksTable
@@ -103,7 +103,7 @@ class BookRepositoryImpl :
                             (AuthorBookTable.authors inList authorIds) and
                             (BooksTable.library eq libraryId)
                     }.firstOrNull() ?: return@transaction null
-            BookeEntity.wrap(rawBook[BooksTable.id], rawBook)
+            BookEntity.wrap(rawBook[BooksTable.id], rawBook)
         }
 
     override fun get(
@@ -157,7 +157,7 @@ class BookRepositoryImpl :
         libraryId: UUID,
     ): List<BookModel> =
         transaction {
-            BookeEntity
+            BookEntity
                 .find { BooksTable.title like "%$query%" and (BooksTable.library eq libraryId) }
                 .limit(searchLimit)
                 .map { it.toModel() }
@@ -165,7 +165,7 @@ class BookRepositoryImpl :
 
     override fun search(query: String): List<BookModel> =
         transaction {
-            BookeEntity.find { BooksTable.title like "%$query%" }.limit(searchLimit).map { it.toModel() }
+            BookEntity.find { BooksTable.title like "%$query%" }.limit(searchLimit).map { it.toModel() }
         }
 
     override fun modify(
@@ -203,7 +203,7 @@ class BookRepositoryImpl :
         complete: BookApiModel,
     ): BookModel =
         transaction {
-            val book = BookeEntity.findById(id) ?: throw ErrorResponse.notFound("Book", id)
+            val book = BookEntity.findById(id) ?: throw ErrorResponse.notFound("Book", id)
             if (book.library.id.value !=
                 libraryId
             ) {
@@ -234,9 +234,9 @@ class BookRepositoryImpl :
         libraryId: UUID,
         authors: List<AuthorEntity>,
         series: List<SeriesEntity>,
-    ): BookeEntity =
+    ): BookEntity =
         transaction {
-            BookeEntity
+            BookEntity
                 .new {
                     title = bookName
                     this.authors = SizedCollection(authors)
@@ -249,7 +249,7 @@ class BookRepositoryImpl :
         libraryId: UUID,
         authors: List<AuthorEntity>,
         series: List<SeriesEntity>,
-    ): BookeEntity =
+    ): BookEntity =
         transaction {
             findByName(bookName, authors.map { it.id.value }, libraryId) ?: create(bookName, libraryId, authors, series)
         }

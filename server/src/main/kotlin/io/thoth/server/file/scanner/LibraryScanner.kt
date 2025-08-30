@@ -7,7 +7,7 @@ import io.thoth.server.database.access.markAsTouched
 import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BookeEntity
+import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageTable
 import io.thoth.server.database.tables.LibrariesTable
@@ -121,7 +121,7 @@ class LibraryScannerImpl :
             // Remove all tracks that have not been updated
             TrackEntity.find { TracksTable.scanIndex less library.scanIndex }.forEach { it.delete() }
             // Find all books that have no tracks and remove them
-            BookeEntity.all().filter { it.tracks.empty() }.forEach { it.delete() }
+            BookEntity.all().filter { it.tracks.empty() }.forEach { it.delete() }
             // Find all authors that have no books and remove them
             AuthorEntity.all().filter { it.books.empty() }.forEach { it.delete() }
             // Find all series that have no books and remove them

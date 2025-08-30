@@ -6,7 +6,7 @@ import io.thoth.server.common.extensions.saveTo
 import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BookeEntity
+import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.SeriesTable
@@ -38,7 +38,7 @@ object SearchRepository {
                 ) { listOfNotNull(it.name) }
                 .saveTo(limit)
         val bookAuthors =
-            BookeEntity
+            BookEntity
                 .find { BooksTable.library inList libsToSearch }
                 .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.series.joinToString(",") { it.title }) }
                 .saveTo(limit)
@@ -59,7 +59,7 @@ object SearchRepository {
                 ) { listOfNotNull(it.title) }
                 .saveTo(limit)
         val authorSeries =
-            BookeEntity
+            BookEntity
                 .find { BooksTable.library inList libsToSearch }
                 .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.authors.joinToString(",") { it.name }) }
                 .saveTo(limit)
@@ -73,14 +73,14 @@ object SearchRepository {
         limit: Int,
     ) = transaction {
         val books =
-            BookeEntity
+            BookEntity
                 .find { BooksTable.library inList libsToSearch }
                 .fuzzy(
                     query,
                 ) { listOfNotNull(it.title) }
                 .saveTo(limit)
         val booksAndOther =
-            BookeEntity
+            BookEntity
                 .find { BooksTable.library inList libsToSearch }
                 .fuzzy(query) {
                     listOfNotNull(

@@ -5,7 +5,7 @@ import io.thoth.server.database.access.create
 import io.thoth.server.database.access.getByPath
 import io.thoth.server.database.access.markAsTouched
 import io.thoth.server.database.tables.AuthorEntity
-import io.thoth.server.database.tables.BookeEntity
+import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.ImageEntity
 import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.database.tables.TrackEntity
@@ -146,7 +146,7 @@ class TrackManagerImpl :
     private fun getOrCreateBook(
         scan: AudioFileAnalysisResult,
         libraryModel: LibraryEntity,
-    ): BookeEntity {
+    ): BookEntity {
         val authors = getOrCreateAuthors(scan, libraryModel)
         val book =
             bookRepository.findByName(
@@ -163,11 +163,11 @@ class TrackManagerImpl :
     }
 
     private fun updateBook(
-        book: BookeEntity,
+        book: BookEntity,
         scan: AudioFileAnalysisResult,
         dbAuthors: List<AuthorEntity>,
         libraryModel: LibraryEntity,
-    ): BookeEntity {
+    ): BookEntity {
         val dbSeries =
             if (scan.series != null) {
                 seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthors)
@@ -198,7 +198,7 @@ class TrackManagerImpl :
         scan: AudioFileAnalysisResult,
         dbAuthor: List<AuthorEntity>,
         libraryModel: LibraryEntity,
-    ): BookeEntity {
+    ): BookEntity {
         val dbSeries =
             if (scan.series != null) {
                 seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthor)
@@ -208,7 +208,7 @@ class TrackManagerImpl :
         val dbImage = if (scan.cover != null) ImageEntity.create(scan.cover!!) else null
         val dbSeriesList = if (dbSeries != null) listOf(dbSeries) else listOf()
 
-        return BookeEntity.new {
+        return BookEntity.new {
             title = scan.book
             authors = SizedCollection(dbAuthor)
             language = scan.language
