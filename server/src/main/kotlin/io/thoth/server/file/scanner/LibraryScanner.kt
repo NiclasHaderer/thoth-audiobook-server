@@ -24,7 +24,6 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.union
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.UUID
@@ -38,8 +37,6 @@ interface LibraryScanner {
 class LibraryScannerImpl :
     LibraryScanner,
     KoinComponent {
-    private val trackManager: TrackManager by inject()
-
     companion object {
         private val mutex = Mutex()
         private val currentLibraryScans = mutableMapOf<UUID, Boolean>()
@@ -130,11 +127,11 @@ class LibraryScannerImpl :
             folder,
             ignoreFolder = {
                 ignoreFolder(it)
-                trackManager.removeFolder(it, library)
+                TrackManager.removeFolder(it, library)
             },
             addOrUpdate = { path, _ ->
                 if (shouldUpdate(path) && !isIgnored(path)) {
-                    trackManager.addPath(path, library)
+                    TrackManager.addPath(path, library)
                 }
             },
         )

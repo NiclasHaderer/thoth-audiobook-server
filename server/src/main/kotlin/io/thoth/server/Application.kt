@@ -55,9 +55,8 @@ fun main() {
 
 fun Application.applicationModule() {
     setupDependencyInjection()
-
-    plugins()
     DatabaseConnector.connect()
+    plugins()
     routing()
     startBackgroundJobs()
 }
