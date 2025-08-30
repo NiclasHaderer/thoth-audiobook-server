@@ -3,10 +3,10 @@ package io.thoth.server.database.access
 import io.thoth.models.BookModel
 import io.thoth.models.NamedId
 import io.thoth.models.TitledId
-import io.thoth.server.database.tables.BookeEntity
+import io.thoth.server.database.tables.BookEntity
 import org.jetbrains.exposed.v1.core.SortOrder
 
-fun BookeEntity.toModel(
+fun BookEntity.toModel(
     authorOrder: SortOrder = SortOrder.ASC,
     seriesOrder: SortOrder = SortOrder.ASC,
 ): BookModel =

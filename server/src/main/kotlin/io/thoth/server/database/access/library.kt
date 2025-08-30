@@ -3,8 +3,8 @@ package io.thoth.server.database.access
 import io.thoth.models.Library
 import io.thoth.server.database.tables.LibraryEntity
 
-fun Library.toModel(): Library =
-    LibraryEntity(
+fun LibraryEntity.toModel(): Library =
+    Library(
         id = id.value,
         name = name,
         icon = icon,
