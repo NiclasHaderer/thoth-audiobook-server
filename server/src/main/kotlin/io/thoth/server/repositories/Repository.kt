@@ -3,7 +3,7 @@ package io.thoth.server.repositories
 import org.jetbrains.exposed.v1.core.SortOrder
 import java.util.UUID
 
-interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API, COMPLETE_API> {
+interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API> {
     val searchLimit: Int
         get() = 30
 
@@ -48,12 +48,6 @@ interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API, COMPLETE_API> {
         id: UUID,
         libraryId: UUID,
         partial: PARTIAL_API,
-    ): NORMAL
-
-    fun replace(
-        id: UUID,
-        libraryId: UUID,
-        complete: COMPLETE_API,
     ): NORMAL
 
     fun autoMatch(

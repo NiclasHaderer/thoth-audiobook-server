@@ -1,12 +1,11 @@
 package io.thoth.server.repositories
 
-import io.thoth.metadata.MetadataProviders
-import io.thoth.metadata.MetadataWrapper
+import io.thoth.metadata.MetadataAgentWrapper
+import io.thoth.metadata.MetadataAgents
 import io.thoth.models.Series
 import io.thoth.models.SeriesDetailed
+import io.thoth.models.SeriesUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.api.PartialSeriesApiModel
-import io.thoth.server.api.SeriesApiModel
 import io.thoth.server.common.extensions.add
 import io.thoth.server.common.extensions.toSizedIterable
 import io.thoth.server.database.access.getNewImage
@@ -26,8 +25,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
 
-interface SeriesRepository :
-    Repository<SeriesEntity, Series, SeriesDetailed, PartialSeriesApiModel, SeriesApiModel> {
+interface SeriesRepository : Repository<SeriesEntity, Series, SeriesDetailed, SeriesUpdate> {
     fun findByName(
         seriesTitle: String,
         libraryId: UUID,
@@ -52,7 +50,7 @@ class SeriesRepositoryImpl :
     private val authorRepository by inject<AuthorRepository>()
     private val bookRepository by inject<BookRepository>()
     private val libraryRepository by inject<LibraryRepository>()
-    private val metadataProviders by inject<MetadataProviders>()
+    private val metadataAgents by inject<MetadataAgents>()
 
     private companion object {
         val log = logger {}
@@ -144,7 +142,6 @@ class SeriesRepositoryImpl :
         log.info("Created series: $seriesName")
         return SeriesEntity.new {
             title = seriesName
-            displayTitle = seriesName
             authors = SizedCollection(dbAuthor)
             library = libraryRepository.raw(libraryId)
         }
@@ -181,13 +178,13 @@ class SeriesRepositoryImpl :
     override fun modify(
         id: UUID,
         libraryId: UUID,
-        partial: PartialSeriesApiModel,
+        partial: SeriesUpdate,
     ): Series =
         transaction {
             val series = raw(id, libraryId)
 
             series.apply {
-                displayTitle = partial.title
+                title = partial.title ?: title
                 provider = partial.provider ?: provider
                 providerID = partial.providerID ?: providerID
                 totalBooks = partial.totalBooks ?: totalBooks
@@ -207,28 +204,6 @@ class SeriesRepositoryImpl :
             series.toModel()
         }
 
-    override fun replace(
-        id: UUID,
-        libraryId: UUID,
-        complete: SeriesApiModel,
-    ): Series =
-        transaction {
-            val series = raw(id, libraryId)
-
-            series.apply {
-                title = complete.title
-                provider = complete.provider
-                providerID = complete.providerID
-                totalBooks = complete.totalBooks
-                primaryWorks = complete.primaryWorks
-                coverID = ImageEntity.getNewImage(complete.cover, currentImageID = coverID, default = null)
-                description = complete.description
-                series.authors = complete.authors.map { authorRepository.raw(it, libraryId) }.toSizedIterable()
-                series.books = complete.books.map { bookRepository.raw(it, libraryId) }.toSizedIterable()
-            }
-            series.toModel()
-        }
-
     override fun autoMatch(
         id: UUID,
         libraryId: UUID,
@@ -238,8 +213,8 @@ class SeriesRepositoryImpl :
             val library = libraryRepository.raw(libraryId)
 
             val metadataAgents =
-                library.metadataScanners.mapNotNull { agent -> metadataProviders.find { it.uniqueName == agent.name } }
-            val metadataWrapper = MetadataWrapper(metadataAgents)
+                library.metadataAgents.mapNotNull { agent -> metadataAgents.find { it.name == agent.name } }
+            val metadataWrapper = MetadataAgentWrapper(metadataAgents)
             val seriesMetadata =
                 runBlocking {
                     metadataWrapper
@@ -250,7 +225,7 @@ class SeriesRepositoryImpl :
             modify(
                 id,
                 libraryId,
-                PartialSeriesApiModel(
+                SeriesUpdate(
                     title = seriesMetadata.title,
                     authors = null,
                     books = null,

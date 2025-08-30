@@ -16,7 +16,7 @@ class LibraryEntity(
     var scanIndex by LibrariesTable.scanIndex
     var folders by LibrariesTable.folders
     var preferEmbeddedMetadata by LibrariesTable.preferEmbeddedMetadata
-    var metadataScanners by LibrariesTable.metadataScanners
+    var metadataAgents by LibrariesTable.metadataAgents
     var fileScanners by LibrariesTable.fileScanners
     var language by LibrariesTable.language
 
@@ -28,7 +28,7 @@ class LibraryEntity(
             scanIndex = scanIndex,
             preferEmbeddedMetadata = preferEmbeddedMetadata,
             folders = folders,
-            metadataScanners = metadataScanners,
+            metadataScanners = metadataAgents,
             fileScanners = fileScanners,
             language = language,
         )

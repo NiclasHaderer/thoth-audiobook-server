@@ -15,7 +15,6 @@ class BookEntity(
     companion object : UUIDEntityClass<BookEntity>(BooksTable)
 
     var title by BooksTable.title
-    var displayTitle by BooksTable.displayTitle
     var description by BooksTable.description
     var releaseDate by BooksTable.releaseDate
     var publisher by BooksTable.publisher

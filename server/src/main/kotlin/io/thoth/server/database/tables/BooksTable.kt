@@ -6,7 +6,6 @@ import org.jetbrains.exposed.v1.javatime.date
 
 object BooksTable : UUIDTable("Books") {
     val title = varchar("title", 255)
-    val displayTitle = varchar("displayTitle", 255).nullable()
     val releaseDate = date("releaseDate").nullable()
     val publisher = varchar("publisher", 255).nullable()
     val language = varchar("language", 255).nullable()

@@ -1,12 +1,10 @@
 package io.thoth.server.repositories
 
-import io.thoth.metadata.MetadataProviders
-import io.thoth.metadata.MetadataWrapper
+import io.thoth.metadata.MetadataAgents
 import io.thoth.models.Author
 import io.thoth.models.AuthorDetailed
+import io.thoth.models.AuthorUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.api.AuthorApiModel
-import io.thoth.server.api.PartialAuthorApiModel
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.tables.AuthorEntity
@@ -23,8 +21,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
 
-interface AuthorRepository :
-    Repository<AuthorEntity, Author, AuthorDetailed, PartialAuthorApiModel, AuthorApiModel> {
+interface AuthorRepository : Repository<AuthorEntity, Author, AuthorDetailed, AuthorUpdate> {
     fun findByName(
         authorName: String,
         libraryId: UUID,
@@ -44,7 +41,7 @@ interface AuthorRepository :
 class AuthorServiceImpl :
     AuthorRepository,
     KoinComponent {
-    val metadataProviders by inject<MetadataProviders>()
+    val metadataAgents by inject<MetadataAgents>()
     val libraryRepository by inject<LibraryRepository>()
 
     override fun findByName(
@@ -108,7 +105,7 @@ class AuthorServiceImpl :
         transaction {
             val library = libraryRepository.raw(libraryId)
             val author = raw(id, libraryId)
-            val metadataAgent = MetadataWrapper.fromAgents(library.metadataScanners, metadataProviders)
+            val metadataAgent = metadataAgents.forLibrary(library)
             val result = runBlocking { metadataAgent.getAuthorByName(author.name, library.language).firstOrNull() }
             author
                 .apply {
@@ -184,7 +181,7 @@ class AuthorServiceImpl :
     override fun modify(
         id: UUID,
         libraryId: UUID,
-        partial: PartialAuthorApiModel,
+        partial: AuthorUpdate,
     ) = transaction {
         val author = raw(id, libraryId)
         author
@@ -198,26 +195,6 @@ class AuthorServiceImpl :
                 birthDate = partial.birthDate ?: author.birthDate
                 deathDate = partial.deathDate ?: author.deathDate
                 imageID = ImageEntity.getNewImage(partial.image, currentImageID = imageID, default = imageID)
-            }.toModel()
-    }
-
-    override fun replace(
-        id: UUID,
-        libraryId: UUID,
-        complete: AuthorApiModel,
-    ) = transaction {
-        val author = raw(id, libraryId)
-        author
-            .apply {
-                name = complete.name
-                provider = complete.provider
-                providerID = complete.providerID
-                biography = complete.biography
-                website = complete.website
-                bornIn = complete.bornIn
-                birthDate = complete.birthDate
-                deathDate = complete.deathDate
-                imageID = ImageEntity.getNewImage(complete.image, currentImageID = imageID, default = null)
             }.toModel()
     }
 

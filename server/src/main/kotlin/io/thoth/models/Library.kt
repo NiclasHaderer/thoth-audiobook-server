@@ -9,7 +9,7 @@ data class Library(
     val scanIndex: ULong,
     val preferEmbeddedMetadata: Boolean,
     val folders: List<String>,
-    val metadataScanners: List<MetadataAgent>,
+    val metadataScanners: List<NamedMetadataAgent>,
     val fileScanners: List<FileScanner>,
     var language: String,
 )

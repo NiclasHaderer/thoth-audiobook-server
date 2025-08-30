@@ -1,7 +1,7 @@
 package io.thoth.server.database.tables
 
 import io.thoth.models.FileScanner
-import io.thoth.models.MetadataAgent
+import io.thoth.models.NamedMetadataAgent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.extensions.json
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
@@ -17,10 +17,10 @@ object LibrariesTable : UUIDTable("Libraries") {
             }
         }
     val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
-    val metadataScanners =
-        json<List<MetadataAgent>>("metadataScanners") {
+    val metadataAgents =
+        json<List<NamedMetadataAgent>>("metadataAgents") {
             if (it.isEmpty()) {
-                throw ErrorResponse.userError("metadataScanners must have at least one element")
+                throw ErrorResponse.userError("metadataAgents must have at least one element")
             }
         }
     val fileScanners =

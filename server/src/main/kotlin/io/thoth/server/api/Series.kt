@@ -5,10 +5,10 @@ import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.Series
 import io.thoth.models.SeriesDetailed
+import io.thoth.models.SeriesUpdate
 import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
-import io.thoth.openapi.ktor.put
 import io.thoth.server.repositories.SeriesRepository
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.koin.ktor.ext.inject
@@ -55,11 +55,7 @@ fun Routing.seriesRouting() {
             .map { series -> TitledId(id = series.id, title = series.title) }
     }
 
-    patch<Api.Libraries.Id.Series.Id, PartialSeriesApiModel, Series> { id, patchSeries ->
+    patch<Api.Libraries.Id.Series.Id, SeriesUpdate, Series> { id, patchSeries ->
         seriesRepository.modify(id = id.id, libraryId = id.libraryId, partial = patchSeries)
-    }
-
-    put<Api.Libraries.Id.Series.Id, SeriesApiModel, Series> { id, putSeries ->
-        seriesRepository.replace(id = id.id, libraryId = id.libraryId, complete = putSeries)
     }
 }

@@ -1,6 +1,6 @@
 package io.thoth.metadata.audible.client
 
-import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.thoth.metadata.audible.models.AudibleAgentId
 import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSeriesImpl
@@ -14,7 +14,7 @@ suspend fun getAudibleSeries(
     // Audible does not return 404 if a series is not valid, so...
     document.getElementById("product-list-a11y-skiplink-target") ?: return null
 
-    val seriesID = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location()))
+    val seriesID = AudibleAgentId(audibleAsinFromLink(document.location()))
     val seriesName = getSeriesName(document)
     val seriesLink = document.location().split("?").first()
     val seriesBooks =

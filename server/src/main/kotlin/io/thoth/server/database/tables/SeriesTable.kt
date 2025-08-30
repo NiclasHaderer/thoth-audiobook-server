@@ -5,7 +5,6 @@ import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 
 object SeriesTable : UUIDTable("Series") {
     val title = varchar("title", 255)
-    val displayTitle = varchar("displayTitle", 255).nullable()
     val totalBooks = integer("totalBooks").nullable()
     val primaryWorks = integer("primaryWorks").nullable()
     val description = text("description").nullable()

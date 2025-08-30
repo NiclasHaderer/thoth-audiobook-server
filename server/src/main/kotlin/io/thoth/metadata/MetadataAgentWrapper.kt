@@ -6,33 +6,21 @@ import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
-import io.thoth.models.MetadataAgent
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import me.xdrop.fuzzywuzzy.FuzzySearch
 
-class MetadataWrapper(
-    private val providerList: List<MetadataProvider>,
-) : MetadataProvider() {
-    companion object {
-        fun fromAgents(
-            agents: List<MetadataAgent>,
-            availableAgents: List<MetadataProvider>,
-        ): MetadataProvider {
-            val agentsToUse =
-                availableAgents.filter { agentInstance -> agents.any { it.name == agentInstance.uniqueName } }
-            return MetadataWrapper(agentsToUse)
-        }
-    }
-
-    override var uniqueName = "All Providers"
+class MetadataAgentWrapper(
+    private val providerList: List<MetadataAgent>,
+) : MetadataAgent() {
+    override var name = "All Providers"
     override val supportedCountryCodes: List<String>
         get() = providerList.flatMap { it.supportedCountryCodes }.distinct()
 
-    private val providerMap by lazy { providerList.associateBy { it.uniqueName } }
+    private val providerMap by lazy { providerList.associateBy { it.name } }
 
-    override suspend fun _search(
+    override suspend fun searchImpl(
         region: String,
         keywords: String?,
         title: String?,
@@ -59,7 +47,7 @@ class MetadataWrapper(
             }.awaitAll()
             .flatten()
 
-    override suspend fun _getAuthorByID(
+    override suspend fun getAuthorByIDImpl(
         providerId: String,
         authorId: String,
         region: String,
@@ -68,7 +56,7 @@ class MetadataWrapper(
         return provider.getAuthorByID(providerId = providerId, region = region, authorId = authorId)
     }
 
-    override suspend fun _getBookByID(
+    override suspend fun getBookByIDImpl(
         providerId: String,
         bookId: String,
         region: String,
@@ -77,7 +65,7 @@ class MetadataWrapper(
         return provider.getBookByID(providerId = providerId, region = region, bookId = bookId)
     }
 
-    override suspend fun _getSeriesByID(
+    override suspend fun getSeriesByIDImpl(
         providerId: String,
         region: String,
         seriesId: String,
@@ -86,7 +74,7 @@ class MetadataWrapper(
         return provider.getSeriesByID(providerId = providerId, region = region, seriesId = seriesId)
     }
 
-    override suspend fun _getAuthorByName(
+    override suspend fun getAuthorByNameImpl(
         authorName: String,
         region: String,
     ): List<MetadataAuthor> {
@@ -99,7 +87,7 @@ class MetadataWrapper(
         return FuzzySearch.extractSorted(authorName, authors) { it.name }.map { it.referent }
     }
 
-    override suspend fun _getBookByName(
+    override suspend fun getBookByNameImpl(
         bookName: String,
         region: String,
         authorName: String?,
@@ -116,7 +104,7 @@ class MetadataWrapper(
         return FuzzySearch.extractSorted(bookName, books) { it.title }.map { it.referent }
     }
 
-    override suspend fun _getSeriesByName(
+    override suspend fun getSeriesByNameImpl(
         seriesName: String,
         region: String,
         authorName: String?,
@@ -133,5 +121,5 @@ class MetadataWrapper(
         return FuzzySearch.extractSorted(seriesName, series) { it.title }.map { it.referent }
     }
 
-    private fun getProvider(providerID: String): MetadataProvider? = providerMap[providerID]
+    private fun getProvider(providerID: String): MetadataAgent? = providerMap[providerID]
 }

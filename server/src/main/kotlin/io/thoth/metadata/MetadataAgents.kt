@@ -8,9 +8,11 @@ import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
+import io.thoth.server.database.tables.LibraryEntity
+import mu.KotlinLogging.logger
 import java.util.Optional
 
-abstract class MetadataProvider {
+abstract class MetadataAgent {
     private companion object {
         private val separator = "--thṓth--"
         private val searchCache = Caffeine.newBuilder().maximumSize(50).build<String, List<MetadataSearchBook>>()
@@ -22,7 +24,7 @@ abstract class MetadataProvider {
         private val bookIdCache = Caffeine.newBuilder().maximumSize(50).build<String, Optional<MetadataBook>>()
     }
 
-    abstract val uniqueName: String
+    abstract val name: String
     abstract val supportedCountryCodes: List<String>
 
     suspend fun search(
@@ -36,7 +38,7 @@ abstract class MetadataProvider {
     ): List<MetadataSearchBook> {
         val cacheKey = getKey(keywords, title, author, narrator, language, pageSize, region)
         return getOrSetCache(searchCache, cacheKey) {
-            _search(
+            searchImpl(
                 region = region,
                 keywords = keywords,
                 title = title,
@@ -48,7 +50,7 @@ abstract class MetadataProvider {
         }
     }
 
-    protected abstract suspend fun _search(
+    protected abstract suspend fun searchImpl(
         region: String,
         keywords: String? = null,
         title: String? = null,
@@ -64,11 +66,11 @@ abstract class MetadataProvider {
         region: String,
     ): MetadataAuthor? {
         val cacheKey = getKey(providerId, authorId, region)
-        return getOrSetCache(authorIdCache, cacheKey) { _getAuthorByID(providerId, authorId, region).optional() }
+        return getOrSetCache(authorIdCache, cacheKey) { getAuthorByIDImpl(providerId, authorId, region).optional() }
             .orElse(null)
     }
 
-    protected abstract suspend fun _getAuthorByID(
+    protected abstract suspend fun getAuthorByIDImpl(
         providerId: String,
         authorId: String,
         region: String,
@@ -79,10 +81,10 @@ abstract class MetadataProvider {
         region: String,
     ): List<MetadataAuthor> {
         val cacheKey = getKey(authorName, region)
-        return getOrSetCache(authorNameCache, cacheKey) { _getAuthorByName(authorName, region) }
+        return getOrSetCache(authorNameCache, cacheKey) { getAuthorByNameImpl(authorName, region) }
     }
 
-    protected abstract suspend fun _getAuthorByName(
+    protected abstract suspend fun getAuthorByNameImpl(
         authorName: String,
         region: String,
     ): List<MetadataAuthor>
@@ -93,10 +95,12 @@ abstract class MetadataProvider {
         region: String,
     ): MetadataBook? {
         val cacheKey = getKey(providerId, bookId, region)
-        return getOrSetCache(bookIdCache, cacheKey) { _getBookByID(providerId, bookId, region).optional() }.orElse(null)
+        return getOrSetCache(bookIdCache, cacheKey) { getBookByIDImpl(providerId, bookId, region).optional() }.orElse(
+            null,
+        )
     }
 
-    protected abstract suspend fun _getBookByID(
+    protected abstract suspend fun getBookByIDImpl(
         providerId: String,
         bookId: String,
         region: String,
@@ -108,10 +112,10 @@ abstract class MetadataProvider {
         authorName: String? = null,
     ): List<MetadataBook> {
         val cacheKey = getKey(bookName, region, authorName)
-        return getOrSetCache(bookNameCache, cacheKey) { _getBookByName(bookName, region, authorName) }
+        return getOrSetCache(bookNameCache, cacheKey) { getBookByNameImpl(bookName, region, authorName) }
     }
 
-    protected abstract suspend fun _getBookByName(
+    protected abstract suspend fun getBookByNameImpl(
         bookName: String,
         region: String,
         authorName: String? = null,
@@ -123,11 +127,11 @@ abstract class MetadataProvider {
         region: String,
     ): MetadataSeries? {
         val cacheKey = getKey(providerId, seriesId, region)
-        return getOrSetCache(seriesIdCache, cacheKey) { _getSeriesByID(providerId, region, seriesId).optional() }
+        return getOrSetCache(seriesIdCache, cacheKey) { getSeriesByIDImpl(providerId, region, seriesId).optional() }
             .orElse(null)
     }
 
-    protected abstract suspend fun _getSeriesByID(
+    protected abstract suspend fun getSeriesByIDImpl(
         providerId: String,
         region: String,
         seriesId: String,
@@ -139,10 +143,10 @@ abstract class MetadataProvider {
         authorName: String? = null,
     ): List<MetadataSeries> {
         val cacheKey = getKey(seriesName, region, authorName)
-        return getOrSetCache(seriesNameCache, cacheKey) { _getSeriesByName(seriesName, region, authorName) }
+        return getOrSetCache(seriesNameCache, cacheKey) { getSeriesByNameImpl(seriesName, region, authorName) }
     }
 
-    protected abstract suspend fun _getSeriesByName(
+    protected abstract suspend fun getSeriesByNameImpl(
         seriesName: String,
         region: String,
         authorName: String? = null,
@@ -161,9 +165,23 @@ abstract class MetadataProvider {
         return value
     }
 
-    private fun getKey(vararg keys: Any?): String = keys.joinToString { it.toString() + separator }
+    private fun getKey(vararg keys: Any?): String = (listOf(keys) + name).joinToString(separator)
 }
 
-class MetadataProviders(
-    private val items: List<MetadataProvider>,
-) : List<MetadataProvider> by items
+class MetadataAgents(
+    private val items: List<MetadataAgent>,
+) : List<MetadataAgent> by items {
+    private val log = logger {}
+
+    fun forLibrary(library: LibraryEntity): MetadataAgent {
+        val agentsToUse = filter { agent -> agent.name in library.metadataAgents.map { it.name } }
+        if (agentsToUse.isEmpty()) {
+            log.warn {
+                "Library does not reference any available metadata agents"
+                " (available agents: ${map { it.name }})"
+                " (library agents: ${library.metadataAgents.map { it.name }})"
+            }
+        }
+        return MetadataAgentWrapper(agentsToUse)
+    }
+}
