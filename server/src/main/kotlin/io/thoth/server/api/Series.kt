@@ -1,10 +1,10 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.Routing
-import io.thoth.models.DetailedSeries
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.Series
+import io.thoth.models.SeriesDetailed
 import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
@@ -47,7 +47,7 @@ fun Routing.seriesRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Series.Id, DetailedSeries> { seriesRepository.get(id = it.id, libraryId = it.libraryId) }
+    get<Api.Libraries.Id.Series.Id, SeriesDetailed> { seriesRepository.get(id = it.id, libraryId = it.libraryId) }
 
     get<Api.Libraries.Id.Series.Autocomplete, List<TitledId>> {
         seriesRepository

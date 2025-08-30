@@ -3,7 +3,7 @@ package io.thoth.server.repositories
 import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.models.Book
-import io.thoth.models.DetailedBook
+import io.thoth.models.BookDetailed
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.BookApiModel
 import io.thoth.server.api.PartialBookApiModel
@@ -30,7 +30,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
 
-interface BookRepository : Repository<BookEntity, Book, DetailedBook, PartialBookApiModel, BookApiModel> {
+interface BookRepository : Repository<BookEntity, Book, BookDetailed, PartialBookApiModel, BookApiModel> {
     fun findByName(
         bookTitle: String,
         authorIds: List<UUID>,
@@ -108,7 +108,7 @@ class BookRepositoryImpl :
     override fun get(
         id: UUID,
         libraryId: UUID,
-    ): DetailedBook =
+    ): BookDetailed =
         transaction {
             val book = raw(id, libraryId)
             val tracks =
@@ -117,7 +117,7 @@ class BookRepositoryImpl :
                     .orderBy(
                         TracksTable.trackNr to SortOrder.ASC,
                     ).map { it.toModel() }
-            DetailedBook.fromModel(book.toModel(), tracks)
+            BookDetailed.fromModel(book.toModel(), tracks)
         }
 
     override fun position(

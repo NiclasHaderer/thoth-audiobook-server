@@ -2,7 +2,7 @@ package io.thoth.server.api
 
 import io.ktor.server.routing.Routing
 import io.thoth.models.Book
-import io.thoth.models.DetailedBook
+import io.thoth.models.BookDetailed
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.TitledId
@@ -47,7 +47,7 @@ fun Routing.bookRouting() {
         Position(sortIndex = sortOrder, id = route.id, order = Position.Order.ASC)
     }
 
-    get<Api.Libraries.Id.Books.Id, DetailedBook> { route ->
+    get<Api.Libraries.Id.Books.Id, BookDetailed> { route ->
         bookRepository.get(id = route.id, libraryId = route.libraryId)
     }
 

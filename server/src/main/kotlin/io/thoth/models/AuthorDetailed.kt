@@ -3,7 +3,7 @@ package io.thoth.models
 import java.time.LocalDate
 import java.util.UUID
 
-class DetailedAuthor(
+class AuthorDetailed(
     id: UUID,
     name: String,
     provider: String?,
@@ -35,7 +35,7 @@ class DetailedAuthor(
             author: Author,
             books: List<Book>,
             series: List<Series>,
-        ) = DetailedAuthor(
+        ) = AuthorDetailed(
             id = author.id,
             name = author.name,
             biography = author.biography,
