@@ -1,5 +1,5 @@
 package io.thoth.auth.models
 
-open class JWKs(
+open class ThothJWKs(
     open val keys: List<JWK>,
 )

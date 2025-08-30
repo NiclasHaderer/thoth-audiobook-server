@@ -346,7 +346,7 @@ class Api {
                             get() = parent.id
                     }
 
-                    @Summary("Auto match book", method = "POST")
+                    @Summary("Auto match author", method = "POST")
                     @Resource("automatch")
                     data class AutoMatch(
                         private val parent: Id,
@@ -425,7 +425,7 @@ class Api {
                             get() = parent.id
                     }
 
-                    @Summary("Auto match book", method = "POST")
+                    @Summary("Auto match series", method = "POST")
                     @Resource("automatch")
                     data class AutoMatch(
                         private val parent: Id,

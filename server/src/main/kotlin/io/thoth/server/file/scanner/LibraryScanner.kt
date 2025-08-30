@@ -1,6 +1,6 @@
 package io.thoth.server.file.scanner
 
-import io.thoth.models.LibraryModel
+import io.thoth.models.Library
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.hasBeenUpdated
 import io.thoth.server.database.access.markAsTouched
@@ -36,7 +36,7 @@ import kotlin.io.path.getLastModifiedTime
 interface LibraryScanner {
     fun fullScan(libraryIDs: List<UUID>)
 
-    fun scanLibrary(library: LibraryModel)
+    fun scanLibrary(library: Library)
 
     fun scanLibrary(library: Library)
 
@@ -142,7 +142,7 @@ class LibraryScannerImpl :
             TImages.deleteWhere { TImages.id notInList referencedImageIds }
         }
 
-    override fun scanLibrary(library: LibraryModel) {
+    override fun scanLibrary(library: Library) {
         val dbLib = transaction { Library[library.id] }
         scanLibrary(dbLib)
     }

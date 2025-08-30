@@ -1,8 +1,8 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.Routing
-import io.thoth.models.LibraryModel
-import io.thoth.models.SearchModel
+import io.thoth.models.Library
+import io.thoth.models.LibrarySearchResult
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
@@ -21,23 +21,33 @@ fun Routing.libraryRouting() {
 
     val libraryRepository by inject<LibraryRepository>()
 
-    get<Api.Libraries, List<LibraryModel>> { libraryRepository.getAll() }
+    get<Api.Libraries, List<Library>> { libraryRepository.getAll() }
 
-    get<Api.Libraries.Id, LibraryModel> { (id) -> libraryRepository.get(id) }
+    get<Api.Libraries.Id, Library> { (id) -> libraryRepository.get(id) }
 
-    put<Api.Libraries.Id, LibraryApiModel, LibraryModel> { (id), postLibrary ->
+    put<Api.Libraries.Id, UpdateLibrary, Library> { (id), postLibrary ->
         libraryRepository.replace(id, postLibrary)
     }
 
-    patch<Api.Libraries.Id, PartialLibraryApiModel, LibraryModel> { (id), patchLibrary ->
+    patch<Api.Libraries.Id, PartialUpdateLibrary, Library> { (id), patchLibrary ->
         libraryRepository.modify(id, patchLibrary)
     }
 
     post<Api.Libraries.Id.Rescan, Unit, Unit> { route, _ -> libraryRepository.rescan(route.libraryId) }
 
-    post<Api.Libraries, LibraryApiModel, LibraryModel> { _, postLibrary -> libraryRepository.create(postLibrary) }
+    post<Api.Libraries, UpdateLibrary, Library> { _, postLibrary ->
+        val principal = thothPrincipal()
+        if (!principal.permissions.isAdmin) {
+            throw ErrorResponse.forbidden(
+                "Create",
+                "library",
+                "Only admins can create libraries",
+            )
+        }
+        libraryRepository.create(postLibrary)
+    }
 
-    get<Api.Libraries.Search, SearchModel> {
+    get<Api.Libraries.Search, LibrarySearchResult> {
         val libsToSearch = thothPrincipal().permissions.libraries.map { lib -> lib.id }
 
         if (it.q != null) {

@@ -1,6 +1,6 @@
 package io.thoth.server.repositories
 
-import io.thoth.models.SearchModel
+import io.thoth.models.LibrarySearchResult
 import io.thoth.server.common.extensions.fuzzy
 import io.thoth.server.common.extensions.saveTo
 import io.thoth.server.database.access.toModel
@@ -18,8 +18,8 @@ object SearchRepository {
         query: String,
         libsToSearch: List<UUID>,
         limit: Int = 5,
-    ): SearchModel =
-        SearchModel(
+    ): LibrarySearchResult =
+        LibrarySearchResult(
             books = everywhereBook(query, libsToSearch, limit),
             series = everywhereSeries(query, libsToSearch, limit),
             authors = everywhereAuthor(query, libsToSearch, limit),

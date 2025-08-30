@@ -1,18 +1,15 @@
 package io.thoth.server.plugins.auth
 
 import io.ktor.http.HttpMethod
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
 import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.principal
 import io.ktor.server.request.httpMethod
 import io.ktor.server.routing.RoutingContext
-import io.ktor.util.pipeline.PipelineContext
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.models.LibraryPermissions
 import io.thoth.models.LibraryPermissionsModel
-import io.thoth.models.UserPermissionsModel
+import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.TLibraries
@@ -25,7 +22,7 @@ class ThothPrincipalImpl(
     override val userId: UUID,
     override val type: ThothJwtTypes,
 ) : ThothPrincipal {
-    val permissions: UserPermissionsModel
+    val permissions: UserPermissions
         get() =
             transaction {
                 val user = User.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
@@ -41,7 +38,7 @@ class ThothPrincipalImpl(
                     } else {
                         user.permissions.map { it.toModel() }
                     }
-                UserPermissionsModel(isAdmin = user.admin, libraries = permissions)
+                UserPermissions(isAdmin = user.admin, libraries = permissions)
             }
 }
 

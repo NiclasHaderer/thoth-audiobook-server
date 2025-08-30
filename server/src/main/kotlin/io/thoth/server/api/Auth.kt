@@ -14,9 +14,9 @@ import io.thoth.auth.interactions.logoutUser
 import io.thoth.auth.interactions.modifyUserPermissions
 import io.thoth.auth.interactions.registerUser
 import io.thoth.auth.interactions.renameUser
-import io.thoth.auth.models.JWKs
 import io.thoth.auth.models.ThothAccessToken
 import io.thoth.auth.models.ThothChangePassword
+import io.thoth.auth.models.ThothJWKs
 import io.thoth.auth.models.ThothLoginUser
 import io.thoth.auth.models.ThothModifyPermissions
 import io.thoth.auth.models.ThothRegisterUser
@@ -24,7 +24,7 @@ import io.thoth.auth.models.ThothRenameUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserWithPermissions
 import io.thoth.models.UpdatePermissionsModel
-import io.thoth.models.UserPermissionsModel
+import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.post
@@ -38,7 +38,7 @@ fun Routing.authRoutes() {
 
     post<Api.Auth.Register, ThothRegisterUser, ThothUser>(withTransaction(RoutingContext::registerUser))
 
-    get<Api.Auth.Jwks, JWKs>(withTransaction(RoutingContext::getJwks))
+    get<Api.Auth.Jwks, ThothJWKs>(withTransaction(RoutingContext::getJwks))
 
     put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UpdatePermissionsModel>, ThothUser>(
         withTransaction(RoutingContext::modifyUserPermissions),
@@ -46,11 +46,11 @@ fun Routing.authRoutes() {
 
     get<Api.Auth.User.Id, ThothUser>(withTransaction(RoutingContext::displayUser))
 
-    get<Api.Auth.User.Current, ThothUserWithPermissions<UserPermissionsModel>>(
+    get<Api.Auth.User.Current, ThothUserWithPermissions<UserPermissions>>(
         withTransaction(RoutingContext::currentUser),
     )
 
-    get<Api.Auth.User.All, List<ThothUserWithPermissions<UserPermissionsModel>>>(
+    get<Api.Auth.User.All, List<ThothUserWithPermissions<UserPermissions>>>(
         withTransaction(RoutingContext::listUsers),
     )
 
