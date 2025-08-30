@@ -1,34 +1,33 @@
 package io.thoth.server.config
 
 import com.cronutils.model.Cron
-import io.thoth.metadata.audible.models.AudibleRegions
+import com.sksamuel.hoplite.ConfigLoaderBuilder
+import com.sksamuel.hoplite.addResourceOrFileSource
+import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 
-interface ThothConfig {
-    val ignoreFile: String
-    val production: Boolean
-    val allowNewSignups: Boolean
-    val fullScanCron: Cron
-    val metadataRefreshCron: Cron
-    val domain: String
-    val TLS: Boolean
-    val analyzerThreads: Int
-    val port: Int
-    val audibleRegion: AudibleRegions
-    val database: DatabaseConnection
-    val configDirectory: String
+data class ThothConfig(
+    val ignoreFile: String,
+    val production: Boolean,
+    val allowNewSignups: Boolean,
+    val fullScanCron: Cron,
+    val port: Int,
+    val domain: String,
+    val TLS: Boolean,
+    val database: DatabaseConnection,
+    val jwtCertificate: String,
+) {
+    companion object {
+        fun load(): ThothConfig {
+            val configPathStr = System.getenv("THOTH_CONFIG_PATH") ?: error("Set THOTH_CONFIG_PATH config variable")
+            val configPath = Path.of(configPathStr).absolutePathString()
+
+            return ConfigLoaderBuilder
+                .default()
+                .addDecoder(CronDecoder())
+                .addResourceOrFileSource(configPath)
+                .build()
+                .loadConfigOrThrow<ThothConfig>()
+        }
+    }
 }
-
-data class ThothConfigImpl(
-    override val ignoreFile: String,
-    override val production: Boolean,
-    override val allowNewSignups: Boolean,
-    override val fullScanCron: Cron,
-    override val metadataRefreshCron: Cron,
-    override val analyzerThreads: Int,
-    override val port: Int,
-    override val domain: String,
-    override val TLS: Boolean,
-    override val audibleRegion: AudibleRegions,
-    override val database: DatabaseConnectionImpl,
-    override val configDirectory: String,
-) : ThothConfig
