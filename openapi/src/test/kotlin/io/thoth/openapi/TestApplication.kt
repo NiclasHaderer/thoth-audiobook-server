@@ -6,7 +6,6 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.dataconversion.DataConversion
 import io.ktor.server.resources.Resources
-import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.get
@@ -91,9 +90,8 @@ class GenericRoute3<T>(
 )
 
 fun Application.testRoutes() {
-    install(Routing)
-    install(DataConversion)
     install(Resources)
+    install(DataConversion)
     install(ContentNegotiation)
     install(OpenAPIRouting)
 
