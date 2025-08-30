@@ -121,7 +121,7 @@ fun Application.startBackgroundJobs() {
         val config = get<ThothConfig>()
         if (!config.production) {
             log.info("Generating clients")
-            generateTsClient("gen/client/typescript")
+            generateTsClient("..thoth-web/src/client/generated/client/typescript")
             generateKotlinClient(
                 apiClientPackageName = "io.thoth.client.gen",
                 savePath = "client/src/main/kotlin/io/thoth/client/gen",
