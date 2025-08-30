@@ -1,10 +1,21 @@
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.util.reflect.*
+package io.thoth.client.gen
+
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.call.body
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.request
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.URLBuilder
+import io.ktor.http.Url
+import io.ktor.http.appendEncodedPathSegments
+import io.ktor.http.content.NullBody
+import io.ktor.http.content.OutgoingContent
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.util.reflect.TypeInfo
+import io.ktor.utils.io.InternalAPI
 
 typealias OnBeforeRequest<T> = suspend (metadata: RequestMetadata<T>, requestBuilder: HttpRequestBuilder) -> Unit
 typealias OnAfterRequest<T, R> = suspend (metadata: RequestMetadata<T>, response: OpenApiHttpResponse<R>) -> Unit
@@ -79,7 +90,7 @@ abstract class RequestRunner(
     }
 }
 
-@OptIn(io.ktor.util.InternalAPI::class)
+@OptIn(InternalAPI::class)
 private fun <T> HttpRequestBuilder.setBody(
     body: T,
     typeInfo: TypeInfo,

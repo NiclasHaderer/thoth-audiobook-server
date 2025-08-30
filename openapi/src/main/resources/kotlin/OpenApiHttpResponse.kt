@@ -1,9 +1,15 @@
-import io.ktor.client.call.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.util.date.*
-import io.ktor.util.reflect.*
-import io.ktor.utils.io.*
+package io.thoth.client.gen
+
+import io.ktor.client.call.HttpClientCall
+import io.ktor.client.call.body
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.Headers
+import io.ktor.http.HttpProtocolVersion
+import io.ktor.http.HttpStatusCode
+import io.ktor.util.date.GMTDate
+import io.ktor.util.reflect.TypeInfo
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.InternalAPI
 import kotlin.coroutines.CoroutineContext
 
 class OpenApiHttpResponse<T>(
@@ -14,9 +20,9 @@ class OpenApiHttpResponse<T>(
     override val call: HttpClientCall
         get() = delegate.call
 
-    @io.ktor.util.InternalAPI
-    override val content: ByteReadChannel
-        get() = delegate.content
+    @InternalAPI
+    override val rawContent: ByteReadChannel
+        get() = delegate.rawContent
     override val requestTime: GMTDate
         get() = delegate.requestTime
     override val responseTime: GMTDate
