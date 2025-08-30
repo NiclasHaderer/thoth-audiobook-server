@@ -4,12 +4,12 @@ import io.thoth.server.common.extensions.add
 import io.thoth.server.database.access.create
 import io.thoth.server.database.access.getByPath
 import io.thoth.server.database.access.markAsTouched
-import io.thoth.server.database.tables.Author
-import io.thoth.server.database.tables.Book
-import io.thoth.server.database.tables.Image
-import io.thoth.server.database.tables.Library
-import io.thoth.server.database.tables.TTracks
-import io.thoth.server.database.tables.Track
+import io.thoth.server.database.tables.AuthorEntity
+import io.thoth.server.database.tables.BookeEntity
+import io.thoth.server.database.tables.ImageEntity
+import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapper
@@ -31,12 +31,12 @@ interface TrackManager {
     suspend fun insertScanResult(
         scan: AudioFileAnalysisResult,
         path: Path,
-        library: Library,
+        library: LibraryEntity,
     )
 
     suspend fun addPath(
         path: Path,
-        library: Library,
+        library: LibraryEntity,
     )
 
     fun removePath(path: Path)
@@ -55,7 +55,7 @@ class TrackManagerImpl :
 
     override suspend fun addPath(
         path: Path,
-        library: Library,
+        library: LibraryEntity,
     ) {
         if (path.isDirectory()) {
             log.warn { "Skipped ${path.absolute()} because it is a directory" }
@@ -83,7 +83,7 @@ class TrackManagerImpl :
     override suspend fun insertScanResult(
         scan: AudioFileAnalysisResult,
         path: Path,
-        library: Library,
+        library: LibraryEntity,
     ) {
         this.semaphore.acquire()
         try {
@@ -95,14 +95,14 @@ class TrackManagerImpl :
 
     override fun removePath(path: Path) =
         transaction {
-            Track.find { TTracks.path like "${path.absolute()}%" }.forEach { it.delete() }
+            TrackEntity.find { TracksTable.path like "${path.absolute()}%" }.forEach { it.delete() }
         }
 
     private fun insertOrUpdateTrack(
         scan: AudioFileAnalysisResult,
-        library: Library,
-    ): Track {
-        val track = Track.getByPath(scan.path)
+        library: LibraryEntity,
+    ): TrackEntity {
+        val track = TrackEntity.getByPath(scan.path)
         return if (track != null) {
             updateTrack(track, scan, library).also { track.markAsTouched() }
         } else {
@@ -112,10 +112,10 @@ class TrackManagerImpl :
 
     private fun createTrack(
         scan: AudioFileAnalysisResult,
-        libraryModel: Library,
-    ): Track {
+        libraryModel: LibraryEntity,
+    ): TrackEntity {
         val dbBook = getOrCreateBook(scan, libraryModel)
-        return Track.new {
+        return TrackEntity.new {
             title = scan.title
             duration = scan.duration
             accessTime = scan.lastModified
@@ -127,10 +127,10 @@ class TrackManagerImpl :
     }
 
     private fun updateTrack(
-        track: Track,
+        track: TrackEntity,
         scan: AudioFileAnalysisResult,
-        libraryModel: Library,
-    ): Track {
+        libraryModel: LibraryEntity,
+    ): TrackEntity {
         val dbBook = getOrCreateBook(scan, libraryModel)
         return track.apply {
             title = scan.title
@@ -145,8 +145,8 @@ class TrackManagerImpl :
 
     private fun getOrCreateBook(
         scan: AudioFileAnalysisResult,
-        libraryModel: Library,
-    ): Book {
+        libraryModel: LibraryEntity,
+    ): BookeEntity {
         val authors = getOrCreateAuthors(scan, libraryModel)
         val book =
             bookRepository.findByName(
@@ -163,18 +163,25 @@ class TrackManagerImpl :
     }
 
     private fun updateBook(
-        book: Book,
+        book: BookeEntity,
         scan: AudioFileAnalysisResult,
-        dbAuthors: List<Author>,
-        libraryModel: Library,
-    ): Book {
+        dbAuthors: List<AuthorEntity>,
+        libraryModel: LibraryEntity,
+    ): BookeEntity {
         val dbSeries =
             if (scan.series != null) {
                 seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthors)
             } else {
                 null
             }
-        val dbImage = if (scan.cover != null && book.coverID == null) Image.create(scan.cover!!).id else book.coverID
+        val dbImage =
+            if (scan.cover != null &&
+                book.coverID == null
+            ) {
+                ImageEntity.create(scan.cover!!).id
+            } else {
+                book.coverID
+            }
 
         return book.apply {
             title = scan.book
@@ -189,19 +196,19 @@ class TrackManagerImpl :
 
     private fun createBook(
         scan: AudioFileAnalysisResult,
-        dbAuthor: List<Author>,
-        libraryModel: Library,
-    ): Book {
+        dbAuthor: List<AuthorEntity>,
+        libraryModel: LibraryEntity,
+    ): BookeEntity {
         val dbSeries =
             if (scan.series != null) {
                 seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthor)
             } else {
                 null
             }
-        val dbImage = if (scan.cover != null) Image.create(scan.cover!!) else null
+        val dbImage = if (scan.cover != null) ImageEntity.create(scan.cover!!) else null
         val dbSeriesList = if (dbSeries != null) listOf(dbSeries) else listOf()
 
-        return Book.new {
+        return BookeEntity.new {
             title = scan.book
             authors = SizedCollection(dbAuthor)
             language = scan.language
@@ -215,13 +222,13 @@ class TrackManagerImpl :
 
     private fun getOrCreateAuthors(
         scan: AudioFileAnalysisResult,
-        libraryModel: Library,
-    ): List<Author> =
+        libraryModel: LibraryEntity,
+    ): List<AuthorEntity> =
         scan.authors.map { author ->
             authorRepository.findByName(author, libraryModel.id.value)
                 ?: run {
                     log.info("Created author: ${scan.authors}")
-                    Author.new {
+                    AuthorEntity.new {
                         name = author
                         library = libraryModel
                     }

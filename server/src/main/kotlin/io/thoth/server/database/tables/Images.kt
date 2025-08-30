@@ -6,14 +6,14 @@ import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import java.util.UUID
 
-object TImages : UUIDTable("Images") {
+object ImageTable : UUIDTable("Images") {
     val blob = blob("image")
 }
 
-class Image(
+class ImageEntity(
     id: EntityID<UUID>,
 ) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Image>(TImages)
+    companion object : UUIDEntityClass<ImageEntity>(ImageTable)
 
-    var blob by TImages.blob
+    var blob by ImageTable.blob
 }

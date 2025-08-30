@@ -2,13 +2,13 @@ package io.thoth.server.database.access
 
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.models.UserModel
-import io.thoth.server.database.tables.User
+import io.thoth.server.database.tables.UserEntity
 
-fun User.toExternalUser(): ThothDatabaseUser =
+fun UserEntity.toExternalUser(): ThothDatabaseUser =
     ThothDatabaseUser(
         id = this@toExternalUser.id.value,
         username = this@toExternalUser.username,
         passwordHash = this@toExternalUser.passwordHash,
     )
 
-fun User.toModel(): UserModel = UserModel(id = id.value, username = username, admin = admin)
+fun UserEntity.toModel(): UserModel = UserModel(id = id.value, username = username, admin = admin)

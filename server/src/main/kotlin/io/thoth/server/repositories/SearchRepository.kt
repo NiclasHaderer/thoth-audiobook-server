@@ -4,12 +4,12 @@ import io.thoth.models.LibrarySearchResult
 import io.thoth.server.common.extensions.fuzzy
 import io.thoth.server.common.extensions.saveTo
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.Author
-import io.thoth.server.database.tables.Book
-import io.thoth.server.database.tables.Series
-import io.thoth.server.database.tables.TAuthors
-import io.thoth.server.database.tables.TBooks
-import io.thoth.server.database.tables.TSeries
+import io.thoth.server.database.tables.AuthorEntity
+import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BookeEntity
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.SeriesEntity
+import io.thoth.server.database.tables.SeriesTable
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 
@@ -31,10 +31,15 @@ object SearchRepository {
         limit: Int,
     ) = transaction {
         val authors =
-            Author.find { TAuthors.library inList libsToSearch }.fuzzy(query) { listOfNotNull(it.name) }.saveTo(limit)
+            AuthorEntity
+                .find { AuthorTable.library inList libsToSearch }
+                .fuzzy(
+                    query,
+                ) { listOfNotNull(it.name) }
+                .saveTo(limit)
         val bookAuthors =
-            Book
-                .find { TBooks.library inList libsToSearch }
+            BookeEntity
+                .find { BooksTable.library inList libsToSearch }
                 .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.series.joinToString(",") { it.title }) }
                 .saveTo(limit)
                 .flatMap { it.authors }
@@ -47,10 +52,15 @@ object SearchRepository {
         limit: Int,
     ) = transaction {
         val series =
-            Series.find { TSeries.library inList libsToSearch }.fuzzy(query) { listOfNotNull(it.title) }.saveTo(limit)
+            SeriesEntity
+                .find { SeriesTable.library inList libsToSearch }
+                .fuzzy(
+                    query,
+                ) { listOfNotNull(it.title) }
+                .saveTo(limit)
         val authorSeries =
-            Book
-                .find { TBooks.library inList libsToSearch }
+            BookeEntity
+                .find { BooksTable.library inList libsToSearch }
                 .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.authors.joinToString(",") { it.name }) }
                 .saveTo(limit)
                 .flatMap { it.series }
@@ -63,10 +73,15 @@ object SearchRepository {
         limit: Int,
     ) = transaction {
         val books =
-            Book.find { TBooks.library inList libsToSearch }.fuzzy(query) { listOfNotNull(it.title) }.saveTo(limit)
+            BookeEntity
+                .find { BooksTable.library inList libsToSearch }
+                .fuzzy(
+                    query,
+                ) { listOfNotNull(it.title) }
+                .saveTo(limit)
         val booksAndOther =
-            Book
-                .find { TBooks.library inList libsToSearch }
+            BookeEntity
+                .find { BooksTable.library inList libsToSearch }
                 .fuzzy(query) {
                     listOfNotNull(
                         it.authors.joinToString(", ") { it.name },

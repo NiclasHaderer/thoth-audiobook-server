@@ -1,19 +1,19 @@
 package io.thoth.server.database.migrations.history
 
 import io.thoth.server.database.migrations.migrator.Migration
-import io.thoth.server.database.tables.TAuthorBookMapping
-import io.thoth.server.database.tables.TAuthors
-import io.thoth.server.database.tables.TBooks
-import io.thoth.server.database.tables.TGenreBookMapping
-import io.thoth.server.database.tables.TGenreSeriesMapping
-import io.thoth.server.database.tables.TGenres
-import io.thoth.server.database.tables.TImages
-import io.thoth.server.database.tables.TLibraryUserMapping
-import io.thoth.server.database.tables.TSeries
-import io.thoth.server.database.tables.TSeriesAuthorMapping
-import io.thoth.server.database.tables.TSeriesBookMapping
-import io.thoth.server.database.tables.TTracks
-import io.thoth.server.database.tables.TUsers
+import io.thoth.server.database.tables.AuthorBookTable
+import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.GenreBookTable
+import io.thoth.server.database.tables.GenreSeriesTable
+import io.thoth.server.database.tables.GenresTable
+import io.thoth.server.database.tables.ImageTable
+import io.thoth.server.database.tables.LibraryUserTable
+import io.thoth.server.database.tables.SeriesAuthorTable
+import io.thoth.server.database.tables.SeriesBookTable
+import io.thoth.server.database.tables.SeriesTable
+import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.UsersTable
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -21,19 +21,19 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 class `01_Create_Tables` : Migration() {
     private val tables =
         listOf(
-            TAuthors,
-            TBooks,
-            TImages,
-            TSeries,
-            TGenres,
-            TTracks,
-            TUsers,
-            TAuthorBookMapping,
-            TGenreBookMapping,
-            TGenreSeriesMapping,
-            TSeriesBookMapping,
-            TSeriesAuthorMapping,
-            TLibraryUserMapping,
+            AuthorTable,
+            BooksTable,
+            ImageTable,
+            SeriesTable,
+            GenresTable,
+            TracksTable,
+            UsersTable,
+            AuthorBookTable,
+            GenreBookTable,
+            GenreSeriesTable,
+            SeriesBookTable,
+            SeriesAuthorTable,
+            LibraryUserTable,
         ).toTypedArray()
 
     override fun migrate(db: Database) {

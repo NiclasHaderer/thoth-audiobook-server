@@ -1,6 +1,6 @@
 package io.thoth.server.file.tagger
 
-import io.thoth.server.database.tables.Track
+import io.thoth.server.database.tables.TrackEntity
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -129,7 +129,7 @@ fun List<FileTagger>.saveToFile() =
         parent.children.forEach { it.join() }
     }
 
-fun List<Track>.toTrackModel() =
+fun List<TrackEntity>.toTrackModel() =
     runBlocking {
         val parent = Job()
         val t = this@toTrackModel.map { async(parent) { FileTaggerImpl(it.path) } }

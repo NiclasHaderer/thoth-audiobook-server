@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.date
 import java.util.UUID
 
-object TBooks : UUIDTable("Books") {
+object BooksTable : UUIDTable("Books") {
     val title = varchar("title", 255)
     val displayTitle = varchar("displayTitle", 255).nullable()
     val releaseDate = date("releaseDate").nullable()
@@ -24,34 +24,34 @@ object TBooks : UUIDTable("Books") {
     val providerRating = float("rating").nullable()
 
     // Relations
-    val coverID = reference("cover", TImages, onDelete = ReferenceOption.CASCADE).nullable()
-    val library = reference("library", TLibraries, onDelete = ReferenceOption.CASCADE)
+    val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.CASCADE).nullable()
+    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
 }
 
-class Book(
+class BookeEntity(
     id: EntityID<UUID>,
 ) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Book>(TBooks)
+    companion object : UUIDEntityClass<BookeEntity>(BooksTable)
 
-    var title by TBooks.title
-    var displayTitle by TBooks.displayTitle
-    var description by TBooks.description
-    var releaseDate by TBooks.releaseDate
-    var publisher by TBooks.publisher
-    var language by TBooks.language
-    var narrator by TBooks.narrator
-    var isbn by TBooks.isbn
-    var coverID by TBooks.coverID
+    var title by BooksTable.title
+    var displayTitle by BooksTable.displayTitle
+    var description by BooksTable.description
+    var releaseDate by BooksTable.releaseDate
+    var publisher by BooksTable.publisher
+    var language by BooksTable.language
+    var narrator by BooksTable.narrator
+    var isbn by BooksTable.isbn
+    var coverID by BooksTable.coverID
 
     // Provider
-    var provider by TBooks.provider
-    var providerID by TBooks.providerID
-    var providerRating by TBooks.providerRating
+    var provider by BooksTable.provider
+    var providerID by BooksTable.providerID
+    var providerRating by BooksTable.providerRating
 
     // Relations
-    var authors by Author via TAuthorBookMapping
-    var series by Series via TSeriesBookMapping
-    var genres by Genre via TGenreBookMapping
-    var library by Library referencedOn TBooks.library
-    val tracks by Track referrersOn TTracks.book
+    var authors by AuthorEntity via AuthorBookTable
+    var series by SeriesEntity via SeriesBookTable
+    var genres by GenreEntity via GenreBookTable
+    var library by LibraryEntity referencedOn BooksTable.library
+    val tracks by TrackEntity referrersOn TracksTable.book
 }

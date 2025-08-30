@@ -6,16 +6,16 @@ import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import java.util.UUID
 
-object TGenres : UUIDTable("Genres") {
+object GenresTable : UUIDTable("Genres") {
     val name = varchar("name", 255)
 }
 
-class Genre(
+class GenreEntity(
     id: EntityID<UUID>,
 ) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Genre>(TGenres)
+    companion object : UUIDEntityClass<GenreEntity>(GenresTable)
 
-    var name by TGenres.name
-    val books by Book via TGenreBookMapping
-    val series by Series via TGenreSeriesMapping
+    var name by GenresTable.name
+    val books by BookeEntity via GenreBookTable
+    val series by SeriesEntity via GenreSeriesTable
 }

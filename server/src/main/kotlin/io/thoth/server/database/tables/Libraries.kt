@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import java.util.UUID
 
-object TLibraries : UUIDTable("Libraries") {
+object LibrariesTable : UUIDTable("Libraries") {
     val name = varchar("name", 255)
     val icon = text("icon").nullable()
     val scanIndex = ulong("scanIndex").default(0uL)
@@ -38,17 +38,17 @@ object TLibraries : UUIDTable("Libraries") {
     val language = varchar("language", 255)
 }
 
-class Library(
+class LibraryEntity(
     id: EntityID<UUID>,
 ) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Library>(TLibraries)
+    companion object : UUIDEntityClass<LibraryEntity>(LibrariesTable)
 
-    var name by TLibraries.name
-    var icon by TLibraries.icon
-    var scanIndex by TLibraries.scanIndex
-    var folders by TLibraries.folders
-    var preferEmbeddedMetadata by TLibraries.preferEmbeddedMetadata
-    var metadataScanners by TLibraries.metadataScanners
-    var fileScanners by TLibraries.fileScanners
-    var language by TLibraries.language
+    var name by LibrariesTable.name
+    var icon by LibrariesTable.icon
+    var scanIndex by LibrariesTable.scanIndex
+    var folders by LibrariesTable.folders
+    var preferEmbeddedMetadata by LibrariesTable.preferEmbeddedMetadata
+    var metadataScanners by LibrariesTable.metadataScanners
+    var fileScanners by LibrariesTable.fileScanners
+    var language by LibrariesTable.language
 }

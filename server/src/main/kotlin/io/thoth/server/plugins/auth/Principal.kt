@@ -12,8 +12,8 @@ import io.thoth.models.LibraryPermissionsModel
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.TLibraries
-import io.thoth.server.database.tables.User
+import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.UserEntity
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
@@ -25,14 +25,14 @@ class ThothPrincipalImpl(
     val permissions: UserPermissions
         get() =
             transaction {
-                val user = User.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
+                val user = UserEntity.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
                 val permissions: List<LibraryPermissionsModel> =
                     if (user.admin) {
-                        TLibraries.selectAll().map {
+                        LibrariesTable.selectAll().map {
                             LibraryPermissionsModel(
-                                id = it[TLibraries.id].value,
+                                id = it[LibrariesTable.id].value,
                                 permissions = LibraryPermissions.READ_WRITE,
-                                name = it[TLibraries.name],
+                                name = it[LibrariesTable.name],
                             )
                         }
                     } else {

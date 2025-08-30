@@ -2,8 +2,10 @@ package io.thoth.server.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.thoth.server.common.extensions.get
 import io.thoth.server.common.utils.memoize
 import io.thoth.server.config.DatabaseConnection
+import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.migrations.migrator.DatabaseMigrator
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.DatabaseConfig
@@ -43,10 +45,8 @@ private object DatabaseFactory {
     }
 }
 
-fun connectToDatabase(config: DatabaseConnection) {
-    DatabaseFactory.connect(config)
-}
-
-fun migrateDatabase(config: DatabaseConnection) {
-    DatabaseFactory.migrate(config)
+fun connectToDatabaseAndMigrate() {
+    val config = get<ThothConfig>()
+    DatabaseFactory.connect(config.database)
+    DatabaseFactory.migrate(config.database)
 }

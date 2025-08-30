@@ -24,8 +24,7 @@ import io.thoth.server.api.seriesRouting
 import io.thoth.server.common.extensions.get
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.connectToDatabase
-import io.thoth.server.database.migrateDatabase
+import io.thoth.server.database.connectToDatabaseAndMigrate
 import io.thoth.server.di.setupDependencyInjection
 import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.plugins.auth.configureAuthentication
@@ -42,7 +41,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.logging.LogManager
 
 fun main() {
-    // Force every library using the standard java logger force it to use SLF4J
+    // Force every library using the standard java logger to use SLF4J
     LogManager.getLogManager().reset()
     SLF4JBridgeHandler.install()
 
@@ -57,18 +56,11 @@ fun main() {
 }
 
 fun Application.applicationModule() {
-    // Setup DI with Koin
     setupDependencyInjection()
 
     plugins()
-
-    // Connect to database
-    val config = get<ThothConfig>()
-    connectToDatabase(config.database)
-    migrateDatabase(config.database)
-
+    connectToDatabaseAndMigrate()
     routing()
-
     startBackgroundJobs()
 }
 

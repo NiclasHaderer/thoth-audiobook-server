@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.date
 import java.util.UUID
 
-object TAuthors : UUIDTable("Authors") {
+object AuthorTable : UUIDTable("Authors") {
     val name = varchar("name", 255)
     val displayName = varchar("displayName", 255).nullable()
     val biography = text("biography").nullable()
@@ -22,30 +22,30 @@ object TAuthors : UUIDTable("Authors") {
     val providerID = varchar("providerID", 255).nullable()
 
     // Relations
-    val imageID = reference("imageId", TImages, onDelete = ReferenceOption.CASCADE).nullable()
-    val library = reference("library", TLibraries, onDelete = ReferenceOption.CASCADE)
+    val imageID = reference("imageId", ImageTable, onDelete = ReferenceOption.CASCADE).nullable()
+    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
 }
 
-class Author(
+class AuthorEntity(
     id: EntityID<UUID>,
 ) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<Author>(TAuthors)
+    companion object : UUIDEntityClass<AuthorEntity>(AuthorTable)
 
-    var name by TAuthors.name
-    var displayName by TAuthors.displayName
-    var biography by TAuthors.biography
-    var imageID by TAuthors.imageID
-    var website by TAuthors.website
-    var birthDate by TAuthors.birthDate
-    var bornIn by TAuthors.bornIn
-    var deathDate by TAuthors.deathDate
+    var name by AuthorTable.name
+    var displayName by AuthorTable.displayName
+    var biography by AuthorTable.biography
+    var imageID by AuthorTable.imageID
+    var website by AuthorTable.website
+    var birthDate by AuthorTable.birthDate
+    var bornIn by AuthorTable.bornIn
+    var deathDate by AuthorTable.deathDate
 
     // Provider
-    var provider by TAuthors.provider
-    var providerID by TAuthors.providerID
+    var provider by AuthorTable.provider
+    var providerID by AuthorTable.providerID
 
     // Relations
-    var books by Book via TAuthorBookMapping
-    var series by Series via TSeriesAuthorMapping
-    var library by Library referencedOn TAuthors.library
+    var books by BookeEntity via AuthorBookTable
+    var series by SeriesEntity via SeriesAuthorTable
+    var library by LibraryEntity referencedOn AuthorTable.library
 }

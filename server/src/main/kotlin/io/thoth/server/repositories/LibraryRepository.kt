@@ -6,8 +6,8 @@ import io.thoth.server.api.PartialUpdateLibrary
 import io.thoth.server.api.UpdateLibrary
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.Library
-import io.thoth.server.database.tables.TLibraries
+import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.file.scanner.FileTreeWatcher
 import io.thoth.server.schedules.ThothSchedules
 import kotlinx.coroutines.CoroutineScope
@@ -63,7 +63,7 @@ class LibraryRepositoryImpl :
 
     override fun raw(id: UUID): Library =
         transaction {
-            Library.find { TLibraries.id eq id }.firstOrNull() ?: throw ErrorResponse.notFound("Library", id)
+            LibraryEntity.find { LibrariesTable.id eq id }.firstOrNull() ?: throw ErrorResponse.notFound("Library", id)
         }
 
     override fun rescan(id: UUID) {
@@ -73,7 +73,7 @@ class LibraryRepositoryImpl :
 
     override fun get(id: UUID): Library = transaction { raw(id).toModel() }
 
-    override fun getAll(): List<Library> = transaction { Library.all().map { it.toModel() } }
+    override fun getAll(): List<Library> = transaction { LibraryEntity.all().map { it.toModel() } }
 
     override fun modify(
         id: UUID,
@@ -104,7 +104,7 @@ class LibraryRepositoryImpl :
     override fun create(complete: UpdateLibrary): Library =
         transaction {
             raiseForOverlaps(null, complete.folders)
-            Library.new {
+            LibraryEntity.new {
                 name = complete.name
                 icon = complete.icon
                 folders = complete.folders
@@ -125,7 +125,7 @@ class LibraryRepositoryImpl :
         transaction {
             raiseForOverlaps(id, complete.folders)
 
-            val library = Library.findById(id) ?: Library.new { name = complete.name }
+            val library = LibraryEntity.findById(id) ?: LibraryEntity.new { name = complete.name }
             library.apply {
                 name = complete.name
                 icon = complete.icon
@@ -145,18 +145,19 @@ class LibraryRepositoryImpl :
     ): Pair<Boolean, List<Path>> =
         transaction {
             val newFolders = folders.map { Path.of(it) }
-            val allFolders = Library.find { TLibraries.id neq id }.flatMap { it.folders }.map { Path.of(it) }
+            val allFolders = LibraryEntity.find { LibrariesTable.id neq id }.flatMap { it.folders }.map { Path.of(it) }
             val overlaps = newFolders.filter { newFolder -> allFolders.any { newFolder.startsWith(it) } }
 
             Pair(overlaps.isNotEmpty(), overlaps)
         }
 
-    override fun allFolders(): List<Path> = transaction { Library.all().flatMap { it.folders }.map { Path.of(it) } }
+    override fun allFolders(): List<Path> =
+        transaction { LibraryEntity.all().flatMap { it.folders }.map { Path.of(it) } }
 
     override fun getMatching(path: Path): Library? =
         transaction {
             val potentialLibraries =
-                Library.all().filter { lib -> lib.folders.map { Path.of(it) }.any { path.startsWith(it) } }
+                LibraryEntity.all().filter { lib -> lib.folders.map { Path.of(it) }.any { path.startsWith(it) } }
             if (potentialLibraries.isEmpty()) return@transaction null
             if (potentialLibraries.size == 1) return@transaction potentialLibraries.first()
             log.error { "Multiple libraries match path $path" }
