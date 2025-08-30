@@ -1,6 +1,6 @@
 package io.thoth.metadata.audible.client
 
-import io.thoth.metadata.MetadataProvider
+import io.thoth.metadata.MetadataAgent
 import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.audible.models.AudibleSearchAmount
 import io.thoth.metadata.audible.models.AudibleSearchLanguage
@@ -17,15 +17,15 @@ import me.xdrop.fuzzywuzzy.FuzzySearch
 
 const val AUDIBLE_PROVIDER_NAME = "audible"
 
-class AudibleClient(
+class AudibleMetadataAgent(
     private val imageSize: Int = 500,
-) : MetadataProvider() {
-    override val uniqueName = AUDIBLE_PROVIDER_NAME
+) : MetadataAgent() {
+    override val name = AUDIBLE_PROVIDER_NAME
 
     override val supportedCountryCodes: List<String>
-        get() = AudibleRegions.values().map { it.name }
+        get() = AudibleRegions.entries.map { it.name }
 
-    override suspend fun _search(
+    override suspend fun searchImpl(
         region: String,
         keywords: String?,
         title: String?,
@@ -46,7 +46,7 @@ class AudibleClient(
         )?.filter { it.title != null && it.id.itemID != "search" } ?: listOf()
     }
 
-    override suspend fun _getAuthorByID(
+    override suspend fun getAuthorByIDImpl(
         providerId: String,
         authorId: String,
         region: String,
@@ -56,11 +56,11 @@ class AudibleClient(
         return getAudibleAuthor(audibleRegion, imageSize, authorId)
     }
 
-    override suspend fun _getAuthorByName(
+    override suspend fun getAuthorByNameImpl(
         authorName: String,
         region: String,
     ): List<MetadataAuthorImpl> {
-        val searchResult = _search(region, author = authorName)
+        val searchResult = searchImpl(region, author = authorName)
 
         return coroutineScope {
             FuzzySearch
@@ -69,7 +69,7 @@ class AudibleClient(
                 }.map {
                     async {
                         it.referent.authors?.map { author ->
-                            _getAuthorByID(providerId = uniqueName, authorId = author.id.itemID, region = region)
+                            getAuthorByIDImpl(providerId = name, authorId = author.id.itemID, region = region)
                         }
                     }
                 }.awaitAll()
@@ -80,7 +80,7 @@ class AudibleClient(
         }
     }
 
-    override suspend fun _getBookByID(
+    override suspend fun getBookByIDImpl(
         providerId: String,
         bookId: String,
         region: String,
@@ -89,25 +89,25 @@ class AudibleClient(
         return getAudibleBook(audibleRegion, bookId)
     }
 
-    override suspend fun _getBookByName(
+    override suspend fun getBookByNameImpl(
         bookName: String,
         region: String,
         authorName: String?,
     ): List<MetadataBookImpl> {
-        val searchResult = _search(region, title = bookName, author = authorName)
+        val searchResult = searchImpl(region, title = bookName, author = authorName)
 
         return coroutineScope {
             FuzzySearch
                 .extractSorted(bookName, searchResult) { it.title }
                 .map {
-                    async { _getBookByID(providerId = uniqueName, region = region, bookId = it.referent.id.itemID) }
+                    async { getBookByIDImpl(providerId = name, region = region, bookId = it.referent.id.itemID) }
                 }.awaitAll()
                 .distinctBy { it?.id?.itemID }
                 .filterNotNull()
         }
     }
 
-    override suspend fun _getSeriesByID(
+    override suspend fun getSeriesByIDImpl(
         providerId: String,
         region: String,
         seriesId: String,
@@ -116,13 +116,13 @@ class AudibleClient(
         return getAudibleSeries(audibleRegion, seriesId)
     }
 
-    override suspend fun _getSeriesByName(
+    override suspend fun getSeriesByNameImpl(
         seriesName: String,
         region: String,
         authorName: String?,
     ): List<MetadataSeriesImpl> {
         val seriesResult =
-            _search(region = region, keywords = seriesName, author = authorName)
+            searchImpl(region = region, keywords = seriesName, author = authorName)
                 .flatMap { it.series }
                 .filter { it.title != null }
 
@@ -130,7 +130,13 @@ class AudibleClient(
             FuzzySearch
                 .extractSorted(seriesName, seriesResult) { it.title }
                 .map {
-                    async { _getSeriesByID(providerId = uniqueName, region = region, seriesId = it.referent.id.itemID) }
+                    async {
+                        getSeriesByIDImpl(
+                            providerId = name,
+                            region = region,
+                            seriesId = it.referent.id.itemID,
+                        )
+                    }
                 }.awaitAll()
                 .distinctBy { it?.id?.itemID }
                 .filterNotNull()

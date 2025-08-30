@@ -1,8 +1,8 @@
 package io.thoth.server.di
 
-import io.thoth.metadata.MetadataProviders
-import io.thoth.metadata.MetadataWrapper
-import io.thoth.metadata.audible.client.AudibleClient
+import io.thoth.metadata.MetadataAgentWrapper
+import io.thoth.metadata.MetadataAgents
+import io.thoth.metadata.audible.client.AudibleMetadataAgent
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.loadPublicConfig
 import io.thoth.server.di.serialization.JacksonSerialization
@@ -31,11 +31,11 @@ fun setupDependencyInjection() =
         modules(
             module {
                 single { config }
-                single<MetadataProviders> {
-                    val allProviders = listOf(AudibleClient())
-                    MetadataProviders(allProviders + MetadataWrapper(allProviders))
+                single<MetadataAgents> {
+                    val allProviders = listOf(AudibleMetadataAgent())
+                    MetadataAgents(allProviders + MetadataAgentWrapper(allProviders))
                 }
-                single<MetadataWrapper> { MetadataWrapper(get<MetadataProviders>()) }
+                single<MetadataAgentWrapper> { MetadataAgentWrapper(get<MetadataAgents>()) }
                 single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
                 single<LibraryScanner> { LibraryScannerImpl() }
                 single<Serialization> { JacksonSerialization() }

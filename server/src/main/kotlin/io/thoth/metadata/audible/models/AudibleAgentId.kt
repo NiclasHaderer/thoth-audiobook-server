@@ -1,10 +1,10 @@
 package io.thoth.metadata.audible.models
 
 import io.thoth.metadata.audible.client.AUDIBLE_PROVIDER_NAME
-import io.thoth.metadata.responses.MetadataProviderWithID
+import io.thoth.metadata.responses.MetadataAgentID
 
-data class AudibleProviderWithIDMetadata(
+data class AudibleAgentId(
     override val itemID: String,
-) : MetadataProviderWithID {
+) : MetadataAgentID {
     override val provider = AUDIBLE_PROVIDER_NAME
 }

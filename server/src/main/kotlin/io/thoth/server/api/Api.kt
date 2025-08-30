@@ -182,7 +182,6 @@ class Api {
         }
 
         @Resource("{libraryId}")
-        @Summary("Replace library", method = "PUT")
         @Summary("Delete library", method = "DELETE")
         @Summary("Update library", method = "PATCH")
         @Summary("Get library", method = "GET")
@@ -245,7 +244,6 @@ class Api {
 
                 @Summary("Get book", method = "GET")
                 @Summary("Update book", method = "PATCH")
-                @Summary("Replace book", method = "PUT")
                 @Resource("{id}")
                 data class Id(
                     val id: UUID_S,
@@ -324,7 +322,6 @@ class Api {
 
                 @Summary("Get author", method = "GET")
                 @Summary("Update author", method = "PATCH")
-                @Summary("Replace author", method = "PUT")
                 @Resource("{id}")
                 data class Id(
                     val id: UUID_S,
@@ -403,7 +400,6 @@ class Api {
 
                 @Summary("Get series", method = "GET")
                 @Summary("Update series", method = "PATCH")
-                @Summary("Replace series", method = "PUT")
                 @Resource("{id}")
                 data class Id(
                     val id: UUID_S,

@@ -3,12 +3,12 @@ package io.thoth.server.api
 import io.ktor.server.routing.Routing
 import io.thoth.models.Author
 import io.thoth.models.AuthorDetailed
+import io.thoth.models.AuthorUpdate
 import io.thoth.models.NamedId
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
-import io.thoth.openapi.ktor.put
 import io.thoth.server.repositories.AuthorRepository
 import org.koin.ktor.ext.inject
 import java.util.UUID
@@ -42,11 +42,7 @@ fun Routing.authorRouting() {
         authorService.search(it.q, it.libraryId).map { NamedId(it.id, it.name) }
     }
 
-    patch<Api.Libraries.Id.Authors.Id, PartialAuthorApiModel, Author> { id, patchAuthor ->
+    patch<Api.Libraries.Id.Authors.Id, AuthorUpdate, Author> { id, patchAuthor ->
         authorService.modify(id.id, id.libraryId, patchAuthor)
-    }
-
-    put<Api.Libraries.Id.Authors.Id, AuthorApiModel, Author> { id, patchAuthor ->
-        authorService.replace(id.id, id.libraryId, patchAuthor)
     }
 }

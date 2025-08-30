@@ -2,7 +2,7 @@ package io.thoth.server.api
 
 import io.ktor.server.routing.RoutingContext
 import io.thoth.models.FileScanner
-import io.thoth.models.MetadataAgent
+import io.thoth.models.NamedMetadataAgent
 import io.thoth.openapi.ktor.ValidateObject
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
@@ -11,7 +11,7 @@ data class UpdateLibrary(
     val icon: String?,
     val folders: List<String>,
     val preferEmbeddedMetadata: Boolean,
-    val metadataScanners: List<MetadataAgent>,
+    val metadataScanners: List<NamedMetadataAgent>,
     val fileScanners: List<FileScanner>,
     var language: String,
 ) : ValidateObject {
@@ -35,7 +35,7 @@ data class PartialUpdateLibrary(
     val icon: String?,
     val folders: List<String>?,
     val preferEmbeddedMetadata: Boolean?,
-    val metadataScanners: List<MetadataAgent>?,
+    val metadataScanners: List<NamedMetadataAgent>?,
     val fileScanners: List<FileScanner>?,
     val language: String?,
 ) : ValidateObject {

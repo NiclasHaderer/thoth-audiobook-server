@@ -1,21 +1,21 @@
 package io.thoth.metadata.responses
 
 interface MetadataBookSeries {
-    val id: MetadataProviderWithID
+    val id: MetadataAgentID
     val title: String?
     val link: String
     val index: Float?
 }
 
 data class MetadataBookSeriesImpl(
-    override val id: MetadataProviderWithID,
+    override val id: MetadataAgentID,
     override val title: String?,
     override val link: String,
     override val index: Float?,
 ) : MetadataBookSeries
 
 interface MetadataSeries {
-    val id: MetadataProviderWithID
+    val id: MetadataAgentID
     val link: String
     val title: String?
     val authors: List<String>?
@@ -27,7 +27,7 @@ interface MetadataSeries {
 }
 
 data class MetadataSeriesImpl(
-    override val id: MetadataProviderWithID,
+    override val id: MetadataAgentID,
     override val title: String?,
     override val authors: List<String>?,
     override val link: String,

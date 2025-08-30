@@ -1,5 +1,5 @@
 package io.thoth.models
 
-data class MetadataAgent(
+data class NamedMetadataAgent(
     var name: String,
 )

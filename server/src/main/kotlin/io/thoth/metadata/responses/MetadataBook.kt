@@ -3,7 +3,7 @@ package io.thoth.metadata.responses
 import java.time.LocalDate
 
 interface MetadataSearchBook {
-    val id: MetadataProviderWithID
+    val id: MetadataAgentID
     val title: String?
     val link: String?
     val authors: List<MetadataSearchAuthor>?
@@ -15,7 +15,7 @@ interface MetadataSearchBook {
 }
 
 data class MetadataSearchBookImpl(
-    override val id: MetadataProviderWithID,
+    override val id: MetadataAgentID,
     override val title: String?,
     override val link: String?,
     override val authors: List<MetadataSearchAuthor>?,
@@ -34,7 +34,7 @@ interface MetadataBook : MetadataSearchBook {
 }
 
 data class MetadataBookImpl(
-    override val id: MetadataProviderWithID,
+    override val id: MetadataAgentID,
     override val title: String?,
     override val link: String?,
     override val authors: List<MetadataSearchAuthor>?,

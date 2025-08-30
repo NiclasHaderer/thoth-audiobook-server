@@ -15,7 +15,6 @@ class SeriesEntity(
     companion object : UUIDEntityClass<SeriesEntity>(SeriesTable)
 
     var title by SeriesTable.title
-    var displayTitle by SeriesTable.displayTitle
     var totalBooks by SeriesTable.totalBooks
     var primaryWorks by SeriesTable.primaryWorks
     var coverID by SeriesTable.coverID

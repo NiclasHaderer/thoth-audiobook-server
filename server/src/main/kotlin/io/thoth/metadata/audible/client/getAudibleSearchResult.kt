@@ -2,7 +2,7 @@ package io.thoth.metadata.audible.client
 
 import io.ktor.http.Parameters
 import io.thoth.metadata.appendOptional
-import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.thoth.metadata.audible.models.AudibleAgentId
 import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.audible.models.AudibleSearchAmount
 import io.thoth.metadata.audible.models.AudibleSearchLanguage
@@ -55,7 +55,7 @@ fun getAudibleSearchResult(
             series = extractBookSeriesInfo(it),
             coverURL = extractImageUrl(it),
             releaseDate = extractReleaseDate(it, regions),
-            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
+            id = AudibleAgentId(audibleAsinFromLink(link)),
             narrator = extractNarrator(it),
             language = extractLanguage(it),
         )
@@ -104,7 +104,7 @@ internal fun extractAuthorInfo(element: Element): List<MetadataSearchAuthorImpl>
         MetadataSearchAuthorImpl(
             link = link,
             name = authorLink.text(),
-            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(link)),
+            id = AudibleAgentId(audibleAsinFromLink(link)),
         )
     }
 }
@@ -145,7 +145,7 @@ internal fun extractBookSeriesInfo(element: Element): List<MetadataBookSeriesImp
         MetadataBookSeriesImpl(
             link = seriesLink,
             title = seriesTitle,
-            id = AudibleProviderWithIDMetadata(audibleAsinFromLink(seriesLink)),
+            id = AudibleAgentId(audibleAsinFromLink(seriesLink)),
             index = seriesIndex,
         )
     }

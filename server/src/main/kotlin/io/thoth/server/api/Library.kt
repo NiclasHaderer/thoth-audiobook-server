@@ -7,7 +7,6 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
-import io.thoth.openapi.ktor.put
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.plugins.auth.thothPrincipal
 import io.thoth.server.repositories.LibraryRepository
@@ -24,10 +23,6 @@ fun Routing.libraryRouting() {
     get<Api.Libraries, List<Library>> { libraryRepository.getAll() }
 
     get<Api.Libraries.Id, Library> { (id) -> libraryRepository.get(id) }
-
-    put<Api.Libraries.Id, UpdateLibrary, Library> { (id), postLibrary ->
-        libraryRepository.replace(id, postLibrary)
-    }
 
     patch<Api.Libraries.Id, PartialUpdateLibrary, Library> { (id), patchLibrary ->
         libraryRepository.modify(id, patchLibrary)

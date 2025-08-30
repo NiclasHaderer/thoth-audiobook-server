@@ -3,13 +3,13 @@ package io.thoth.server.api
 import io.ktor.server.routing.Routing
 import io.thoth.models.Book
 import io.thoth.models.BookDetailed
+import io.thoth.models.BookUpdate
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
-import io.thoth.openapi.ktor.put
 import io.thoth.server.repositories.BookRepository
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.koin.ktor.ext.inject
@@ -55,12 +55,8 @@ fun Routing.bookRouting() {
         bookRepository.search(route.q, route.libraryId).map { TitledId(it.id, it.title) }
     }
 
-    patch<Api.Libraries.Id.Books.Id, PartialBookApiModel, Book> { route, patch ->
+    patch<Api.Libraries.Id.Books.Id, BookUpdate, Book> { route, patch ->
         bookRepository.modify(route.id, route.libraryId, patch)
-    }
-
-    put<Api.Libraries.Id.Books.Id, BookApiModel, Book> { id, putBook ->
-        bookRepository.replace(id.id, id.libraryId, putBook)
     }
 
     post<Api.Libraries.Id.Books.Id.AutoMatch, Unit, Book> { id, _ ->

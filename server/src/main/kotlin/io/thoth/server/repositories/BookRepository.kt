@@ -1,12 +1,11 @@
 package io.thoth.server.repositories
 
-import io.thoth.metadata.MetadataProviders
-import io.thoth.metadata.MetadataWrapper
+import io.thoth.metadata.MetadataAgentWrapper
+import io.thoth.metadata.MetadataAgents
 import io.thoth.models.Book
 import io.thoth.models.BookDetailed
+import io.thoth.models.BookUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.api.BookApiModel
-import io.thoth.server.api.PartialBookApiModel
 import io.thoth.server.common.extensions.toSizedIterable
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.tables.AuthorBookTable
@@ -30,7 +29,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
 
-interface BookRepository : Repository<BookEntity, Book, BookDetailed, PartialBookApiModel, BookApiModel> {
+interface BookRepository : Repository<BookEntity, Book, BookDetailed, BookUpdate> {
     fun findByName(
         bookTitle: String,
         authorIds: List<UUID>,
@@ -58,7 +57,7 @@ class BookRepositoryImpl :
     private val authorRepository by inject<AuthorRepository>()
     private val seriesRepository by inject<SeriesRepository>()
     private val libraryRepository by inject<LibraryRepository>()
-    private val metadataProviders by inject<MetadataProviders>()
+    private val metadataAgents by inject<MetadataAgents>()
 
     override fun total(libraryId: UUID) = transaction { BookEntity.find { BooksTable.library eq libraryId }.count() }
 
@@ -170,12 +169,12 @@ class BookRepositoryImpl :
     override fun modify(
         id: UUID,
         libraryId: UUID,
-        partial: PartialBookApiModel,
+        partial: BookUpdate,
     ): Book =
         transaction {
             val book = raw(id, libraryId)
             book.apply {
-                displayTitle = partial.title
+                title = partial.title ?: title
                 provider = partial.provider ?: provider
                 providerID = partial.providerID ?: providerID
                 providerRating = partial.providerRating ?: providerRating
@@ -192,38 +191,6 @@ class BookRepositoryImpl :
             }
             if (partial.series != null) {
                 book.series = partial.series.map { seriesRepository.raw(it, libraryId) }.toSizedIterable()
-            }
-            book.toModel()
-        }
-
-    override fun replace(
-        id: UUID,
-        libraryId: UUID,
-        complete: BookApiModel,
-    ): Book =
-        transaction {
-            val book = BookEntity.findById(id) ?: throw ErrorResponse.notFound("Book", id)
-            if (book.library.id.value !=
-                libraryId
-            ) {
-                throw ErrorResponse.notFound("Book", id, "Book is not in that library")
-            }
-            book.apply {
-                displayTitle = complete.title
-                provider = complete.provider
-                providerID = complete.providerID
-                providerRating = complete.providerRating
-                releaseDate = complete.releaseDate
-                publisher = complete.publisher
-                language = complete.language
-                description = complete.description
-                narrator = complete.narrator
-                isbn = complete.isbn
-                coverID = ImageEntity.getNewImage(complete.cover, currentImageID = coverID, default = null)
-                authors = complete.authors.map { authorRepository.raw(it, libraryId) }.toSizedIterable()
-                series =
-                    complete.series?.map { seriesRepository.raw(it, libraryId) }?.toSizedIterable()
-                        ?: emptyList<SeriesEntity>().toSizedIterable()
             }
             book.toModel()
         }
@@ -262,8 +229,8 @@ class BookRepositoryImpl :
             val library = libraryRepository.raw(libraryId)
 
             val metadataAgents =
-                library.metadataScanners.mapNotNull { agent -> metadataProviders.find { it.uniqueName == agent.name } }
-            val metadataWrapper = MetadataWrapper(metadataAgents)
+                library.metadataAgents.mapNotNull { agent -> metadataAgents.find { it.name == agent.name } }
+            val metadataWrapper = MetadataAgentWrapper(metadataAgents)
 
             val bookMetadata =
                 runBlocking {
@@ -278,7 +245,7 @@ class BookRepositoryImpl :
             modify(
                 id,
                 libraryId,
-                PartialBookApiModel(
+                BookUpdate(
                     title = bookMetadata.title,
                     authors = null,
                     series = null,

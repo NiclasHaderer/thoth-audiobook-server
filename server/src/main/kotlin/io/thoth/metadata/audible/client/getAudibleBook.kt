@@ -1,6 +1,6 @@
 package io.thoth.metadata.audible.client
 
-import io.thoth.metadata.audible.models.AudibleProviderWithIDMetadata
+import io.thoth.metadata.audible.models.AudibleAgentId
 import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.audible.models.getValue
 import io.thoth.metadata.replaceAll
@@ -18,7 +18,7 @@ suspend fun getAudibleBook(
 
     return MetadataBookImpl(
         link = document.location().split("?").first(),
-        id = AudibleProviderWithIDMetadata(audibleAsinFromLink(document.location())),
+        id = AudibleAgentId(audibleAsinFromLink(document.location())),
         description = getDescription(document),
         title = extractTitle(document, region),
         coverURL = extractImageUrl(document),

@@ -30,11 +30,6 @@ interface LibraryRepository {
     ): Library
 
     fun create(complete: UpdateLibrary): Library
-
-    fun replace(
-        id: UUID,
-        complete: UpdateLibrary,
-    ): Library
 }
 
 class LibraryRepositoryImpl :
@@ -72,51 +67,32 @@ class LibraryRepositoryImpl :
                 icon = partial.icon ?: icon
                 folders = partial.folders ?: folders
                 preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: preferEmbeddedMetadata
-                metadataScanners = partial.metadataScanners ?: metadataScanners
+                metadataAgents = partial.metadataScanners ?: metadataAgents
                 fileScanners = partial.fileScanners ?: fileScanners
                 language = partial.language ?: language
             }
-        }.also {
             if (partial.folders != null || partial.metadataScanners != null || partial.fileScanners != null) {
-                runBlocking { scheduler.dispatch(schedules.scanLibrary.build(it)) }
+                runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
             }
-        }.toModel()
+            library.toModel()
+        }
 
     override fun create(complete: UpdateLibrary): Library =
         transaction {
             raiseForOverlaps(null, complete.folders)
-            LibraryEntity.new {
-                name = complete.name
-                icon = complete.icon
-                folders = complete.folders
-                preferEmbeddedMetadata = complete.preferEmbeddedMetadata
-                metadataScanners = complete.metadataScanners
-                fileScanners = complete.fileScanners
-                language = complete.language
-            }
-        }.also {
-            runBlocking { scheduler.dispatch(schedules.scanLibrary.build(it)) }
-        }.toModel()
-
-    override fun replace(
-        id: UUID,
-        complete: UpdateLibrary,
-    ): Library =
-        transaction {
-            raiseForOverlaps(id, complete.folders)
-
-            val library = LibraryEntity.findById(id) ?: LibraryEntity.new { name = complete.name }
-            library.apply {
-                name = complete.name
-                icon = complete.icon
-                folders = complete.folders
-                preferEmbeddedMetadata = complete.preferEmbeddedMetadata
-                metadataScanners = complete.metadataScanners
-                fileScanners = complete.fileScanners
-            }
-        }.also {
-            runBlocking { scheduler.dispatch(schedules.scanLibrary.build(it)) }
-        }.toModel()
+            val library =
+                LibraryEntity.new {
+                    name = complete.name
+                    icon = complete.icon
+                    folders = complete.folders
+                    preferEmbeddedMetadata = complete.preferEmbeddedMetadata
+                    metadataAgents = complete.metadataScanners
+                    fileScanners = complete.fileScanners
+                    language = complete.language
+                }
+            runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
+            library.toModel()
+        }
 
     fun overlappingFolders(
         id: UUID?,
