@@ -10,11 +10,11 @@ import io.thoth.server.api.PartialAuthorApiModel
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.Author
-import io.thoth.server.database.tables.Image
-import io.thoth.server.database.tables.TAuthors
-import io.thoth.server.database.tables.TBooks
-import io.thoth.server.database.tables.TSeries
+import io.thoth.server.database.tables.AuthorEntity
+import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.ImageEntity
+import io.thoth.server.database.tables.SeriesTable
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -25,21 +25,21 @@ import org.koin.core.component.inject
 import java.util.UUID
 
 interface AuthorRepository :
-    Repository<Author, AuthorModel, DetailedAuthorModel, PartialAuthorApiModel, AuthorApiModel> {
+    Repository<AuthorEntity, AuthorModel, DetailedAuthorModel, PartialAuthorApiModel, AuthorApiModel> {
     fun findByName(
         authorName: String,
         libraryId: UUID,
-    ): Author?
+    ): AuthorEntity?
 
     fun getOrCreate(
         authorName: String,
         libraryId: UUID,
-    ): Author
+    ): AuthorEntity
 
     fun create(
         authorName: String,
         libraryId: UUID,
-    ): Author
+    ): AuthorEntity
 }
 
 class AuthorServiceImpl :
@@ -51,16 +51,16 @@ class AuthorServiceImpl :
     override fun findByName(
         authorName: String,
         libraryId: UUID,
-    ): Author? =
+    ): AuthorEntity? =
         transaction {
-            Author.find { TAuthors.name like authorName and (TAuthors.library eq libraryId) }.firstOrNull()
+            AuthorEntity.find { AuthorTable.name like authorName and (AuthorTable.library eq libraryId) }.firstOrNull()
         }
 
     override fun raw(
         id: UUID,
         libraryId: UUID,
     ) = transaction {
-        Author.find { TAuthors.id eq id and (TAuthors.library eq libraryId) }.firstOrNull()
+        AuthorEntity.find { AuthorTable.id eq id and (AuthorTable.library eq libraryId) }.firstOrNull()
             ?: throw ErrorResponse.notFound("Author", id)
     }
 
@@ -69,18 +69,18 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): List<AuthorModel> =
         transaction {
-            Author
-                .find { TAuthors.name like "%$query%" and (TAuthors.library eq libraryId) }
-                .orderBy(TAuthors.name.lowerCase() to SortOrder.ASC)
+            AuthorEntity
+                .find { AuthorTable.name like "%$query%" and (AuthorTable.library eq libraryId) }
+                .orderBy(AuthorTable.name.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
         }
 
     override fun search(query: String): List<AuthorModel> =
         transaction {
-            Author
-                .find { TAuthors.name like "%$query%" }
-                .orderBy(TAuthors.name.lowerCase() to SortOrder.ASC)
+            AuthorEntity
+                .find { AuthorTable.name like "%$query%" }
+                .orderBy(AuthorTable.name.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
         }
@@ -88,18 +88,18 @@ class AuthorServiceImpl :
     override fun getOrCreate(
         authorName: String,
         libraryId: UUID,
-    ): Author =
+    ): AuthorEntity =
         transaction {
-            Author.findOne { TAuthors.name like authorName and (TAuthors.library eq libraryId) }
+            AuthorEntity.findOne { AuthorTable.name like authorName and (AuthorTable.library eq libraryId) }
                 ?: create(authorName, libraryId)
         }
 
     override fun create(
         authorName: String,
         libraryId: UUID,
-    ): Author =
+    ): AuthorEntity =
         transaction {
-            Author.new { name = authorName }.also { it.library = libraryRepository.raw(libraryId) }
+            AuthorEntity.new { name = authorName }.also { it.library = libraryRepository.raw(libraryId) }
         }
 
     override fun autoMatch(
@@ -121,7 +121,7 @@ class AuthorServiceImpl :
                     bornIn = result?.bornIn ?: author.bornIn
                     birthDate = result?.birthDate ?: author.birthDate
                     deathDate = result?.deathDate ?: author.deathDate
-                    imageID = Image.getNewImage(result?.imageURL, currentImageID = imageID, default = imageID)
+                    imageID = ImageEntity.getNewImage(result?.imageURL, currentImageID = imageID, default = imageID)
                 }.toModel()
         }
 
@@ -132,9 +132,9 @@ class AuthorServiceImpl :
         offset: Long,
     ): List<AuthorModel> =
         transaction {
-            Author
-                .find { TAuthors.library eq libraryId }
-                .orderBy(TAuthors.name.lowerCase() to order)
+            AuthorEntity
+                .find { AuthorTable.library eq libraryId }
+                .orderBy(AuthorTable.name.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.toModel() }
@@ -149,8 +149,8 @@ class AuthorServiceImpl :
 
             DetailedAuthorModel.fromModel(
                 author = author.toModel(),
-                books = author.books.orderBy(TBooks.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
-                series = author.series.orderBy(TSeries.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
+                books = author.books.orderBy(BooksTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
+                series = author.series.orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
             )
         }
 
@@ -161,9 +161,9 @@ class AuthorServiceImpl :
         offset: Long,
     ): List<UUID> =
         transaction {
-            Author
-                .find { TAuthors.library eq libraryId }
-                .orderBy(TAuthors.name.lowerCase() to order)
+            AuthorEntity
+                .find { AuthorTable.library eq libraryId }
+                .orderBy(AuthorTable.name.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.id.value }
@@ -175,9 +175,9 @@ class AuthorServiceImpl :
         order: SortOrder,
     ): Long =
         transaction {
-            Author
-                .find { TAuthors.library eq libraryId }
-                .orderBy(TAuthors.name.lowerCase() to order)
+            AuthorEntity
+                .find { AuthorTable.library eq libraryId }
+                .orderBy(AuthorTable.name.lowerCase() to order)
                 .indexOfFirst { it.id.value == id }
                 .toLong()
         }
@@ -198,7 +198,7 @@ class AuthorServiceImpl :
                 bornIn = partial.bornIn ?: author.bornIn
                 birthDate = partial.birthDate ?: author.birthDate
                 deathDate = partial.deathDate ?: author.deathDate
-                imageID = Image.getNewImage(partial.image, currentImageID = imageID, default = imageID)
+                imageID = ImageEntity.getNewImage(partial.image, currentImageID = imageID, default = imageID)
             }.toModel()
     }
 
@@ -218,9 +218,10 @@ class AuthorServiceImpl :
                 bornIn = complete.bornIn
                 birthDate = complete.birthDate
                 deathDate = complete.deathDate
-                imageID = Image.getNewImage(complete.image, currentImageID = imageID, default = null)
+                imageID = ImageEntity.getNewImage(complete.image, currentImageID = imageID, default = null)
             }.toModel()
     }
 
-    override fun total(libraryId: UUID): Long = transaction { Author.find { TAuthors.library eq libraryId }.count() }
+    override fun total(libraryId: UUID): Long =
+        transaction { AuthorEntity.find { AuthorTable.library eq libraryId }.count() }
 }

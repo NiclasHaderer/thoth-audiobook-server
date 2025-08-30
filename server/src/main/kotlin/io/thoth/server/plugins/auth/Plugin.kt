@@ -13,11 +13,11 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.access.toExternalUser
-import io.thoth.server.database.tables.Library
-import io.thoth.server.database.tables.LibraryUserMappingEntity
-import io.thoth.server.database.tables.TLibraryUserMapping
-import io.thoth.server.database.tables.TUsers
-import io.thoth.server.database.tables.User
+import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.database.tables.LibraryUserEntity
+import io.thoth.server.database.tables.LibraryUserTable
+import io.thoth.server.database.tables.UserEntity
+import io.thoth.server.database.tables.UsersTable
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -57,16 +57,16 @@ fun Application.configureAuthentication() {
             }
         }
 
-        getUserByUsername { username -> User.findOne { TUsers.username eq username }?.toExternalUser() }
+        getUserByUsername { username -> UserEntity.findOne { UsersTable.username eq username }?.toExternalUser() }
 
         allowNewSignups { thothConfig.allowNewSignups }
 
-        getUserById { User.findById(it)?.toExternalUser() }
+        getUserById { UserEntity.findById(it)?.toExternalUser() }
 
-        isFirstUser { User.count() == 0L }
+        isFirstUser { UserEntity.count() == 0L }
 
         createUser { newUser ->
-            User
+            UserEntity
                 .new {
                     username = newUser.username
                     passwordHash = newUser.passwordHash
@@ -74,30 +74,30 @@ fun Application.configureAuthentication() {
                 }.toExternalUser()
         }
 
-        listAllUsers { User.all().map { it.toExternalUser() } }
+        listAllUsers { UserEntity.all().map { it.toExternalUser() } }
 
-        deleteUser { User.findById(it.id)?.delete() }
+        deleteUser { UserEntity.findById(it.id)?.delete() }
 
-        renameUser { user, newName -> User.findById(user.id)!!.also { it.username = newName }.toExternalUser() }
+        renameUser { user, newName -> UserEntity.findById(user.id)!!.also { it.username = newName }.toExternalUser() }
 
         updatePassword { user, newPassword ->
             transaction {
-                User.findById(user.id)!!.also { it.passwordHash = newPassword }.toExternalUser()
+                UserEntity.findById(user.id)!!.also { it.passwordHash = newPassword }.toExternalUser()
             }
         }
 
         updateUserPermissions { currentUser, permissions ->
             transaction {
-                if (!permissions.isAdmin && TUsers.selectAll().where { TUsers.admin eq true }.count() == 1L) {
+                if (!permissions.isAdmin && UsersTable.selectAll().where { UsersTable.admin eq true }.count() == 1L) {
                     throw ErrorResponse.userError("Cannot remove admin permissions from the only admin user.")
                 }
 
-                val dbUser = User.findById(currentUser.id)!!
+                val dbUser = UserEntity.findById(currentUser.id)!!
                 dbUser.admin = permissions.isAdmin
-                TLibraryUserMapping.deleteWhere { TLibraryUserMapping.user eq currentUser.id }
+                LibraryUserTable.deleteWhere { LibraryUserTable.user eq currentUser.id }
                 permissions.libraries.forEach { permission ->
-                    val library = Library.findById(permission.id)!!
-                    LibraryUserMappingEntity.new {
+                    val library = LibraryEntity.findById(permission.id)!!
+                    LibraryUserEntity.new {
                         this.user = dbUser
                         this.library = library
                         this.permissions = permission.permissions
@@ -107,7 +107,7 @@ fun Application.configureAuthentication() {
             }
         }
 
-        isAdminUser { user: ThothDatabaseUser -> transaction { User.findById(user.id)?.admin ?: false } }
+        isAdminUser { user: ThothDatabaseUser -> transaction { UserEntity.findById(user.id)?.admin ?: false } }
 
         getUserPermissions { user: ThothDatabaseUser -> thothPrincipal().permissions }
     }

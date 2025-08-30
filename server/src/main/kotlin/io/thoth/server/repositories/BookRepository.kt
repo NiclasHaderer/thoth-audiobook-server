@@ -10,15 +10,15 @@ import io.thoth.server.api.PartialBookApiModel
 import io.thoth.server.common.extensions.toSizedIterable
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.Author
-import io.thoth.server.database.tables.Book
-import io.thoth.server.database.tables.Image
-import io.thoth.server.database.tables.Series
-import io.thoth.server.database.tables.TAuthorBookMapping
-import io.thoth.server.database.tables.TAuthors
-import io.thoth.server.database.tables.TBooks
-import io.thoth.server.database.tables.TTracks
-import io.thoth.server.database.tables.Track
+import io.thoth.server.database.tables.AuthorBookTable
+import io.thoth.server.database.tables.AuthorEntity
+import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BookeEntity
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.ImageEntity
+import io.thoth.server.database.tables.SeriesEntity
+import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.TracksTable
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -31,26 +31,26 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
 
-interface BookRepository : Repository<Book, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
+interface BookRepository : Repository<BookeEntity, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
     fun findByName(
         bookTitle: String,
         authorIds: List<UUID>,
         libraryId: UUID,
-    ): Book?
+    ): BookeEntity?
 
     fun getOrCreate(
         bookName: String,
         libraryId: UUID,
-        authors: List<Author>,
-        series: List<Series>,
-    ): Book
+        authors: List<AuthorEntity>,
+        series: List<SeriesEntity>,
+    ): BookeEntity
 
     fun create(
         bookName: String,
         libraryId: UUID,
-        authors: List<Author>,
-        series: List<Series>,
-    ): Book
+        authors: List<AuthorEntity>,
+        series: List<SeriesEntity>,
+    ): BookeEntity
 }
 
 class BookRepositoryImpl :
@@ -61,7 +61,7 @@ class BookRepositoryImpl :
     private val libraryRepository by inject<LibraryRepository>()
     private val metadataProviders by inject<MetadataProviders>()
 
-    override fun total(libraryId: UUID) = transaction { Book.find { TBooks.library eq libraryId }.count() }
+    override fun total(libraryId: UUID) = transaction { BookeEntity.find { BooksTable.library eq libraryId }.count() }
 
     override fun getAll(
         libraryId: UUID,
@@ -70,9 +70,9 @@ class BookRepositoryImpl :
         offset: Long,
     ): List<BookModel> =
         transaction {
-            Book
-                .find { TBooks.library eq libraryId }
-                .orderBy(TBooks.title.lowerCase() to order)
+            BookeEntity
+                .find { BooksTable.library eq libraryId }
+                .orderBy(BooksTable.title.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.toModel() }
@@ -81,9 +81,9 @@ class BookRepositoryImpl :
     override fun raw(
         id: UUID,
         libraryId: UUID,
-    ): Book =
+    ): BookeEntity =
         transaction {
-            Book.find { TBooks.id eq id and (TBooks.library eq libraryId) }.firstOrNull()
+            BookeEntity.find { BooksTable.id eq id and (BooksTable.library eq libraryId) }.firstOrNull()
                 ?: throw ErrorResponse.notFound("Book", id)
         }
 
@@ -91,19 +91,19 @@ class BookRepositoryImpl :
         bookTitle: String,
         authorIds: List<UUID>,
         libraryId: UUID,
-    ): Book? =
+    ): BookeEntity? =
         transaction {
             val rawBook =
-                TBooks
-                    .join(TAuthorBookMapping, JoinType.INNER, TBooks.id, TAuthorBookMapping.book)
-                    .join(TAuthors, JoinType.INNER, TAuthorBookMapping.authors, TAuthors.id)
+                BooksTable
+                    .join(AuthorBookTable, JoinType.INNER, BooksTable.id, AuthorBookTable.book)
+                    .join(AuthorTable, JoinType.INNER, AuthorBookTable.authors, AuthorTable.id)
                     .selectAll()
                     .where {
-                        (TBooks.title like bookTitle) and
-                            (TAuthorBookMapping.authors inList authorIds) and
-                            (TBooks.library eq libraryId)
+                        (BooksTable.title like bookTitle) and
+                            (AuthorBookTable.authors inList authorIds) and
+                            (BooksTable.library eq libraryId)
                     }.firstOrNull() ?: return@transaction null
-            Book.wrap(rawBook[TBooks.id], rawBook)
+            BookeEntity.wrap(rawBook[BooksTable.id], rawBook)
         }
 
     override fun get(
@@ -113,10 +113,10 @@ class BookRepositoryImpl :
         transaction {
             val book = raw(id, libraryId)
             val tracks =
-                Track
-                    .find { TTracks.book eq id }
+                TrackEntity
+                    .find { TracksTable.book eq id }
                     .orderBy(
-                        TTracks.trackNr to SortOrder.ASC,
+                        TracksTable.trackNr to SortOrder.ASC,
                     ).map { it.toModel() }
             DetailedBookModel.fromModel(book.toModel(), tracks)
         }
@@ -128,10 +128,11 @@ class BookRepositoryImpl :
     ): Long =
         transaction {
             val book = get(id, libraryId)
-            TBooks
+            BooksTable
                 .selectAll()
-                .where { TBooks.title.lowerCase() less book.title.lowercase() and (TBooks.library eq libraryId) }
-                .orderBy(TBooks.title.lowerCase() to order)
+                .where {
+                    BooksTable.title.lowerCase() less book.title.lowercase() and (BooksTable.library eq libraryId)
+                }.orderBy(BooksTable.title.lowerCase() to order)
                 .count()
         }
 
@@ -142,13 +143,13 @@ class BookRepositoryImpl :
         offset: Long,
     ): List<UUID> =
         transaction {
-            TBooks
+            BooksTable
                 .selectAll()
-                .where { TBooks.library eq libraryId }
-                .orderBy(TBooks.title.lowerCase() to order)
+                .where { BooksTable.library eq libraryId }
+                .orderBy(BooksTable.title.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
-                .map { it[TBooks.id].value }
+                .map { it[BooksTable.id].value }
         }
 
     override fun search(
@@ -156,15 +157,15 @@ class BookRepositoryImpl :
         libraryId: UUID,
     ): List<BookModel> =
         transaction {
-            Book
-                .find { TBooks.title like "%$query%" and (TBooks.library eq libraryId) }
+            BookeEntity
+                .find { BooksTable.title like "%$query%" and (BooksTable.library eq libraryId) }
                 .limit(searchLimit)
                 .map { it.toModel() }
         }
 
     override fun search(query: String): List<BookModel> =
         transaction {
-            Book.find { TBooks.title like "%$query%" }.limit(searchLimit).map { it.toModel() }
+            BookeEntity.find { BooksTable.title like "%$query%" }.limit(searchLimit).map { it.toModel() }
         }
 
     override fun modify(
@@ -185,7 +186,7 @@ class BookRepositoryImpl :
                 description = partial.description ?: description
                 narrator = partial.narrator ?: narrator
                 isbn = partial.isbn ?: isbn
-                coverID = Image.getNewImage(partial.cover, currentImageID = coverID, default = coverID)
+                coverID = ImageEntity.getNewImage(partial.cover, currentImageID = coverID, default = coverID)
             }
             if (partial.authors != null) {
                 book.authors = partial.authors.map { authorRepository.raw(it, libraryId) }.toSizedIterable()
@@ -202,7 +203,7 @@ class BookRepositoryImpl :
         complete: BookApiModel,
     ): BookModel =
         transaction {
-            val book = Book.findById(id) ?: throw ErrorResponse.notFound("Book", id)
+            val book = BookeEntity.findById(id) ?: throw ErrorResponse.notFound("Book", id)
             if (book.library.id.value !=
                 libraryId
             ) {
@@ -219,11 +220,11 @@ class BookRepositoryImpl :
                 description = complete.description
                 narrator = complete.narrator
                 isbn = complete.isbn
-                coverID = Image.getNewImage(complete.cover, currentImageID = coverID, default = null)
+                coverID = ImageEntity.getNewImage(complete.cover, currentImageID = coverID, default = null)
                 authors = complete.authors.map { authorRepository.raw(it, libraryId) }.toSizedIterable()
                 series =
                     complete.series?.map { seriesRepository.raw(it, libraryId) }?.toSizedIterable()
-                        ?: emptyList<Series>().toSizedIterable()
+                        ?: emptyList<SeriesEntity>().toSizedIterable()
             }
             book.toModel()
         }
@@ -231,11 +232,11 @@ class BookRepositoryImpl :
     override fun create(
         bookName: String,
         libraryId: UUID,
-        authors: List<Author>,
-        series: List<Series>,
-    ): Book =
+        authors: List<AuthorEntity>,
+        series: List<SeriesEntity>,
+    ): BookeEntity =
         transaction {
-            Book
+            BookeEntity
                 .new {
                     title = bookName
                     this.authors = SizedCollection(authors)
@@ -246,9 +247,9 @@ class BookRepositoryImpl :
     override fun getOrCreate(
         bookName: String,
         libraryId: UUID,
-        authors: List<Author>,
-        series: List<Series>,
-    ): Book =
+        authors: List<AuthorEntity>,
+        series: List<SeriesEntity>,
+    ): BookeEntity =
         transaction {
             findByName(bookName, authors.map { it.id.value }, libraryId) ?: create(bookName, libraryId, authors, series)
         }

@@ -1,9 +1,9 @@
 package io.thoth.server.database.access
 
 import io.thoth.models.LibraryPermissionsModel
-import io.thoth.server.database.tables.LibraryUserMappingEntity
+import io.thoth.server.database.tables.LibraryUserEntity
 
-fun LibraryUserMappingEntity.toModel(): LibraryPermissionsModel =
+fun LibraryUserEntity.toModel(): LibraryPermissionsModel =
     LibraryPermissionsModel(
         id = library.id.value,
         permissions = permissions,

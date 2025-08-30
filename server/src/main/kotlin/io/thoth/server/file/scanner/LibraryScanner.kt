@@ -5,17 +5,17 @@ import io.thoth.server.common.extensions.findOne
 import io.thoth.server.database.access.hasBeenUpdated
 import io.thoth.server.database.access.markAsTouched
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.Author
-import io.thoth.server.database.tables.Book
-import io.thoth.server.database.tables.Library
-import io.thoth.server.database.tables.Series
-import io.thoth.server.database.tables.TAuthors
-import io.thoth.server.database.tables.TBooks
-import io.thoth.server.database.tables.TImages
-import io.thoth.server.database.tables.TLibraries
-import io.thoth.server.database.tables.TSeries
-import io.thoth.server.database.tables.TTracks
-import io.thoth.server.database.tables.Track
+import io.thoth.server.database.tables.AuthorEntity
+import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BookeEntity
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.ImageTable
+import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.database.tables.SeriesEntity
+import io.thoth.server.database.tables.SeriesTable
+import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.file.TrackManager
 import io.thoth.server.repositories.LibraryRepository
 import kotlinx.coroutines.runBlocking
@@ -99,7 +99,7 @@ class LibraryScannerImpl :
             return
         }
         fullScanIsOngoing.set(true)
-        val libraries = transaction { Library.find { TLibraries.id inList libraryIDs }.map { it.toModel() } }
+        val libraries = transaction { LibraryEntity.find { LibrariesTable.id inList libraryIDs }.map { it.toModel() } }
         libraries.forEach { library ->
             log.info { "Scanning library ${library.name}" }
             scanLibrary(library)
@@ -119,31 +119,32 @@ class LibraryScannerImpl :
     private fun cleanupLibrary(library: Library) =
         transaction {
             // Remove all tracks that have not been updated
-            Track.find { TTracks.scanIndex less library.scanIndex }.forEach { it.delete() }
+            TrackEntity.find { TracksTable.scanIndex less library.scanIndex }.forEach { it.delete() }
             // Find all books that have no tracks and remove them
-            Book.all().filter { it.tracks.empty() }.forEach { it.delete() }
+            BookeEntity.all().filter { it.tracks.empty() }.forEach { it.delete() }
             // Find all authors that have no books and remove them
-            Author.all().filter { it.books.empty() }.forEach { it.delete() }
+            AuthorEntity.all().filter { it.books.empty() }.forEach { it.delete() }
             // Find all series that have no books and remove them
-            Series.all().filter { it.books.empty() }.forEach { it.delete() }
+            SeriesEntity.all().filter { it.books.empty() }.forEach { it.delete() }
             // Remove images that are not used any more
 
             // Step 1: Find referenced image IDs
             val referencedImageIds =
                 (
-                    TBooks.select(TBooks.coverID).where { TBooks.coverID.isNotNull() } +
-                        TSeries.select(TSeries.coverID).where { TSeries.coverID.isNotNull() } +
-                        TAuthors.select(TAuthors.imageID).where { TAuthors.imageID.isNotNull() }
+                    BooksTable.select(BooksTable.coverID).where { BooksTable.coverID.isNotNull() } +
+                        SeriesTable.select(SeriesTable.coverID).where { SeriesTable.coverID.isNotNull() } +
+                        AuthorTable.select(AuthorTable.imageID).where { AuthorTable.imageID.isNotNull() }
                 ).mapNotNull {
-                    it.getOrNull(TBooks.coverID) ?: it.getOrNull(TSeries.coverID) ?: it.getOrNull(TAuthors.imageID)
+                    it.getOrNull(BooksTable.coverID) ?: it.getOrNull(SeriesTable.coverID)
+                        ?: it.getOrNull(AuthorTable.imageID)
                 }.distinct()
 
             // Step 2: Delete unused images
-            TImages.deleteWhere { TImages.id notInList referencedImageIds }
+            ImageTable.deleteWhere { ImageTable.id notInList referencedImageIds }
         }
 
     override fun scanLibrary(library: Library) {
-        val dbLib = transaction { Library[library.id] }
+        val dbLib = transaction { LibraryEntity[library.id] }
         scanLibrary(dbLib)
     }
 
@@ -191,7 +192,7 @@ class LibraryScannerImpl :
     }
 
     private fun shouldUpdate(path: Path): Boolean {
-        val dbTrack = transaction { Track.findOne { TTracks.path like path.absolutePathString() } }
+        val dbTrack = transaction { TrackEntity.findOne { TracksTable.path like path.absolutePathString() } }
         // If the track has already been imported and the access time has not changed skip
         if (dbTrack != null && !dbTrack.hasBeenUpdated(path.getLastModifiedTime().toMillis())) {
             // Mark as touched, so the tracks don't get removed

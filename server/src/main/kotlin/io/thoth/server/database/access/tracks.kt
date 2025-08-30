@@ -4,18 +4,18 @@ import io.thoth.models.NamedId
 import io.thoth.models.TitledId
 import io.thoth.models.TrackModel
 import io.thoth.server.common.extensions.findOne
-import io.thoth.server.database.tables.TTracks
-import io.thoth.server.database.tables.Track
+import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.TracksTable
 
-fun Track.Companion.getByPath(path: String): Track? = Track.findOne { TTracks.path like path }
+fun TrackEntity.Companion.getByPath(path: String): TrackEntity? = TrackEntity.findOne { TracksTable.path like path }
 
-fun Track.markAsTouched() {
+fun TrackEntity.markAsTouched() {
     scanIndex = library.scanIndex
 }
 
-fun Track.hasBeenUpdated(updateTime: Long) = this.accessTime >= updateTime
+fun TrackEntity.hasBeenUpdated(updateTime: Long) = this.accessTime >= updateTime
 
-fun Track.toModel() =
+fun TrackEntity.toModel() =
     TrackModel(
         id = id.value,
         title = title,

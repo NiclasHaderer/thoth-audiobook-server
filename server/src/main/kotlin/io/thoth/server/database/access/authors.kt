@@ -2,9 +2,9 @@ package io.thoth.server.database.access
 
 import io.thoth.models.AuthorModel
 import io.thoth.models.NamedId
-import io.thoth.server.database.tables.Author
+import io.thoth.server.database.tables.AuthorEntity
 
-fun Author.toModel(): AuthorModel =
+fun AuthorEntity.toModel(): AuthorModel =
     AuthorModel(
         id = id.value,
         name = name,

@@ -11,11 +11,11 @@ import io.thoth.server.common.extensions.add
 import io.thoth.server.common.extensions.toSizedIterable
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.access.toModel
-import io.thoth.server.database.tables.Author
-import io.thoth.server.database.tables.Image
-import io.thoth.server.database.tables.Series
-import io.thoth.server.database.tables.TBooks
-import io.thoth.server.database.tables.TSeries
+import io.thoth.server.database.tables.AuthorEntity
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.ImageEntity
+import io.thoth.server.database.tables.SeriesEntity
+import io.thoth.server.database.tables.SeriesTable
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -28,23 +28,23 @@ import org.koin.core.component.inject
 import java.util.UUID
 
 interface SeriesRepository :
-    Repository<Series, SeriesModel, DetailedSeriesModel, PartialSeriesApiModel, SeriesApiModel> {
+    Repository<SeriesEntity, SeriesModel, DetailedSeriesModel, PartialSeriesApiModel, SeriesApiModel> {
     fun findByName(
         seriesTitle: String,
         libraryId: UUID,
-    ): Series?
+    ): SeriesEntity?
 
     fun getOrCreate(
         seriesName: String,
         libraryId: UUID,
-        dbAuthor: List<Author>,
-    ): Series
+        dbAuthor: List<AuthorEntity>,
+    ): SeriesEntity
 
     fun create(
         seriesName: String,
         libraryId: UUID,
-        dbAuthor: List<Author>,
-    ): Series
+        dbAuthor: List<AuthorEntity>,
+    ): SeriesEntity
 }
 
 class SeriesRepositoryImpl :
@@ -62,16 +62,16 @@ class SeriesRepositoryImpl :
     override fun findByName(
         seriesTitle: String,
         libraryId: UUID,
-    ): Series? =
+    ): SeriesEntity? =
         transaction {
-            Series.find { TSeries.title eq seriesTitle and (TSeries.library eq libraryId) }.firstOrNull()
+            SeriesEntity.find { SeriesTable.title eq seriesTitle and (SeriesTable.library eq libraryId) }.firstOrNull()
         }
 
     override fun raw(
         id: UUID,
         libraryId: UUID,
-    ): Series =
-        Series.find { TSeries.id eq id and (TSeries.library eq libraryId) }.firstOrNull()
+    ): SeriesEntity =
+        SeriesEntity.find { SeriesTable.id eq id and (SeriesTable.library eq libraryId) }.firstOrNull()
             ?: throw ErrorResponse.notFound("Series", id)
 
     override fun get(
@@ -83,7 +83,7 @@ class SeriesRepositoryImpl :
 
             DetailedSeriesModel.fromModel(
                 series = series.toModel(),
-                books = series.books.orderBy(TBooks.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
+                books = series.books.orderBy(BooksTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
             )
         }
 
@@ -94,9 +94,9 @@ class SeriesRepositoryImpl :
         offset: Long,
     ): List<SeriesModel> =
         transaction {
-            Series
-                .find { TSeries.library eq libraryId }
-                .orderBy(TSeries.title.lowerCase() to order)
+            SeriesEntity
+                .find { SeriesTable.library eq libraryId }
+                .orderBy(SeriesTable.title.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.toModel() }
@@ -107,18 +107,18 @@ class SeriesRepositoryImpl :
         libraryId: UUID,
     ): List<SeriesModel> =
         transaction {
-            Series
-                .find { TSeries.title like "%$query%" and (TSeries.library eq libraryId) }
-                .orderBy(TSeries.title.lowerCase() to SortOrder.ASC)
+            SeriesEntity
+                .find { SeriesTable.title like "%$query%" and (SeriesTable.library eq libraryId) }
+                .orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
         }
 
     override fun search(query: String): List<SeriesModel> =
         transaction {
-            Series
-                .find { TSeries.title like "%$query%" }
-                .orderBy(TSeries.title.lowerCase() to SortOrder.ASC)
+            SeriesEntity
+                .find { SeriesTable.title like "%$query%" }
+                .orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
         }
@@ -126,8 +126,8 @@ class SeriesRepositoryImpl :
     override fun getOrCreate(
         seriesName: String,
         libraryId: UUID,
-        dbAuthor: List<Author>,
-    ): Series {
+        dbAuthor: List<AuthorEntity>,
+    ): SeriesEntity {
         val series = findByName(seriesName, libraryId)
         return if (series != null) {
             series.authors = series.authors.add(dbAuthor)
@@ -140,10 +140,10 @@ class SeriesRepositoryImpl :
     override fun create(
         seriesName: String,
         libraryId: UUID,
-        dbAuthor: List<Author>,
-    ): Series {
+        dbAuthor: List<AuthorEntity>,
+    ): SeriesEntity {
         log.info("Created series: $seriesName")
-        return Series.new {
+        return SeriesEntity.new {
             title = seriesName
             displayTitle = seriesName
             authors = SizedCollection(dbAuthor)
@@ -158,9 +158,9 @@ class SeriesRepositoryImpl :
         offset: Long,
     ): List<UUID> =
         transaction {
-            Series
-                .find { TSeries.library eq libraryId }
-                .orderBy(TSeries.title.lowerCase() to order)
+            SeriesEntity
+                .find { SeriesTable.library eq libraryId }
+                .orderBy(SeriesTable.title.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.id.value }
@@ -172,9 +172,9 @@ class SeriesRepositoryImpl :
         order: SortOrder,
     ): Long =
         transaction {
-            Series
-                .find { TSeries.library eq libraryId }
-                .orderBy(TSeries.title.lowerCase() to order)
+            SeriesEntity
+                .find { SeriesTable.library eq libraryId }
+                .orderBy(SeriesTable.title.lowerCase() to order)
                 .indexOfFirst { it.id.value == id }
                 .toLong()
         }
@@ -193,7 +193,7 @@ class SeriesRepositoryImpl :
                 providerID = partial.providerID ?: providerID
                 totalBooks = partial.totalBooks ?: totalBooks
                 primaryWorks = partial.primaryWorks ?: primaryWorks
-                coverID = Image.getNewImage(partial.cover, currentImageID = coverID, default = coverID)
+                coverID = ImageEntity.getNewImage(partial.cover, currentImageID = coverID, default = coverID)
                 description = partial.description ?: description
             }
 
@@ -222,7 +222,7 @@ class SeriesRepositoryImpl :
                 providerID = complete.providerID
                 totalBooks = complete.totalBooks
                 primaryWorks = complete.primaryWorks
-                coverID = Image.getNewImage(complete.cover, currentImageID = coverID, default = null)
+                coverID = ImageEntity.getNewImage(complete.cover, currentImageID = coverID, default = null)
                 description = complete.description
                 series.authors = complete.authors.map { authorRepository.raw(it, libraryId) }.toSizedIterable()
                 series.books = complete.books.map { bookRepository.raw(it, libraryId) }.toSizedIterable()
@@ -265,5 +265,8 @@ class SeriesRepositoryImpl :
             )
         }
 
-    override fun total(libraryId: UUID): Long = transaction { Series.find { TSeries.library eq libraryId }.count() }
+    override fun total(libraryId: UUID): Long =
+        transaction {
+            SeriesEntity.find { SeriesTable.library eq libraryId }.count()
+        }
 }

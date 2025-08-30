@@ -6,19 +6,19 @@ import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
 import java.util.UUID
 
-object TUsers : UUIDTable("Users") {
+object UsersTable : UUIDTable("Users") {
     val username = char("username", 256).uniqueIndex()
     val passwordHash = char("passwordHash", 512)
     val admin = bool("admin").default(false)
 }
 
-class User(
+class UserEntity(
     id: EntityID<UUID>,
 ) : UUIDEntity(id) {
-    companion object : UUIDEntityClass<User>(TUsers)
+    companion object : UUIDEntityClass<UserEntity>(UsersTable)
 
-    var username by TUsers.username
-    var passwordHash by TUsers.passwordHash
-    var admin by TUsers.admin
-    val permissions by LibraryUserMappingEntity referrersOn TLibraryUserMapping.user
+    var username by UsersTable.username
+    var passwordHash by UsersTable.passwordHash
+    var admin by UsersTable.admin
+    val permissions by LibraryUserEntity referrersOn LibraryUserTable.user
 }
