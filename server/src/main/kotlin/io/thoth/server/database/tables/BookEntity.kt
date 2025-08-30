@@ -1,6 +1,6 @@
 package io.thoth.server.database.tables
 
-import io.thoth.models.BookModel
+import io.thoth.models.Book
 import io.thoth.models.NamedId
 import io.thoth.models.TitledId
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -39,8 +39,8 @@ class BookEntity(
     fun toModel(
         authorOrder: SortOrder = SortOrder.ASC,
         seriesOrder: SortOrder = SortOrder.ASC,
-    ): BookModel =
-        BookModel(
+    ): Book =
+        Book(
             id = id.value,
             title = title,
             description = description,

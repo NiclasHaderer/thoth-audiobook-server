@@ -2,8 +2,7 @@ package io.thoth.models
 
 import java.util.UUID
 
-data class User(
+data class TitledId(
     val id: UUID,
-    val username: String,
-    val admin: Boolean,
+    val title: String,
 )

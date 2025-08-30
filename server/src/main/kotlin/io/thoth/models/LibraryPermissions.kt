@@ -2,7 +2,8 @@ package io.thoth.models
 
 import java.util.UUID
 
-data class NamedId(
+class LibraryPermissions(
     val id: UUID,
     val name: String,
+    val permissions: UpdatePermissions,
 )

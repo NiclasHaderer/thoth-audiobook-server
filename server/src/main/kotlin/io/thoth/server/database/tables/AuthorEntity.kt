@@ -1,6 +1,6 @@
 package io.thoth.server.database.tables
 
-import io.thoth.models.AuthorModel
+import io.thoth.models.Author
 import io.thoth.models.NamedId
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
@@ -30,8 +30,8 @@ class AuthorEntity(
     var series by SeriesEntity via SeriesAuthorTable
     var library by LibraryEntity referencedOn AuthorTable.library
 
-    fun toModel(): AuthorModel =
-        AuthorModel(
+    fun toModel(): Author =
+        Author(
             id = id.value,
             name = name,
             biography = biography,

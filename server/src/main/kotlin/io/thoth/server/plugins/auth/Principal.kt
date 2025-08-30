@@ -8,7 +8,7 @@ import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.models.LibraryPermissions
-import io.thoth.models.LibraryPermissionsModel
+import io.thoth.models.UpdatePermissions
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.tables.LibrariesTable
@@ -25,12 +25,12 @@ class ThothPrincipalImpl(
         get() =
             transaction {
                 val user = UserEntity.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
-                val permissions: List<LibraryPermissionsModel> =
+                val permissions: List<LibraryPermissions> =
                     if (user.admin) {
                         LibrariesTable.selectAll().map {
-                            LibraryPermissionsModel(
+                            LibraryPermissions(
                                 id = it[LibrariesTable.id].value,
-                                permissions = LibraryPermissions.READ_WRITE,
+                                permissions = UpdatePermissions.READ_WRITE,
                                 name = it[LibrariesTable.name],
                             )
                         }
@@ -76,7 +76,7 @@ fun RoutingContext.assertLibraryPermissions(vararg libraryIds: UUID) {
             (
                 principal.permissions.libraries.any { allowedLib ->
                     // If the user is not allowed to edit the library
-                    allowedLib.permissions == LibraryPermissions.READ_WRITE &&
+                    allowedLib.permissions == UpdatePermissions.READ_WRITE &&
                         // The used http method is not the readonlyMethods list
                         !readonlyMethods.contains(this.call.request.httpMethod)
                 }

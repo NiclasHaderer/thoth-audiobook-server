@@ -2,8 +2,8 @@ package io.thoth.server.repositories
 
 import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
-import io.thoth.models.AuthorModel
-import io.thoth.models.DetailedAuthorModel
+import io.thoth.models.Author
+import io.thoth.models.DetailedAuthor
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.AuthorApiModel
 import io.thoth.server.api.PartialAuthorApiModel
@@ -24,7 +24,7 @@ import org.koin.core.component.inject
 import java.util.UUID
 
 interface AuthorRepository :
-    Repository<AuthorEntity, AuthorModel, DetailedAuthorModel, PartialAuthorApiModel, AuthorApiModel> {
+    Repository<AuthorEntity, Author, DetailedAuthor, PartialAuthorApiModel, AuthorApiModel> {
     fun findByName(
         authorName: String,
         libraryId: UUID,
@@ -66,7 +66,7 @@ class AuthorServiceImpl :
     override fun search(
         query: String,
         libraryId: UUID,
-    ): List<AuthorModel> =
+    ): List<Author> =
         transaction {
             AuthorEntity
                 .find { AuthorTable.name like "%$query%" and (AuthorTable.library eq libraryId) }
@@ -75,7 +75,7 @@ class AuthorServiceImpl :
                 .map { it.toModel() }
         }
 
-    override fun search(query: String): List<AuthorModel> =
+    override fun search(query: String): List<Author> =
         transaction {
             AuthorEntity
                 .find { AuthorTable.name like "%$query%" }
@@ -104,7 +104,7 @@ class AuthorServiceImpl :
     override fun autoMatch(
         id: UUID,
         libraryId: UUID,
-    ): AuthorModel =
+    ): Author =
         transaction {
             val library = libraryRepository.raw(libraryId)
             val author = raw(id, libraryId)
@@ -129,7 +129,7 @@ class AuthorServiceImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
-    ): List<AuthorModel> =
+    ): List<Author> =
         transaction {
             AuthorEntity
                 .find { AuthorTable.library eq libraryId }
@@ -142,11 +142,11 @@ class AuthorServiceImpl :
     override fun get(
         id: UUID,
         libraryId: UUID,
-    ): DetailedAuthorModel =
+    ): DetailedAuthor =
         transaction {
             val author = raw(id, libraryId)
 
-            DetailedAuthorModel.fromModel(
+            DetailedAuthor.fromModel(
                 author = author.toModel(),
                 books = author.books.orderBy(BooksTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
                 series = author.series.orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },

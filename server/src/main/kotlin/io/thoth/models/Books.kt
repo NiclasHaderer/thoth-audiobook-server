@@ -3,7 +3,7 @@ package io.thoth.models
 import java.time.LocalDate
 import java.util.UUID
 
-open class BookModel(
+open class Book(
     val id: UUID,
     val authors: List<NamedId>,
     val series: List<TitledId>,
@@ -22,7 +22,7 @@ open class BookModel(
     val library: NamedId,
 )
 
-class DetailedBookModel(
+class DetailedBook(
     id: UUID,
     authors: List<NamedId>,
     series: List<TitledId>,
@@ -39,8 +39,8 @@ class DetailedBookModel(
     coverID: UUID?,
     genres: List<NamedId>,
     library: NamedId,
-    val tracks: List<TrackModel>,
-) : BookModel(
+    val tracks: List<Track>,
+) : Book(
         id = id,
         title = title,
         releaseDate = releaseDate,
@@ -60,9 +60,9 @@ class DetailedBookModel(
     ) {
     companion object {
         fun fromModel(
-            book: BookModel,
-            tracks: List<TrackModel>,
-        ): DetailedBookModel {
+            book: Book,
+            tracks: List<Track>,
+        ): DetailedBook {
             val sortedTracks =
                 if (tracks.any { it.trackNr == null }) {
                     tracks.sortedBy { it.path }
@@ -70,7 +70,7 @@ class DetailedBookModel(
                     tracks.sortedBy { it.trackNr }
                 }
 
-            return DetailedBookModel(
+            return DetailedBook(
                 id = book.id,
                 title = book.title,
                 releaseDate = book.releaseDate,
