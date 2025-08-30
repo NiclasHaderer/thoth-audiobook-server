@@ -26,7 +26,7 @@ import java.nio.file.Path
 
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
-    val keyPair = getOrCreateKeyPair(Path.of("${thothConfig.configDirectory}/jwt.pem"))
+    val keyPair = getOrCreateKeyPair(Path.of(thothConfig.jwtCertificate))
 
     install(ThothAuthenticationPlugin.build<UserPermissions, UpdateUserPermissions>()) {
         production = thothConfig.production

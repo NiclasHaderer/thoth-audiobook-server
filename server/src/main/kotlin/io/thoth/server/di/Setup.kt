@@ -1,10 +1,9 @@
 package io.thoth.server.di
 
-import io.thoth.metadata.MetadataAgentWrapper
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.audible.client.AudibleMetadataAgent
 import io.thoth.server.common.scheduling.Scheduler
-import io.thoth.server.config.loadPublicConfig
+import io.thoth.server.config.ThothConfig
 import io.thoth.server.di.serialization.JacksonSerialization
 import io.thoth.server.di.serialization.Serialization
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
@@ -27,15 +26,10 @@ import org.koin.logger.slf4jLogger
 
 fun setupDependencyInjection() =
     startKoin {
-        val config = loadPublicConfig()
         modules(
             module {
-                single { config }
-                single<MetadataAgents> {
-                    val allProviders = listOf(AudibleMetadataAgent())
-                    MetadataAgents(allProviders + MetadataAgentWrapper(allProviders))
-                }
-                single<MetadataAgentWrapper> { MetadataAgentWrapper(get<MetadataAgents>()) }
+                single { ThothConfig.load() }
+                single<MetadataAgents> { MetadataAgents(listOf(AudibleMetadataAgent())) }
                 single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
                 single<LibraryScanner> { LibraryScannerImpl() }
                 single<Serialization> { JacksonSerialization() }

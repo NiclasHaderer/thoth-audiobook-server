@@ -3,17 +3,13 @@
   "production": false,
   "allowNewSignups": true,
   "fullScanCron": "0 0 * * 1",
-  "metadataRefreshCron": "0 0 * * 1",
   "audioFileLocations": [
     "test-resources"
   ],
-  "analyzerThreads": 6,
   "port": 8080,
   "domain": "localhost",
   "TLS": false,
-  "audibleRegion": "us",
-  "configDirectory": "config-preset",
-  "preferEmbeddedMetadata": true,
+  "jwtCertificate": "config-preset/jwt.pem",
   "database": {
     "driverClassName": "org.sqlite.JDBC",
     "jdbcUrl": "jdbc:sqlite:thoth.db",

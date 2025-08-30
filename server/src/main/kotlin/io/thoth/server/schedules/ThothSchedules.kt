@@ -23,5 +23,4 @@ class ThothSchedules :
             },
         )
     val scanLibrary = event<LibraryEntity>("Scan library", callback = { libraryScanner.scanLibrary(it.data) })
-    val retrieveMetadata = schedule("Retrieve Metadata", config.metadataRefreshCron) { /*TODO*/ }
 }
