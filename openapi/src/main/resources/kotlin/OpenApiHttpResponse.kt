@@ -1,5 +1,3 @@
-package io.thoth.client.gen
-
 import io.ktor.client.call.HttpClientCall
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
