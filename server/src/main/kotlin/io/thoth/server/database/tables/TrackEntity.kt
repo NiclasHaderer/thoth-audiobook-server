@@ -19,8 +19,9 @@ class TrackEntity(
     var duration by TracksTable.duration
     var accessTime by TracksTable.accessTime
     var path by TracksTable.path
-    var book by BookEntity referencedOn TracksTable.book
     var scanIndex by TracksTable.scanIndex
+    var book by BookEntity referencedOn TracksTable.book
+    var library by LibraryEntity referencedOn TracksTable.library
 
     fun toModel() =
         TrackModel(

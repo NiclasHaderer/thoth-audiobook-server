@@ -19,7 +19,7 @@ class ThothSchedules :
             "Full scan",
             config.fullScanCron,
             callback = {
-                transaction { LibraryEntity.all() }.forEach { libraryScanner.scanLibrary(it) }
+                transaction { LibraryEntity.all().forEach { libraryScanner.scanLibrary(it) } }
             },
         )
     val scanLibrary = event<LibraryEntity>("Scan library", callback = { libraryScanner.scanLibrary(it.data) })

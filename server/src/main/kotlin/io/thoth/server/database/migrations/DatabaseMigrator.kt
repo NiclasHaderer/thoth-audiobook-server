@@ -18,7 +18,7 @@ private data class DatabaseVersion(
     fun migrate() {
         try {
             transaction {
-                log.info("Applying migration $this")
+                log.info("Applying migration ${this@DatabaseVersion}")
                 migration.migrate()
                 SchemaTrackerEntity.new {
                     date = System.currentTimeMillis() / 1000L
@@ -26,7 +26,7 @@ private data class DatabaseVersion(
                 }
             }
         } catch (e: Exception) {
-            log.error("Error while applying migration $this", e)
+            log.error("Error while applying migration ${this@DatabaseVersion}", e)
             throw e
         }
     }
@@ -47,7 +47,7 @@ class DatabaseMigrator {
                         return@map null
                     }
                 val version = versionMatch.groupValues[1].toInt()
-                val name = versionMatch.groupValues[1]
+                val name = versionMatch.groupValues[2]
                 DatabaseVersion(version, name, it.getDeclaredConstructor().newInstance())
             }.filterNotNull()
             .sortedBy { it.version }
@@ -59,7 +59,7 @@ class DatabaseMigrator {
                 .all()
                 .orderBy(SchemaTrackerTable.version to SortOrder.DESC)
                 .firstOrNull()
-                ?.version
+                ?.version ?: -1
         }
     }
 
@@ -68,12 +68,7 @@ class DatabaseMigrator {
         migrateTo(latestAppliedVersion)
     }
 
-    private fun migrateTo(latestDbVersion: Int?) {
-        if (latestDbVersion == null) {
-            log.info("No migrations found, applying all migrations")
-            return
-        }
-
+    private fun migrateTo(latestDbVersion: Int) {
         if (latestDbVersion > databaseVersions.last().version) {
             log.error("Database version is higher than the latest migration version")
             throw Exception("Your thoth version is older, than the newest database. Downgrading not supported")

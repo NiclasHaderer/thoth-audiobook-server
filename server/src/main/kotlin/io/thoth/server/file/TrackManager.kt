@@ -29,7 +29,7 @@ import kotlin.io.path.absolute
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.readAttributes
 
-class TrackManager : KoinComponent {
+object TrackManager : KoinComponent {
     private val bookRepository by inject<BookRepository>()
     private val seriesRepository by inject<SeriesRepository>()
     private val authorRepository by inject<AuthorRepository>()
@@ -90,6 +90,7 @@ class TrackManager : KoinComponent {
             book = dbBook
             trackNr = scan.trackNr
             scanIndex = libraryModel.scanIndex
+            library = libraryModel
         }
     }
 
