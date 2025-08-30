@@ -23,7 +23,7 @@ import io.thoth.auth.models.ThothRegisterUser
 import io.thoth.auth.models.ThothRenameUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.models.ThothUserWithPermissions
-import io.thoth.models.UpdatePermissionsModel
+import io.thoth.models.UpdateUserPermissions
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.get
@@ -40,7 +40,7 @@ fun Routing.authRoutes() {
 
     get<Api.Auth.Jwks, ThothJWKs>(withTransaction(RoutingContext::getJwks))
 
-    put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UpdatePermissionsModel>, ThothUser>(
+    put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UpdateUserPermissions>, ThothUser>(
         withTransaction(RoutingContext::modifyUserPermissions),
     )
 
