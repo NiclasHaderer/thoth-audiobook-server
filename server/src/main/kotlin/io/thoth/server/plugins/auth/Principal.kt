@@ -11,7 +11,6 @@ import io.thoth.models.LibraryPermissions
 import io.thoth.models.LibraryPermissionsModel
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.UserEntity
 import org.jetbrains.exposed.v1.jdbc.selectAll

@@ -7,13 +7,9 @@ import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.loadPublicConfig
 import io.thoth.server.di.serialization.JacksonSerialization
 import io.thoth.server.di.serialization.Serialization
-import io.thoth.server.file.TrackManager
-import io.thoth.server.file.TrackManagerImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.analyzer.impl.AudioFolderScanner
 import io.thoth.server.file.analyzer.impl.AudioTagScanner
-import io.thoth.server.file.scanner.FileTreeWatcher
-import io.thoth.server.file.scanner.FileTreeWatcherImpl
 import io.thoth.server.file.scanner.LibraryScanner
 import io.thoth.server.file.scanner.LibraryScannerImpl
 import io.thoth.server.repositories.AuthorRepository
@@ -40,7 +36,6 @@ fun setupDependencyInjection() =
                     MetadataProviders(allProviders + MetadataWrapper(allProviders))
                 }
                 single<MetadataWrapper> { MetadataWrapper(get<MetadataProviders>()) }
-                single<FileTreeWatcher> { FileTreeWatcherImpl() }
                 single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
                 single<LibraryScanner> { LibraryScannerImpl() }
                 single<Serialization> { JacksonSerialization() }
@@ -48,7 +43,6 @@ fun setupDependencyInjection() =
                 single<AuthorRepository> { AuthorServiceImpl() }
                 single<SeriesRepository> { SeriesRepositoryImpl() }
                 single<LibraryRepository> { LibraryRepositoryImpl() }
-                single<TrackManager> { TrackManagerImpl() }
                 single { Scheduler() }
                 single { ThothSchedules() }
             },

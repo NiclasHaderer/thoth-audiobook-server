@@ -1,6 +1,6 @@
 package io.thoth.server.database.migrations.history
 
-import io.thoth.server.database.migrations.migrator.Migration
+import io.thoth.server.database.migrations.Migration
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
@@ -18,7 +18,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
-class `01_Create_Tables` : Migration() {
+object `01_INITIAL_SETUP` : Migration() {
     private val tables =
         listOf(
             AuthorTable,
@@ -36,12 +36,7 @@ class `01_Create_Tables` : Migration() {
             LibraryUserTable,
         ).toTypedArray()
 
-    override fun migrate(db: Database) {
+    override fun migrate() {
         transaction { SchemaUtils.create(*tables) }
-    }
-
-    override fun generateRollbackStatements(db: Database): List<String> {
-        val tablesForDeletion = SchemaUtils.sortTablesByReferences(tables.toList()).reversed().filter { it in tables }
-        return tablesForDeletion.flatMap { it.dropStatement() }
     }
 }

@@ -10,7 +10,6 @@ import io.thoth.server.api.SeriesApiModel
 import io.thoth.server.common.extensions.add
 import io.thoth.server.common.extensions.toSizedIterable
 import io.thoth.server.database.access.getNewImage
-import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageEntity

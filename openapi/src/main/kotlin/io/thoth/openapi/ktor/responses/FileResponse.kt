@@ -2,7 +2,6 @@
 
 package io.thoth.openapi.ktor.responses
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respondFile
 import io.ktor.server.routing.RoutingContext
@@ -10,6 +9,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
+import kotlin.io.path.pathString
 
 class FileResponse(
     val path: Path,
@@ -18,7 +18,7 @@ class FileResponse(
 
     init {
         if (!path.exists() && path.isRegularFile()) {
-            throw ErrorResponse(HttpStatusCode.NotFound, "Could not find file $path")
+            throw ErrorResponse.notFound("file", path.pathString)
         }
     }
 

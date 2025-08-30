@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import io.thoth.models.LibraryPermissionsModel
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.CompositeEntity
@@ -13,4 +14,11 @@ class LibraryUserEntity(
     var permissions by LibraryUserTable.permissions
     var library by LibraryEntity referencedOn LibraryUserTable.library
     var user by UserEntity referencedOn LibraryUserTable.user
+
+    fun toModel(): LibraryPermissionsModel =
+        LibraryPermissionsModel(
+            id = library.id.value,
+            permissions = permissions,
+            name = library.name,
+        )
 }

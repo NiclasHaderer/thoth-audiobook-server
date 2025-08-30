@@ -13,6 +13,7 @@ object TracksTable : UUIDTable("Tracks") {
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
     val path = text("path").uniqueIndex()
     val book = reference("book", BooksTable)
+    val library = reference("library", LibrariesTable)
     val scanIndex = ulong("scanIndex")
     val trackNr = integer("trackNr").nullable()
 }
