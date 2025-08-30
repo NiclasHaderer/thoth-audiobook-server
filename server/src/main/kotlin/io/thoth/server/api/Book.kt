@@ -1,8 +1,8 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.Routing
-import io.thoth.models.BookModel
-import io.thoth.models.DetailedBookModel
+import io.thoth.models.Book
+import io.thoth.models.DetailedBook
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.TitledId
@@ -17,7 +17,7 @@ import java.util.UUID
 
 fun Routing.bookRouting() {
     val bookRepository by inject<BookRepository>()
-    get<Api.Libraries.Id.Books.All, PaginatedResponse<BookModel>> { route ->
+    get<Api.Libraries.Id.Books.All, PaginatedResponse<Book>> { route ->
         val books =
             bookRepository.getAll(
                 libraryId = route.libraryId,
@@ -47,7 +47,7 @@ fun Routing.bookRouting() {
         Position(sortIndex = sortOrder, id = route.id, order = Position.Order.ASC)
     }
 
-    get<Api.Libraries.Id.Books.Id, DetailedBookModel> { route ->
+    get<Api.Libraries.Id.Books.Id, DetailedBook> { route ->
         bookRepository.get(id = route.id, libraryId = route.libraryId)
     }
 
@@ -55,15 +55,15 @@ fun Routing.bookRouting() {
         bookRepository.search(route.q, route.libraryId).map { TitledId(it.id, it.title) }
     }
 
-    patch<Api.Libraries.Id.Books.Id, PartialBookApiModel, BookModel> { route, patch ->
+    patch<Api.Libraries.Id.Books.Id, PartialBookApiModel, Book> { route, patch ->
         bookRepository.modify(route.id, route.libraryId, patch)
     }
 
-    put<Api.Libraries.Id.Books.Id, BookApiModel, BookModel> { id, putBook ->
+    put<Api.Libraries.Id.Books.Id, BookApiModel, Book> { id, putBook ->
         bookRepository.replace(id.id, id.libraryId, putBook)
     }
 
-    post<Api.Libraries.Id.Books.Id.AutoMatch, Unit, BookModel> { id, _ ->
+    post<Api.Libraries.Id.Books.Id.AutoMatch, Unit, Book> { id, _ ->
         bookRepository.autoMatch(id.id, id.libraryId)
     }
 }

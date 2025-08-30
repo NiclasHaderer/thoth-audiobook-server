@@ -2,8 +2,8 @@ package io.thoth.server.repositories
 
 import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
-import io.thoth.models.BookModel
-import io.thoth.models.DetailedBookModel
+import io.thoth.models.Book
+import io.thoth.models.DetailedBook
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.BookApiModel
 import io.thoth.server.api.PartialBookApiModel
@@ -30,7 +30,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
 
-interface BookRepository : Repository<BookEntity, BookModel, DetailedBookModel, PartialBookApiModel, BookApiModel> {
+interface BookRepository : Repository<BookEntity, Book, DetailedBook, PartialBookApiModel, BookApiModel> {
     fun findByName(
         bookTitle: String,
         authorIds: List<UUID>,
@@ -67,7 +67,7 @@ class BookRepositoryImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
-    ): List<BookModel> =
+    ): List<Book> =
         transaction {
             BookEntity
                 .find { BooksTable.library eq libraryId }
@@ -108,7 +108,7 @@ class BookRepositoryImpl :
     override fun get(
         id: UUID,
         libraryId: UUID,
-    ): DetailedBookModel =
+    ): DetailedBook =
         transaction {
             val book = raw(id, libraryId)
             val tracks =
@@ -117,7 +117,7 @@ class BookRepositoryImpl :
                     .orderBy(
                         TracksTable.trackNr to SortOrder.ASC,
                     ).map { it.toModel() }
-            DetailedBookModel.fromModel(book.toModel(), tracks)
+            DetailedBook.fromModel(book.toModel(), tracks)
         }
 
     override fun position(
@@ -154,7 +154,7 @@ class BookRepositoryImpl :
     override fun search(
         query: String,
         libraryId: UUID,
-    ): List<BookModel> =
+    ): List<Book> =
         transaction {
             BookEntity
                 .find { BooksTable.title like "%$query%" and (BooksTable.library eq libraryId) }
@@ -162,7 +162,7 @@ class BookRepositoryImpl :
                 .map { it.toModel() }
         }
 
-    override fun search(query: String): List<BookModel> =
+    override fun search(query: String): List<Book> =
         transaction {
             BookEntity.find { BooksTable.title like "%$query%" }.limit(searchLimit).map { it.toModel() }
         }
@@ -171,7 +171,7 @@ class BookRepositoryImpl :
         id: UUID,
         libraryId: UUID,
         partial: PartialBookApiModel,
-    ): BookModel =
+    ): Book =
         transaction {
             val book = raw(id, libraryId)
             book.apply {
@@ -200,7 +200,7 @@ class BookRepositoryImpl :
         id: UUID,
         libraryId: UUID,
         complete: BookApiModel,
-    ): BookModel =
+    ): Book =
         transaction {
             val book = BookEntity.findById(id) ?: throw ErrorResponse.notFound("Book", id)
             if (book.library.id.value !=
@@ -256,7 +256,7 @@ class BookRepositoryImpl :
     override fun autoMatch(
         id: UUID,
         libraryId: UUID,
-    ): BookModel =
+    ): Book =
         transaction {
             val book = raw(id, libraryId)
             val library = libraryRepository.raw(libraryId)

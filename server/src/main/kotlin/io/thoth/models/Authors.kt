@@ -3,7 +3,7 @@ package io.thoth.models
 import java.time.LocalDate
 import java.util.UUID
 
-open class AuthorModel(
+open class Author(
     val id: UUID,
     val name: String,
     val provider: String?,
@@ -17,7 +17,7 @@ open class AuthorModel(
     val library: NamedId,
 )
 
-class DetailedAuthorModel(
+class DetailedAuthor(
     id: UUID,
     name: String,
     provider: String?,
@@ -29,9 +29,9 @@ class DetailedAuthorModel(
     birthDate: LocalDate?,
     deathDate: LocalDate?,
     library: NamedId,
-    val books: List<BookModel>,
-    val series: List<SeriesModel>,
-) : AuthorModel(
+    val books: List<Book>,
+    val series: List<Series>,
+) : Author(
         id = id,
         name = name,
         provider = provider,
@@ -46,10 +46,10 @@ class DetailedAuthorModel(
     ) {
     companion object {
         fun fromModel(
-            author: AuthorModel,
-            books: List<BookModel>,
-            series: List<SeriesModel>,
-        ) = DetailedAuthorModel(
+            author: Author,
+            books: List<Book>,
+            series: List<Series>,
+        ) = DetailedAuthor(
             id = author.id,
             name = author.name,
             biography = author.biography,

@@ -1,7 +1,7 @@
 package io.thoth.server.database.tables
 
 import io.thoth.auth.models.ThothDatabaseUser
-import io.thoth.models.UserModel
+import io.thoth.models.User
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
@@ -17,7 +17,7 @@ class UserEntity(
     var admin by UsersTable.admin
     val permissions by LibraryUserEntity referrersOn LibraryUserTable.user
 
-    fun toModel(): UserModel = UserModel(id = id.value, username = username, admin = admin)
+    fun toModel(): User = User(id = id.value, username = username, admin = admin)
 
     fun toExternalUser(): ThothDatabaseUser =
         ThothDatabaseUser(

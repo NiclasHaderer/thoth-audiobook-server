@@ -2,7 +2,7 @@ package io.thoth.models
 
 import java.util.UUID
 
-open class SeriesModel(
+open class Series(
     val id: UUID,
     val authors: List<NamedId>,
     val title: String,
@@ -21,7 +21,7 @@ data class YearRange(
     val end: Int,
 )
 
-class DetailedSeriesModel(
+class DetailedSeries(
     id: UUID,
     authors: List<NamedId>,
     title: String,
@@ -35,8 +35,8 @@ class DetailedSeriesModel(
     library: NamedId,
     val yearRange: YearRange?,
     val narrators: List<String>,
-    val books: List<BookModel>,
-) : SeriesModel(
+    val books: List<Book>,
+) : Series(
         id = id,
         title = title,
         authors = authors,
@@ -51,9 +51,9 @@ class DetailedSeriesModel(
     ) {
     companion object {
         fun fromModel(
-            series: SeriesModel,
-            books: List<BookModel>,
-        ): DetailedSeriesModel {
+            series: Series,
+            books: List<Book>,
+        ): DetailedSeries {
             val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
             val years = books.mapNotNull { it.releaseDate }
             val startDate = years.minOrNull()
@@ -64,7 +64,7 @@ class DetailedSeriesModel(
                 yearRange = YearRange(start = startDate.year, end = endDate.year)
             }
 
-            return DetailedSeriesModel(
+            return DetailedSeries(
                 id = series.id,
                 title = series.title,
                 totalBooks = series.totalBooks,

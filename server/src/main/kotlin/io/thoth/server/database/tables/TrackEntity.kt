@@ -2,7 +2,7 @@ package io.thoth.server.database.tables
 
 import io.thoth.models.NamedId
 import io.thoth.models.TitledId
-import io.thoth.models.TrackModel
+import io.thoth.models.Track
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UUIDEntity
 import org.jetbrains.exposed.v1.dao.UUIDEntityClass
@@ -24,7 +24,7 @@ class TrackEntity(
     var library by LibraryEntity referencedOn TracksTable.library
 
     fun toModel() =
-        TrackModel(
+        Track(
             id = id.value,
             title = title,
             path = path,

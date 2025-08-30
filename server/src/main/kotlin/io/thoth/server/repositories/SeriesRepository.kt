@@ -2,8 +2,8 @@ package io.thoth.server.repositories
 
 import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
-import io.thoth.models.DetailedSeriesModel
-import io.thoth.models.SeriesModel
+import io.thoth.models.DetailedSeries
+import io.thoth.models.Series
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.PartialSeriesApiModel
 import io.thoth.server.api.SeriesApiModel
@@ -27,7 +27,7 @@ import org.koin.core.component.inject
 import java.util.UUID
 
 interface SeriesRepository :
-    Repository<SeriesEntity, SeriesModel, DetailedSeriesModel, PartialSeriesApiModel, SeriesApiModel> {
+    Repository<SeriesEntity, Series, DetailedSeries, PartialSeriesApiModel, SeriesApiModel> {
     fun findByName(
         seriesTitle: String,
         libraryId: UUID,
@@ -76,11 +76,11 @@ class SeriesRepositoryImpl :
     override fun get(
         id: UUID,
         libraryId: UUID,
-    ): DetailedSeriesModel =
+    ): DetailedSeries =
         transaction {
             val series = raw(id = id, libraryId = libraryId)
 
-            DetailedSeriesModel.fromModel(
+            DetailedSeries.fromModel(
                 series = series.toModel(),
                 books = series.books.orderBy(BooksTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
             )
@@ -91,7 +91,7 @@ class SeriesRepositoryImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
-    ): List<SeriesModel> =
+    ): List<Series> =
         transaction {
             SeriesEntity
                 .find { SeriesTable.library eq libraryId }
@@ -104,7 +104,7 @@ class SeriesRepositoryImpl :
     override fun search(
         query: String,
         libraryId: UUID,
-    ): List<SeriesModel> =
+    ): List<Series> =
         transaction {
             SeriesEntity
                 .find { SeriesTable.title like "%$query%" and (SeriesTable.library eq libraryId) }
@@ -113,7 +113,7 @@ class SeriesRepositoryImpl :
                 .map { it.toModel() }
         }
 
-    override fun search(query: String): List<SeriesModel> =
+    override fun search(query: String): List<Series> =
         transaction {
             SeriesEntity
                 .find { SeriesTable.title like "%$query%" }
@@ -182,7 +182,7 @@ class SeriesRepositoryImpl :
         id: UUID,
         libraryId: UUID,
         partial: PartialSeriesApiModel,
-    ): SeriesModel =
+    ): Series =
         transaction {
             val series = raw(id, libraryId)
 
@@ -211,7 +211,7 @@ class SeriesRepositoryImpl :
         id: UUID,
         libraryId: UUID,
         complete: SeriesApiModel,
-    ): SeriesModel =
+    ): Series =
         transaction {
             val series = raw(id, libraryId)
 
@@ -232,7 +232,7 @@ class SeriesRepositoryImpl :
     override fun autoMatch(
         id: UUID,
         libraryId: UUID,
-    ): SeriesModel =
+    ): Series =
         transaction {
             val series = raw(id, libraryId)
             val library = libraryRepository.raw(libraryId)

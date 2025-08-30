@@ -1,8 +1,8 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.Routing
-import io.thoth.models.AuthorModel
-import io.thoth.models.DetailedAuthorModel
+import io.thoth.models.Author
+import io.thoth.models.DetailedAuthor
 import io.thoth.models.NamedId
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
@@ -16,7 +16,7 @@ import java.util.UUID
 fun Routing.authorRouting() {
     val authorService by inject<AuthorRepository>()
 
-    get<Api.Libraries.Id.Authors.All, PaginatedResponse<AuthorModel>> {
+    get<Api.Libraries.Id.Authors.All, PaginatedResponse<Author>> {
         PaginatedResponse(
             items = authorService.getAll(it.libraryId, it.order.toSortOrder(), it.limit, it.offset),
             limit = it.limit,
@@ -36,17 +36,17 @@ fun Routing.authorRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Authors.Id, DetailedAuthorModel> { authorService.get(it.id, it.libraryId) }
+    get<Api.Libraries.Id.Authors.Id, DetailedAuthor> { authorService.get(it.id, it.libraryId) }
 
     get<Api.Libraries.Id.Authors.Autocomplete, List<NamedId>> {
         authorService.search(it.q, it.libraryId).map { NamedId(it.id, it.name) }
     }
 
-    patch<Api.Libraries.Id.Authors.Id, PartialAuthorApiModel, AuthorModel> { id, patchAuthor ->
+    patch<Api.Libraries.Id.Authors.Id, PartialAuthorApiModel, Author> { id, patchAuthor ->
         authorService.modify(id.id, id.libraryId, patchAuthor)
     }
 
-    put<Api.Libraries.Id.Authors.Id, AuthorApiModel, AuthorModel> { id, patchAuthor ->
+    put<Api.Libraries.Id.Authors.Id, AuthorApiModel, Author> { id, patchAuthor ->
         authorService.replace(id.id, id.libraryId, patchAuthor)
     }
 }

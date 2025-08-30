@@ -3,7 +3,7 @@ package io.thoth.models
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class TrackModel(
+data class Track(
     val id: UUID,
     val title: String,
     val trackNr: Int?,

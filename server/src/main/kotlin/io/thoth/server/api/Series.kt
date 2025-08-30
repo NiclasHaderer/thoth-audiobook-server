@@ -1,10 +1,10 @@
 package io.thoth.server.api
 
 import io.ktor.server.routing.Routing
-import io.thoth.models.DetailedSeriesModel
+import io.thoth.models.DetailedSeries
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
-import io.thoth.models.SeriesModel
+import io.thoth.models.Series
 import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
@@ -16,7 +16,7 @@ import java.util.UUID
 
 fun Routing.seriesRouting() {
     val seriesRepository by inject<SeriesRepository>()
-    get<Api.Libraries.Id.Series.All, PaginatedResponse<SeriesModel>> {
+    get<Api.Libraries.Id.Series.All, PaginatedResponse<Series>> {
         PaginatedResponse(
             seriesRepository.getAll(
                 libraryId = it.libraryId,
@@ -47,7 +47,7 @@ fun Routing.seriesRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Series.Id, DetailedSeriesModel> { seriesRepository.get(id = it.id, libraryId = it.libraryId) }
+    get<Api.Libraries.Id.Series.Id, DetailedSeries> { seriesRepository.get(id = it.id, libraryId = it.libraryId) }
 
     get<Api.Libraries.Id.Series.Autocomplete, List<TitledId>> {
         seriesRepository
@@ -55,11 +55,11 @@ fun Routing.seriesRouting() {
             .map { series -> TitledId(id = series.id, title = series.title) }
     }
 
-    patch<Api.Libraries.Id.Series.Id, PartialSeriesApiModel, SeriesModel> { id, patchSeries ->
+    patch<Api.Libraries.Id.Series.Id, PartialSeriesApiModel, Series> { id, patchSeries ->
         seriesRepository.modify(id = id.id, libraryId = id.libraryId, partial = patchSeries)
     }
 
-    put<Api.Libraries.Id.Series.Id, SeriesApiModel, SeriesModel> { id, putSeries ->
+    put<Api.Libraries.Id.Series.Id, SeriesApiModel, Series> { id, putSeries ->
         seriesRepository.replace(id = id.id, libraryId = id.libraryId, complete = putSeries)
     }
 }

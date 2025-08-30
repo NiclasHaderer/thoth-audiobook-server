@@ -1,7 +1,7 @@
 package io.thoth.server.database.tables
 
 import io.thoth.models.NamedId
-import io.thoth.models.SeriesModel
+import io.thoth.models.Series
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.lowerCase
@@ -31,8 +31,8 @@ class SeriesEntity(
     var genres by GenreEntity via GenreSeriesTable
     var library by LibraryEntity referencedOn SeriesTable.library
 
-    fun toModel(authorOrder: SortOrder = SortOrder.ASC): SeriesModel =
-        SeriesModel(
+    fun toModel(authorOrder: SortOrder = SortOrder.ASC): Series =
+        Series(
             id = id.value,
             title = title,
             description = description,
