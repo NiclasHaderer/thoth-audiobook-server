@@ -13,7 +13,7 @@ class LibraryPermissionsModel(
     val permissions: LibraryPermissions,
 )
 
-class UserPermissionsModel(
+class UserPermissions(
     val isAdmin: Boolean,
     val libraries: List<LibraryPermissionsModel>,
 )

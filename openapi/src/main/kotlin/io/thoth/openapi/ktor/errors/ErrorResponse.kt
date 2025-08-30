@@ -3,7 +3,7 @@ package io.thoth.openapi.ktor.errors
 import io.ktor.http.HttpStatusCode
 import java.util.UUID
 
-class ErrorResponse(
+class ErrorResponse private constructor(
     val status: HttpStatusCode,
     val error: String,
     val details: Any? = null,

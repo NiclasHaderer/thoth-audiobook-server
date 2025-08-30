@@ -1,9 +1,9 @@
 package io.thoth.server.repositories
 
-import io.thoth.models.LibraryModel
+import io.thoth.models.Library
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.api.LibraryApiModel
-import io.thoth.server.api.PartialLibraryApiModel
+import io.thoth.server.api.PartialUpdateLibrary
+import io.thoth.server.api.UpdateLibrary
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.database.access.toModel
 import io.thoth.server.database.tables.Library
@@ -26,21 +26,21 @@ interface LibraryRepository {
 
     fun rescan(id: UUID)
 
-    fun get(id: UUID): LibraryModel
+    fun get(id: UUID): Library
 
-    fun getAll(): List<LibraryModel>
+    fun getAll(): List<Library>
 
     fun modify(
         id: UUID,
-        partial: PartialLibraryApiModel,
-    ): LibraryModel
+        partial: PartialUpdateLibrary,
+    ): Library
 
-    fun create(complete: LibraryApiModel): LibraryModel
+    fun create(complete: UpdateLibrary): Library
 
     fun replace(
         id: UUID,
-        complete: LibraryApiModel,
-    ): LibraryModel
+        complete: UpdateLibrary,
+    ): Library
 
     fun overlappingFolders(
         id: UUID?,
@@ -71,14 +71,14 @@ class LibraryRepositoryImpl :
         runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
     }
 
-    override fun get(id: UUID): LibraryModel = transaction { raw(id).toModel() }
+    override fun get(id: UUID): Library = transaction { raw(id).toModel() }
 
-    override fun getAll(): List<LibraryModel> = transaction { Library.all().map { it.toModel() } }
+    override fun getAll(): List<Library> = transaction { Library.all().map { it.toModel() } }
 
     override fun modify(
         id: UUID,
-        partial: PartialLibraryApiModel,
-    ): LibraryModel =
+        partial: PartialUpdateLibrary,
+    ): Library =
         transaction {
             if (partial.folders != null) {
                 raiseForOverlaps(id, partial.folders)
@@ -101,7 +101,7 @@ class LibraryRepositoryImpl :
             }
         }.toModel()
 
-    override fun create(complete: LibraryApiModel): LibraryModel =
+    override fun create(complete: UpdateLibrary): Library =
         transaction {
             raiseForOverlaps(null, complete.folders)
             Library.new {
@@ -120,8 +120,8 @@ class LibraryRepositoryImpl :
 
     override fun replace(
         id: UUID,
-        complete: LibraryApiModel,
-    ): LibraryModel =
+        complete: UpdateLibrary,
+    ): Library =
         transaction {
             raiseForOverlaps(id, complete.folders)
 

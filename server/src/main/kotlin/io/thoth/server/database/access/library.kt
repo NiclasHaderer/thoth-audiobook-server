@@ -1,10 +1,10 @@
 package io.thoth.server.database.access
 
-import io.thoth.models.LibraryModel
+import io.thoth.models.Library
 import io.thoth.server.database.tables.Library
 
-fun Library.toModel(): LibraryModel =
-    LibraryModel(
+fun Library.toModel(): Library =
+    Library(
         id = id.value,
         name = name,
         icon = icon,

@@ -4,13 +4,13 @@ import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.JWK
-import io.thoth.auth.models.JWKs
+import io.thoth.auth.models.ThothJWKs
 import io.thoth.auth.thothAuthConfig
 import java.security.interfaces.RSAPublicKey
 
 interface ThothJwksParams
 
-fun RoutingContext.getJwks(params: ThothJwksParams): JWKs {
+fun RoutingContext.getJwks(params: ThothJwksParams): ThothJWKs {
     val config = thothAuthConfig<Any, Any>()
     val keyPairs = config.keyPairs
 
@@ -32,5 +32,5 @@ fun RoutingContext.getJwks(params: ThothJwksParams): JWKs {
                 )
             }
 
-    return JWKs(keys = jwks)
+    return ThothJWKs(keys = jwks)
 }

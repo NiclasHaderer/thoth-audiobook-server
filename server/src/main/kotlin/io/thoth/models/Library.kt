@@ -10,7 +10,7 @@ data class FileScanner(
     var name: String,
 )
 
-data class LibraryModel(
+data class Library(
     val id: UUID,
     val name: String,
     val icon: String?,

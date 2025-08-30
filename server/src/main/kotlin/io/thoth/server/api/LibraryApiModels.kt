@@ -6,7 +6,7 @@ import io.thoth.models.MetadataAgent
 import io.thoth.openapi.ktor.ValidateObject
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
-data class LibraryApiModel(
+data class UpdateLibrary(
     val name: String,
     val icon: String?,
     val folders: List<String>,
@@ -30,7 +30,7 @@ data class LibraryApiModel(
     }
 }
 
-data class PartialLibraryApiModel(
+data class PartialUpdateLibrary(
     val name: String?,
     val icon: String?,
     val folders: List<String>?,
