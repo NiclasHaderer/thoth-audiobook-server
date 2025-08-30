@@ -3,7 +3,7 @@ package io.thoth.models
 import java.time.LocalDate
 import java.util.UUID
 
-class DetailedBook(
+class BookDetailed(
     id: UUID,
     authors: List<NamedId>,
     series: List<TitledId>,
@@ -43,7 +43,7 @@ class DetailedBook(
         fun fromModel(
             book: Book,
             tracks: List<Track>,
-        ): DetailedBook {
+        ): BookDetailed {
             val sortedTracks =
                 if (tracks.any { it.trackNr == null }) {
                     tracks.sortedBy { it.path }
@@ -51,7 +51,7 @@ class DetailedBook(
                     tracks.sortedBy { it.trackNr }
                 }
 
-            return DetailedBook(
+            return BookDetailed(
                 id = book.id,
                 title = book.title,
                 releaseDate = book.releaseDate,

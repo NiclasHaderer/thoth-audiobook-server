@@ -2,7 +2,7 @@ package io.thoth.server.api
 
 import io.ktor.server.routing.Routing
 import io.thoth.models.Author
-import io.thoth.models.DetailedAuthor
+import io.thoth.models.AuthorDetailed
 import io.thoth.models.NamedId
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
@@ -36,7 +36,7 @@ fun Routing.authorRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Authors.Id, DetailedAuthor> { authorService.get(it.id, it.libraryId) }
+    get<Api.Libraries.Id.Authors.Id, AuthorDetailed> { authorService.get(it.id, it.libraryId) }
 
     get<Api.Libraries.Id.Authors.Autocomplete, List<NamedId>> {
         authorService.search(it.q, it.libraryId).map { NamedId(it.id, it.name) }

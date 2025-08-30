@@ -3,7 +3,7 @@ package io.thoth.server.repositories
 import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
 import io.thoth.models.Author
-import io.thoth.models.DetailedAuthor
+import io.thoth.models.AuthorDetailed
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.AuthorApiModel
 import io.thoth.server.api.PartialAuthorApiModel
@@ -24,7 +24,7 @@ import org.koin.core.component.inject
 import java.util.UUID
 
 interface AuthorRepository :
-    Repository<AuthorEntity, Author, DetailedAuthor, PartialAuthorApiModel, AuthorApiModel> {
+    Repository<AuthorEntity, Author, AuthorDetailed, PartialAuthorApiModel, AuthorApiModel> {
     fun findByName(
         authorName: String,
         libraryId: UUID,
@@ -142,11 +142,11 @@ class AuthorServiceImpl :
     override fun get(
         id: UUID,
         libraryId: UUID,
-    ): DetailedAuthor =
+    ): AuthorDetailed =
         transaction {
             val author = raw(id, libraryId)
 
-            DetailedAuthor.fromModel(
+            AuthorDetailed.fromModel(
                 author = author.toModel(),
                 books = author.books.orderBy(BooksTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
                 series = author.series.orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },

@@ -2,8 +2,8 @@ package io.thoth.server.repositories
 
 import io.thoth.metadata.MetadataProviders
 import io.thoth.metadata.MetadataWrapper
-import io.thoth.models.DetailedSeries
 import io.thoth.models.Series
+import io.thoth.models.SeriesDetailed
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.PartialSeriesApiModel
 import io.thoth.server.api.SeriesApiModel
@@ -27,7 +27,7 @@ import org.koin.core.component.inject
 import java.util.UUID
 
 interface SeriesRepository :
-    Repository<SeriesEntity, Series, DetailedSeries, PartialSeriesApiModel, SeriesApiModel> {
+    Repository<SeriesEntity, Series, SeriesDetailed, PartialSeriesApiModel, SeriesApiModel> {
     fun findByName(
         seriesTitle: String,
         libraryId: UUID,
@@ -76,11 +76,11 @@ class SeriesRepositoryImpl :
     override fun get(
         id: UUID,
         libraryId: UUID,
-    ): DetailedSeries =
+    ): SeriesDetailed =
         transaction {
             val series = raw(id = id, libraryId = libraryId)
 
-            DetailedSeries.fromModel(
+            SeriesDetailed.fromModel(
                 series = series.toModel(),
                 books = series.books.orderBy(BooksTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
             )
