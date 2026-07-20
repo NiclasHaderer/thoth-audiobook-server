@@ -1,10 +1,10 @@
 package io.thoth.server.database.migrations
 
-import mu.KotlinLogging.logger
+import io.github.classgraph.ClassGraph
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.reflections.Reflections
 
 private data class DatabaseVersion(
     val version: Int,
@@ -18,7 +18,7 @@ private data class DatabaseVersion(
     fun migrate() {
         try {
             transaction {
-                log.info("Applying migration ${this@DatabaseVersion}")
+                log.info { "Applying migration ${this@DatabaseVersion}" }
                 migration.migrate()
                 SchemaTrackerEntity.new {
                     date = System.currentTimeMillis() / 1000L
@@ -26,7 +26,7 @@ private data class DatabaseVersion(
                 }
             }
         } catch (e: Exception) {
-            log.error("Error while applying migration ${this@DatabaseVersion}", e)
+            log.error(e) { "Error while applying migration ${this@DatabaseVersion}" }
             throw e
         }
     }
@@ -38,8 +38,9 @@ class DatabaseMigrator {
     private val packageName: String = "io.thoth.server.database.migrations.history"
 
     private val databaseVersions: List<DatabaseVersion> by lazy {
-        Reflections(packageName)
-            .getSubTypesOf(Migration::class.java)
+        ClassGraph().acceptPackages(packageName).enableClassInfo().scan().use { scan ->
+            scan.getSubclasses(Migration::class.java).loadClasses(Migration::class.java)
+        }
             .map {
                 val versionMatch =
                     classNameMatcher.find(it.simpleName) ?: run {
@@ -70,12 +71,12 @@ class DatabaseMigrator {
 
     private fun migrateTo(latestDbVersion: Int) {
         if (latestDbVersion > databaseVersions.last().version) {
-            log.error("Database version is higher than the latest migration version")
+            log.error { "Database version is higher than the latest migration version" }
             throw Exception("Your thoth version is older, than the newest database. Downgrading not supported")
         }
 
         if (latestDbVersion == databaseVersions.last().version) {
-            log.info("Database is up to date")
+            log.info { "Database is up to date" }
             return
         }
 

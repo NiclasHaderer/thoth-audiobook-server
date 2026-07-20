@@ -3,7 +3,7 @@ package io.thoth.openapi.client.kotlin
 import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.client.common.mappedKtReference
 import io.thoth.openapi.ktor.OpenApiRoute
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 
 class KtClientFunction(
     private val getRouteName: (OpenApiRoute) -> String?,
@@ -62,7 +62,7 @@ class KtClientFunction(
     private fun generateContent(impl: Boolean): String? {
         val routeName = getRouteName(route)
         if (routeName == null) {
-            log.warn("Route ${route.method}:${route.fullPath} has no summary")
+            log.warn { "Route ${route.method}:${route.fullPath} has no summary" }
             return null
         }
 

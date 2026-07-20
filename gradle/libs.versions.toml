@@ -1,0 +1,129 @@
+[versions]
+kotlin = "2.4.10"
+ktor = "3.5.1"
+kotlinxSerialization = "1.11.0"
+arrow = "2.2.3"
+exposed = "1.3.1"
+sqlite = "3.53.2.0"
+hikari = "7.1.0"
+hoplite = "2.9.0"
+koin = "4.2.2"
+springSecurity = "7.1.0"
+jwt = "4.6.0"
+jwk = "0.24.1"
+joseJwt = "10.9.1"
+bouncycastle = "1.85"
+openApi = "2.2.52"
+swaggerUi = "5.32.8"
+jsoup = "1.22.2"
+json = "20260719"
+caffeine = "3.2.4"
+classgraph = "4.8.184"
+jaudiotagger = "v3.0.1"
+fileWatcher = "0.19.1"
+fuzzyWuzzy = "1.4.0"
+cronUtils = "9.2.1"
+kotlinLogging = "8.0.4"
+logback = "1.5.38"
+slf4j = "2.0.18"
+shadow = "8.3.11"
+
+[libraries]
+# Kotlin
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+# Ktor - server
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-core-jvm = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
+ktor-server-resources = { module = "io.ktor:ktor-server-resources", version.ref = "ktor" }
+ktor-server-data-conversion = { module = "io.ktor:ktor-server-data-conversion", version.ref = "ktor" }
+ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
+ktor-server-auth-jvm = { module = "io.ktor:ktor-server-auth-jvm", version.ref = "ktor" }
+ktor-server-auth-jwt = { module = "io.ktor:ktor-server-auth-jwt", version.ref = "ktor" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
+ktor-server-partial-content = { module = "io.ktor:ktor-server-partial-content", version.ref = "ktor" }
+ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-content-negotiation-jvm = { module = "io.ktor:ktor-server-content-negotiation-jvm", version.ref = "ktor" }
+ktor-server-sessions-jvm = { module = "io.ktor:ktor-server-sessions-jvm", version.ref = "ktor" }
+ktor-server-host-common-jvm = { module = "io.ktor:ktor-server-host-common-jvm", version.ref = "ktor" }
+ktor-server-websockets-jvm = { module = "io.ktor:ktor-server-websockets-jvm", version.ref = "ktor" }
+ktor-server-netty-jvm = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+
+# Ktor - client
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-core-jvm = { module = "io.ktor:ktor-client-core-jvm", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-cio-jvm = { module = "io.ktor:ktor-client-cio-jvm", version.ref = "ktor" }
+
+# Ktor - serialization
+ktor-serialization-jackson = { module = "io.ktor:ktor-serialization-jackson", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+# Arrow
+arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
+
+# Exposed
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
+exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
+
+# Database drivers / pooling
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+
+# Config (Hoplite)
+hoplite-core = { module = "com.sksamuel.hoplite:hoplite-core", version.ref = "hoplite" }
+hoplite-json = { module = "com.sksamuel.hoplite:hoplite-json", version.ref = "hoplite" }
+hoplite-yaml = { module = "com.sksamuel.hoplite:hoplite-yaml", version.ref = "hoplite" }
+hoplite-toml = { module = "com.sksamuel.hoplite:hoplite-toml", version.ref = "hoplite" }
+hoplite-hocon = { module = "com.sksamuel.hoplite:hoplite-hocon", version.ref = "hoplite" }
+
+# Dependency injection (Koin)
+koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
+koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
+
+# Security / JWT
+spring-security-core = { module = "org.springframework.security:spring-security-core", version.ref = "springSecurity" }
+java-jwt = { module = "com.auth0:java-jwt", version.ref = "jwt" }
+jwks-rsa = { module = "com.auth0:jwks-rsa", version.ref = "jwk" }
+nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "joseJwt" }
+bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
+
+# OpenAPI / Swagger
+swagger-models = { module = "io.swagger.core.v3:swagger-models", version.ref = "openApi" }
+swagger-core = { module = "io.swagger.core.v3:swagger-core", version.ref = "openApi" }
+swagger-ui = { module = "org.webjars:swagger-ui", version.ref = "swaggerUi" }
+
+# Metadata / misc
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+json = { module = "org.json:json", version.ref = "json" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+classgraph = { module = "io.github.classgraph:classgraph", version.ref = "classgraph" }
+jaudiotagger = { module = "org.bitbucket.ijabz:jaudiotagger", version.ref = "jaudiotagger" }
+directory-watcher = { module = "io.methvin:directory-watcher", version.ref = "fileWatcher" }
+fuzzywuzzy = { module = "me.xdrop:fuzzywuzzy", version.ref = "fuzzyWuzzy" }
+cron-utils = { module = "com.cronutils:cron-utils", version.ref = "cronUtils" }
+
+# Logging
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlinLogging" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+slf4j-jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j", version.ref = "slf4j" }
+
+[bundles]
+exposed = ["exposed-core", "exposed-json", "exposed-dao", "exposed-jdbc", "exposed-java-time"]
+hoplite = ["hoplite-core", "hoplite-json", "hoplite-yaml", "hoplite-toml", "hoplite-hocon"]
+koin = ["koin-ktor", "koin-logger-slf4j"]
+bouncycastle = ["bouncycastle-prov", "bouncycastle-pkix"]
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

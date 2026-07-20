@@ -15,10 +15,11 @@ import io.thoth.server.database.tables.ImageEntity
 import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.SeriesTable
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -139,7 +140,7 @@ class SeriesRepositoryImpl :
         libraryId: UUID,
         dbAuthor: List<AuthorEntity>,
     ): SeriesEntity {
-        log.info("Created series: $seriesName")
+        log.info { "Created series: $seriesName" }
         return SeriesEntity.new {
             title = seriesName
             authors = SizedCollection(dbAuthor)

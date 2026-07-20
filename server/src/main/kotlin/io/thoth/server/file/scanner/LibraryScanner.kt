@@ -16,10 +16,9 @@ import io.thoth.server.database.tables.TrackEntity
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.file.TrackManager
 import kotlinx.coroutines.sync.Mutex
-import mu.KotlinLogging.logger
-import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.core.statements.UpsertSqlExpressionBuilder.notInSubQuery
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.union

@@ -4,7 +4,7 @@ import io.ktor.http.ContentType
 import io.swagger.v3.core.util.RefUtils
 import io.swagger.v3.oas.models.media.Schema
 import io.thoth.openapi.common.ClassType
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 
 typealias GenerateSchemaSubtype = (ClassType) -> SchemaGenerator.WrappedSchema
 

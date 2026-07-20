@@ -1,12 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-val ktorVersion: String by project
-val kotlinLoggingVersion: String by project
-val openApiVersion: String by project
-val swaggerUiVersion: String by project
-val kotlinVersion: String by project
-val reflectVersion: String by project
-
 plugins {
     kotlin("jvm")
     id("maven-publish")
@@ -14,29 +5,29 @@ plugins {
 }
 
 dependencies {
-    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
+    implementation(libs.kotlin.logging)
 
     // Get type generators
-    implementation("org.reflections:reflections:$reflectVersion")
+    implementation(libs.classgraph)
 
     // Ktor
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("io.ktor:ktor-server-resources:$ktorVersion")
-    implementation("io.ktor:ktor-server-data-conversion:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth:$ktorVersion")
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.server.resources)
+    implementation(libs.ktor.server.data.conversion)
+    implementation(libs.ktor.server.auth)
 
     // Openapi
-    implementation("io.swagger.core.v3:swagger-models:$openApiVersion")
-    implementation("io.swagger.core.v3:swagger-core:$openApiVersion")
-    implementation("org.webjars:swagger-ui:$swaggerUiVersion")
+    implementation(libs.swagger.models)
+    implementation(libs.swagger.core)
+    implementation(libs.swagger.ui)
 
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-jackson:3.2.3")
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.jackson)
 
     // Tests
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.ktor.server.test.host)
 }
 
 afterEvaluate {

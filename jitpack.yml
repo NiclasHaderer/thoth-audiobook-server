@@ -4,4 +4,3 @@ before_install:
   # https://sdkman.io/jdks#amzn
   - sdk install java 17.0.10-amzn
   - sdk use java 17.0.10-amzn
-  - ./scripts/prepareJitpackEnvironment.sh

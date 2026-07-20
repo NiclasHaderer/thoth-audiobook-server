@@ -13,7 +13,7 @@ import io.ktor.server.plugins.UnsupportedMediaTypeException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.util.logging.error
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 private fun <T> formatException(
     statusCode: HttpStatusCode,
@@ -40,7 +40,7 @@ fun Application.configureStatusPages() {
             )
         }
 
-        exception<Throwable>(formatException(HttpStatusCode.InternalServerError) { logger.error(it) })
+        exception<Throwable>(formatException(HttpStatusCode.InternalServerError) { logger.error(it) { it.message } })
         exception<BadRequestException>(formatException(HttpStatusCode.BadRequest))
         exception<MissingRequestParameterException>(formatException(HttpStatusCode.BadRequest))
         exception<ParameterConversionException>(formatException(HttpStatusCode.BadRequest))

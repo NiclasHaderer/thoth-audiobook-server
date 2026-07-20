@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.migrations.DatabaseMigrator
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.component.KoinComponent
@@ -34,8 +34,8 @@ object DatabaseConnector : KoinComponent {
                 dataSource,
                 databaseConfig = DatabaseConfig.invoke { useNestedTransactions = true },
             )
-        log.info("Migrating database")
+        log.info { "Migrating database" }
         DatabaseMigrator().migrateDatabase()
-        log.info("Migrations done")
+        log.info { "Migrations done" }
     }
 }

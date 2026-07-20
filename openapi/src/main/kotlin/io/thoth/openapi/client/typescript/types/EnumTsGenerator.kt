@@ -3,7 +3,7 @@ package io.thoth.openapi.client.typescript.types
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class EnumTsGenerator : TsTypeGenerator() {
     private val log = KotlinLogging.logger {}

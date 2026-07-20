@@ -2,7 +2,7 @@ package io.thoth.server.file.scanner
 
 import io.thoth.server.common.extensions.isAudioFile
 import io.thoth.server.config.ThothConfig
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException

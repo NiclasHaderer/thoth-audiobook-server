@@ -3,7 +3,7 @@ package io.thoth.server.common.scheduling
 import io.thoth.server.common.extensions.nextExecution
 import io.thoth.server.common.extensions.toHumanReadable
 import kotlinx.coroutines.coroutineScope
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit

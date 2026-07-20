@@ -1,11 +1,3 @@
-val ktorVersion: String by project
-val jwtVersion: String by project
-val kotlinLoggingVersion: String by project
-val springSecurityVersion: String by project
-val bouncyCastleVersion: String by project
-val joseJWTVersion: String by project
-val jwkVersion: String by project
-
 plugins {
     kotlin("jvm")
     id("maven-publish")
@@ -20,24 +12,23 @@ dependencies {
     implementation(project(":openapi"))
     implementation(project(":auth-models"))
 
-    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
+    implementation(libs.kotlin.logging)
 
     // Ktor
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("io.ktor:ktor-server-resources:$ktorVersion")
-    implementation("io.ktor:ktor-server-data-conversion:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.server.resources)
+    implementation(libs.ktor.server.data.conversion)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.auth.jvm)
+    implementation(libs.ktor.server.auth.jwt)
 
     // Security
-    implementation("org.springframework.security:spring-security-core:$springSecurityVersion")
-    implementation("com.auth0:java-jwt:$jwtVersion")
-    implementation("com.auth0:jwks-rsa:$jwkVersion")
-    implementation("com.nimbusds:nimbus-jose-jwt:$joseJWTVersion")
-    implementation("org.bouncycastle:bcprov-jdk15on:$bouncyCastleVersion")
-    implementation("org.bouncycastle:bcpkix-jdk15on:$bouncyCastleVersion")
+    implementation(libs.spring.security.core)
+    implementation(libs.java.jwt)
+    implementation(libs.jwks.rsa)
+    implementation(libs.nimbus.jose.jwt)
+    implementation(libs.bundles.bouncycastle)
 }
 
 afterEvaluate {

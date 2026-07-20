@@ -13,5 +13,5 @@ internal fun passwordMatches(
 
 internal fun hashPassword(password: String): String {
     val encoder = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8()
-    return encoder.encode(password)
+    return encoder.encode(password)!!
 }

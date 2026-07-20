@@ -1,7 +1,7 @@
 package io.thoth.openapi.client.common
 
+import io.github.classgraph.ClassGraph
 import io.thoth.openapi.common.ClassType
-import org.reflections.Reflections
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.createInstance
@@ -30,8 +30,11 @@ abstract class TypeGenerator<TYPE, DATA_TYPE> {
         private val generators: List<GENERATOR> =
             run {
                 paths
-                    .map { Reflections(it) }
-                    .flatMap { ref -> ref.getSubTypesOf(clazz.java).map { it.kotlin.createInstance() }.toList() }
+                    .flatMap { path ->
+                        ClassGraph().acceptPackages(path).enableClassInfo().scan().use { scan ->
+                            scan.getSubclasses(clazz.java).loadClasses(clazz.java)
+                        }.map { it.kotlin.createInstance() }
+                    }
             }
 
         fun generateTypes(classType: ClassType): Pair<TYPE, List<TYPE>> {

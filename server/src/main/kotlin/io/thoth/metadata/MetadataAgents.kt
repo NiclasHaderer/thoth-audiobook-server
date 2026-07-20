@@ -1,7 +1,7 @@
 package io.thoth.metadata
 
 import io.thoth.server.database.tables.LibraryEntity
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 
 class MetadataAgents(
     private val items: List<MetadataAgent>,

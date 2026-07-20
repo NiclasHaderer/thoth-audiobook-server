@@ -15,10 +15,9 @@ import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
-import mu.KotlinLogging.logger
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -125,7 +124,7 @@ object TrackManager : KoinComponent {
         return if (book != null) {
             updateBook(book, scan, authors, libraryModel)
         } else {
-            log.info("Created new book: ${scan.book}")
+            log.info { "Created new book: ${scan.book}" }
             createBook(scan, authors, libraryModel)
         }
     }
@@ -174,7 +173,7 @@ object TrackManager : KoinComponent {
         val dbImage = if (scan.cover != null) ImageEntity.create(scan.cover!!) else null
         val dbSeriesList = if (dbSeries != null) listOf(dbSeries) else listOf()
 
-        log.info("Creating book ${scan.book}")
+        log.info { "Creating book ${scan.book}" }
         return BookEntity.new {
             title = scan.book
             authors = SizedCollection(dbAuthor)
@@ -193,7 +192,7 @@ object TrackManager : KoinComponent {
     ): List<AuthorEntity> =
         scan.authors.map { author ->
             authorRepository.findByName(author, libraryModel.id.value) ?: run {
-                log.info("Creating author: $author")
+                log.info { "Creating author: $author" }
                 AuthorEntity
                     .new {
                         name = author
