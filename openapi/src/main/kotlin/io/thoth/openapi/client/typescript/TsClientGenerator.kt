@@ -9,7 +9,7 @@ import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.common.padLinesStart
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
 
@@ -76,7 +76,7 @@ class TsClientGenerator(
         routes.forEach { route ->
             val routeName = getRouteName(route)
             if (routeName == null) {
-                log.warn("Route ${route.method}:${route.fullPath} has no summary")
+                log.warn { "Route ${route.method}:${route.fullPath} has no summary" }
                 return@forEach
             }
             val (responseBody, all) = typeProvider.generateTypes(route.responseBodyType)

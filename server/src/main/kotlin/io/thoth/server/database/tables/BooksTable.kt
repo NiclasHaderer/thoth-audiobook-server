@@ -1,7 +1,7 @@
 package io.thoth.server.database.tables
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.javatime.date
 
 object BooksTable : UUIDTable("Books") {

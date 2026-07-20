@@ -3,8 +3,8 @@ package io.thoth.server.database.tables
 import io.thoth.models.Author
 import io.thoth.models.NamedId
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import java.util.UUID
 
 class AuthorEntity(

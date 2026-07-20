@@ -12,7 +12,7 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
 import io.thoth.metadata.audible.models.AudibleRegions
 import io.thoth.metadata.audible.models.getValue
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 

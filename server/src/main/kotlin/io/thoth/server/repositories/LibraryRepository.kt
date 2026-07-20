@@ -10,6 +10,7 @@ import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.schedules.ThothSchedules
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.core.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Path

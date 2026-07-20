@@ -150,7 +150,7 @@ abstract class MetadataAgent {
         authorName: String? = null,
     ): List<MetadataSeries>
 
-    private suspend fun <K, V> getOrSetCache(
+    private suspend fun <K : Any, V : Any> getOrSetCache(
         cache: Cache<K, V>,
         key: K,
         getValue: suspend () -> V,

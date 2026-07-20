@@ -2,29 +2,17 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val kotlinVersion: String by project
+val kotlinVersion = libs.versions.kotlin.get()
 
 plugins {
     base
-    kotlin("jvm") version "2.2.0" apply false
-    kotlin("plugin.serialization") version "2.2.0" apply false
-}
-
-repositories {
-    mavenCentral()
-    maven("https://plugins.gradle.org/m2/")
-    maven("https://jitpack.io")
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
 subprojects {
     group = "io.thoth"
     version = "0.0.1"
-
-    repositories {
-        mavenCentral()
-        maven("https://plugins.gradle.org/m2/")
-        maven("https://jitpack.io")
-    }
 
     plugins.withType<JavaPlugin> {
         configure<JavaPluginExtension> {

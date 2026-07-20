@@ -1,7 +1,3 @@
-val ktorVersion: String by project
-val kotlinVersion: String by project
-val arrowVersion: String by project
-
 plugins {
     kotlin("jvm")
     id("maven-publish")
@@ -22,8 +18,8 @@ afterEvaluate {
 }
 
 dependencies {
-    implementation("io.arrow-kt:arrow-core:$arrowVersion")
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+    implementation(libs.arrow.core)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.kotlin.reflect)
 }

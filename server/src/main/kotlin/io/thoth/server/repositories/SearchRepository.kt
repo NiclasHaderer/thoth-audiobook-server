@@ -10,6 +10,7 @@ import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.SeriesTable
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.core.*
 import java.util.UUID
 
 object SearchRepository {

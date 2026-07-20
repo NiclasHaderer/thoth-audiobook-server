@@ -4,7 +4,7 @@ import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.extensions.json
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 
 object LibrariesTable : UUIDTable("Libraries") {
     val name = varchar("name", 255)

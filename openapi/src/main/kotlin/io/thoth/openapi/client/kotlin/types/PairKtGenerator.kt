@@ -3,7 +3,7 @@ package io.thoth.openapi.client.kotlin.types
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class PairKtGenerator : KtTypeGenerator() {
     private val log = KotlinLogging.logger {}

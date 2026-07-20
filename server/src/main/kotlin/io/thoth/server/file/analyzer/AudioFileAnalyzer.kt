@@ -3,7 +3,7 @@ package io.thoth.server.file.analyzer
 import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapper
 import io.thoth.server.file.tagger.ReadonlyFileTagger
-import mu.KotlinLogging.logger
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 
