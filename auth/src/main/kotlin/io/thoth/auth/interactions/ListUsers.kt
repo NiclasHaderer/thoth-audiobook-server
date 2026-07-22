@@ -16,7 +16,7 @@ fun <PERMISSIONS : Any> RoutingContext.listUsers(
 
     val principal = thothPrincipal<ThothPrincipal>()
     if (!config.isAdmin(principal)) {
-        throw ErrorResponse.userError("User is not admin")
+        throw ErrorResponse.forbidden("list", "users")
     }
 
     return config.listAllUsers().map { user ->

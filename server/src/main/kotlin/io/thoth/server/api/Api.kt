@@ -28,10 +28,9 @@ import io.thoth.server.plugins.auth.assertLibraryPermissions
 
 // TODO remove unused methods in the db access layer
 // TODO move companion object functions of user into own thingi
-// TODO make sure that users only have access to the libraries they are allowed to access
 @Resource("api")
 class Api {
-    @Secured(Guards.Normal)
+    @Secured(Guards.Admin)
     @Resource("fs")
     @Summary("List folders at a certain path", method = "GET")
     @Tagged("Filesystem")
@@ -141,7 +140,7 @@ class Api {
         private val parent: Api,
     )
 
-    @Secured(Guards.Normal)
+    @Secured(Guards.Admin)
     @Summary("List file scanners", method = "GET")
     @Tagged("Scanner")
     @Resource("scanners")
@@ -149,7 +148,7 @@ class Api {
         private val parent: Api,
     )
 
-    @Secured(Guards.Normal)
+    @Secured(Guards.Admin)
     @Summary("List metadata agents", method = "GET")
     @Tagged("Scanner")
     @Resource("metadata-agents")
@@ -542,7 +541,7 @@ class Api {
         }
     }
 
-    // TODO secure?
+    @Secured(Guards.Media)
     @Resource("stream")
     @Tagged("Files")
     data class Files(

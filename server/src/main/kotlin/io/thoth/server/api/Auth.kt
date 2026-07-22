@@ -30,13 +30,17 @@ import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.ktor.put
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 fun Routing.authRoutes() {
     post<Api.Auth.Login, ThothLoginUser, ThothAccessToken>(withTransaction(RoutingContext::loginUser))
 
     post<Api.Auth.Logout, Unit, Unit>(withTransaction(RoutingContext::logoutUser))
 
-    post<Api.Auth.Register, ThothRegisterUser, ThothUser>(withTransaction(RoutingContext::registerUser))
+    post<Api.Auth.Register, ThothRegisterUser, ThothUser> { params, body ->
+        registerLock.withLock { transaction { registerUser(params, body) } }
+    }
 
     get<Api.Auth.Jwks, ThothJWKs>(withTransaction(RoutingContext::getJwks))
 
@@ -62,6 +66,10 @@ fun Routing.authRoutes() {
 
     post<Api.Auth.User.Refresh, Unit, ThothAccessToken>(withTransaction(RoutingContext::getRefreshToken))
 }
+
+// Serializes concurrent registrations so the "first user becomes admin" check-then-insert can't race
+// (two signups on an empty DB both seeing zero users). In-process lock: fine for a single app instance.
+private val registerLock = ReentrantLock()
 
 private fun <P1, P2, R> withTransaction(
     func: RoutingContext.(p1: P1, p2: P2) -> R,

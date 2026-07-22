@@ -33,11 +33,6 @@ fun RoutingContext.registerUser(
         }
     }
 
-    val dbUser = config.getUserByUsername(user.username)
-    if (dbUser != null) {
-        throw ErrorResponse.userError("User with name ${user.username} already exists")
-    }
-
     val passwordHash = hashPassword(user.password)
     val isAdmin = config.firstUserIsAdmin && config.isFirstUser()
 

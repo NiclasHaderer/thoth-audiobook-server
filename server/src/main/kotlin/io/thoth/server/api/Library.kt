@@ -20,7 +20,10 @@ fun Routing.libraryRouting() {
 
     val libraryRepository by inject<LibraryRepository>()
 
-    get<Api.Libraries, List<Library>> { libraryRepository.getAll() }
+    get<Api.Libraries, List<Library>> {
+        val allowed = thothPrincipal().permissions.libraries.mapTo(mutableSetOf()) { it.id }
+        libraryRepository.getAll().filter { it.id in allowed }
+    }
 
     get<Api.Libraries.Id, Library> { (id) -> libraryRepository.get(id) }
 

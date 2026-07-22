@@ -22,5 +22,7 @@ fun RoutingContext.getRefreshToken(
     val userId = UUID.fromString(userIdStr)
     val user = config.getUserById(userId) ?: throw ErrorResponse.internalError("User not found")
 
-    return ThothAccessToken(generateAccessTokenForUser(user, config))
+    val accessToken = generateAccessTokenForUser(user, config)
+    call.appendAccessCookie(accessToken, config)
+    return ThothAccessToken(accessToken)
 }

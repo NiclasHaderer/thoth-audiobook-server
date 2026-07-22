@@ -33,7 +33,7 @@ fun RoutingContext.changeUserPassword(
         }
     }
 
-    if (!passwordMatches(passwordChange.currentPassword, user)) {
+    if (principal.userId == params.id && !passwordMatches(passwordChange.currentPassword, user)) {
         throw ErrorResponse.userError("Wrong password")
     }
 

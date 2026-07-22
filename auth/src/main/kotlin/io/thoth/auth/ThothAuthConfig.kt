@@ -4,6 +4,7 @@ import com.auth0.jwk.JwkProviderBuilder
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
+import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.encodedPath
 import io.ktor.http.toURI
 import io.ktor.server.application.Application
@@ -12,6 +13,7 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.response.respond
 import io.ktor.server.routing.RoutingContext
 import io.ktor.util.AttributeKey
@@ -28,6 +30,15 @@ internal typealias KeyId = String
 
 internal typealias GetPrincipal =
     ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal?
+
+internal typealias AuthHeaderProvider = (call: ApplicationCall) -> HttpAuthHeader?
+
+// Falls back to a cookie so browser-native requests (<img src>, <audio src>) that can't set headers still authenticate.
+fun bearerFromHeaderOrCookie(cookieName: String): AuthHeaderProvider =
+    { call ->
+        runCatching { call.request.parseAuthorizationHeader() }.getOrNull()
+            ?: call.request.cookies[cookieName]?.let { HttpAuthHeader.Single("Bearer", it) }
+    }
 
 internal val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig<*, *>>("ThothAuthPlugin")
 
@@ -62,6 +73,7 @@ class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
     val protocol: URLProtocol,
     val jwksPath: String,
     val guards: Map<String, GetPrincipal>,
+    val guardAuthHeaders: Map<String, AuthHeaderProvider>,
     val getUserByUsername: (username: String) -> ThothDatabaseUser?,
     val allowNewSignups: () -> Boolean,
     val getUserById: (id: UUID) -> ThothDatabaseUser?,
@@ -98,6 +110,8 @@ class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
                     if (this@ThothAuthConfig.realm != null) {
                         realm = this@ThothAuthConfig.realm
                     }
+
+                    guardAuthHeaders[guard]?.let { provider -> authHeader { call -> provider(call) } }
 
                     verifier(jwkProvider, this@ThothAuthConfig.issuer) { acceptLeeway(3) }
 
@@ -190,12 +204,15 @@ class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
 
     // Guards
     private val guards = mutableMapOf<String, GetPrincipal>()
+    private val guardAuthHeaders = mutableMapOf<String, AuthHeaderProvider>()
 
     fun configureGuard(
         guard: String,
+        authHeader: AuthHeaderProvider? = null,
         getPrincipal: GetPrincipal,
     ) {
         guards[guard] = getPrincipal
+        if (authHeader != null) guardAuthHeaders[guard] = authHeader
     }
 
     // Builder
@@ -221,6 +238,7 @@ class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
             protocol = protocol,
             jwksPath = jwksPath,
             guards = guards.toMap(),
+            guardAuthHeaders = guardAuthHeaders.toMap(),
             getUserByUsername = getUserByUsername,
             allowNewSignups = allowNewSignups,
             getUserById = getUserById,

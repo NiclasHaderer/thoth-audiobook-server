@@ -31,8 +31,6 @@ fun RoutingContext.renameUser(
         }
     }
 
-    config.getUserByUsername(renamedUser.username)?.let { throw ErrorResponse.userError("Username already exists") }
-
     var user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
     user = config.renameUser(user, renamedUser.username)
     return user.wrap()

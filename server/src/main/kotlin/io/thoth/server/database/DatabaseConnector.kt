@@ -6,7 +6,11 @@ import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.migrations.DatabaseMigrator
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -34,6 +38,14 @@ object DatabaseConnector : KoinComponent {
                 dataSource,
                 databaseConfig = DatabaseConfig.invoke { useNestedTransactions = true },
             )
+
+        transaction(dbInstance) {
+            val dialect = currentDialect
+            require(dialect is SQLiteDialect || dialect is PostgreSQLDialect) {
+                "Unsupported database dialect '${dialect.name}'. Thoth supports only SQLite and PostgreSQL."
+            }
+        }
+
         log.info { "Migrating database" }
         DatabaseMigrator().migrateDatabase()
         log.info { "Migrations done" }
