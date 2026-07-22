@@ -41,7 +41,7 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RoutingC
     noinline callback: suspend RoutingContext.(params: PARAMS, body: BODY) -> RESPONSE,
     params: PARAMS,
 ) {
-    if (params is BeforeBodyParsing) params.run { beforeBodyParsing() }
+    runBeforeBodyParsing(params)
     val parsedBody: BODY = call.parseBody()
     if (parsedBody is ValidateObject) parsedBody.run { validateBody() }
     if (params is AfterBodyParsing) params.run { afterBodyParsing() }

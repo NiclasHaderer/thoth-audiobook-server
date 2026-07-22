@@ -16,9 +16,10 @@ fun RoutingContext.logoutUser(
             name = "refresh",
             value = "",
             httpOnly = true,
-            secure = config.production,
-            extensions = mapOf("SameSite" to "Strict", "HttpOnly" to "true", "Secure" to config.ssl.toString()),
+            secure = config.ssl,
+            extensions = mapOf("SameSite" to "Strict"),
             maxAge = 0,
         ),
     )
+    call.clearAccessCookie(config)
 }

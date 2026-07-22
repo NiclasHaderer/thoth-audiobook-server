@@ -34,11 +34,13 @@ fun RoutingContext.loginUser(
             name = "refresh",
             value = keyPair.refreshToken,
             httpOnly = true,
-            secure = config.production,
-            extensions = mapOf("SameSite" to "Strict", "HttpOnly" to "true", "Secure" to config.ssl.toString()),
+            secure = config.ssl,
+            extensions = mapOf("SameSite" to "Strict"),
             maxAge = (config.refreshTokenExpiryTime / 1000).toInt(),
         ),
     )
+
+    call.appendAccessCookie(keyPair.accessToken, config)
 
     return ThothAccessToken(keyPair.accessToken)
 }

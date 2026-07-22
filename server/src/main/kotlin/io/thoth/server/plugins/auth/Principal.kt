@@ -22,24 +22,26 @@ class ThothPrincipalImpl(
     override val type: ThothJwtTypes,
 ) : ThothPrincipal {
     val permissions: UserPermissions
-        get() =
-            transaction {
-                val user = UserEntity.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
-                val permissions: List<LibraryPermissions> =
-                    if (user.admin) {
-                        LibrariesTable.selectAll().map {
-                            LibraryPermissions(
-                                id = it[LibrariesTable.id].value,
-                                permissions = UpdatePermissions.READ_WRITE,
-                                name = it[LibrariesTable.name],
-                            )
-                        }
-                    } else {
-                        user.permissions.map { it.toModel() }
-                    }
-                UserPermissions(isAdmin = user.admin, libraries = permissions)
-            }
+        get() = resolveUserPermissions(userId)
 }
+
+fun resolveUserPermissions(userId: UUID): UserPermissions =
+    transaction {
+        val user = UserEntity.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
+        val permissions: List<LibraryPermissions> =
+            if (user.admin) {
+                LibrariesTable.selectAll().map {
+                    LibraryPermissions(
+                        id = it[LibrariesTable.id].value,
+                        permissions = UpdatePermissions.READ_WRITE,
+                        name = it[LibrariesTable.name],
+                    )
+                }
+            } else {
+                user.permissions.map { it.toModel() }
+            }
+        UserPermissions(isAdmin = user.admin, libraries = permissions)
+    }
 
 fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipalImpl? {
     val userIdStr = credentials.payload.getClaim("sub").asString() ?: return null
@@ -65,23 +67,14 @@ fun RoutingContext.assertLibraryPermissions(vararg libraryIds: UUID) {
     val principal = thothPrincipal()
 
     val readonlyMethods = listOf(HttpMethod.Head, HttpMethod.Get, HttpMethod.Options)
+    val isWrite = !readonlyMethods.contains(call.request.httpMethod)
 
     libraryIds.forEach { libId ->
-        var matches = principal.permissions.libraries.any { allowedLib -> allowedLib.id == libId }
-        if (!matches) {
-            throw ErrorResponse.forbidden("access", "Library $libId")
-        }
+        val library =
+            principal.permissions.libraries.firstOrNull { allowedLib -> allowedLib.id == libId }
+                ?: throw ErrorResponse.forbidden("access", "Library $libId")
 
-        matches =
-            (
-                principal.permissions.libraries.any { allowedLib ->
-                    // If the user is not allowed to edit the library
-                    allowedLib.permissions == UpdatePermissions.READ_WRITE &&
-                        // The used http method is not the readonlyMethods list
-                        !readonlyMethods.contains(this.call.request.httpMethod)
-                }
-            )
-        if (!matches) {
+        if (isWrite && library.permissions != UpdatePermissions.READ_WRITE) {
             throw ErrorResponse.forbidden("modify", "Library $libId")
         }
     }

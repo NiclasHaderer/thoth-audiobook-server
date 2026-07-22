@@ -25,6 +25,10 @@ fun Application.configureOpenApi() {
                     scheme = "bearer"
                     bearerFormat = "JWT"
                 }
+                http(Guards.Media) {
+                    scheme = "bearer"
+                    bearerFormat = "JWT"
+                }
             }
         }
     }

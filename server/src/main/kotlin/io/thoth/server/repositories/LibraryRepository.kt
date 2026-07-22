@@ -15,6 +15,12 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Path
 import java.util.UUID
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+
+// Serializes library create/modify so the folder-overlap check-then-write can't race (two concurrent
+// mutations both passing the overlap check). In-process lock: fine for a single app instance.
+private val libraryMutationLock = ReentrantLock()
 
 interface LibraryRepository {
     fun raw(id: UUID): LibraryEntity
@@ -57,42 +63,46 @@ class LibraryRepositoryImpl :
         id: UUID,
         partial: PartialUpdateLibrary,
     ): Library =
-        transaction {
-            if (partial.folders != null) {
-                raiseForOverlaps(id, partial.folders)
-            }
+        libraryMutationLock.withLock {
+            transaction {
+                if (partial.folders != null) {
+                    raiseForOverlaps(id, partial.folders)
+                }
 
-            val library = raw(id)
-            library.apply {
-                name = partial.name ?: name
-                icon = partial.icon ?: icon
-                folders = partial.folders ?: folders
-                preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: preferEmbeddedMetadata
-                metadataAgents = partial.metadataScanners ?: metadataAgents
-                fileScanners = partial.fileScanners ?: fileScanners
-                language = partial.language ?: language
+                val library = raw(id)
+                library.apply {
+                    name = partial.name ?: name
+                    icon = partial.icon ?: icon
+                    folders = partial.folders ?: folders
+                    preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: preferEmbeddedMetadata
+                    metadataAgents = partial.metadataScanners ?: metadataAgents
+                    fileScanners = partial.fileScanners ?: fileScanners
+                    language = partial.language ?: language
+                }
+                if (partial.folders != null || partial.metadataScanners != null || partial.fileScanners != null) {
+                    runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
+                }
+                library.toModel()
             }
-            if (partial.folders != null || partial.metadataScanners != null || partial.fileScanners != null) {
-                runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
-            }
-            library.toModel()
         }
 
     override fun create(complete: UpdateLibrary): Library =
-        transaction {
-            raiseForOverlaps(null, complete.folders)
-            val library =
-                LibraryEntity.new {
-                    name = complete.name
-                    icon = complete.icon
-                    folders = complete.folders
-                    preferEmbeddedMetadata = complete.preferEmbeddedMetadata
-                    metadataAgents = complete.metadataScanners
-                    fileScanners = complete.fileScanners
-                    language = complete.language
-                }
-            runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
-            library.toModel()
+        libraryMutationLock.withLock {
+            transaction {
+                raiseForOverlaps(null, complete.folders)
+                val library =
+                    LibraryEntity.new {
+                        name = complete.name
+                        icon = complete.icon
+                        folders = complete.folders
+                        preferEmbeddedMetadata = complete.preferEmbeddedMetadata
+                        metadataAgents = complete.metadataScanners
+                        fileScanners = complete.fileScanners
+                        language = complete.language
+                    }
+                runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
+                library.toModel()
+            }
         }
 
     fun overlappingFolders(

@@ -6,6 +6,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.thoth.auth.JwtError
 import io.thoth.auth.ThothAuthenticationPlugin
+import io.thoth.auth.bearerFromHeaderOrCookie
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.models.UpdateUserPermissions
 import io.thoth.models.UserPermissions
@@ -19,10 +20,35 @@ import io.thoth.server.database.tables.UserEntity
 import io.thoth.server.database.tables.UsersTable
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.ktor.ext.inject
 import java.nio.file.Path
+
+private fun <T> rejectDuplicateUsername(
+    username: String,
+    block: () -> T,
+): T =
+    try {
+        block()
+    } catch (e: ExposedSQLException) {
+        if (e.message?.contains("username", ignoreCase = true) == true) {
+            throw ErrorResponse.userError("User with name $username already exists")
+        }
+        throw e
+    }
+
+// The DB triggers (see 02_ENSURE_ADMIN_EXISTS) enforce "at least one admin"; translate their abort into a 400.
+private fun <T> translateLastAdminError(block: () -> T): T =
+    try {
+        block()
+    } catch (e: ExposedSQLException) {
+        if (e.message?.contains("only admin", ignoreCase = true) == true) {
+            throw ErrorResponse.userError("Cannot remove the only admin user.")
+        }
+        throw e
+    }
 
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
@@ -30,6 +56,7 @@ fun Application.configureAuthentication() {
 
     install(ThothAuthenticationPlugin.build<UserPermissions, UpdateUserPermissions>()) {
         production = thothConfig.production
+        ssl = thothConfig.TLS
         issuer = "thoth.io"
         domain = thothConfig.domain
         port = thothConfig.port
@@ -39,6 +66,13 @@ fun Application.configureAuthentication() {
         activeKeyId = "thoth"
 
         configureGuard(Guards.Normal) { jwtCredential, setError ->
+            jwtToPrincipal(jwtCredential) ?: return@configureGuard run {
+                setError(JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
+                null
+            }
+        }
+
+        configureGuard(Guards.Media, authHeader = bearerFromHeaderOrCookie("access")) { jwtCredential, setError ->
             jwtToPrincipal(jwtCredential) ?: return@configureGuard run {
                 setError(JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
                 null
@@ -65,19 +99,26 @@ fun Application.configureAuthentication() {
         isFirstUser { UserEntity.count() == 0L }
 
         createUser { newUser ->
-            UserEntity
-                .new {
-                    username = newUser.username
-                    passwordHash = newUser.passwordHash
-                    admin = newUser.admin
-                }.toExternalUser()
+            rejectDuplicateUsername(newUser.username) {
+                UserEntity
+                    .new {
+                        username = newUser.username
+                        passwordHash = newUser.passwordHash
+                        admin = newUser.admin
+                    }.also { it.flush() }
+                    .toExternalUser()
+            }
         }
 
         listAllUsers { UserEntity.all().map { it.toExternalUser() } }
 
-        deleteUser { UserEntity.findById(it.id)?.delete() }
+        deleteUser { translateLastAdminError { UserEntity.findById(it.id)?.delete() } }
 
-        renameUser { user, newName -> UserEntity.findById(user.id)!!.also { it.username = newName }.toExternalUser() }
+        renameUser { user, newName ->
+            rejectDuplicateUsername(newName) {
+                UserEntity.findById(user.id)!!.also { it.username = newName; it.flush() }.toExternalUser()
+            }
+        }
 
         updatePassword { user, newPassword ->
             transaction {
@@ -87,12 +128,9 @@ fun Application.configureAuthentication() {
 
         updateUserPermissions { currentUser, permissions ->
             transaction {
-                if (!permissions.isAdmin && UsersTable.selectAll().where { UsersTable.admin eq true }.count() == 1L) {
-                    throw ErrorResponse.userError("Cannot remove admin permissions from the only admin user.")
-                }
-
                 val dbUser = UserEntity.findById(currentUser.id)!!
-                dbUser.admin = permissions.isAdmin
+
+                translateLastAdminError { dbUser.also { it.admin = permissions.isAdmin }.flush() }
                 LibraryUserTable.deleteWhere { LibraryUserTable.user eq currentUser.id }
                 permissions.libraries.forEach { permission ->
                     val library = LibraryEntity.findById(permission.id)!!
@@ -108,6 +146,6 @@ fun Application.configureAuthentication() {
 
         isAdminUser { user: ThothDatabaseUser -> transaction { UserEntity.findById(user.id)?.admin ?: false } }
 
-        getUserPermissions { user: ThothDatabaseUser -> thothPrincipal().permissions }
+        getUserPermissions { user: ThothDatabaseUser -> resolveUserPermissions(user.id) }
     }
 }
