@@ -87,6 +87,18 @@ tasks.register<Exec>("jextract") {
         nativeSourceDir.dir("taglib").dir("bindings/c").file("tag_c.h").asFile.absolutePath,
     )
     doFirst { delete(generatedDir) }
+    // The bindings are committed once and shipped to every platform, but jextract hardcodes the
+    // host's data model for C long, whose layout is OfInt on Windows and OfLong elsewhere. The
+    // declaration is unused, so widening the type keeps the file loadable everywhere.
+    doLast {
+        val shared = generatedDir.file("io/thoth/taglib/ffi/TagLibC\$shared.java").asFile
+        shared.writeText(
+            shared.readText().replace(
+                "ValueLayout.OfLong C_LONG = (ValueLayout.OfLong)",
+                "ValueLayout C_LONG = (ValueLayout)",
+            ),
+        )
+    }
 }
 
 sourceSets.main {
