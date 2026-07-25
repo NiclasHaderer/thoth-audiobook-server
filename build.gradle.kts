@@ -16,8 +16,9 @@ subprojects {
 
     plugins.withType<JavaPlugin> {
         configure<JavaPluginExtension> {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
+            toolchain { languageVersion.set(JavaLanguageVersion.of(25)) }
+            sourceCompatibility = JavaVersion.VERSION_25
+            targetCompatibility = JavaVersion.VERSION_25
         }
     }
     tasks.withType<KotlinCompile>().configureEach {
@@ -25,7 +26,7 @@ subprojects {
             freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
             freeCompilerArgs.add("-Xcontext-parameters")
             freeCompilerArgs.add("-Xmulti-dollar-interpolation")
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget.set(JvmTarget.JVM_25)
             apiVersion.set(KotlinVersion.fromVersion(kotlinVersion.substringBeforeLast('.')))
             languageVersion.set(KotlinVersion.fromVersion(kotlinVersion.substringBeforeLast('.')))
             optIn.add("kotlin.RequiresOptIn")

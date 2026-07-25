@@ -1,0 +1,3 @@
+[submodule "taglib/native/taglib"]
+	path = taglib/native/taglib
+	url = https://github.com/niclashaderer/taglib

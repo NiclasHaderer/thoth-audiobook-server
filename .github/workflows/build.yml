@@ -1,0 +1,92 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Builds libtag_c from the bundled TagLib fork on every platform we ship, and runs
+  # the :taglib tests against the freshly built host library.
+  native:
+    name: native ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64
+            runner: ubuntu-latest
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+          - target: macos-x64
+            runner: macos-15-intel
+          - target: macos-arm64
+            runner: macos-14
+          - target: windows-x64
+            runner: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Compiles the native library (via CMake) and exercises it through the FFM bindings.
+      - run: ./gradlew :taglib:test
+
+      - name: Stage the built library
+        shell: bash
+        run: |
+          mkdir -p staging/${{ matrix.target }}
+          cp taglib/build/nativeResources/native/${{ matrix.target }}/* staging/${{ matrix.target }}/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.target }}
+          path: staging
+          if-no-files-found: error
+
+  # Bundles every platform's library into the jar and runs the whole test suite.
+  package:
+    needs: native
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          merge-multiple: true
+          path: taglib/src/main/resources/native
+
+      - name: Check every target is present
+        shell: bash
+        run: |
+          for target in linux-x64 linux-arm64 macos-x64 macos-arm64 windows-x64; do
+            ls taglib/src/main/resources/native/$target/* > /dev/null
+          done
+
+      # buildNativeHost would overwrite the host entry with a fresh build; the downloaded
+      # artifacts are what we want to ship, so only the remaining work runs here.
+      - run: ./gradlew build -x :taglib:buildNativeHost
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-jar
+          path: server/build/libs/*.jar
+          if-no-files-found: error

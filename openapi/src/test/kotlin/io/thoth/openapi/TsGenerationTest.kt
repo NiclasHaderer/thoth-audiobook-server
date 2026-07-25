@@ -16,6 +16,8 @@ class TsGenerationTest {
                     dist = "",
                     fileWriter = { file, content -> generatedStuff[file.name] = content },
                     apiFactoryName = "createTestApi",
+                    // The writer above keeps everything in memory, so there is no dist to clean.
+                    cleanDistPackage = false,
                 )
             }
         }

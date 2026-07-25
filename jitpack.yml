@@ -1,6 +1,8 @@
 jdk:
+  # Only bootstraps the image: JitPack's jdk: values lag behind current JDKs, so sdkman
+  # below provides the JDK 25 the build actually compiles with.
   - openjdk17
 before_install:
   # https://sdkman.io/jdks#amzn
-  - sdk install java 17.0.10-amzn
-  - sdk use java 17.0.10-amzn
+  - sdk install java 25.0.4-amzn
+  - sdk use java 25.0.4-amzn

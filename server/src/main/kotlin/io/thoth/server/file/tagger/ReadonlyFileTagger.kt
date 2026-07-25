@@ -1,98 +1,79 @@
 package io.thoth.server.file.tagger
 
-import org.jaudiotagger.audio.AudioFile
-import org.jaudiotagger.audio.AudioFileIO
-import org.jaudiotagger.tag.FieldKey
-import java.io.File
+import io.thoth.taglib.TagLibFile
 import java.nio.file.Path
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import kotlin.io.path.absolute
+import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.nameWithoutExtension
 
-interface ReadonlyFileTagger {
-    val title: String
-    val description: String?
-    val date: LocalDate?
-    val authors: List<String>?
-    val book: String?
-    val language: String?
-    val trackNr: Int?
-    val narrator: String?
-    val series: String?
-    val seriesIndex: Float?
+/**
+ * Reads the audiobook fields out of TagLib's normalized property map. All native access happens in
+ * the constructor so nothing has to be closed by callers.
+ */
+class ReadonlyFileTagger(
+    filePath: Path,
+) {
+    constructor(path: String) : this(Path.of(path))
+
+    private val properties: Map<String, List<String>>
+
     val cover: ByteArray?
     val duration: Int
-    val path: String
-    val lastModified: Long
-}
+    val path: String = filePath.absolute().normalize().toString()
+    val lastModified: Long = filePath.getLastModifiedTime().toMillis()
 
-open class ReadonlyFileTaggerImpl(
-    private val audioFile: AudioFile,
-) : ReadonlyFileTagger {
-    constructor(path: Path) : this(path.toFile())
-
-    constructor(file: File) : this(AudioFileIO.read(file))
-
-    constructor(path: String) : this(File(path))
-
-    override val title: String
-        get() {
-            val title = audioFile.tag.getFirst(FieldKey.TITLE).ifEmpty { null }
-            return title ?: Path.of(path).nameWithoutExtension
+    init {
+        TagLibFile(filePath).use { file ->
+            properties = file.properties()
+            cover = file.pictures().firstOrNull()?.data
+            duration = file.lengthInSeconds
         }
+    }
 
-    override val description: String?
-        get() = audioFile.tag.getFirst(FieldKey.COMMENT).ifEmpty { null }
+    val title: String
+        get() = first("TITLE") ?: Path.of(path).nameWithoutExtension
 
-    override val date: LocalDate?
-        get() {
-            return try {
-                val releaseDate: String? = audioFile.tag.getFirst(FieldKey.ORIGINALRELEASEDATE)
-                LocalDate.parse(releaseDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-            } catch (e: Exception) {
-                val year = audioFile.tag.getFirst(FieldKey.YEAR).toIntOrNull()
-                val albumYear = audioFile.tag.getFirst(FieldKey.ALBUM_YEAR).toIntOrNull()
+    val description: String?
+        get() = first("COMMENT")
 
-                val finalYear = year ?: albumYear ?: return null
-                return LocalDate.of(finalYear, 1, 1)
-            }
+    val date: LocalDate?
+        get() = parseDate(first("ORIGINALDATE") ?: first("RELEASEDATE") ?: first("DATE"))
+
+    /** TagLib splits multi-valued fields for us, replacing the NUL separated string jaudiotagger produced. */
+    val authors: List<String>?
+        get() = properties["ARTIST"]?.filter { it.isNotBlank() }?.ifEmpty { null }
+
+    val book: String?
+        get() = first("ALBUM")
+
+    val language: String?
+        get() = first("LANGUAGE")
+
+    val trackNr: Int?
+        get() = first("TRACKNUMBER")?.substringBefore('/')?.trim()?.toIntOrNull()
+
+    val narrator: String?
+        get() = first("COMPOSER")
+
+    /**
+     * The series name is written to ID3v2's TIT1, which TagLib reports as WORK; MP4 files keep the
+     * equivalent in the grouping atom, reported as GROUPING.
+     */
+    val series: String?
+        get() = first("WORK") ?: first("GROUPING")
+
+    val seriesIndex: Float?
+        get() = first("CATALOGNUMBER")?.toFloatOrNull()
+
+    private fun first(key: String): String? = properties[key]?.firstOrNull()?.ifBlank { null }
+
+    private companion object {
+        /** Tags carry either a full date or a bare year, depending on the format and tagger. */
+        fun parseDate(value: String?): LocalDate? {
+            val date = value?.trim()?.ifEmpty { null } ?: return null
+            runCatching { return LocalDate.parse(date.take(10)) }
+            return date.take(4).toIntOrNull()?.let { LocalDate.of(it, 1, 1) }
         }
-
-    override val authors: List<String>?
-        get() =
-            audioFile.tag
-                .getFirst(FieldKey.ARTIST)
-                .ifEmpty { null }
-                ?.split(Char.MIN_VALUE)
-                ?.ifEmpty { null }
-
-    override val book: String?
-        get() = audioFile.tag.getFirst(FieldKey.ALBUM).ifEmpty { null }
-
-    override val language: String?
-        get() = audioFile.tag.getFirst(FieldKey.LANGUAGE).ifEmpty { null }
-
-    override val trackNr: Int?
-        get() = audioFile.tag.getFirst(FieldKey.TRACK).toIntOrNull()
-
-    override val narrator: String?
-        get() = audioFile.tag.getFirst(FieldKey.COMPOSER).ifEmpty { null }
-
-    override val series: String?
-        get() = audioFile.tag.getFirst(FieldKey.GROUPING).ifEmpty { null }
-
-    override val seriesIndex: Float?
-        get() = audioFile.tag.getFirst(FieldKey.CATALOG_NO).toFloatOrNull()
-
-    override val cover: ByteArray?
-        get() = audioFile.tag.firstArtwork?.binaryData
-
-    override val duration: Int
-        get() = audioFile.audioHeader.trackLength
-
-    override val path: String
-        get() = audioFile.file.normalize().absolutePath
-
-    override val lastModified: Long
-        get() = audioFile.file.lastModified()
+    }
 }

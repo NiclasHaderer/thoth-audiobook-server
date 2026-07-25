@@ -6,13 +6,17 @@ plugins {
 }
 
 application {
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
+    // :taglib reaches TagLib through the FFM API, which needs native access granted.
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true", "--enable-native-access=ALL-UNNAMED")
     mainClass.set("io.thoth.server.ApplicationKt")
     tasks.run.get().workingDir = rootProject.projectDir
 }
 
 // Shadow task depends on Jar task, so these configs are reflected for Shadow as well
-tasks.jar { manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt" }
+tasks.jar {
+    manifest.attributes["Main-Class"] = "io.thoth.server.ApplicationKt"
+    manifest.attributes["Enable-Native-Access"] = "ALL-UNNAMED"
+}
 
 dependencies {
     // Other projects
@@ -50,7 +54,7 @@ dependencies {
     implementation(libs.bundles.koin)
 
     // Audio file processing
-    implementation(libs.jaudiotagger)
+    implementation(project(":taglib"))
     // Folder watching
     implementation(libs.directory.watcher)
     // Search
