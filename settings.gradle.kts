@@ -23,4 +23,5 @@ include(
     "auth",
     "auth-models",
     "client",
+    "taglib",
 )

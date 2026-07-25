@@ -3,7 +3,6 @@ package io.thoth.server.file.analyzer.impl
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.tagger.ReadonlyFileTagger
-import io.thoth.server.file.tagger.ReadonlyFileTaggerImpl
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
@@ -19,7 +18,7 @@ class AudioFileAnalyzerWrapper(
         attrs: BasicFileAttributes,
         libraryPath: Path,
     ): AudioFileAnalysisResult? {
-        val tags = ReadonlyFileTaggerImpl(filePath)
+        val tags = ReadonlyFileTagger(filePath)
         for (analyzer in analyzers) {
             try {
                 val result = analyzer.analyze(filePath, attrs, tags, libraryPath)

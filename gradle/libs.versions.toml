@@ -19,14 +19,13 @@ jsoup = "1.22.2"
 json = "20260719"
 caffeine = "3.2.4"
 classgraph = "4.8.184"
-jaudiotagger = "v3.0.1"
 fileWatcher = "0.19.1"
 fuzzyWuzzy = "1.4.0"
 cronUtils = "9.2.1"
 kotlinLogging = "8.0.4"
 logback = "1.5.38"
 slf4j = "2.0.18"
-shadow = "8.3.11"
+shadow = "9.6.1"
 
 [libraries]
 # Kotlin
@@ -107,8 +106,7 @@ jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 json = { module = "org.json:json", version.ref = "json" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 classgraph = { module = "io.github.classgraph:classgraph", version.ref = "classgraph" }
-jaudiotagger = { module = "org.bitbucket.ijabz:jaudiotagger", version.ref = "jaudiotagger" }
-directory-watcher = { module = "io.methvin:directory-watcher", version.ref = "fileWatcher" }
+directory-watcher ={ module = "io.methvin:directory-watcher", version.ref = "fileWatcher" }
 fuzzywuzzy = { module = "me.xdrop:fuzzywuzzy", version.ref = "fuzzyWuzzy" }
 cron-utils = { module = "com.cronutils:cron-utils", version.ref = "cronUtils" }
 

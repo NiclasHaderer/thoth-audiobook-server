@@ -24,6 +24,9 @@ abstract class ClientGenerator(
     fun safeClient() {
         val client = generateClient()
         if (cleanDistPackage) {
+            // An empty dist resolves to the current working directory, so cleaning
+            // it would wipe whatever the process happens to run in.
+            require(dist.toString().isNotBlank()) { "Refusing to clean an empty dist path" }
             dist.toFile().deleteRecursively()
         }
         client.forEach {
