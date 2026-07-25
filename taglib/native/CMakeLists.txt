@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.20)
 
 project(thoth_taglib CXX)
 
+# TagLib sets these for its own subdirectory only, so repeat them here: tag_c is defined at this
+# level and needs the same C++ level, and the static libtag.a has to be PIC to link into a shared
+# library on ELF platforms.
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 set(TAGLIB_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/taglib)
 if(NOT EXISTS ${TAGLIB_SOURCE_DIR}/CMakeLists.txt)
   message(FATAL_ERROR
@@ -15,9 +22,10 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(WITH_ZLIB OFF CACHE BOOL "" FORCE)
 set(VISIBILITY_HIDDEN ON CACHE BOOL "" FORCE)
-if(MSVC)
-  set(ENABLE_STATIC_RUNTIME ON CACHE BOOL "" FORCE)
-endif()
+# TagLib's ENABLE_STATIC_RUNTIME only rewrites the flags in its own scope, which would leave tag_c
+# on the dynamic runtime and mismatched against libtag.a. Setting the policy-backed variable applies
+# to both targets, so the shipped dll carries the CRT with it.
+set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>)
 
 add_subdirectory(${TAGLIB_SOURCE_DIR} taglib EXCLUDE_FROM_ALL)
 
