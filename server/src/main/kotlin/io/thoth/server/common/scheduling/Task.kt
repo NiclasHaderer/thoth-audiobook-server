@@ -16,7 +16,7 @@ class EventTask<T>(
     override val name: String,
     val callback: suspend (Event<T>) -> Unit,
 ) : Task {
-    override val type: TaskType = TaskType.EVENT
+    override val type = TaskType.EVENT
 
     class Event<T>(
         val name: String,
@@ -27,23 +27,10 @@ class EventTask<T>(
     fun build(data: T): Event<T> = Event(name, data, this)
 }
 
-class ScheduleTask(
+class CronTask(
     override val name: String,
     val cron: Cron,
     val callback: suspend () -> Unit,
 ) : Task {
-    override val type: TaskType = TaskType.CRON
-}
-
-interface ScheduleCollection {
-    fun <T> event(
-        event: String,
-        callback: suspend (EventTask.Event<T>) -> Unit,
-    ): EventTask<T> = EventTask(event, callback)
-
-    fun schedule(
-        name: String,
-        cron: Cron,
-        callback: suspend () -> Unit,
-    ): ScheduleTask = ScheduleTask(name, cron, callback)
+    override val type = TaskType.CRON
 }

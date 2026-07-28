@@ -1,142 +1,137 @@
 package io.thoth.server.common.scheduling
 
-import io.thoth.server.common.extensions.nextExecution
-import io.thoth.server.common.extensions.toHumanReadable
-import kotlinx.coroutines.coroutineScope
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
+import io.thoth.server.common.extensions.toHumanReadable
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.toKotlinDuration
 
-abstract class TaskQueueHolder {
-    private val _taskQueue = mutableListOf<ScheduledTask>()
-
-    protected val taskQueue: List<ScheduledTask>
-        get() = modifyQueue { toList() }
-
-    protected fun <T> modifyQueue(action: MutableList<ScheduledTask>.() -> T): T {
-        synchronized(_taskQueue) {
-            return _taskQueue.action()
-        }
-    }
+private enum class SchedulerState {
+    STOPPED,
+    RUNNING,
+    /** Stop was requested and the loop is finishing the task it is running */
+    STOPPING,
 }
 
-open class Scheduler : TaskQueueHolder() {
-    data class QueuedTask(
-        val name: String,
-        val executeAt: LocalDateTime,
-        val type: TaskType,
-    )
-
-    private var currentExecution: DelayedExecution? = null
-    private val schedules = mutableListOf<Task>()
+class Scheduler {
     private val log = logger {}
-    private val started = AtomicBoolean(false)
+
+    // Needs to be locked before reading/writing from it
+    private val taskQueue = mutableListOf<ScheduledTask>()
+    private val state = AtomicReference(SchedulerState.STOPPED)
+
+    private val queueChanged = Channel<Unit>(Channel.CONFLATED)
 
     val queue: List<QueuedTask>
-        get() = taskQueue.map { QueuedTask(it.task.name, it.executeAt, it.task.type) }
+        get() =
+            synchronized(taskQueue) {
+                taskQueue.map { QueuedTask(it.task.name, it.executeAt, it.task.type) }
+            }
 
     suspend fun start() {
-        if (started.compareAndExchange(false, true)) {
+        if (!state.compareAndSet(SchedulerState.STOPPED, SchedulerState.RUNNING)) {
+            log.warn { "Scheduler is already running" }
             return
         }
-        internalStart()
-    }
-
-    fun launchScheduledJob(schedule: ScheduleTask) {
-        val relevantSchedules = schedules.filterIsInstance<ScheduleTask>().filter { it == schedule }
-        relevantSchedules.forEach { task ->
-            modifyQueue { add(ScheduledCronTask(task, LocalDateTime.now(), "Launched manually")) }
-        }
-        if (relevantSchedules.isEmpty()) {
-            log.warn { "No schedules for scheduleName ${schedule.name}" }
-        } else {
-            log.info { "Dispatched schedule ${schedule.name} to ${relevantSchedules.size} schedules" }
+        try {
+            runQueue()
+        } finally {
+            state.set(SchedulerState.STOPPED)
         }
     }
 
-    suspend fun <T> dispatch(event: EventTask.Event<T>) {
-        if (!started.get()) {
-            throw IllegalStateException("Scheduler not started")
+    fun stop() {
+        state.compareAndSet(SchedulerState.RUNNING, SchedulerState.STOPPING)
+        wakeUp()
+    }
+
+    fun schedule(task: CronTask) {
+        // Constructed before locking, as it evaluates the cron expression
+        val execution = ScheduledCronTask(task)
+        synchronized(taskQueue) {
+            // One cron entry per task, so scheduling the same task twice does not double its executions
+            taskQueue.removeAll { it is ScheduledCronTask && it.task === task }
+            taskQueue.add(execution)
         }
+        wakeUp()
+    }
 
-        val relevantSchedules = schedules.filterIsInstance<EventTask<T>>().filter { it == event.origin }
+    fun launchNow(task: CronTask) {
+        synchronized(taskQueue) { taskQueue.add(ScheduledManualTask(task)) }
+        wakeUp()
+        log.info { "Queued schedule '${task.name}'" }
+    }
 
-        relevantSchedules.forEach { task -> modifyQueue { add(ScheduledEventTask(task, event)) } }
-        if (relevantSchedules.isEmpty()) {
-            log.warn { "No schedules for event $event" }
-        } else {
-            log.info { "Dispatched event $event to ${relevantSchedules.size} schedules" }
+    /** Runs the task the event was built by. */
+    fun <T> dispatch(event: EventTask.Event<T>) {
+        check(state.get() == SchedulerState.RUNNING) { "Scheduler not started" }
+
+        synchronized(taskQueue) { taskQueue.add(ScheduledEventTask(event)) }
+        wakeUp()
+        log.info { "Dispatched event '${event.name}' to schedule '${event.origin.name}'" }
+    }
+
+    private fun wakeUp() {
+        queueChanged.trySend(Unit)
+    }
+
+    private fun rescheduleCronTask(task: CronTask) {
+        val execution = ScheduledCronTask(task)
+        synchronized(taskQueue) {
+            // Rescheduling twice would pile up cron entries, which someone scheduling the task again can cause
+            if (taskQueue.any { it is ScheduledCronTask && it.task === task }) return
+            taskQueue.add(execution)
         }
-        reevaluateNextExecutionTime()
     }
 
-    fun <T> register(event: EventTask<T>) {
-        schedules.add(event)
-    }
+    private suspend fun runQueue() {
+        while (state.get() == SchedulerState.RUNNING && currentCoroutineContext().isActive) {
+            // The task which is due next. Its execution time can be in the past if it is overdue.
+            val next = synchronized(taskQueue) { taskQueue.minByOrNull { it.executeAt } }
 
-    suspend fun schedule(schedule: ScheduleTask) {
-        schedules.add(schedule)
-        queueTask(schedule)
-        reevaluateNextExecutionTime()
-    }
+            if (next == null) {
+                log.debug { "No tasks in queue. Waiting for new tasks to be scheduled" }
+                queueChanged.receive()
+                continue
+            }
 
-    private fun queueTask(task: ScheduleTask) {
-        val nextExecution = task.cron.nextExecution()
-        modifyQueue { add(ScheduledCronTask(task, nextExecution)) }
-    }
-
-    private suspend fun reevaluateNextExecutionTime() {
-        currentExecution?.cancel()
-        currentExecution = null
-    }
-
-    private suspend fun internalStart() =
-        coroutineScope {
-            while (true) {
-                // Get the task with the next execution time. This time can also be in the past if the
-                // task is overdue.
-                val scheduledTask = taskQueue.minByOrNull { it.executeAt }
-
-                if (scheduledTask == null) {
-                    log.debug { "No tasks in queue. Waiting for new tasks to be scheduled" }
-                    val currentExecution = DelayedExecution(Long.MAX_VALUE) {}
-                    currentExecution.runInBackground(this@coroutineScope)
-                    this@Scheduler.currentExecution = currentExecution
-                    currentExecution.join()
-                    continue
-                }
-
+            val waitFor = next.timeUntilExecution()
+            if (waitFor > Duration.ZERO) {
                 log.debug {
-                    "Next task '${scheduledTask.task.name}' will be executed in ${
-                        Duration.of(scheduledTask.schedulesIn(), ChronoUnit.MILLIS).toHumanReadable()
-                    }. " +
-                        "Triggered by ${scheduledTask.task.type}:${scheduledTask.cause}"
+                    "Next task '${next.task.name}' will be executed in ${waitFor.toHumanReadable()}. " +
+                        "Triggered by ${next.task.type}:${next.cause}"
                 }
+                // Waking up early means the queue changed and another task may be due before this one
+                if (withTimeoutOrNull(waitFor.toKotlinDuration()) { queueChanged.receive() } != null) continue
+            }
 
-                // Schedule the task for execution
-                val currentExecution = DelayedExecution(scheduledTask.schedulesIn(), scheduledTask::run)
-                currentExecution.runInBackground(this@coroutineScope)
-                this@Scheduler.currentExecution = currentExecution
-                // Wait for the task to be executed
-                currentExecution.join()
+            // Take the task out of the queue before running it, so nothing can queue it a second time meanwhile
+            if (!synchronized(taskQueue) { taskQueue.remove(next) }) continue
+            execute(next)
+        }
+    }
 
-                if (currentExecution.executedSuccessfully()) {
-                    // Task has been executed successfully
-                    // Task can therefore be removed from the queue
-                    log.debug { "Scheduled task '${scheduledTask.task.name}' was executed successfully" }
-                    modifyQueue { filter { it == scheduledTask }.forEach { remove(it) } }
-                    // If the task was a cron task, it should be rescheduled
-                    if (scheduledTask is ScheduledCronTask) {
-                        queueTask(scheduledTask.task)
-                    }
-                } else {
-                    // Task was canceled
-                    // This can happen if a new task is added to the schedule or an event is dispatched
-                    // In this case just look for the next task to run by checking the queue again
-                    log.debug { "Waiting for scheduled task was canceled. Looking for the next task to run" }
-                }
+    private suspend fun execute(scheduledTask: ScheduledTask) {
+        try {
+            // The tasks block, as they read files and talk to the database
+            withContext(Dispatchers.IO) { scheduledTask.run() }
+            log.debug { "Scheduled task '${scheduledTask.task.name}' was executed successfully" }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // A failing task must neither take the scheduler down with it nor be retried in a tight loop
+            log.error(e) { "Scheduled task '${scheduledTask.task.name}' failed" }
+        } finally {
+            if (scheduledTask is ScheduledCronTask) {
+                rescheduleCronTask(scheduledTask.task)
             }
         }
+    }
 }

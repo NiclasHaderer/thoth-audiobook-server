@@ -1,40 +1,46 @@
 package io.thoth.server.common.scheduling
 
+import io.thoth.server.common.extensions.nextExecution
 import java.time.Duration
 import java.time.LocalDateTime
+
+data class QueuedTask(
+    val name: String,
+    val executeAt: LocalDateTime,
+    val type: TaskType,
+)
 
 abstract class ScheduledTask(
     open val task: Task,
     val executeAt: LocalDateTime,
     val cause: String,
 ) {
-    fun schedulesIn(): Long {
-        val now = LocalDateTime.now()
-        return try {
-            Duration.between(now, executeAt).toMillis()
-        } catch (e: ArithmeticException) {
-            Long.MAX_VALUE
-        }
-    }
+    /** Negative if the execution is overdue. */
+    fun timeUntilExecution(): Duration = Duration.between(LocalDateTime.now(), executeAt)
 
     abstract suspend fun run()
 }
 
 class ScheduledCronTask(
-    override val task: ScheduleTask,
-    executeAt: LocalDateTime,
-    cause: String = task.cron.asString(),
-) : ScheduledTask(task, executeAt, cause) {
+    override val task: CronTask,
+) : ScheduledTask(task, task.cron.nextExecution(), task.cron.asString()) {
+    override suspend fun run() {
+        task.callback()
+    }
+}
+
+class ScheduledManualTask(
+    override val task: CronTask,
+) : ScheduledTask(task, LocalDateTime.now(), "Launched manually") {
     override suspend fun run() {
         task.callback()
     }
 }
 
 class ScheduledEventTask<T>(
-    override val task: EventTask<T>,
     val event: EventTask.Event<T>,
-) : ScheduledTask(task, LocalDateTime.now(), event.name) {
+) : ScheduledTask(event.origin, LocalDateTime.now(), event.name) {
     override suspend fun run() {
-        task.callback(event)
+        event.origin.callback(event)
     }
 }
