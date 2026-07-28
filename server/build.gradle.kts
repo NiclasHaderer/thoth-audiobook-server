@@ -27,7 +27,6 @@ dependencies {
     // Metadata
     implementation(libs.jsoup)
     implementation(libs.caffeine)
-    implementation(libs.json)
 
     // Database
     implementation(libs.bundles.exposed)

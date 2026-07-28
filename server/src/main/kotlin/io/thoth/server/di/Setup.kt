@@ -1,5 +1,6 @@
 package io.thoth.server.di
 
+import io.thoth.metadata.CachingMetadataAgent
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.audible.client.AudibleMetadataAgent
 import io.thoth.server.common.scheduling.Scheduler
@@ -29,7 +30,7 @@ fun setupDependencyInjection() =
         modules(
             module {
                 single { ThothConfig.load() }
-                single<MetadataAgents> { MetadataAgents(listOf(AudibleMetadataAgent())) }
+                single<MetadataAgents> { MetadataAgents(listOf(CachingMetadataAgent(AudibleMetadataAgent()))) }
                 single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
                 single<LibraryScanner> { LibraryScannerImpl() }
                 single<Serialization> { JacksonSerialization() }
