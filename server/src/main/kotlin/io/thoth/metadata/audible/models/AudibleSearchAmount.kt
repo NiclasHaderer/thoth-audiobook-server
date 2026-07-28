@@ -8,8 +8,7 @@ enum class AudibleSearchAmount(
     Twenty(20),
     Thirty(30),
     Forty(40),
-    Fifty(50),
-    ;
+    Fifty(50);
 
     companion object {
         fun from(searchCount: MetadataSearchCount): AudibleSearchAmount =

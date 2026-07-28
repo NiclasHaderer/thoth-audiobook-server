@@ -1,6 +1,5 @@
 package io.thoth.server.repositories
 
-import io.thoth.metadata.MetadataAgentWrapper
 import io.thoth.metadata.MetadataAgents
 import io.thoth.models.Series
 import io.thoth.models.SeriesDetailed
@@ -213,9 +212,7 @@ class SeriesRepositoryImpl :
             val series = raw(id, libraryId)
             val library = libraryRepository.raw(libraryId)
 
-            val metadataAgents =
-                library.metadataAgents.mapNotNull { agent -> metadataAgents.find { it.name == agent.name } }
-            val metadataWrapper = MetadataAgentWrapper(metadataAgents)
+            val metadataWrapper = metadataAgents.forLibrary(library)
             val seriesMetadata =
                 runBlocking {
                     metadataWrapper

@@ -1,7 +1,6 @@
 package io.thoth.metadata
 
 import io.ktor.http.ParametersBuilder
-import java.util.Optional
 
 internal fun String.replaceAll(
     values: List<Regex>,
@@ -18,23 +17,3 @@ internal fun ParametersBuilder.appendOptional(
 ) {
     if (value != null) append(name, value)
 }
-
-internal fun <T> List<T>.saveSubList(
-    startIndex: Int,
-    endIndex: Int? = null,
-): List<T> {
-    val searchStartIndex = if (this.size < startIndex) this.size else startIndex
-    val searchEndIndex =
-        if (endIndex == null) {
-            this.size
-        } else if (this.size < endIndex) {
-            this.size
-        } else {
-            endIndex
-        }
-    return this.subList(searchStartIndex, searchEndIndex)
-}
-
-internal fun <T> T?.optional() = Optional.ofNullable(this)
-
-internal fun <T> T?.packAsList() = if (this == null) emptyList<T>() else listOf(this)

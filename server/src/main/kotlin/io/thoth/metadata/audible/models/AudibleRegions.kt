@@ -1,57 +1,56 @@
 package io.thoth.metadata.audible.models
 
-enum class AudibleRegions(
-    val value: String,
-) {
-    AU("au"),
-    CA("ca"),
-    DE("de"),
-    ES("es"),
-    FR("fr"),
-    IN("in"),
-    IT("it"),
-    JP("jp"),
-    US("us"),
-    UK("uk"),
-    ;
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
+
+private val log = logger {}
+
+enum class AudibleRegions {
+    AU,
+    CA,
+    DE,
+    ES,
+    FR,
+    IN,
+    IT,
+    JP,
+    US,
+    UK;
 
     companion object {
         fun from(region: String): AudibleRegions =
-            entries.firstOrNull { it.name.lowercase() == region.lowercase() } ?: US
+            entries.firstOrNull { it.name.equals(region, ignoreCase = true) }
+                ?: US.also { log.warn { "'$region' is no Audible marketplace, falling back to $it" } }
     }
 }
 
 class AudibleRegionValue(
-    val chapterName: String,
     val tld: String,
-    val datePattern: String,
     val titleReplacers: List<Regex> = listOf(),
+    /**
+     * Locale of the scraped pages. Marketplaces serving more than one locale otherwise pick it based on the IP of the
+     * caller, which would give a server outside the region pages in a foreign language.
+     */
+    val locale: String,
 ) {
     fun toHost(): String = "audible.$tld"
+
+    fun toApiHost(): String = "api.audible.$tld"
 }
 
-private const val AUDIBLE_CHAPTER_NAME = "Chapter"
 private val TITLE_REPLACER = listOf(", Book .*".toRegex())
-private const val DATE_PATTERN = "MM-dd-yy"
 
 private val RegionMappings =
-    mutableMapOf(
-        AudibleRegions.AU to
-            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "com.au", DATE_PATTERN, TITLE_REPLACER),
-        AudibleRegions.CA to
-            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "ca", DATE_PATTERN, TITLE_REPLACER),
-        AudibleRegions.DE to
-            AudibleRegionValue(chapterName = "Kapitel", tld = "de", "dd.MM.yyyy", listOf(" - Gesprochen .*".toRegex())),
-        AudibleRegions.ES to AudibleRegionValue(chapterName = "Capítulo", tld = "es", DATE_PATTERN),
-        AudibleRegions.FR to AudibleRegionValue(chapterName = "Chapitre", tld = "fr", DATE_PATTERN),
-        AudibleRegions.IN to
-            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "in", DATE_PATTERN, TITLE_REPLACER),
-        AudibleRegions.IT to AudibleRegionValue(chapterName = "Capitolo", tld = "it", DATE_PATTERN),
-        AudibleRegions.JP to AudibleRegionValue(chapterName = "章", tld = "co.jp", DATE_PATTERN),
-        AudibleRegions.US to
-            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "com", DATE_PATTERN, TITLE_REPLACER),
-        AudibleRegions.UK to
-            AudibleRegionValue(chapterName = AUDIBLE_CHAPTER_NAME, tld = "co.uk", DATE_PATTERN, TITLE_REPLACER),
+    mapOf(
+        AudibleRegions.AU to AudibleRegionValue(tld = "com.au", TITLE_REPLACER, locale = "en_AU"),
+        AudibleRegions.CA to AudibleRegionValue(tld = "ca", TITLE_REPLACER, locale = "en_CA"),
+        AudibleRegions.DE to AudibleRegionValue(tld = "de", listOf(" - Gesprochen .*".toRegex()), locale = "de_DE"),
+        AudibleRegions.ES to AudibleRegionValue(tld = "es", locale = "es_ES"),
+        AudibleRegions.FR to AudibleRegionValue(tld = "fr", locale = "fr_FR"),
+        AudibleRegions.IN to AudibleRegionValue(tld = "in", TITLE_REPLACER, locale = "en_IN"),
+        AudibleRegions.IT to AudibleRegionValue(tld = "it", locale = "it_IT"),
+        AudibleRegions.JP to AudibleRegionValue(tld = "co.jp", locale = "ja_JP"),
+        AudibleRegions.US to AudibleRegionValue(tld = "com", TITLE_REPLACER, locale = "en_US"),
+        AudibleRegions.UK to AudibleRegionValue(tld = "co.uk", TITLE_REPLACER, locale = "en_GB"),
     )
 
 fun AudibleRegions.getValue(): AudibleRegionValue = RegionMappings[this]!!
