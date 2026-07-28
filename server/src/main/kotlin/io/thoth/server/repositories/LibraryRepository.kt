@@ -8,7 +8,6 @@ import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.schedules.ThothSchedules
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.core.*
 import org.koin.core.component.KoinComponent
@@ -52,7 +51,7 @@ class LibraryRepositoryImpl :
 
     override fun rescan(id: UUID) {
         val library = raw(id)
-        runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
+        scheduler.dispatch(schedules.scanLibrary.build(library))
     }
 
     override fun get(id: UUID): Library = transaction { raw(id).toModel() }
@@ -80,7 +79,7 @@ class LibraryRepositoryImpl :
                     language = partial.language ?: language
                 }
                 if (partial.folders != null || partial.metadataScanners != null || partial.fileScanners != null) {
-                    runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
+                    scheduler.dispatch(schedules.scanLibrary.build(library))
                 }
                 library.toModel()
             }
@@ -100,7 +99,7 @@ class LibraryRepositoryImpl :
                         fileScanners = complete.fileScanners
                         language = complete.language
                     }
-                runBlocking { scheduler.dispatch(schedules.scanLibrary.build(library)) }
+                scheduler.dispatch(schedules.scanLibrary.build(library))
                 library.toModel()
             }
         }

@@ -103,16 +103,11 @@ fun Application.routing() {
 }
 
 fun Application.startBackgroundJobs() {
-    launch { get<Scheduler>().start() }
-    launch {
-        val scheduler = get<Scheduler>()
-        val thothSchedules = get<ThothSchedules>()
-        scheduler.schedule(thothSchedules.fullScan)
-
-        scheduler.register(thothSchedules.scanLibrary)
-
-        scheduler.launchScheduledJob(thothSchedules.fullScan)
-    }
+    val scheduler = get<Scheduler>()
+    val thothSchedules = get<ThothSchedules>()
+    scheduler.schedule(thothSchedules.fullScan)
+    scheduler.launchNow(thothSchedules.fullScan)
+    launch { scheduler.start() }
 
     // Generate clients
     if (!get<ThothConfig>().production) {
