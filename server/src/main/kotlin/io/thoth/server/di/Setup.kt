@@ -25,7 +25,7 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.logger.slf4jLogger
 
-fun setupDependencyInjection() =
+fun setupDependencyInjection() {
     startKoin {
         modules(
             module {
@@ -33,7 +33,8 @@ fun setupDependencyInjection() =
                 single<MetadataAgents> { MetadataAgents(listOf(CachingMetadataAgent(AudibleMetadataAgent()))) }
                 single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
                 single<LibraryScanner> { LibraryScannerImpl() }
-                single<Serialization> { JacksonSerialization() }
+                single { JacksonSerialization() }
+                single<Serialization> { get<JacksonSerialization>() }
                 single<BookRepository> { BookRepositoryImpl() }
                 single<AuthorRepository> { AuthorServiceImpl() }
                 single<SeriesRepository> { SeriesRepositoryImpl() }
@@ -44,3 +45,4 @@ fun setupDependencyInjection() =
         )
         slf4jLogger()
     }
+}

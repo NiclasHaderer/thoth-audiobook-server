@@ -8,43 +8,28 @@ import kotlin.reflect.KType
 import kotlin.reflect.javaType
 
 class JacksonSerialization : Serialization {
-    var objectMapper: ObjectMapper? = null
+    /**
+     * Ktor builds the mapper, so this is filled in by configureSerialization. It cannot be a constructor argument:
+     * table definitions resolve this class while the database connects, which happens before the plugins are set up.
+     */
+    lateinit var objectMapper: ObjectMapper
 
-    override fun serializeValue(value: Any): String {
-        require(objectMapper != null) { "ObjectMapper not initialized" }
-        return objectMapper!!.writeValueAsString(value)
-    }
+    override fun serializeValue(value: Any): String = objectMapper.writeValueAsString(value)
 
     override fun <T : Any> deserializeValue(
         value: String,
         to: KClass<T>,
-    ): T = runDeserialization(value, to.java)
+    ): T = objectMapper.readValue(value, to.java)
 
     @OptIn(ExperimentalStdlibApi::class)
     override fun <T : Any> deserializeValue(
         value: String,
         to: KType,
     ): T =
-        runDeserialization(
+        objectMapper.readValue(
             value,
             object : TypeReference<T>() {
                 override fun getType(): Type = to.javaType
             },
         )
-
-    private fun <T : Any> runDeserialization(
-        value: String,
-        to: Class<T>,
-    ): T {
-        require(objectMapper != null) { "ObjectMapper not initialized" }
-        return objectMapper!!.readValue(value, to)
-    }
-
-    private fun <T : Any> runDeserialization(
-        value: String,
-        to: TypeReference<T>,
-    ): T {
-        require(objectMapper != null) { "ObjectMapper not initialized" }
-        return objectMapper!!.readValue(value, to)
-    }
 }

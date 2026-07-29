@@ -4,15 +4,14 @@ import io.thoth.server.common.extensions.countParents
 import io.thoth.server.common.extensions.grandGrandParentName
 import io.thoth.server.common.extensions.grandParentName
 import io.thoth.server.common.extensions.parentName
+import io.thoth.server.common.extensions.relativeToBase
 import io.thoth.server.common.extensions.replaceAll
-import io.thoth.server.common.extensions.replacePart
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.tagger.ReadonlyFileTagger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
-import kotlin.io.path.absolutePathString
 
 class AudioFolderScanner : AudioFileAnalyzer {
     override val name = "AudioFolderScanner"
@@ -24,7 +23,7 @@ class AudioFolderScanner : AudioFileAnalyzer {
         tags: ReadonlyFileTagger,
         libraryPath: Path,
     ): AudioFileAnalysisResult? {
-        val cleanPath = filePath.replacePart(libraryPath.absolutePathString())
+        val cleanPath = filePath.relativeToBase(libraryPath) ?: return null
         val parentCount = cleanPath.countParents()
         if (parentCount != 2 && parentCount != 3) return null
 

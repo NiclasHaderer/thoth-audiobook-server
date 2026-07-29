@@ -1,11 +1,12 @@
 package io.thoth.server.file.scanner
 
-import io.thoth.server.common.extensions.isAudioFile
+import io.thoth.server.common.extensions.hasAudioExtension
 import io.thoth.server.config.ThothConfig
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.IOException
+import java.nio.file.FileVisitOption
 import java.nio.file.FileVisitResult
 import java.nio.file.FileVisitor
 import java.nio.file.Files
@@ -41,7 +42,7 @@ private class FileTreeScanner(
         file: Path,
         attrs: BasicFileAttributes,
     ): FileVisitResult {
-        if (file.isAudioFile()) {
+        if (attrs.isRegularFile && file.hasAudioExtension()) {
             addOrUpdate(file.absolute().normalize(), attrs)
         }
         return FileVisitResult.CONTINUE
@@ -64,5 +65,6 @@ fun walkFiles(
     addOrUpdate: (file: Path, attrs: BasicFileAttributes) -> Unit,
 ) {
     val fileTreeScanner = FileTreeScanner(ignoreFolder, addOrUpdate)
-    Files.walkFileTree(rootDirectory, fileTreeScanner)
+    // Follow links so symlinked libraries and books get scanned. Link loops surface as visitFileFailed, which skips.
+    Files.walkFileTree(rootDirectory, setOf(FileVisitOption.FOLLOW_LINKS), Int.MAX_VALUE, fileTreeScanner)
 }

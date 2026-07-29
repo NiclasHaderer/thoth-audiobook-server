@@ -21,7 +21,6 @@ import io.thoth.server.api.metadataScannerRouting
 import io.thoth.server.api.pingRouting
 import io.thoth.server.api.scannerRouting
 import io.thoth.server.api.seriesRouting
-import io.thoth.server.common.extensions.get
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.DatabaseConnector
@@ -35,6 +34,7 @@ import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
 import io.thoth.server.schedules.ThothSchedules
 import kotlinx.coroutines.launch
+import org.koin.ktor.ext.get
 import org.slf4j.bridge.SLF4JBridgeHandler
 import java.util.logging.LogManager
 

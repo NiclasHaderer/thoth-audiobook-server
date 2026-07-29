@@ -83,7 +83,14 @@ class Scheduler {
     }
 
     private fun rescheduleCronTask(task: CronTask) {
-        val execution = ScheduledCronTask(task)
+        // Runs from a finally block, so evaluating the cron must not be able to take the scheduler down
+        val execution =
+            try {
+                ScheduledCronTask(task)
+            } catch (e: Exception) {
+                log.error(e) { "Could not reschedule task '${task.name}'. It will not run again." }
+                return
+            }
         synchronized(taskQueue) {
             // Rescheduling twice would pile up cron entries, which someone scheduling the task again can cause
             if (taskQueue.any { it is ScheduledCronTask && it.task === task }) return
