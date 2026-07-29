@@ -2,7 +2,6 @@ package io.thoth.server.repositories
 
 import io.thoth.models.LibrarySearchResult
 import io.thoth.server.common.extensions.fuzzy
-import io.thoth.server.common.extensions.saveTo
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookEntity
@@ -36,14 +35,14 @@ object SearchRepository {
                 .fuzzy(
                     query,
                 ) { listOfNotNull(it.name) }
-                .saveTo(limit)
+                .take(limit)
         val bookAuthors =
             BookEntity
                 .find { BooksTable.library inList libsToSearch }
                 .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.series.joinToString(",") { it.title }) }
-                .saveTo(limit)
+                .take(limit)
                 .flatMap { it.authors }
-        (authors + bookAuthors).distinctBy { it.id }.saveTo(limit).map { it.toModel() }
+        (authors + bookAuthors).distinctBy { it.id }.take(limit).map { it.toModel() }
     }
 
     private fun everywhereSeries(
@@ -57,14 +56,14 @@ object SearchRepository {
                 .fuzzy(
                     query,
                 ) { listOfNotNull(it.title) }
-                .saveTo(limit)
+                .take(limit)
         val authorSeries =
             BookEntity
                 .find { BooksTable.library inList libsToSearch }
                 .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.authors.joinToString(",") { it.name }) }
-                .saveTo(limit)
+                .take(limit)
                 .flatMap { it.series }
-        (series + authorSeries).distinctBy { it.id }.saveTo(limit).map { it.toModel() }
+        (series + authorSeries).distinctBy { it.id }.take(limit).map { it.toModel() }
     }
 
     private fun everywhereBook(
@@ -78,7 +77,7 @@ object SearchRepository {
                 .fuzzy(
                     query,
                 ) { listOfNotNull(it.title) }
-                .saveTo(limit)
+                .take(limit)
         val booksAndOther =
             BookEntity
                 .find { BooksTable.library inList libsToSearch }
@@ -88,7 +87,7 @@ object SearchRepository {
                         it.series.joinToString(",") { it.title },
                         it.narrator,
                     )
-                }.saveTo(limit)
-        (books + booksAndOther).distinctBy { it.id }.saveTo(limit).map { it.toModel() }
+                }.take(limit)
+        (books + booksAndOther).distinctBy { it.id }.take(limit).map { it.toModel() }
     }
 }

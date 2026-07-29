@@ -5,16 +5,26 @@ import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.client.statement.readRawBytes
 import kotlinx.coroutines.runBlocking
 import java.util.Base64
-import java.util.UUID
 
-private val client = HttpClient()
+private val client =
+    HttpClient {
+        // Non-2xx must not end up stored as the image body
+        expectSuccess = true
+        // The download happens while a database transaction is open, so it may not hang forever
+        install(HttpTimeout) {
+            requestTimeoutMillis = 30_000
+            connectTimeoutMillis = 10_000
+            socketTimeoutMillis = 10_000
+        }
+    }
 
 private suspend fun imageFromString(url: String): ByteArray =
-    if (url.matches("^data://".toRegex())) {
+    if (url.startsWith("data:")) {
         decodeDataURL(url)
     } else {
         client.get(url).readRawBytes()
@@ -28,8 +38,6 @@ private fun decodeDataURL(dataUrl: String): ByteArray {
 
 fun String.syncUriToFile(): ByteArray = runBlocking { imageFromString(this@syncUriToFile) }
 
-suspend fun String.uriToFile(): ByteArray = imageFromString(this@uriToFile)
-
 fun String.replaceAll(
     values: List<Regex>,
     newValue: String,
@@ -39,15 +47,12 @@ fun String.replaceAll(
     return result
 }
 
-fun String.isUUID(): Boolean {
-    val uuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
-    return this.matches(uuidRegex)
-}
+private val UUID_REGEX = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".toRegex()
+
+fun String.isUUID(): Boolean = this.matches(UUID_REGEX)
 
 fun String.toCron(): Cron {
     val cronDefinition = CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX)
     val parser = CronParser(cronDefinition)
     return parser.parse(this)
 }
-
-fun String.asUUID(): UUID = UUID.fromString(this)

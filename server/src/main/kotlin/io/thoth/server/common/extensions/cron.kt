@@ -5,7 +5,10 @@ import com.cronutils.model.time.ExecutionTime
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
-fun Cron.nextExecution(): LocalDateTime {
-    val nextExecutionTime = ExecutionTime.forCron(this).nextExecution(ZonedDateTime.now()).get()
-    return nextExecutionTime.toLocalDateTime()
-}
+/** @throws IllegalStateException if the expression parses but can never fire again, e.g. "0 0 30 2 *". 30th of February */
+fun Cron.nextExecution(): LocalDateTime =
+    ExecutionTime
+        .forCron(this)
+        .nextExecution(ZonedDateTime.now())
+        .orElseThrow { IllegalStateException("Cron expression '${asString()}' has no future execution") }
+        .toLocalDateTime()

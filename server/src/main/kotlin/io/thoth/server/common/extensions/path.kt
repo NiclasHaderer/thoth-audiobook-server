@@ -1,25 +1,16 @@
 package io.thoth.server.common.extensions
 
-import java.nio.file.FileSystems
-import java.nio.file.LinkOption
 import java.nio.file.Path
-import java.nio.file.Paths
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.extension
-import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
 
-fun Path.hasParent() = this.parent != null && this.parent.name.isNotEmpty()
+private fun Path.hasParent() = this.parent != null && this.parent.name.isNotEmpty()
 
-fun Path.replacePart(replaceString: String): Path {
-    val absReplace =
-        Path
-            .of(replaceString)
-            .toAbsolutePath()
-            .normalize()
-            .absolutePathString()
-    val absPath = this.toAbsolutePath().normalize().absolutePathString()
-    return Path.of(absPath.replace(absReplace, ""))
+/** This path relative to [base], or null if it is not inside [base]. */
+fun Path.relativeToBase(base: Path): Path? {
+    val absBase = base.toAbsolutePath().normalize()
+    val absPath = this.toAbsolutePath().normalize()
+    return if (absPath.startsWith(absBase)) absBase.relativize(absPath) else null
 }
 
 fun Path.countParents(): Int {
@@ -38,14 +29,7 @@ fun Path.grandParentName() = this.parent.parent.name
 
 fun Path.grandGrandParentName() = this.parent.parent.parent.name
 
-fun Path.replaceParts(parts: List<String>): Path {
-    var result = this
-    parts.forEach { result = result.replacePart(it) }
-    return result
-}
-
-private val AUDIO_EXTENSIONS = setOf("mp3", "flac", "ogg", "vobis", "m4a", "m4p", "m4b", "aiff", "wav", "wma", "dsf")
-
-fun Path.isAudioFile(): Boolean = this.isRegularFile(LinkOption.NOFOLLOW_LINKS) && this.hasAudioExtension()
+private val AUDIO_EXTENSIONS =
+    setOf("mp3", "flac", "ogg", "opus", "aac", "m4a", "m4p", "m4b", "aiff", "wav", "wma", "dsf")
 
 fun Path.hasAudioExtension(): Boolean = this.extension.lowercase() in AUDIO_EXTENSIONS
