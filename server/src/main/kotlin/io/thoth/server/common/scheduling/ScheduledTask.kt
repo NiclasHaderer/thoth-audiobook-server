@@ -15,7 +15,6 @@ abstract class ScheduledTask(
     val executeAt: LocalDateTime,
     val cause: String,
 ) {
-    /** Negative if the execution is overdue. */
     fun timeUntilExecution(): Duration = Duration.between(LocalDateTime.now(), executeAt)
 
     abstract suspend fun run()

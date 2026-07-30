@@ -6,63 +6,80 @@ import io.thoth.metadata.responses.MetadataSeries
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import me.xdrop.fuzzywuzzy.FuzzySearch
+
+/** Number of IDs which are resolved at once while walking the ranked hits of a search. */
+private const val RESOLUTION_WINDOW = 5
 
 /**
  * Agent for providers which only offer a book search, so looking an entity up by name means searching for it, ranking
- * the hits by name similarity and resolving the referenced IDs.
+ * the hits by name similarity and resolving the referenced IDs. Resolving is what costs requests, so it happens in
+ * windows while the returned flow is collected: taking the best match of a search with 50 hits costs one search and one
+ * window instead of 50 lookups.
  */
-abstract class SearchBasedMetadataAgent : MetadataAgent {
-    override suspend fun getAuthorByName(
+class SearchBasedMetadataAgent(
+    private val provider: MetadataProvider,
+) : MetadataAgent,
+    MetadataProvider by provider {
+    override fun getAuthorByName(
         authorName: String,
         region: String,
-    ): List<MetadataAuthor> {
-        val hits = search(region = region, author = authorName)
-        val authorIds =
-            FuzzySearch
-                .extractSorted(authorName, hits) { hit -> hit.authors?.joinToString(", ") { it.name ?: "" } ?: "" }
-                .flatMap { it.referent.authors ?: emptyList() }
-                .map { it.id.itemID }
-                .distinct()
+    ): Flow<MetadataAuthor> =
+        flow {
+            val hits = search(region = region, author = authorName)
+            val authorIds =
+                FuzzySearch
+                    .extractSorted(authorName, hits) { hit -> hit.authors?.joinToString(", ") { it.name ?: "" } ?: "" }
+                    .flatMap { it.referent.authors ?: emptyList() }
+                    .map { it.id.itemID }
+                    .distinct()
 
-        return resolveAll(authorIds) { getAuthorByID(providerId = name, authorId = it, region = region) }
-    }
+            emitAll(resolveInWindows(authorIds) { getAuthorByID(providerId = name, authorId = it, region = region) })
+        }
 
-    override suspend fun getBookByName(
+    override fun getBookByName(
         bookName: String,
         region: String,
         authorName: String?,
-    ): List<MetadataBook> {
-        val hits = search(region = region, title = bookName, author = authorName)
-        val bookIds =
-            FuzzySearch
-                .extractSorted(bookName, hits) { it.title ?: "" }
-                .map { it.referent.id.itemID }
-                .distinct()
+    ): Flow<MetadataBook> =
+        flow {
+            val hits = search(region = region, title = bookName, author = authorName)
+            val bookIds =
+                FuzzySearch
+                    .extractSorted(bookName, hits) { it.title ?: "" }
+                    .map { it.referent.id.itemID }
+                    .distinct()
 
-        return resolveAll(bookIds) { getBookByID(providerId = name, bookId = it, region = region) }
-    }
+            emitAll(resolveInWindows(bookIds) { getBookByID(providerId = name, bookId = it, region = region) })
+        }
 
-    override suspend fun getSeriesByName(
+    override fun getSeriesByName(
         seriesName: String,
         region: String,
         authorName: String?,
-    ): List<MetadataSeries> {
-        val hits = search(region = region, keywords = seriesName, author = authorName).flatMap { it.series }
-        val seriesIds =
-            FuzzySearch
-                .extractSorted(seriesName, hits) { it.title ?: "" }
-                .map { it.referent.id.itemID }
-                .distinct()
+    ): Flow<MetadataSeries> =
+        flow {
+            val hits = search(region = region, keywords = seriesName, author = authorName).flatMap { it.series }
+            val seriesIds =
+                FuzzySearch
+                    .extractSorted(seriesName, hits) { it.title ?: "" }
+                    .map { it.referent.id.itemID }
+                    .distinct()
 
-        return resolveAll(seriesIds) { getSeriesByID(providerId = name, seriesId = it, region = region) }
-    }
+            emitAll(resolveInWindows(seriesIds) { getSeriesByID(providerId = name, seriesId = it, region = region) })
+        }
 
-    private suspend fun <T> resolveAll(
+    private fun <T> resolveInWindows(
         ids: List<String>,
         resolve: suspend (String) -> T?,
-    ): List<T> =
-        coroutineScope {
-            ids.map { async { resolve(it) } }.awaitAll().filterNotNull()
+    ): Flow<T> =
+        flow {
+            ids.chunked(RESOLUTION_WINDOW).forEach { window ->
+                val resolved = coroutineScope { window.map { async { resolve(it) } }.awaitAll() }
+                resolved.filterNotNull().forEach { emit(it) }
+            }
         }
 }

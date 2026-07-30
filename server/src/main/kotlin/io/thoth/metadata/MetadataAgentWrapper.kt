@@ -10,18 +10,20 @@ import io.thoth.metadata.responses.MetadataSeries
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import me.xdrop.fuzzywuzzy.FuzzySearch
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 private val log = logger {}
 
 class MetadataAgentWrapper(
-    private val providerList: List<MetadataAgent>,
+    private val agentList: List<MetadataAgent>,
 ) : MetadataAgent {
-    override val name = providerList.joinToString(", ") { it.name }
+    override val name = agentList.joinToString(", ") { it.name }
     override val supportedCountryCodes: List<String>
-        get() = providerList.flatMap { it.supportedCountryCodes }.distinct()
+        get() = agentList.flatMap { it.supportedCountryCodes }.distinct()
 
-    private val providerMap by lazy { providerList.associateBy { it.name } }
+    private val agentsByName by lazy { agentList.associateBy { it.name } }
 
     override suspend fun search(
         region: String,
@@ -32,84 +34,75 @@ class MetadataAgentWrapper(
         language: MetadataLanguage?,
         pageSize: MetadataSearchCount?,
     ): List<MetadataSearchBook> =
-        fromAllProviders {
-            it.search(
-                region = region,
-                keywords = keywords,
-                title = title,
-                author = author,
-                narrator = narrator,
-                language = language,
-                pageSize = pageSize,
-            )
+        coroutineScope {
+            agentList
+                .map {
+                    async {
+                        it.search(
+                            region = region,
+                            keywords = keywords,
+                            title = title,
+                            author = author,
+                            narrator = narrator,
+                            language = language,
+                            pageSize = pageSize,
+                        )
+                    }
+                }.awaitAll()
+                .flatten()
         }
 
     override suspend fun getAuthorByID(
         providerId: String,
         authorId: String,
         region: String,
-    ): MetadataAuthor? =
-        provider(providerId)?.getAuthorByID(providerId = providerId, authorId = authorId, region = region)
+    ): MetadataAuthor? = agent(providerId)?.getAuthorByID(providerId = providerId, authorId = authorId, region = region)
 
     override suspend fun getBookByID(
         providerId: String,
         bookId: String,
         region: String,
-    ): MetadataBook? = provider(providerId)?.getBookByID(providerId = providerId, bookId = bookId, region = region)
+    ): MetadataBook? = agent(providerId)?.getBookByID(providerId = providerId, bookId = bookId, region = region)
 
     override suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
         region: String,
-    ): MetadataSeries? =
-        provider(providerId)?.getSeriesByID(providerId = providerId, seriesId = seriesId, region = region)
+    ): MetadataSeries? = agent(providerId)?.getSeriesByID(providerId = providerId, seriesId = seriesId, region = region)
 
-    override suspend fun getAuthorByName(
+    override fun getAuthorByName(
         authorName: String,
         region: String,
-    ): List<MetadataAuthor> {
-        val authors = fromAllProviders { it.getAuthorByName(authorName = authorName, region = region) }
-        return rankByName(authorName, authors) { it.name }
-    }
+    ): Flow<MetadataAuthor> = fromEachAgent { it.getAuthorByName(authorName = authorName, region = region) }
 
-    override suspend fun getBookByName(
+    override fun getBookByName(
         bookName: String,
         region: String,
         authorName: String?,
-    ): List<MetadataBook> {
-        val books = fromAllProviders { it.getBookByName(bookName = bookName, region = region, authorName = authorName) }
-        return rankByName(bookName, books) { it.title }
-    }
+    ): Flow<MetadataBook> =
+        fromEachAgent { it.getBookByName(bookName = bookName, region = region, authorName = authorName) }
 
-    override suspend fun getSeriesByName(
+    override fun getSeriesByName(
         seriesName: String,
         region: String,
         authorName: String?,
-    ): List<MetadataSeries> {
-        val series =
-            fromAllProviders { it.getSeriesByName(seriesName = seriesName, region = region, authorName = authorName) }
-        return rankByName(seriesName, series) { it.title }
-    }
+    ): Flow<MetadataSeries> =
+        fromEachAgent { it.getSeriesByName(seriesName = seriesName, region = region, authorName = authorName) }
 
-    private suspend fun <T> fromAllProviders(query: suspend (MetadataAgent) -> List<T>): List<T> =
-        coroutineScope {
-            providerList.map { async { query(it) } }.awaitAll().flatten()
+    /**
+     * Every agent hands out its results best match first, so they are concatenated instead of ranked again: ranking
+     * across agents would mean resolving every result of every agent before the first one can be handed out.
+     */
+    private fun <T> fromEachAgent(query: (MetadataAgent) -> Flow<T>): Flow<T> =
+        flow {
+            agentList.forEach { emitAll(query(it)) }
         }
 
-    private fun <T> rankByName(
-        name: String,
-        items: List<T>,
-        nameOf: (T) -> String?,
-    ): List<T> =
-        FuzzySearch
-            .extractSorted(name, items.filter { nameOf(it) != null }) { nameOf(it) }
-            .map { it.referent }
-
-    private fun provider(providerId: String): MetadataAgent? {
-        val provider = providerMap[providerId]
-        if (provider == null) {
-            log.warn { "No metadata agent named '$providerId' (available: ${providerMap.keys})" }
+    private fun agent(providerId: String): MetadataAgent? {
+        val agent = agentsByName[providerId]
+        if (agent == null) {
+            log.warn { "No metadata agent named '$providerId' (available: ${agentsByName.keys})" }
         }
-        return provider
+        return agent
     }
 }

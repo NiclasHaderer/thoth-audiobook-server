@@ -9,6 +9,7 @@ import io.thoth.metadata.responses.MetadataSeries
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.ktor.get
 import io.thoth.server.repositories.LibraryRepository
+import kotlinx.coroutines.flow.toList
 import org.koin.ktor.ext.inject
 
 fun Routing.metadataRouting() {
@@ -40,7 +41,7 @@ fun Routing.metadataRouting() {
     get<Api.Libraries.Id.Metadata.Author.Search, List<MetadataAuthor>> {
         val library = libraryRepository.raw(it.libraryId)
         val metadataAgent = metadataAgents.forLibrary(library)
-        metadataAgent.getAuthorByName(authorName = it.q, region = library.language)
+        metadataAgent.getAuthorByName(authorName = it.q, region = library.language).toList()
     }
 
     get<Api.Libraries.Id.Metadata.Book.Id, MetadataBook> {
@@ -53,7 +54,7 @@ fun Routing.metadataRouting() {
     get<Api.Libraries.Id.Metadata.Book.Search, List<MetadataBook>> {
         val library = libraryRepository.raw(it.libraryId)
         val metadataAgent = metadataAgents.forLibrary(library)
-        metadataAgent.getBookByName(bookName = it.q, region = library.language, authorName = it.authorName)
+        metadataAgent.getBookByName(bookName = it.q, region = library.language, authorName = it.authorName).toList()
     }
 
     get<Api.Libraries.Id.Metadata.Series.Id, MetadataSeries> {
@@ -65,6 +66,8 @@ fun Routing.metadataRouting() {
     get<Api.Libraries.Id.Metadata.Series.Search, List<MetadataSeries>> {
         val library = libraryRepository.raw(it.libraryId)
         val metadataAgent = metadataAgents.forLibrary(library)
-        metadataAgent.getSeriesByName(seriesName = it.q, region = library.language, authorName = it.authorName)
+        metadataAgent
+            .getSeriesByName(seriesName = it.q, region = library.language, authorName = it.authorName)
+            .toList()
     }
 }

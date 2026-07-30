@@ -1,18 +1,21 @@
 package io.thoth.metadata.audible.client
 
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.metadata.audible.models.AudibleAgentId
 import io.thoth.metadata.audible.models.AudibleApiPerson
 import io.thoth.metadata.audible.models.AudibleApiProduct
 import io.thoth.metadata.audible.models.AudibleApiSeries
 import io.thoth.metadata.audible.models.AudibleRegions
-import io.thoth.metadata.audible.models.getValue
-import io.thoth.metadata.replaceAll
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
+import io.thoth.server.common.extensions.replaceAll
 import org.jsoup.parser.Parser
 import java.time.LocalDate
+import java.time.format.DateTimeParseException
+
+private val log = logger {}
 
 private val htmlLineBreak = Regex("(?i)<br\\s*/?>|</p\\s*>")
 private val htmlTag = Regex("<[^>]+>")
@@ -84,7 +87,7 @@ internal fun AudibleApiProduct.seriesBookAsins(): List<String> =
         .distinct()
 
 private fun AudibleApiProduct.cleanTitle(region: AudibleRegions): String? =
-    title?.replaceAll(region.getValue().titleReplacers, "")?.trim()
+    title?.replaceAll(region.titleReplacers, "")?.trim()
 
 private fun AudibleApiProduct.coverURL(imageSize: Int): String? =
     productImages[imageSize.toString()] ?: productImages.values.firstOrNull()
@@ -92,17 +95,17 @@ private fun AudibleApiProduct.coverURL(imageSize: Int): String? =
 internal fun audibleBookLink(
     region: AudibleRegions,
     asin: String,
-) = "https://www.${region.getValue().toHost()}/pd/$asin"
+) = "https://www.${region.host}/pd/$asin"
 
 internal fun audibleSeriesLink(
     region: AudibleRegions,
     asin: String,
-) = "https://www.${region.getValue().toHost()}/series/$asin"
+) = "https://www.${region.host}/series/$asin"
 
 internal fun audibleAuthorLink(
     region: AudibleRegions,
     asin: String,
-) = "https://www.${region.getValue().toHost()}/author/$asin"
+) = "https://www.${region.host}/author/$asin"
 
 /** Audible serves summaries as HTML fragments, while the metadata responses are plain text. */
 internal fun audibleHtmlToText(html: String?): String? =
@@ -119,7 +122,8 @@ private fun parseAudibleDate(date: String?): LocalDate? =
     date?.let {
         try {
             LocalDate.parse(it)
-        } catch (e: Exception) {
+        } catch (e: DateTimeParseException) {
+            log.warn(e) { "Audible answered with the unparsable date '$it'" }
             null
         }
     }

@@ -15,19 +15,21 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.await
 import java.time.Duration
+import kotlin.coroutines.cancellation.CancellationException
 
 private const val KEY_SEPARATOR = "--thoth--"
 private const val MAX_ENTRIES_PER_OPERATION = 50L
 private val ENTRY_LIFETIME = Duration.ofHours(1)
 
 /**
- * Caches the answers of another agent. The entries hold the in-flight request instead of its result, so concurrent
- * callers asking for the same thing share one request to the provider. Requests which end in an exception or find
- * nothing are dropped from the cache instead of being served for the rest of the hour.
+ * Caches the answers of another provider. The entries hold the in-flight request instead of its result, so concurrent
+ * callers asking for the same thing share one request to the provider. Requests which end in an exception, and ID
+ * lookups which do not find anything, are dropped from the cache right away instead of being served for the rest of the
+ * hour.
  */
-class CachingMetadataAgent(
-    private val delegate: MetadataAgent,
-) : MetadataAgent {
+class CachingMetadataProvider(
+    private val delegate: MetadataProvider,
+) : MetadataProvider {
     override val name get() = delegate.name
     override val supportedCountryCodes get() = delegate.supportedCountryCodes
 
@@ -35,9 +37,6 @@ class CachingMetadataAgent(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val searchCache = buildCache<List<MetadataSearchBook>>()
-    private val authorNameCache = buildCache<List<MetadataAuthor>>()
-    private val bookNameCache = buildCache<List<MetadataBook>>()
-    private val seriesNameCache = buildCache<List<MetadataSeries>>()
     private val authorIdCache = buildCache<MetadataAuthor?>()
     private val bookIdCache = buildCache<MetadataBook?>()
     private val seriesIdCache = buildCache<MetadataSeries?>()
@@ -64,14 +63,6 @@ class CachingMetadataAgent(
             delegate.getAuthorByID(providerId, authorId, region)
         }
 
-    override suspend fun getAuthorByName(
-        authorName: String,
-        region: String,
-    ): List<MetadataAuthor> =
-        authorNameCache.getOrLoad(keyOf(authorName, region)) {
-            delegate.getAuthorByName(authorName, region)
-        }
-
     override suspend fun getBookByID(
         providerId: String,
         bookId: String,
@@ -81,15 +72,6 @@ class CachingMetadataAgent(
             delegate.getBookByID(providerId, bookId, region)
         }
 
-    override suspend fun getBookByName(
-        bookName: String,
-        region: String,
-        authorName: String?,
-    ): List<MetadataBook> =
-        bookNameCache.getOrLoad(keyOf(bookName, region, authorName)) {
-            delegate.getBookByName(bookName, region, authorName)
-        }
-
     override suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
@@ -97,15 +79,6 @@ class CachingMetadataAgent(
     ): MetadataSeries? =
         seriesIdCache.getOrLoad(keyOf(providerId, seriesId, region)) {
             delegate.getSeriesByID(providerId, seriesId, region)
-        }
-
-    override suspend fun getSeriesByName(
-        seriesName: String,
-        region: String,
-        authorName: String?,
-    ): List<MetadataSeries> =
-        seriesNameCache.getOrLoad(keyOf(seriesName, region, authorName)) {
-            delegate.getSeriesByName(seriesName, region, authorName)
         }
 
     private fun <T> buildCache(): AsyncCache<String, T> =
@@ -120,5 +93,22 @@ class CachingMetadataAgent(
     private suspend fun <T> AsyncCache<String, T>.getOrLoad(
         key: String,
         load: suspend () -> T,
-    ): T = get(key) { _, _ -> scope.async { load() }.asCompletableFuture() }.await()
+    ): T {
+        val shared = get(key) { _, _ -> scope.async { load() }.asCompletableFuture() }
+        // A copy is awaited because awaiting cancels the future it waits on, and the shared one belongs to every other
+        // caller of this entry as well
+        val result =
+            try {
+                shared.copy().await()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                // Caffeine drops these entries by itself, but only once its own completion callback got around to it,
+                // which can be after this caller already retried
+                asMap().remove(key, shared)
+                throw e
+            }
+        if (result == null) asMap().remove(key, shared)
+        return result
+    }
 }
