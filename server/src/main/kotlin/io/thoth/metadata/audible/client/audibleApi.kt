@@ -10,8 +10,6 @@ import io.thoth.metadata.audible.models.AudibleApiProduct
 import io.thoth.metadata.audible.models.AudibleApiProductResponse
 import io.thoth.metadata.audible.models.AudibleApiProductsResponse
 import io.thoth.metadata.audible.models.AudibleRegions
-import io.thoth.metadata.audible.models.AudibleSearchAmount
-import io.thoth.metadata.audible.models.getValue
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.metadata.responses.MetadataSeriesImpl
@@ -27,7 +25,7 @@ private const val AUDIBLE_API_VERSION = "1.0"
 private const val AUDIBLE_API_ASIN_BATCH_SIZE = 50
 
 /** Largest num_results the catalog endpoint accepts, it answers anything above with a 400. */
-private const val AUDIBLE_API_MAX_RESULTS = 50
+internal const val AUDIBLE_API_MAX_RESULTS = 50
 
 /** Content delivery type Audible uses for the placeholder product which represents a series. */
 private const val AUDIBLE_SERIES_DELIVERY_TYPE = "BookSeries"
@@ -46,7 +44,7 @@ private val productResponseGroups =
 
 private val json = Json { ignoreUnknownKeys = true }
 
-suspend fun getAudibleBook(
+internal suspend fun getAudibleBook(
     region: AudibleRegions,
     imageSize: Int,
     asin: String,
@@ -57,7 +55,7 @@ suspend fun getAudibleBook(
     return product.toMetadataBook(region, imageSize)
 }
 
-suspend fun getAudibleSearchResult(
+internal suspend fun getAudibleSearchResult(
     region: AudibleRegions,
     imageSize: Int,
     keywords: String? = null,
@@ -65,9 +63,8 @@ suspend fun getAudibleSearchResult(
     author: String? = null,
     narrator: String? = null,
     language: String? = null,
-    pageSize: AudibleSearchAmount? = null,
+    pageSize: Int? = null,
 ): List<MetadataSearchBookImpl> {
-    val wantedResults = pageSize?.size
     val parameters =
         Parameters.build {
             appendOptional("keywords", keywords)
@@ -75,10 +72,7 @@ suspend fun getAudibleSearchResult(
             appendOptional("author", author)
             appendOptional("narrator", narrator)
             // num_results is applied before the language filter below, so a filtered search has to over-fetch
-            appendOptional(
-                "num_results",
-                (if (language == null) wantedResults else AUDIBLE_API_MAX_RESULTS)?.toString(),
-            )
+            appendOptional("num_results", (if (language == null) pageSize else AUDIBLE_API_MAX_RESULTS)?.toString())
         }
     val url = audibleApiUrl(region, listOf("catalog", "products"), imageSize, parameters)
     val products = getApi<AudibleApiProductsResponse>(url)?.products ?: return emptyList()
@@ -86,11 +80,11 @@ suspend fun getAudibleSearchResult(
     // A marketplace serves more than one language and the catalog endpoint cannot filter by it
     return products
         .filter { language == null || it.language.equals(language, ignoreCase = true) }
-        .let { if (wantedResults == null) it else it.take(wantedResults) }
+        .let { if (pageSize == null) it else it.take(pageSize) }
         .map { it.toMetadataSearchBook(region, imageSize) }
 }
 
-suspend fun getAudibleSeries(
+internal suspend fun getAudibleSeries(
     region: AudibleRegions,
     imageSize: Int,
     asin: String,
@@ -112,7 +106,8 @@ suspend fun getAudibleSeries(
         description = audibleHtmlToText(series.publisherSummary ?: series.merchandisingSummary),
         // The relationships are the authority on the length of the series, not the books which could be resolved
         totalBooks = bookAsins.size,
-        primaryWorks = bookAsins.size,
+        // Audible sequences excerpts and box sets right along the regular books, so the primary works are unknown
+        primaryWorks = null,
         books = seriesBooks,
         coverURL = null,
         authors =
@@ -161,7 +156,7 @@ private fun audibleApiUrl(
 ): Url =
     URLBuilder(
         protocol = URLProtocol.HTTPS,
-        host = region.getValue().toApiHost(),
+        host = region.apiHost,
         pathSegments = listOf(AUDIBLE_API_VERSION) + pathSegments,
         parameters = parameters,
     ).also {

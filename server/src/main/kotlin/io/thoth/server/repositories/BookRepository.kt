@@ -16,6 +16,7 @@ import io.thoth.server.database.tables.ImageEntity
 import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.TrackEntity
 import io.thoth.server.database.tables.TracksTable
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SortOrder

@@ -4,17 +4,17 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AudibleApiProductResponse(
+internal data class AudibleApiProductResponse(
     val product: AudibleApiProduct? = null,
 )
 
 @Serializable
-data class AudibleApiProductsResponse(
+internal data class AudibleApiProductsResponse(
     val products: List<AudibleApiProduct> = emptyList(),
 )
 
 @Serializable
-data class AudibleApiProduct(
+internal data class AudibleApiProduct(
     val asin: String,
     val title: String? = null,
     val language: String? = null,
@@ -34,30 +34,30 @@ data class AudibleApiProduct(
 )
 
 @Serializable
-data class AudibleApiPerson(
+internal data class AudibleApiPerson(
     val asin: String? = null,
     val name: String? = null,
 )
 
 @Serializable
-data class AudibleApiSeries(
+internal data class AudibleApiSeries(
     val asin: String? = null,
     val title: String? = null,
     val sequence: String? = null,
 )
 
 @Serializable
-data class AudibleApiRating(
+internal data class AudibleApiRating(
     @SerialName("overall_distribution") val overallDistribution: AudibleApiRatingDistribution? = null,
 )
 
 @Serializable
-data class AudibleApiRatingDistribution(
+internal data class AudibleApiRatingDistribution(
     @SerialName("average_rating") val averageRating: Float? = null,
 )
 
 @Serializable
-data class AudibleApiRelationship(
+internal data class AudibleApiRelationship(
     val asin: String? = null,
     val sequence: String? = null,
     @SerialName("relationship_to_product") val relationshipToProduct: String? = null,

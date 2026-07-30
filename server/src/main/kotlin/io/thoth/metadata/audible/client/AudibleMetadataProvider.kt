@@ -1,8 +1,7 @@
 package io.thoth.metadata.audible.client
 
-import io.thoth.metadata.SearchBasedMetadataAgent
+import io.thoth.metadata.MetadataProvider
 import io.thoth.metadata.audible.models.AudibleRegions
-import io.thoth.metadata.audible.models.AudibleSearchAmount
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataLanguage
@@ -10,11 +9,11 @@ import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeriesImpl
 
-const val AUDIBLE_PROVIDER_NAME = "audible"
+internal const val AUDIBLE_PROVIDER_NAME = "audible"
 
-class AudibleMetadataAgent(
+class AudibleMetadataProvider(
     private val imageSize: Int = 500,
-) : SearchBasedMetadataAgent() {
+) : MetadataProvider {
     override val name = AUDIBLE_PROVIDER_NAME
 
     override val supportedCountryCodes: List<String>
@@ -37,7 +36,14 @@ class AudibleMetadataAgent(
             author = author,
             narrator = narrator,
             language = language?.name?.lowercase(),
-            pageSize = pageSize?.let { AudibleSearchAmount.from(it) },
+            pageSize =
+                when (pageSize) {
+                    null -> null
+                    MetadataSearchCount.Small -> 20
+                    MetadataSearchCount.Medium -> 30
+                    MetadataSearchCount.Large -> 40
+                    MetadataSearchCount.ExtraLarge -> AUDIBLE_API_MAX_RESULTS
+                },
         ).filter { !it.title.isNullOrBlank() }
 
     override suspend fun getAuthorByID(

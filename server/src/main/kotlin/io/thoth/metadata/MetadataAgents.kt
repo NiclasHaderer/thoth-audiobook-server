@@ -12,7 +12,7 @@ class MetadataAgents(
         val libraryAgents = library.metadataAgents.map { it.name }
         val agentsToUse = filter { it.name in libraryAgents }
         if (agentsToUse.isEmpty()) {
-            log.info {
+            log.warn {
                 "Library does not reference any available metadata agents " +
                     "(available agents: ${map { it.name }}) (library agents: $libraryAgents)"
             }

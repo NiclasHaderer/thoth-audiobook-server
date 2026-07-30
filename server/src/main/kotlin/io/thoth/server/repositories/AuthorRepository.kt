@@ -12,6 +12,7 @@ import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageEntity
 import io.thoth.server.database.tables.SeriesTable
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and

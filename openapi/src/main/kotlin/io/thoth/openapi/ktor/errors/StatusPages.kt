@@ -11,11 +11,13 @@ import io.ktor.server.plugins.MissingRequestParameterException
 import io.ktor.server.plugins.ParameterConversionException
 import io.ktor.server.plugins.UnsupportedMediaTypeException
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.plugins.statuspages.StatusPagesConfig
 import io.ktor.server.response.respond
-import io.ktor.util.logging.error
+import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 
-private fun <T> formatException(
+@PublishedApi
+internal fun <T> formatException(
     statusCode: HttpStatusCode,
     cb: ((cause: T) -> Unit)? = null,
 ): suspend (call: ApplicationCall, cause: T) -> Unit =
@@ -29,9 +31,21 @@ private fun <T> formatException(
         cb?.invoke(cause)
     }
 
-fun Application.configureStatusPages() {
+class ErrorStatuses
+    internal constructor(
+        @PublishedApi internal val config: StatusPagesConfig,
+        @PublishedApi internal val logger: KLogger,
+    ) {
+    inline fun <reified T : Throwable> status(statusCode: HttpStatusCode) {
+            config.exception<T>(formatException(statusCode) { logger.warn(it) { it.message } })
+        }
+    }
+
+fun Application.configureStatusPages(errorStatuses: ErrorStatuses.() -> Unit = {}) {
     val logger = KotlinLogging.logger {}
     install(StatusPages) {
+        ErrorStatuses(this, logger).apply(errorStatuses)
+
         exception<ErrorResponse> { call, cause ->
             if (call.response.isSent) return@exception
             call.respond(

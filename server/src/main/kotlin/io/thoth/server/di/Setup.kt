@@ -1,8 +1,9 @@
 package io.thoth.server.di
 
-import io.thoth.metadata.CachingMetadataAgent
+import io.thoth.metadata.CachingMetadataProvider
 import io.thoth.metadata.MetadataAgents
-import io.thoth.metadata.audible.client.AudibleMetadataAgent
+import io.thoth.metadata.SearchBasedMetadataAgent
+import io.thoth.metadata.audible.client.AudibleMetadataProvider
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.di.serialization.JacksonSerialization
@@ -30,7 +31,10 @@ fun setupDependencyInjection() {
         modules(
             module {
                 single { ThothConfig.load() }
-                single<MetadataAgents> { MetadataAgents(listOf(CachingMetadataAgent(AudibleMetadataAgent()))) }
+                single<MetadataAgents> {
+                    // The cache sits below the search based lookups, so their searches and ID lookups hit it as well
+                    MetadataAgents(listOf(SearchBasedMetadataAgent(CachingMetadataProvider(AudibleMetadataProvider()))))
+                }
                 single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
                 single<LibraryScanner> { LibraryScannerImpl() }
                 single { JacksonSerialization() }

@@ -16,7 +16,6 @@ import kotlin.time.toKotlinDuration
 private enum class SchedulerState {
     STOPPED,
     RUNNING,
-    /** Stop was requested and the loop is finishing the task it is running */
     STOPPING,
 }
 
@@ -53,10 +52,8 @@ class Scheduler {
     }
 
     fun schedule(task: CronTask) {
-        // Constructed before locking, as it evaluates the cron expression
         val execution = ScheduledCronTask(task)
         synchronized(taskQueue) {
-            // One cron entry per task, so scheduling the same task twice does not double its executions
             taskQueue.removeAll { it is ScheduledCronTask && it.task === task }
             taskQueue.add(execution)
         }
@@ -69,7 +66,6 @@ class Scheduler {
         log.info { "Queued schedule '${task.name}'" }
     }
 
-    /** Runs the task the event was built by. */
     fun <T> dispatch(event: EventTask.Event<T>) {
         check(state.get() == SchedulerState.RUNNING) { "Scheduler not started" }
 
@@ -92,7 +88,6 @@ class Scheduler {
                 return
             }
         synchronized(taskQueue) {
-            // Rescheduling twice would pile up cron entries, which someone scheduling the task again can cause
             if (taskQueue.any { it is ScheduledCronTask && it.task === task }) return
             taskQueue.add(execution)
         }
@@ -100,7 +95,6 @@ class Scheduler {
 
     private suspend fun runQueue() {
         while (state.get() == SchedulerState.RUNNING && currentCoroutineContext().isActive) {
-            // The task which is due next. Its execution time can be in the past if it is overdue.
             val next = synchronized(taskQueue) { taskQueue.minByOrNull { it.executeAt } }
 
             if (next == null) {
@@ -115,11 +109,9 @@ class Scheduler {
                     "Next task '${next.task.name}' will be executed in ${waitFor.toHumanReadable()}. " +
                         "Triggered by ${next.task.type}:${next.cause}"
                 }
-                // Waking up early means the queue changed and another task may be due before this one
                 if (withTimeoutOrNull(waitFor.toKotlinDuration()) { queueChanged.receive() } != null) continue
             }
 
-            // Take the task out of the queue before running it, so nothing can queue it a second time meanwhile
             if (!synchronized(taskQueue) { taskQueue.remove(next) }) continue
             execute(next)
         }
@@ -127,13 +119,11 @@ class Scheduler {
 
     private suspend fun execute(scheduledTask: ScheduledTask) {
         try {
-            // The tasks block, as they read files and talk to the database
             withContext(Dispatchers.IO) { scheduledTask.run() }
             log.debug { "Scheduled task '${scheduledTask.task.name}' was executed successfully" }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            // A failing task must neither take the scheduler down with it nor be retried in a tight loop
             log.error(e) { "Scheduled task '${scheduledTask.task.name}' failed" }
         } finally {
             if (scheduledTask is ScheduledCronTask) {

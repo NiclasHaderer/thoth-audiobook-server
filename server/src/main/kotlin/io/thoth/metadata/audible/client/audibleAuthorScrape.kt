@@ -6,11 +6,13 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
 import io.thoth.metadata.audible.models.AudibleAgentId
 import io.thoth.metadata.audible.models.AudibleRegions
-import io.thoth.metadata.audible.models.getValue
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+
+private val imageResolution = Regex("_SX\\d{2,4}_CR0")
+private val imageSuffix = Regex(",0,.*")
 
 private val browserHeaders =
     Headers.build {
@@ -28,7 +30,7 @@ private val browserHeaders =
     }
 
 /** Authors are the only entity the Audible API does not expose, so their data has to be scraped. */
-suspend fun getAudibleAuthor(
+internal suspend fun getAudibleAuthor(
     region: AudibleRegions,
     imageSize: Int,
     authorAsin: String,
@@ -56,12 +58,12 @@ internal suspend fun getAudiblePage(
     val url =
         URLBuilder(
             protocol = URLProtocol.HTTPS,
-            host = region.getValue().toHost(),
+            host = region.host,
             pathSegments = pathSegments,
         ).also {
             it.parameters.append("ipRedirectOverride", "true")
             // A locale prefixed path is dropped by the redirect to the canonical page, this parameter survives it
-            it.parameters.append("language", region.getValue().locale)
+            it.parameters.append("language", region.locale)
         }.build()
 
     val page = fetchAudible(url, browserHeaders) ?: return null
@@ -83,4 +85,4 @@ private fun getAuthorImage(
 private fun toImageResAudible(
     url: String,
     resolution: Int,
-): String = url.replace(Regex("_SX\\d{2,4}_CR0"), "_SX${resolution}_CR0").replace(Regex(",0,.*"), ",0,0,0__.jpg")
+): String = url.replace(imageResolution, "_SX${resolution}_CR0").replace(imageSuffix, ",0,0,0__.jpg")

@@ -6,8 +6,10 @@ import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
+import kotlinx.coroutines.flow.Flow
 
-interface MetadataAgent {
+/** The lookups a metadata provider has to implement itself. Everything else can be derived from them. */
+interface MetadataProvider {
     val name: String
     val supportedCountryCodes: List<String>
 
@@ -27,32 +29,39 @@ interface MetadataAgent {
         region: String,
     ): MetadataAuthor?
 
-    suspend fun getAuthorByName(
-        authorName: String,
-        region: String,
-    ): List<MetadataAuthor>
-
     suspend fun getBookByID(
         providerId: String,
         bookId: String,
         region: String,
     ): MetadataBook?
 
-    suspend fun getBookByName(
-        bookName: String,
-        region: String,
-        authorName: String? = null,
-    ): List<MetadataBook>
-
     suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
         region: String,
     ): MetadataSeries?
+}
 
-    suspend fun getSeriesByName(
+/**
+ * A name is not something a provider can be asked for directly, so answering a lookup by name can cost one request per
+ * result. The results are therefore returned as a flow which resolves while it is collected: a caller which only needs
+ * the best match does not pay for the ones behind it.
+ */
+interface MetadataAgent : MetadataProvider {
+    fun getAuthorByName(
+        authorName: String,
+        region: String,
+    ): Flow<MetadataAuthor>
+
+    fun getBookByName(
+        bookName: String,
+        region: String,
+        authorName: String? = null,
+    ): Flow<MetadataBook>
+
+    fun getSeriesByName(
         seriesName: String,
         region: String,
         authorName: String? = null,
-    ): List<MetadataSeries>
+    ): Flow<MetadataSeries>
 }
