@@ -17,12 +17,8 @@ object LibrariesTable : UUIDTable("Libraries") {
             }
         }
     val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
-    val metadataAgents =
-        json<List<NamedMetadataAgent>>("metadataAgents") {
-            if (it.isEmpty()) {
-                throw ErrorResponse.userError("metadataAgents must have at least one element")
-            }
-        }
+    // Deliberately unconstrained: a library with no agents just does no online metadata lookups.
+    val metadataAgents = json<List<NamedMetadataAgent>>("metadataAgents")
     val fileScanners =
         json<List<FileScanner>>("fileScanners") {
             if (it.isEmpty()) {

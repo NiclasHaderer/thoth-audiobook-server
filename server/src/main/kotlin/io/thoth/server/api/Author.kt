@@ -30,7 +30,7 @@ fun Routing.authorRouting() {
 
     get<Api.Libraries.Id.Authors.Id.Position, Position> {
         Position(
-            sortIndex = authorService.position(it.libraryId, it.id, it.order.toSortOrder()),
+            sortIndex = authorService.position(id = it.id, libraryId = it.libraryId, order = it.order.toSortOrder()),
             id = it.id,
             order = it.order,
         )

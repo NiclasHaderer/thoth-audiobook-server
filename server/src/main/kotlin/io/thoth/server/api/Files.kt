@@ -36,7 +36,7 @@ fun Routing.audioRouting() {
             }
         assertLibraryPermissions(libraryId)
         val path = Path.of(track)
-        if (!path.exists() && path.isRegularFile()) {
+        if (!path.exists() || !path.isRegularFile()) {
             throw ErrorResponse.notFound("File", path.name, "Database out of sync. Please start a rescan.")
         }
         call.response.header(

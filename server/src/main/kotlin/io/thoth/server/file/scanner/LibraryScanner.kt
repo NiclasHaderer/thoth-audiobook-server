@@ -86,17 +86,17 @@ class LibraryScannerImpl :
         }
     }
 
-    private fun cleanupLibrary(library: LibraryEntity): Unit =
+    internal fun cleanupLibrary(library: LibraryEntity): Unit =
         transaction {
-            // TODO check if there is a better way...
-            // Remove all tracks that have not been updated
-            TracksTable.deleteWhere { TracksTable.scanIndex less library.scanIndex }
+            TracksTable.deleteWhere {
+                (TracksTable.library eq library.id) and (TracksTable.scanIndex less library.scanIndex)
+            }
             // Find all books that have no tracks and remove them
-            BookEntity.all().filter { it.tracks.empty() }.forEach { it.delete() }
+            BookEntity.find { BooksTable.library eq library.id }.filter { it.tracks.empty() }.forEach { it.delete() }
             // Find all authors that have no books and remove them
-            AuthorEntity.all().filter { it.books.empty() }.forEach { it.delete() }
+            AuthorEntity.find { AuthorTable.library eq library.id }.filter { it.books.empty() }.forEach { it.delete() }
             // Find all series that have no books and remove them
-            SeriesEntity.all().filter { it.books.empty() }.forEach { it.delete() }
+            SeriesEntity.find { SeriesTable.library eq library.id }.filter { it.books.empty() }.forEach { it.delete() }
 
             // Delete unused images
             ImageTable.deleteWhere {
@@ -136,14 +136,14 @@ class LibraryScannerImpl :
         )
     }
 
-    private fun shouldUpdate(path: Path): Boolean {
-        val dbTrack = transaction { TrackEntity.findOne { TracksTable.path like path.absolutePathString() } }
-        // If the track has already been imported and the access time has not changed skip
-        if (dbTrack != null && !dbTrack.hasBeenUpdated(path.getLastModifiedTime().toMillis())) {
+    private fun shouldUpdate(path: Path): Boolean =
+        transaction {
+            val dbTrack =
+                TrackEntity.findOne { TracksTable.path like path.absolutePathString() } ?: return@transaction true
+            // If the track has already been imported and the access time has not changed skip
+            if (dbTrack.hasBeenUpdated(path.getLastModifiedTime().toMillis())) return@transaction true
             // Mark as touched, so the tracks don't get removed
             dbTrack.markAsTouched()
-            return false
+            false
         }
-        return true
-    }
 }

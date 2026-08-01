@@ -1,7 +1,6 @@
 package io.thoth.server.plugins.auth
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLProtocol
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.thoth.auth.JwtError
@@ -24,7 +23,6 @@ import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.ktor.ext.inject
-import java.nio.file.Path
 
 private fun <T> rejectDuplicateUsername(
     username: String,
@@ -52,16 +50,11 @@ private fun <T> translateLastAdminError(block: () -> T): T =
 
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
-    val keyPair = getOrCreateKeyPair(Path.of(thothConfig.jwtCertificate))
+    val keyPair = getOrCreateKeyPair(thothConfig.jwtKeyFile)
 
     install(ThothAuthenticationPlugin.build<UserPermissions, UpdateUserPermissions>()) {
-        production = thothConfig.production
-        ssl = thothConfig.TLS
+        ssl = thothConfig.tls
         issuer = "thoth.io"
-        domain = thothConfig.domain
-        port = thothConfig.port
-        protocol = if (thothConfig.TLS) URLProtocol.HTTPS else URLProtocol.HTTP
-        jwksPath = "/api/auth/jwks.json"
         keyPairs["thoth"] = keyPair
         activeKeyId = "thoth"
 
@@ -90,33 +83,39 @@ fun Application.configureAuthentication() {
             }
         }
 
-        getUserByUsername { username -> UserEntity.findOne { UsersTable.username eq username }?.toExternalUser() }
+        getUserByUsername { username ->
+            transaction { UserEntity.findOne { UsersTable.username eq username }?.toExternalUser() }
+        }
 
         allowNewSignups { thothConfig.allowNewSignups }
 
-        getUserById { UserEntity.findById(it)?.toExternalUser() }
+        getUserById { transaction { UserEntity.findById(it)?.toExternalUser() } }
 
-        isFirstUser { UserEntity.count() == 0L }
+        isFirstUser { transaction { UserEntity.count() == 0L } }
 
         createUser { newUser ->
-            rejectDuplicateUsername(newUser.username) {
-                UserEntity
-                    .new {
-                        username = newUser.username
-                        passwordHash = newUser.passwordHash
-                        admin = newUser.admin
-                    }.also { it.flush() }
-                    .toExternalUser()
+            transaction {
+                rejectDuplicateUsername(newUser.username) {
+                    UserEntity
+                        .new {
+                            username = newUser.username
+                            passwordHash = newUser.passwordHash
+                            admin = newUser.admin
+                        }.also { it.flush() }
+                        .toExternalUser()
+                }
             }
         }
 
-        listAllUsers { UserEntity.all().map { it.toExternalUser() } }
+        listAllUsers { transaction { UserEntity.all().map { it.toExternalUser() } } }
 
-        deleteUser { translateLastAdminError { UserEntity.findById(it.id)?.delete() } }
+        deleteUser { transaction { translateLastAdminError { UserEntity.findById(it.id)?.delete() } } }
 
         renameUser { user, newName ->
-            rejectDuplicateUsername(newName) {
-                UserEntity.findById(user.id)!!.also { it.username = newName; it.flush() }.toExternalUser()
+            transaction {
+                rejectDuplicateUsername(newName) {
+                    UserEntity.findById(user.id)!!.also { it.username = newName; it.flush() }.toExternalUser()
+                }
             }
         }
 

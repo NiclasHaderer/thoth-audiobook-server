@@ -21,8 +21,7 @@ class ThothPrincipalImpl(
     override val userId: UUID,
     override val type: ThothJwtTypes,
 ) : ThothPrincipal {
-    val permissions: UserPermissions
-        get() = resolveUserPermissions(userId)
+    val permissions: UserPermissions by lazy { resolveUserPermissions(userId) }
 }
 
 fun resolveUserPermissions(userId: UUID): UserPermissions =

@@ -16,18 +16,17 @@ import io.thoth.auth.interactions.ThothRegisterParams
 import io.thoth.auth.interactions.ThothRenameUserParams
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
-import io.thoth.models.Position
+import io.thoth.models.Position.Order
 import io.thoth.openapi.ktor.BeforeBodyParsing
 import io.thoth.openapi.ktor.NotSecured
 import io.thoth.openapi.ktor.Secured
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.Tagged
+import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import io.thoth.server.plugins.auth.Guards
 import io.thoth.server.plugins.auth.assertLibraryPermissions
 
-// TODO remove unused methods in the db access layer
-// TODO move companion object functions of user into own thingi
 @Resource("api")
 class Api {
     @Secured(Guards.Admin)
@@ -152,7 +151,7 @@ class Api {
     @Summary("List metadata agents", method = "GET")
     @Tagged("Scanner")
     @Resource("metadata-agents")
-    data class MetadataScanners(
+    data class MetadataAgents(
         private val parent: Api,
     )
 
@@ -174,8 +173,10 @@ class Api {
             private val parent: Libraries,
         ) {
             init {
-                require(q != null || author != null || book != null || series != null) {
-                    "At least one of the following parameters must be provided: q, author, book, series"
+                if (q == null && author == null && book == null && series == null) {
+                    throw ErrorResponse.userError(
+                        "At least one of the following parameters must be provided: q, author, book, series",
+                    )
                 }
             }
         }
@@ -214,6 +215,7 @@ class Api {
                 data class All(
                     val limit: Int = 20,
                     val offset: Long = 0,
+                    val order: Order = Order.ASC,
                     private val parent: Books,
                 ) {
                     val libraryId
@@ -225,6 +227,7 @@ class Api {
                 data class Sorting(
                     val limit: Int = 20,
                     val offset: Long = 0,
+                    val order: Order = Order.ASC,
                     private val parent: Books,
                 ) {
                     val libraryId
@@ -254,6 +257,7 @@ class Api {
                     @Summary("Get book position", method = "GET")
                     @Resource("position")
                     data class Position(
+                        val order: Order = Order.ASC,
                         private val parent: Id,
                     ) {
                         val libraryId
@@ -290,7 +294,7 @@ class Api {
                 data class All(
                     val limit: Int = 20,
                     val offset: Long = 0,
-                    val order: Position.Order = Position.Order.ASC,
+                    val order: Order = Order.ASC,
                     private val parent: Authors,
                 ) {
                     val libraryId
@@ -302,7 +306,7 @@ class Api {
                 data class Sorting(
                     val limit: Int = 20,
                     val offset: Long = 0,
-                    val order: Position.Order = Position.Order.ASC,
+                    val order: Order = Order.ASC,
                     private val parent: Authors,
                 ) {
                     val libraryId
@@ -332,7 +336,7 @@ class Api {
                     @Summary("Get author position", method = "GET")
                     @Resource("position")
                     data class Position(
-                        val order: Position.Order = io.thoth.models.Position.Order.ASC,
+                        val order: Order = Order.ASC,
                         private val parent: Id,
                     ) {
                         val libraryId
@@ -369,6 +373,7 @@ class Api {
                 data class All(
                     val limit: Int = 20,
                     val offset: Long = 0,
+                    val order: Order = Order.ASC,
                     private val parent: Series,
                 ) {
                     val libraryId
@@ -380,7 +385,7 @@ class Api {
                 data class Sorting(
                     val limit: Int = 20,
                     val offset: Long = 0,
-                    val order: Position.Order = Position.Order.ASC,
+                    val order: Order = Order.ASC,
                     private val parent: Series,
                 ) {
                     val libraryId
@@ -410,7 +415,7 @@ class Api {
                     @Summary("Get series position", method = "GET")
                     @Resource("position")
                     data class Position(
-                        val order: io.thoth.models.Position.Order = io.thoth.models.Position.Order.ASC,
+                        val order: Order = Order.ASC,
                         private val parent: Id,
                     ) {
                         val libraryId

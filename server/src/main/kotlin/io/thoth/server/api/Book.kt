@@ -11,7 +11,6 @@ import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
 import io.thoth.server.repositories.BookRepository
-import org.jetbrains.exposed.v1.core.SortOrder
 import org.koin.ktor.ext.inject
 import java.util.UUID
 
@@ -21,7 +20,7 @@ fun Routing.bookRouting() {
         val books =
             bookRepository.getAll(
                 libraryId = route.libraryId,
-                order = SortOrder.ASC,
+                order = route.order.toSortOrder(),
                 limit = route.limit,
                 offset = route.offset,
             )
@@ -36,15 +35,16 @@ fun Routing.bookRouting() {
     get<Api.Libraries.Id.Books.Sorting, List<UUID>> { route ->
         bookRepository.sorting(
             libraryId = route.libraryId,
-            order = SortOrder.ASC,
+            order = route.order.toSortOrder(),
             limit = route.limit,
             offset = route.offset,
         )
     }
 
     get<Api.Libraries.Id.Books.Id.Position, Position> { route ->
-        val sortOrder = bookRepository.position(libraryId = route.libraryId, id = route.id, order = SortOrder.ASC)
-        Position(sortIndex = sortOrder, id = route.id, order = Position.Order.ASC)
+        val sortIndex =
+            bookRepository.position(libraryId = route.libraryId, id = route.id, order = route.order.toSortOrder())
+        Position(sortIndex = sortIndex, id = route.id, order = route.order)
     }
 
     get<Api.Libraries.Id.Books.Id, BookDetailed> { route ->

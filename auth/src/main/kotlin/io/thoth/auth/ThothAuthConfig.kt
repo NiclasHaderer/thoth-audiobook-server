@@ -1,12 +1,10 @@
 package io.thoth.auth
 
-import com.auth0.jwk.JwkProviderBuilder
+import com.auth0.jwt.JWT
+import com.auth0.jwt.JWTVerifier
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLBuilder
-import io.ktor.http.URLProtocol
 import io.ktor.http.auth.HttpAuthHeader
-import io.ktor.http.encodedPath
-import io.ktor.http.toURI
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
@@ -22,9 +20,9 @@ import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.utils.ThothPrincipal
 import java.security.KeyPair
+import java.security.interfaces.RSAPublicKey
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import kotlin.properties.Delegates
 
 internal typealias KeyId = String
 
@@ -59,7 +57,6 @@ data class JwtError(
 private val JWT_VALIDATION_FAILED = AttributeKey<JwtError>("JWT_VALIDATION_FAILED")
 
 class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
-    val production: Boolean = true,
     val ssl: Boolean = true,
     val firstUserIsAdmin: Boolean = true,
     val realm: String? = null,
@@ -68,10 +65,6 @@ class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
     val keyPairs: Map<KeyId, KeyPair>,
     val activeKeyId: KeyId,
     val issuer: String,
-    val domain: String,
-    val port: Int,
-    val protocol: URLProtocol,
-    val jwksPath: String,
     val guards: Map<String, GetPrincipal>,
     val guardAuthHeaders: Map<String, AuthHeaderProvider>,
     val getUserByUsername: (username: String) -> ThothDatabaseUser?,
@@ -89,18 +82,14 @@ class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
     val getUserPermissions: RoutingContext.(user: ThothDatabaseUser) -> PERMISSIONS,
     private val isAdminUser: (user: ThothDatabaseUser) -> Boolean,
 ) {
-    internal val jwkProvider by lazy {
-        val url =
-            URLBuilder()
-                .apply {
-                    protocol = this@ThothAuthConfig.protocol
-                    host = this@ThothAuthConfig.domain
-                    port = this@ThothAuthConfig.port
-                    encodedPath = this@ThothAuthConfig.jwksPath
-                }.build()
-                .toURI()
-                .toURL()
-        JwkProviderBuilder(url).cached(10, 24, TimeUnit.HOURS).rateLimited(10, 1, TimeUnit.MINUTES).build()
+    // The signing keys are in memory, so tokens are verified directly instead of going through the JWKS endpoint
+    internal fun verifierFor(keyId: KeyId?): JWTVerifier? {
+        val keyPair = keyPairs[keyId] ?: return null
+        return JWT
+            .require(Algorithm.RSA256(keyPair.public as RSAPublicKey, null))
+            .withIssuer(issuer)
+            .acceptLeeway(3)
+            .build()
     }
 
     internal fun Application.applyGuards() {
@@ -113,7 +102,10 @@ class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
 
                     guardAuthHeaders[guard]?.let { provider -> authHeader { call -> provider(call) } }
 
-                    verifier(jwkProvider, this@ThothAuthConfig.issuer) { acceptLeeway(3) }
+                    verifier { authHeader ->
+                        val token = (authHeader as? HttpAuthHeader.Single)?.blob ?: return@verifier null
+                        verifierFor(runCatching { JWT.decode(token).keyId }.getOrNull())
+                    }
 
                     validate { jwtCredential ->
                         val principal =
@@ -149,7 +141,6 @@ class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
 }
 
 class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
-    var production = true
     var ssl = true
 
     // Default user settings
@@ -166,10 +157,6 @@ class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
 
     // Application paths
     lateinit var issuer: String
-    lateinit var domain: String
-    var port by Delegates.notNull<Int>()
-    lateinit var protocol: URLProtocol
-    lateinit var jwksPath: String
 
     // Functionality
     private lateinit var getUserByUsername: (username: String) -> ThothDatabaseUser?
@@ -224,7 +211,6 @@ class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
         require(keyPairs.containsKey(activeKeyId)) { "Active key ID '$activeKeyId' not found in key pairs" }
 
         return ThothAuthConfig(
-            production = production,
             ssl = ssl,
             firstUserIsAdmin = firstUserIsAdmin,
             realm = realm,
@@ -233,10 +219,6 @@ class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
             keyPairs = keyPairs,
             activeKeyId = activeKeyId,
             issuer = issuer,
-            domain = domain,
-            port = port,
-            protocol = protocol,
-            jwksPath = jwksPath,
             guards = guards.toMap(),
             guardAuthHeaders = guardAuthHeaders.toMap(),
             getUserByUsername = getUserByUsername,

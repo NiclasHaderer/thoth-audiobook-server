@@ -18,7 +18,8 @@ class ThothSchedules : KoinComponent {
             "Full scan",
             config.fullScanCron,
             callback = {
-                transaction { LibraryEntity.all().forEach { libraryScanner.scanLibrary(it) } }
+                val libraries = transaction { LibraryEntity.all().toList() }
+                libraries.forEach { libraryScanner.scanLibrary(it) }
             },
         )
     val scanLibrary = EventTask<LibraryEntity>("Scan library", callback = { libraryScanner.scanLibrary(it.data) })

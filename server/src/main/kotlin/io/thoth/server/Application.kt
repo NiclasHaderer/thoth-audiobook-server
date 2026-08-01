@@ -20,7 +20,7 @@ import io.thoth.server.api.fileSystemRouting
 import io.thoth.server.api.imageRouting
 import io.thoth.server.api.libraryRouting
 import io.thoth.server.api.metadataRouting
-import io.thoth.server.api.metadataScannerRouting
+import io.thoth.server.api.metadataAgentRouting
 import io.thoth.server.api.pingRouting
 import io.thoth.server.api.scannerRouting
 import io.thoth.server.api.seriesRouting
@@ -46,18 +46,21 @@ fun main() {
     LogManager.getLogManager().reset()
     SLF4JBridgeHandler.install()
 
+    // Loaded before the server starts so a broken config fails immediately instead of on first injection
+    val config = ThothConfig.load()
+
     // Start the server
     embeddedServer(
         Netty,
-        port = 8080,
+        port = config.port,
         watchPaths = emptyList(),
         host = "0.0.0.0",
-        module = Application::applicationModule,
+        module = { applicationModule(config) },
     ).start(wait = true)
 }
 
-fun Application.applicationModule() {
-    setupDependencyInjection()
+fun Application.applicationModule(config: ThothConfig) {
+    setupDependencyInjection(config)
     DatabaseConnector.connect()
     plugins()
     routing()
@@ -89,7 +92,7 @@ fun Application.routing() {
         // Libraries and their resources
         libraryRouting()
         scannerRouting()
-        metadataScannerRouting()
+        metadataAgentRouting()
 
         // Library resources
         bookRouting()
@@ -116,7 +119,7 @@ fun Application.startBackgroundJobs() {
     launch { scheduler.start() }
 
     // Generate clients
-    if (!get<ThothConfig>().production) {
+    if (developmentMode) {
         launch {
             log.info("Generating clients")
             // TODO generateTsClient("../thoth-web/src/client/generated/client/typescript")

@@ -40,17 +40,17 @@ object TrackManager : KoinComponent {
         path: Path,
         library: LibraryEntity,
     ) {
-        transaction {
-            require(path.isRegularFile()) { "Cannot add folder to library" }
-            val libPath = library.folders.map { Path.of(it) }.first { path.startsWith(it) }
-            val analyzer = analyzers.forLibrary(library)
-            val result =
-                analyzer.analyze(path, path.readAttributes(), libPath)
-                    ?: return@transaction log.warn {
-                        "Could not extract al necessary information for '${path.absolute()}'"
-                    }
-            insertScanResult(result, library)
-        }
+        require(path.isRegularFile()) { "Cannot add folder to library" }
+        val (libPath, analyzer) =
+            transaction {
+                library.folders.map { Path.of(it) }.first { path.startsWith(it) } to analyzers.forLibrary(library)
+            }
+
+        val result =
+            analyzer.analyze(path, path.readAttributes(), libPath)
+                ?: return log.warn { "Could not extract al necessary information for '${path.absolute()}'" }
+
+        transaction { insertScanResult(result, library) }
     }
 
     fun removeFolder(

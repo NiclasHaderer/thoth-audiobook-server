@@ -28,7 +28,7 @@ class LibraryEntity(
             scanIndex = scanIndex,
             preferEmbeddedMetadata = preferEmbeddedMetadata,
             folders = folders,
-            metadataScanners = metadataAgents,
+            metadataAgents = metadataAgents,
             fileScanners = fileScanners,
             language = language,
         )

@@ -1,12 +1,15 @@
 package io.thoth.server.repositories
 
+import io.thoth.metadata.MetadataAgent
 import io.thoth.metadata.MetadataAgents
 import io.thoth.models.Series
 import io.thoth.models.SeriesDetailed
 import io.thoth.models.SeriesUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.common.extensions.add
+import io.thoth.server.common.extensions.escape
+import io.thoth.server.common.extensions.ilike
 import io.thoth.server.common.extensions.toSizedIterable
+import io.thoth.server.database.access.fetchImage
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.BooksTable
@@ -62,15 +65,19 @@ class SeriesRepositoryImpl :
         libraryId: UUID,
     ): SeriesEntity? =
         transaction {
-            SeriesEntity.find { SeriesTable.title eq seriesTitle and (SeriesTable.library eq libraryId) }.firstOrNull()
+            SeriesEntity
+                .find { (SeriesTable.title ilike escape(seriesTitle)) and (SeriesTable.library eq libraryId) }
+                .firstOrNull()
         }
 
     override fun raw(
         id: UUID,
         libraryId: UUID,
     ): SeriesEntity =
-        SeriesEntity.find { SeriesTable.id eq id and (SeriesTable.library eq libraryId) }.firstOrNull()
-            ?: throw ErrorResponse.notFound("Series", id)
+        transaction {
+            SeriesEntity.find { SeriesTable.id eq id and (SeriesTable.library eq libraryId) }.firstOrNull()
+                ?: throw ErrorResponse.notFound("Series", id)
+        }
 
     override fun get(
         id: UUID,
@@ -106,7 +113,7 @@ class SeriesRepositoryImpl :
     ): List<Series> =
         transaction {
             SeriesEntity
-                .find { SeriesTable.title like "%$query%" and (SeriesTable.library eq libraryId) }
+                .find { (SeriesTable.title ilike "%${escape(query)}%") and (SeriesTable.library eq libraryId) }
                 .orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
@@ -115,7 +122,7 @@ class SeriesRepositoryImpl :
     override fun search(query: String): List<Series> =
         transaction {
             SeriesEntity
-                .find { SeriesTable.title like "%$query%" }
+                .find { SeriesTable.title ilike "%${escape(query)}%" }
                 .orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
@@ -125,28 +132,30 @@ class SeriesRepositoryImpl :
         seriesName: String,
         libraryId: UUID,
         dbAuthor: List<AuthorEntity>,
-    ): SeriesEntity {
-        val series = findByName(seriesName, libraryId)
-        return if (series != null) {
-            series.authors = series.authors.add(dbAuthor)
-            series
-        } else {
-            create(seriesName, libraryId, dbAuthor)
+    ): SeriesEntity =
+        transaction {
+            val series = findByName(seriesName, libraryId)
+            if (series != null) {
+                series.authors = SizedCollection((series.authors.toList() + dbAuthor).distinctBy { it.id })
+                series
+            } else {
+                create(seriesName, libraryId, dbAuthor)
+            }
         }
-    }
 
     override fun create(
         seriesName: String,
         libraryId: UUID,
         dbAuthor: List<AuthorEntity>,
-    ): SeriesEntity {
-        log.info { "Created series: $seriesName" }
-        return SeriesEntity.new {
-            title = seriesName
-            authors = SizedCollection(dbAuthor)
-            library = libraryRepository.raw(libraryId)
+    ): SeriesEntity =
+        transaction {
+            log.info { "Created series: $seriesName" }
+            SeriesEntity.new {
+                title = seriesName
+                authors = SizedCollection(dbAuthor.distinctBy { it.id })
+                library = libraryRepository.raw(libraryId)
+            }
         }
-    }
 
     override fun sorting(
         libraryId: UUID,
@@ -173,15 +182,18 @@ class SeriesRepositoryImpl :
                 .find { SeriesTable.library eq libraryId }
                 .orderBy(SeriesTable.title.lowerCase() to order)
                 .indexOfFirst { it.id.value == id }
-                .toLong()
+                .takeIf { it >= 0 }
+                ?.toLong()
+                ?: throw ErrorResponse.notFound("Series", id)
         }
 
     override fun modify(
         id: UUID,
         libraryId: UUID,
         partial: SeriesUpdate,
-    ): Series =
-        transaction {
+    ): Series {
+        val newCover = fetchImage(partial.cover)
+        return transaction {
             val series = raw(id, libraryId)
 
             series.apply {
@@ -190,7 +202,7 @@ class SeriesRepositoryImpl :
                 providerID = partial.providerID ?: providerID
                 totalBooks = partial.totalBooks ?: totalBooks
                 primaryWorks = partial.primaryWorks ?: primaryWorks
-                coverID = ImageEntity.getNewImage(partial.cover, currentImageID = coverID, default = coverID)
+                coverID = ImageEntity.getNewImage(newCover, currentImageID = coverID, default = coverID)
                 description = partial.description ?: description
             }
 
@@ -204,39 +216,52 @@ class SeriesRepositoryImpl :
 
             series.toModel()
         }
+    }
 
     override fun autoMatch(
         id: UUID,
         libraryId: UUID,
-    ): Series =
-        transaction {
-            val series = raw(id, libraryId)
-            val library = libraryRepository.raw(libraryId)
+    ): Series {
+        val (metadataWrapper, title, region, authorName) =
+            transaction {
+                val series = raw(id, libraryId)
+                val library = libraryRepository.raw(libraryId)
+                AutoMatchQuery(
+                    metadataAgents.forLibrary(library),
+                    series.title,
+                    library.language,
+                    series.authors.joinToString(", ") { it.name },
+                )
+            }
 
-            val metadataWrapper = metadataAgents.forLibrary(library)
-            val seriesMetadata =
-                runBlocking {
-                    metadataWrapper
-                        .getSeriesByName(series.title, library.language, series.authors.joinToString(", ") { it.name })
-                        .firstOrNull()
-                } ?: return@transaction series.toModel()
+        val seriesMetadata =
+            runBlocking {
+                metadataWrapper.getSeriesByName(title, region, authorName).firstOrNull()
+            } ?: return transaction { raw(id, libraryId).toModel() }
 
-            modify(
-                id,
-                libraryId,
-                SeriesUpdate(
-                    title = seriesMetadata.title,
-                    authors = null,
-                    books = null,
-                    provider = seriesMetadata.id.provider,
-                    providerID = seriesMetadata.id.itemID,
-                    totalBooks = seriesMetadata.totalBooks,
-                    primaryWorks = seriesMetadata.primaryWorks,
-                    cover = seriesMetadata.coverURL,
-                    description = seriesMetadata.description,
-                ),
-            )
-        }
+        return modify(
+            id,
+            libraryId,
+            SeriesUpdate(
+                title = seriesMetadata.title,
+                authors = null,
+                books = null,
+                provider = seriesMetadata.id.provider,
+                providerID = seriesMetadata.id.itemID,
+                totalBooks = seriesMetadata.totalBooks,
+                primaryWorks = seriesMetadata.primaryWorks,
+                cover = seriesMetadata.coverURL,
+                description = seriesMetadata.description,
+            ),
+        )
+    }
+
+    private data class AutoMatchQuery(
+        val metadataWrapper: MetadataAgent,
+        val title: String,
+        val region: String,
+        val authorName: String,
+    )
 
     override fun total(libraryId: UUID): Long =
         transaction {

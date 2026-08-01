@@ -66,9 +66,8 @@ fun validateJwt(
         throw ErrorResponse.userError("Unsupported JWT algorithm ${decodedJWT.algorithm}")
     }
 
-    val provider = authConfig.jwkProvider
-    val algorithm = Algorithm.RSA256(provider[decodedJWT.keyId].publicKey as RSAPublicKey, null)
-    val verifier = JWT.require(algorithm).withIssuer(authConfig.issuer).build()
+    val verifier =
+        authConfig.verifierFor(decodedJWT.keyId) ?: throw ErrorResponse.unauthorized("Unknown JWT key id")
 
     runCatching { verifier.verify(decodedJWT) }
         .onFailure { throw ErrorResponse.unauthorized("Invalid JWT: ${it.message}") }

@@ -1,11 +1,14 @@
 package io.thoth.server.repositories
 
+import io.thoth.metadata.MetadataAgent
 import io.thoth.metadata.MetadataAgents
 import io.thoth.models.Author
 import io.thoth.models.AuthorDetailed
 import io.thoth.models.AuthorUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.common.extensions.findOne
+import io.thoth.server.common.extensions.escape
+import io.thoth.server.common.extensions.ilike
+import io.thoth.server.database.access.fetchImage
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
@@ -51,7 +54,9 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): AuthorEntity? =
         transaction {
-            AuthorEntity.find { AuthorTable.name like authorName and (AuthorTable.library eq libraryId) }.firstOrNull()
+            AuthorEntity
+                .find { (AuthorTable.name ilike escape(authorName)) and (AuthorTable.library eq libraryId) }
+                .firstOrNull()
         }
 
     override fun raw(
@@ -68,7 +73,7 @@ class AuthorServiceImpl :
     ): List<Author> =
         transaction {
             AuthorEntity
-                .find { AuthorTable.name like "%$query%" and (AuthorTable.library eq libraryId) }
+                .find { (AuthorTable.name ilike "%${escape(query)}%") and (AuthorTable.library eq libraryId) }
                 .orderBy(AuthorTable.name.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
@@ -77,7 +82,7 @@ class AuthorServiceImpl :
     override fun search(query: String): List<Author> =
         transaction {
             AuthorEntity
-                .find { AuthorTable.name like "%$query%" }
+                .find { AuthorTable.name ilike "%${escape(query)}%" }
                 .orderBy(AuthorTable.name.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
@@ -86,11 +91,7 @@ class AuthorServiceImpl :
     override fun getOrCreate(
         authorName: String,
         libraryId: UUID,
-    ): AuthorEntity =
-        transaction {
-            AuthorEntity.findOne { AuthorTable.name like authorName and (AuthorTable.library eq libraryId) }
-                ?: create(authorName, libraryId)
-        }
+    ): AuthorEntity = transaction { findByName(authorName, libraryId) ?: create(authorName, libraryId) }
 
     override fun create(
         authorName: String,
@@ -103,15 +104,20 @@ class AuthorServiceImpl :
     override fun autoMatch(
         id: UUID,
         libraryId: UUID,
-    ): Author =
-        transaction {
-            val library = libraryRepository.raw(libraryId)
+    ): Author {
+        val (metadataAgent, authorName, region) =
+            transaction {
+                val library = libraryRepository.raw(libraryId)
+                AutoMatchQuery(metadataAgents.forLibrary(library), raw(id, libraryId).name, library.language)
+            }
+        val result = runBlocking { metadataAgent.getAuthorByName(authorName, region).firstOrNull() }
+        val newImage = fetchImage(result?.imageURL)
+
+        return transaction {
             val author = raw(id, libraryId)
-            val metadataAgent = metadataAgents.forLibrary(library)
-            val result = runBlocking { metadataAgent.getAuthorByName(author.name, library.language).firstOrNull() }
             author
                 .apply {
-                    displayName = result?.name
+                    displayName = result?.name ?: author.displayName
                     provider = result?.id?.provider ?: author.provider
                     providerID = result?.id?.itemID ?: author.providerID
                     biography = result?.biography ?: author.biography
@@ -119,9 +125,16 @@ class AuthorServiceImpl :
                     bornIn = result?.bornIn ?: author.bornIn
                     birthDate = result?.birthDate ?: author.birthDate
                     deathDate = result?.deathDate ?: author.deathDate
-                    imageID = ImageEntity.getNewImage(result?.imageURL, currentImageID = imageID, default = imageID)
+                    imageID = ImageEntity.getNewImage(newImage, currentImageID = imageID, default = imageID)
                 }.toModel()
         }
+    }
+
+    private data class AutoMatchQuery(
+        val metadataAgent: MetadataAgent,
+        val authorName: String,
+        val region: String,
+    )
 
     override fun getAll(
         libraryId: UUID,
@@ -177,27 +190,32 @@ class AuthorServiceImpl :
                 .find { AuthorTable.library eq libraryId }
                 .orderBy(AuthorTable.name.lowerCase() to order)
                 .indexOfFirst { it.id.value == id }
-                .toLong()
+                .takeIf { it >= 0 }
+                ?.toLong()
+                ?: throw ErrorResponse.notFound("Author", id)
         }
 
     override fun modify(
         id: UUID,
         libraryId: UUID,
         partial: AuthorUpdate,
-    ) = transaction {
-        val author = raw(id, libraryId)
-        author
-            .apply {
-                name = partial.name ?: author.name
-                provider = partial.provider ?: author.provider
-                providerID = partial.providerID ?: author.providerID
-                biography = partial.biography ?: author.biography
-                website = partial.website ?: author.website
-                bornIn = partial.bornIn ?: author.bornIn
-                birthDate = partial.birthDate ?: author.birthDate
-                deathDate = partial.deathDate ?: author.deathDate
-                imageID = ImageEntity.getNewImage(partial.image, currentImageID = imageID, default = imageID)
-            }.toModel()
+    ): Author {
+        val newImage = fetchImage(partial.image)
+        return transaction {
+            val author = raw(id, libraryId)
+            author
+                .apply {
+                    name = partial.name ?: author.name
+                    provider = partial.provider ?: author.provider
+                    providerID = partial.providerID ?: author.providerID
+                    biography = partial.biography ?: author.biography
+                    website = partial.website ?: author.website
+                    bornIn = partial.bornIn ?: author.bornIn
+                    birthDate = partial.birthDate ?: author.birthDate
+                    deathDate = partial.deathDate ?: author.deathDate
+                    imageID = ImageEntity.getNewImage(newImage, currentImageID = imageID, default = imageID)
+                }.toModel()
+        }
     }
 
     override fun total(libraryId: UUID): Long =

@@ -5,12 +5,12 @@ kotlinxSerialization = "1.11.0"
 arrow = "2.2.3"
 exposed = "1.3.1"
 sqlite = "3.53.2.0"
+postgresql = "42.7.7"
 hikari = "7.1.0"
 hoplite = "2.9.0"
 koin = "4.2.2"
 springSecurity = "7.1.0"
 jwt = "4.6.0"
-jwk = "0.24.1"
 joseJwt = "10.9.1"
 bouncycastle = "1.85"
 openApi = "2.2.52"
@@ -75,6 +75,7 @@ exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", versio
 
 # Database drivers / pooling
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 
 # Config (Hoplite)
@@ -91,7 +92,6 @@ koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref =
 # Security / JWT
 spring-security-core = { module = "org.springframework.security:spring-security-core", version.ref = "springSecurity" }
 java-jwt = { module = "com.auth0:java-jwt", version.ref = "jwt" }
-jwks-rsa = { module = "com.auth0:jwks-rsa", version.ref = "jwk" }
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "joseJwt" }
 bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 bouncycastle-pkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
