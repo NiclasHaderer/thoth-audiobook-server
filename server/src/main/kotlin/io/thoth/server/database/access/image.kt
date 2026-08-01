@@ -12,25 +12,33 @@ fun ImageEntity.Companion.create(imageBytes: ByteArray): ImageEntity = new { blo
 
 fun ImageEntity.areSame(newImageBytes: ByteArray): Boolean = blob.bytes.contentEquals(newImageBytes)
 
+sealed interface NewImage {
+    class Stored(
+        val id: UUID,
+    ) : NewImage
+
+    class Downloaded(
+        val bytes: ByteArray,
+    ) : NewImage
+}
+
+fun fetchImage(image: String?): NewImage? =
+    when {
+        image == null -> null
+        image.isUUID() -> NewImage.Stored(UUID.fromString(image))
+        else -> NewImage.Downloaded(image.syncUriToFile())
+    }
+
 fun ImageEntity.Companion.getNewImage(
-    newImage: String?,
+    newImage: NewImage?,
     currentImageID: EntityID<UUID>?,
     default: EntityID<UUID>?,
-): EntityID<UUID>? {
-    if (newImage == null) return default
-
-    if (newImage.isUUID()) {
-        val newImageUUID = UUID.fromString(newImage)
-
-        return findById(newImageUUID)?.id ?: throw ErrorResponse.notFound("Image", newImageUUID)
+): EntityID<UUID>? =
+    when (newImage) {
+        null -> default
+        is NewImage.Stored -> findById(newImage.id)?.id ?: throw ErrorResponse.notFound("Image", newImage.id)
+        is NewImage.Downloaded -> {
+            val originalImage = if (currentImageID != null) findById(currentImageID) else null
+            if (originalImage?.areSame(newImage.bytes) == true) currentImageID else create(newImage.bytes).id
+        }
     }
-
-    val originalImage = if (currentImageID != null) findById(currentImageID) else null
-    val newImageBytes = newImage.syncUriToFile()
-    val areSameImage = originalImage?.areSame(newImageBytes) ?: false
-    return if (areSameImage) {
-        currentImageID
-    } else {
-        create(newImageBytes).id
-    }
-}

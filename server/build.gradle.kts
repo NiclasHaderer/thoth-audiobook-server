@@ -18,6 +18,14 @@ tasks.jar {
     manifest.attributes["Enable-Native-Access"] = "ALL-UNNAMED"
 }
 
+tasks.shadowJar {
+    // Hoplite's config parsers and Exposed's factories are registered via ServiceLoader, so their
+    // META-INF/services entries have to be concatenated instead of overwriting each other.
+    // The transformers only see every copy of a duplicated path if duplicates are not dropped first.
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    mergeServiceFiles()
+}
+
 dependencies {
     // Other projects
     implementation(project(":openapi"))
@@ -32,6 +40,7 @@ dependencies {
     implementation(libs.bundles.exposed)
     // Drivers
     implementation(libs.sqlite.jdbc)
+    implementation(libs.postgresql)
     implementation(libs.hikaricp)
     // Migration
     implementation(libs.classgraph)

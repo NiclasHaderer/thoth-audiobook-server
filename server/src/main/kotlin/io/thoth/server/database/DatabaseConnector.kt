@@ -2,6 +2,7 @@ package io.thoth.server.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.thoth.server.config.DatabaseType
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.migrations.DatabaseMigrator
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
@@ -13,6 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.io.path.absolutePathString
 
 object DatabaseConnector : KoinComponent {
     private val log = logger {}
@@ -25,11 +27,30 @@ object DatabaseConnector : KoinComponent {
         val dataSource =
             HikariConfig()
                 .apply {
-                    driverClassName = dbConfig.driverClassName
-                    jdbcUrl = dbConfig.jdbcUrl
-                    maximumPoolSize = dbConfig.maximumPoolSize
-                    isAutoCommit = dbConfig.autoCommit
-                    transactionIsolation = dbConfig.transactionIsolation
+                    when (dbConfig.type) {
+                        DatabaseType.SQLITE -> {
+                            driverClassName = "org.sqlite.JDBC"
+                            // WAL lets readers run while a write is in flight. synchronous=NORMAL only
+                            // risks the newest commits on a power cut, never corruption.
+                            jdbcUrl =
+                                "jdbc:sqlite:${config.sqliteFile.absolutePathString()}" +
+                                "?journal_mode=WAL" +
+                                "&synchronous=NORMAL" +
+                                "&journal_size_limit=${64 * 1024 * 1024}" +
+                                "&busy_timeout=5000"
+                            maximumPoolSize = 4
+                            transactionIsolation = "TRANSACTION_SERIALIZABLE"
+                        }
+
+                        DatabaseType.POSTGRES -> {
+                            driverClassName = "org.postgresql.Driver"
+                            jdbcUrl = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/${dbConfig.name}"
+                            username = dbConfig.user
+                            password = dbConfig.password
+                            maximumPoolSize = 10
+                        }
+                    }
+                    isAutoCommit = false
                 }.also { it.validate() }
                 .let { HikariDataSource(it) }
 

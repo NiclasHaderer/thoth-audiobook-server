@@ -21,7 +21,6 @@ dependencies {
     // Security
     implementation(libs.spring.security.core)
     implementation(libs.java.jwt)
-    implementation(libs.jwks.rsa)
     implementation(libs.nimbus.jose.jwt)
     implementation(libs.bundles.bouncycastle)
 }

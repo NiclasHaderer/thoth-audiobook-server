@@ -17,14 +17,11 @@ fun RoutingContext.loginUser(
 ): ThothAccessToken {
     val config = thothAuthConfig<Any, Any>()
 
-    val user =
-        config.getUserByUsername(loginUser.username)
-            ?: throw ErrorResponse.userError(
-                if (config.production) "Could not login user" else "Username does not exist",
-            )
+    // Never reveal whether the username or the password was wrong
+    val user = config.getUserByUsername(loginUser.username) ?: throw ErrorResponse.userError("Could not login user")
 
     if (!passwordMatches(loginUser.password, user)) {
-        throw ErrorResponse.userError(if (config.production) "Could not login user" else "Password is incorrect")
+        throw ErrorResponse.userError("Could not login user")
     }
 
     val keyPair = generateJwtPairForUser(user, config)

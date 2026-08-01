@@ -38,20 +38,23 @@ class DatabaseMigrator {
     private val packageName: String = "io.thoth.server.database.migrations.history"
 
     private val databaseVersions: List<DatabaseVersion> by lazy {
-        ClassGraph().acceptPackages(packageName).enableClassInfo().scan().use { scan ->
-            scan.getSubclasses(Migration::class.java).loadClasses(Migration::class.java)
-        }
-            .map {
-                val versionMatch =
-                    classNameMatcher.find(it.simpleName) ?: run {
-                        log.error { "Class ${it.name} does not match migration pattern" }
-                        return@map null
-                    }
-                val version = versionMatch.groupValues[1].toInt()
-                val name = versionMatch.groupValues[2]
-                DatabaseVersion(version, name, it.getDeclaredConstructor().newInstance())
-            }.filterNotNull()
-            .sortedBy { it.version }
+        val versions =
+            ClassGraph().acceptPackages(packageName).enableClassInfo().scan().use { scan ->
+                scan.getSubclasses(Migration::class.java).loadClasses(Migration::class.java)
+            }
+                .map {
+                    val versionMatch =
+                        classNameMatcher.matchEntire(it.simpleName)
+                            ?: error("Migration class ${it.name} does not match the '<version>_<name>' pattern")
+                    val version = versionMatch.groupValues[1].toInt()
+                    val name = versionMatch.groupValues[2]
+                    DatabaseVersion(version, name, it.getDeclaredConstructor().newInstance())
+                }.sortedBy { it.version }
+
+        val duplicates = versions.groupBy { it.version }.filterValues { it.size > 1 }.keys
+        check(duplicates.isEmpty()) { "Duplicate migration versions: $duplicates" }
+        check(versions.isNotEmpty()) { "No migrations found in package $packageName" }
+        versions
     }
 
     private val latestAppliedVersion by lazy {
@@ -70,12 +73,17 @@ class DatabaseMigrator {
     }
 
     private fun migrateTo(latestDbVersion: Int) {
-        if (latestDbVersion > databaseVersions.last().version) {
-            log.error { "Database version is higher than the latest migration version" }
-            throw Exception("Your thoth version is older, than the newest database. Downgrading not supported")
+        val latestMigrationVersion = databaseVersions.last().version
+        if (latestDbVersion > latestMigrationVersion) {
+            log.error { "Database version $latestDbVersion is newer than the latest known migration $latestMigrationVersion" }
+            throw IllegalStateException(
+                "The database is at version $latestDbVersion, but this Thoth build only knows migrations up to " +
+                    "$latestMigrationVersion. It was probably used by a newer Thoth version. " +
+                    "Downgrading is not supported, refusing to start.",
+            )
         }
 
-        if (latestDbVersion == databaseVersions.last().version) {
+        if (latestDbVersion == latestMigrationVersion) {
             log.info { "Database is up to date" }
             return
         }

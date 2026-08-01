@@ -1,15 +1,18 @@
 package io.thoth.server.repositories
 
+import io.thoth.metadata.MetadataAgent
 import io.thoth.metadata.MetadataAgents
 import io.thoth.models.Book
 import io.thoth.models.BookDetailed
 import io.thoth.models.BookUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
+import io.thoth.server.common.extensions.escape
+import io.thoth.server.common.extensions.ilike
 import io.thoth.server.common.extensions.toSizedIterable
+import io.thoth.server.database.access.fetchImage
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorEntity
-import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageEntity
@@ -18,12 +21,12 @@ import io.thoth.server.database.tables.TrackEntity
 import io.thoth.server.database.tables.TracksTable
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -92,17 +95,21 @@ class BookRepositoryImpl :
         libraryId: UUID,
     ): BookEntity? =
         transaction {
-            val rawBook =
-                BooksTable
-                    .join(AuthorBookTable, JoinType.INNER, BooksTable.id, AuthorBookTable.book)
-                    .join(AuthorTable, JoinType.INNER, AuthorBookTable.authors, AuthorTable.id)
-                    .selectAll()
-                    .where {
-                        (BooksTable.title like bookTitle) and
-                            (AuthorBookTable.authors inList authorIds) and
-                            (BooksTable.library eq libraryId)
-                    }.firstOrNull() ?: return@transaction null
-            BookEntity.wrap(rawBook[BooksTable.id], rawBook)
+            BookEntity
+                .find {
+                    val sameTitle = (BooksTable.title ilike escape(bookTitle)) and (BooksTable.library eq libraryId)
+                    // An empty author list would make `inList` match nothing, so books without authors are
+                    // identified by title alone instead of never being found.
+                    if (authorIds.isEmpty()) {
+                        sameTitle
+                    } else {
+                        val booksOfAuthors =
+                            AuthorBookTable
+                                .select(AuthorBookTable.book)
+                                .where { AuthorBookTable.authors inList authorIds }
+                        sameTitle and (BooksTable.id inSubQuery booksOfAuthors)
+                    }
+                }.firstOrNull()
         }
 
     override fun get(
@@ -126,13 +133,18 @@ class BookRepositoryImpl :
         order: SortOrder,
     ): Long =
         transaction {
-            val book = get(id, libraryId)
+            val title = raw(id, libraryId).title.lowercase()
             BooksTable
                 .selectAll()
                 .where {
-                    BooksTable.title.lowerCase() less book.title.lowercase() and (BooksTable.library eq libraryId)
-                }.orderBy(BooksTable.title.lowerCase() to order)
-                .count()
+                    val precedes =
+                        if (order == SortOrder.ASC) {
+                            BooksTable.title.lowerCase() less title
+                        } else {
+                            BooksTable.title.lowerCase() greater title
+                        }
+                    precedes and (BooksTable.library eq libraryId)
+                }.count()
         }
 
     override fun sorting(
@@ -157,22 +169,28 @@ class BookRepositoryImpl :
     ): List<Book> =
         transaction {
             BookEntity
-                .find { BooksTable.title like "%$query%" and (BooksTable.library eq libraryId) }
+                .find { (BooksTable.title ilike "%${escape(query)}%") and (BooksTable.library eq libraryId) }
+                .orderBy(BooksTable.title.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
         }
 
     override fun search(query: String): List<Book> =
         transaction {
-            BookEntity.find { BooksTable.title like "%$query%" }.limit(searchLimit).map { it.toModel() }
+            BookEntity
+                .find { BooksTable.title ilike "%${escape(query)}%" }
+                .orderBy(BooksTable.title.lowerCase() to SortOrder.ASC)
+                .limit(searchLimit)
+                .map { it.toModel() }
         }
 
     override fun modify(
         id: UUID,
         libraryId: UUID,
         partial: BookUpdate,
-    ): Book =
-        transaction {
+    ): Book {
+        val newCover = fetchImage(partial.cover)
+        return transaction {
             val book = raw(id, libraryId)
             book.apply {
                 title = partial.title ?: title
@@ -185,7 +203,7 @@ class BookRepositoryImpl :
                 description = partial.description ?: description
                 narrator = partial.narrator ?: narrator
                 isbn = partial.isbn ?: isbn
-                coverID = ImageEntity.getNewImage(partial.cover, currentImageID = coverID, default = coverID)
+                coverID = ImageEntity.getNewImage(newCover, currentImageID = coverID, default = coverID)
             }
             if (partial.authors != null) {
                 book.authors = partial.authors.map { authorRepository.raw(it, libraryId) }.toSizedIterable()
@@ -195,6 +213,7 @@ class BookRepositoryImpl :
             }
             book.toModel()
         }
+    }
 
     override fun create(
         bookName: String,
@@ -224,41 +243,50 @@ class BookRepositoryImpl :
     override fun autoMatch(
         id: UUID,
         libraryId: UUID,
-    ): Book =
-        transaction {
-            val book = raw(id, libraryId)
-            val library = libraryRepository.raw(libraryId)
+    ): Book {
+        val (metadataWrapper, bookName, region, authorName) =
+            transaction {
+                val book = raw(id, libraryId)
+                val library = libraryRepository.raw(libraryId)
+                AutoMatchQuery(
+                    metadataAgents.forLibrary(library),
+                    book.title,
+                    library.language,
+                    book.authors.joinToString(", ") { it.name },
+                )
+            }
 
-            val metadataWrapper = metadataAgents.forLibrary(library)
+        val bookMetadata =
+            runBlocking {
+                metadataWrapper.getBookByName(bookName = bookName, region = region, authorName = authorName)
+                    .firstOrNull()
+            } ?: return transaction { raw(id, libraryId).toModel() }
 
-            val bookMetadata =
-                runBlocking {
-                    metadataWrapper
-                        .getBookByName(
-                            bookName = book.title,
-                            region = library.language,
-                            authorName = book.authors.joinToString(", ") { it.name },
-                        ).firstOrNull()
-                } ?: return@transaction book.toModel()
+        return modify(
+            id,
+            libraryId,
+            BookUpdate(
+                title = bookMetadata.title,
+                authors = null,
+                series = null,
+                provider = bookMetadata.id.provider,
+                providerID = bookMetadata.id.itemID,
+                providerRating = bookMetadata.providerRating,
+                releaseDate = bookMetadata.releaseDate,
+                publisher = bookMetadata.publisher,
+                language = bookMetadata.language,
+                description = bookMetadata.description,
+                narrator = bookMetadata.narrator,
+                isbn = bookMetadata.isbn,
+                cover = bookMetadata.coverURL,
+            ),
+        )
+    }
 
-            modify(
-                id,
-                libraryId,
-                BookUpdate(
-                    title = bookMetadata.title,
-                    authors = null,
-                    series = null,
-                    provider = bookMetadata.id.provider,
-                    providerID = bookMetadata.id.itemID,
-                    providerRating = bookMetadata.providerRating,
-                    releaseDate = bookMetadata.releaseDate,
-                    publisher = bookMetadata.publisher,
-                    language = bookMetadata.language,
-                    description = bookMetadata.description,
-                    narrator = bookMetadata.narrator,
-                    isbn = bookMetadata.isbn,
-                    cover = bookMetadata.coverURL,
-                ),
-            )
-        }
+    private data class AutoMatchQuery(
+        val metadataWrapper: MetadataAgent,
+        val bookName: String,
+        val region: String,
+        val authorName: String,
+    )
 }

@@ -34,15 +34,15 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 fun Routing.authRoutes() {
-    post<Api.Auth.Login, ThothLoginUser, ThothAccessToken>(withTransaction(RoutingContext::loginUser))
+    post<Api.Auth.Login, ThothLoginUser, ThothAccessToken>(RoutingContext::loginUser)
 
-    post<Api.Auth.Logout, Unit, Unit>(withTransaction(RoutingContext::logoutUser))
+    post<Api.Auth.Logout, Unit, Unit>(RoutingContext::logoutUser)
 
     post<Api.Auth.Register, ThothRegisterUser, ThothUser> { params, body ->
-        registerLock.withLock { transaction { registerUser(params, body) } }
+        registerLock.withLock { registerUser(params, body) }
     }
 
-    get<Api.Auth.Jwks, ThothJWKs>(withTransaction(RoutingContext::getJwks))
+    get<Api.Auth.Jwks, ThothJWKs>(RoutingContext::getJwks)
 
     put<Api.Auth.User.Id.Permissions, ThothModifyPermissions<UpdateUserPermissions>, ThothUser>(
         withTransaction(RoutingContext::modifyUserPermissions),
@@ -62,7 +62,7 @@ fun Routing.authRoutes() {
 
     post<Api.Auth.User.Id.Username, ThothRenameUser, ThothUser>(withTransaction(RoutingContext::renameUser))
 
-    post<Api.Auth.User.Id.Password, ThothChangePassword, Unit>(withTransaction(RoutingContext::changeUserPassword))
+    post<Api.Auth.User.Id.Password, ThothChangePassword, Unit>(RoutingContext::changeUserPassword)
 
     post<Api.Auth.User.Refresh, Unit, ThothAccessToken>(withTransaction(RoutingContext::getRefreshToken))
 }

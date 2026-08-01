@@ -16,6 +16,7 @@ import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.io.path.absolute
 
 // Serializes library create/modify so the folder-overlap check-then-write can't race (two concurrent
 // mutations both passing the overlap check). In-process lock: fine for a single app instance.
@@ -63,45 +64,53 @@ class LibraryRepositoryImpl :
         partial: PartialUpdateLibrary,
     ): Library =
         libraryMutationLock.withLock {
-            transaction {
-                if (partial.folders != null) {
-                    raiseForOverlaps(id, partial.folders)
+            val needsScan =
+                partial.folders != null || partial.metadataAgents != null || partial.fileScanners != null
+            val (library, model) =
+                transaction {
+                    if (partial.folders != null) {
+                        raiseForOverlaps(id, partial.folders)
+                    }
+
+                    val library = raw(id)
+                    library.apply {
+                        name = partial.name ?: name
+                        icon = partial.icon ?: icon
+                        folders = partial.folders ?: folders
+                        preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: preferEmbeddedMetadata
+                        metadataAgents = partial.metadataAgents ?: metadataAgents
+                        fileScanners = partial.fileScanners ?: fileScanners
+                        language = partial.language ?: language
+                    }
+                    library to library.toModel()
                 }
 
-                val library = raw(id)
-                library.apply {
-                    name = partial.name ?: name
-                    icon = partial.icon ?: icon
-                    folders = partial.folders ?: folders
-                    preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: preferEmbeddedMetadata
-                    metadataAgents = partial.metadataScanners ?: metadataAgents
-                    fileScanners = partial.fileScanners ?: fileScanners
-                    language = partial.language ?: language
-                }
-                if (partial.folders != null || partial.metadataScanners != null || partial.fileScanners != null) {
-                    scheduler.dispatch(schedules.scanLibrary.build(library))
-                }
-                library.toModel()
+            if (needsScan) {
+                scheduler.dispatch(schedules.scanLibrary.build(library))
             }
+            model
         }
 
     override fun create(complete: UpdateLibrary): Library =
         libraryMutationLock.withLock {
-            transaction {
-                raiseForOverlaps(null, complete.folders)
-                val library =
-                    LibraryEntity.new {
-                        name = complete.name
-                        icon = complete.icon
-                        folders = complete.folders
-                        preferEmbeddedMetadata = complete.preferEmbeddedMetadata
-                        metadataAgents = complete.metadataScanners
-                        fileScanners = complete.fileScanners
-                        language = complete.language
-                    }
-                scheduler.dispatch(schedules.scanLibrary.build(library))
-                library.toModel()
-            }
+            val (library, model) =
+                transaction {
+                    raiseForOverlaps(null, complete.folders)
+                    val library =
+                        LibraryEntity.new {
+                            name = complete.name
+                            icon = complete.icon
+                            folders = complete.folders
+                            preferEmbeddedMetadata = complete.preferEmbeddedMetadata
+                            metadataAgents = complete.metadataAgents
+                            fileScanners = complete.fileScanners
+                            language = complete.language
+                        }
+                    library to library.toModel()
+                }
+
+            scheduler.dispatch(schedules.scanLibrary.build(library))
+            model
         }
 
     fun overlappingFolders(
@@ -109,9 +118,18 @@ class LibraryRepositoryImpl :
         folders: List<String>,
     ): Pair<Boolean, List<Path>> =
         transaction {
-            val newFolders = folders.map { Path.of(it) }
-            val allFolders = LibraryEntity.find { LibrariesTable.id neq id }.flatMap { it.folders }.map { Path.of(it) }
-            val overlaps = newFolders.filter { newFolder -> allFolders.any { newFolder.startsWith(it) } }
+            val newFolders = folders.map { Path.of(it).normalize().absolute() }
+            val allFolders =
+                LibraryEntity
+                    .find { LibrariesTable.id neq id }
+                    .flatMap { it.folders }
+                    .map { Path.of(it).normalize().absolute() }
+            // Either direction is a conflict: a new folder nested inside an existing one, or an existing one
+            // nested inside a new one.
+            val overlaps =
+                newFolders.filter { newFolder ->
+                    allFolders.any { newFolder.startsWith(it) || it.startsWith(newFolder) }
+                }
 
             Pair(overlaps.isNotEmpty(), overlaps)
         }

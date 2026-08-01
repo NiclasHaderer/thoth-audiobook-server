@@ -11,14 +11,13 @@ fun Routing.fileSystemRouting() {
 
         if (!directory.exists() || !directory.isDirectory) throw ErrorResponse.notFound("Directory", path)
 
-        directory
-            .listFiles()!!
-            .filter { it.isDirectory }
-            .filter { if (showHidden) true else !it.isHidden }
-            .filter {
-                val hasChildren = it.listFiles()?.isNotEmpty() ?: false
-                hasChildren
-            }.map { FileSystemItem(name = it.name, path = it.path, parent = it.parentFile?.path) }
+        val children =
+            directory.listFiles()
+                ?: throw ErrorResponse.forbidden("list", "Directory $path")
+
+        children
+            .filter { it.isDirectory && (showHidden || !it.isHidden) && !it.listFiles().isNullOrEmpty() }
+            .map { FileSystemItem(name = it.name, path = it.path, parent = it.parentFile?.path) }
             .sortedBy { it.name }
     }
 }

@@ -26,11 +26,11 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.logger.slf4jLogger
 
-fun setupDependencyInjection() {
+fun setupDependencyInjection(config: ThothConfig) {
     startKoin {
         modules(
             module {
-                single { ThothConfig.load() }
+                single { config }
                 single<MetadataAgents> {
                     // The cache sits below the search based lookups, so their searches and ID lookups hit it as well
                     MetadataAgents(listOf(SearchBasedMetadataAgent(CachingMetadataProvider(AudibleMetadataProvider()))))
