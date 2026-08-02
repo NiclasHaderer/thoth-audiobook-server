@@ -56,7 +56,7 @@ class Api {
             private val parent: Auth,
         ) : ThothLogoutParams
 
-        @Summary("Register user", method = "POST")
+        @Summary("Register user", method = "POST", status = 201)
         @Resource("register")
         data class Register(
             private val parent: Auth,
@@ -139,6 +139,14 @@ class Api {
         private val parent: Api,
     )
 
+    @Secured(Guards.Normal)
+    @Summary("List third party licenses", method = "GET")
+    @Tagged("Server")
+    @Resource("licenses")
+    data class Licenses(
+        private val parent: Api,
+    )
+
     @Secured(Guards.Admin)
     @Summary("List file scanners", method = "GET")
     @Tagged("Scanner")
@@ -157,7 +165,7 @@ class Api {
 
     @Secured(Guards.Normal)
     @Summary("List libraries", method = "GET")
-    @Summary("Create library", method = "POST")
+    @Summary("Create library", method = "POST", status = 201)
     @Resource("libraries")
     @Tagged("Library")
     data class Libraries(
@@ -193,7 +201,7 @@ class Api {
                 assertLibraryPermissions(libraryId)
             }
 
-            @Summary("Rescan library", method = "POST")
+            @Summary("Rescan library", method = "POST", status = 202)
             @Resource("rescan")
             data class Rescan(
                 private val parent: Id,
