@@ -26,7 +26,7 @@ class AudioFileAnalyzerWrapper(
                     return result
                 }
             } catch (e: Exception) {
-                log.warn(e) { "Could not analyze file ${filePath.absolute()}" }
+                log.error(e) { "Could not analyze file ${filePath.absolute()}" }
             }
         }
         return null

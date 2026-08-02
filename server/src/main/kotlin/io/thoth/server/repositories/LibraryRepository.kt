@@ -7,6 +7,8 @@ import io.thoth.server.api.UpdateLibrary
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.file.scanner.LibraryWatcher
+import io.thoth.server.file.scanner.libraryRoot
 import io.thoth.server.schedules.ThothSchedules
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.core.*
@@ -16,7 +18,6 @@ import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.io.path.absolute
 
 // Serializes library create/modify so the folder-overlap check-then-write can't race (two concurrent
 // mutations both passing the overlap check). In-process lock: fine for a single app instance.
@@ -44,6 +45,7 @@ class LibraryRepositoryImpl :
     KoinComponent {
     private val scheduler by inject<Scheduler>()
     private val schedules by inject<ThothSchedules>()
+    private val watcher by inject<LibraryWatcher>()
 
     override fun raw(id: UUID): LibraryEntity =
         transaction {
@@ -87,6 +89,7 @@ class LibraryRepositoryImpl :
 
             if (needsScan) {
                 scheduler.dispatch(schedules.scanLibrary.build(library))
+                watcher.restart()
             }
             model
         }
@@ -110,6 +113,7 @@ class LibraryRepositoryImpl :
                 }
 
             scheduler.dispatch(schedules.scanLibrary.build(library))
+            watcher.restart()
             model
         }
 
@@ -118,12 +122,12 @@ class LibraryRepositoryImpl :
         folders: List<String>,
     ): Pair<Boolean, List<Path>> =
         transaction {
-            val newFolders = folders.map { Path.of(it).normalize().absolute() }
+            val newFolders = folders.map { libraryRoot(it) }
             val allFolders =
                 LibraryEntity
                     .find { LibrariesTable.id neq id }
                     .flatMap { it.folders }
-                    .map { Path.of(it).normalize().absolute() }
+                    .map { libraryRoot(it) }
             // Either direction is a conflict: a new folder nested inside an existing one, or an existing one
             // nested inside a new one.
             val overlaps =

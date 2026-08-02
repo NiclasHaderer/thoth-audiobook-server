@@ -25,6 +25,7 @@ data class DatabaseConfig(
 data class ThothConfig(
     val dataDir: Path = Path.of("data"),
     val port: Int = 8080,
+    val baseUrl: String = "/",
     // Only marks the auth cookies as secure, the server itself never terminates TLS
     val tls: Boolean = false,
     val allowNewSignups: Boolean = true,

@@ -12,6 +12,7 @@ import io.thoth.server.database.tables.TrackEntity
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
+import io.thoth.server.file.scanner.libraryRoot
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
@@ -23,8 +24,10 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.absolute
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.readAttributes
 
@@ -40,10 +43,12 @@ object TrackManager : KoinComponent {
         path: Path,
         library: LibraryEntity,
     ) {
-        require(path.isRegularFile()) { "Cannot add folder to library" }
+        require(path.isRegularFile()) {
+            "Only regular files can be added to a library, but '${path.absolute()}' is not one"
+        }
         val (libPath, analyzer) =
             transaction {
-                library.folders.map { Path.of(it) }.first { path.startsWith(it) } to analyzers.forLibrary(library)
+                library.folders.map { libraryRoot(it) }.first { path.startsWith(it) } to analyzers.forLibrary(library)
             }
 
         val result =
@@ -57,9 +62,13 @@ object TrackManager : KoinComponent {
         path: Path,
         library: LibraryEntity,
     ) {
+        // Rows hold normalised paths, and the separator keeps "/books/Dune" from also matching "/books/Dune 2"
+        val target = path.absolute().normalize().absolutePathString()
         transaction {
+            val subtree = LikePattern.ofLiteral(target + File.separator) + "%"
             TracksTable.deleteWhere {
-                TracksTable.path like "${path.absolute()}%" and (TracksTable.library eq library.id)
+                ((TracksTable.path eq target) or (TracksTable.path like subtree)) and
+                    (TracksTable.library eq library.id)
             }
         }
     }
@@ -68,7 +77,7 @@ object TrackManager : KoinComponent {
         scan: AudioFileAnalysisResult,
         library: LibraryEntity,
     ) {
-        val track = TrackEntity.findOne { TracksTable.path like scan.path }
+        val track = TrackEntity.findOne { TracksTable.path eq scan.path }
         if (track != null) {
             updateTrack(track, scan, library).also { track.markAsTouched() }
         } else {

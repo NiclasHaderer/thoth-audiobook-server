@@ -7,12 +7,6 @@ import org.w3c.dom.Element
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
 
-data class PomMetadata(
-    val licenses: List<String> = emptyList(),
-    val licenseUrl: String? = null,
-    val repository: String? = null,
-)
-
 val generateLicenseReport =
     tasks.register("generateLicenseReport") {
         description = "Writes license metadata for every third party dependency shipped in the server jar"

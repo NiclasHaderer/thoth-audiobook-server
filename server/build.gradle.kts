@@ -3,6 +3,8 @@ plugins {
     kotlin("plugin.serialization")
     alias(libs.plugins.shadow)
     application
+    // Bundles third-party-licenses.json into the jar for the /api/licenses endpoint
+    id("thoth.license-report")
 }
 
 application {
@@ -19,9 +21,8 @@ tasks.jar {
 }
 
 tasks.shadowJar {
-    // Hoplite's config parsers and Exposed's factories are registered via ServiceLoader, so their
-    // META-INF/services entries have to be concatenated instead of overwriting each other.
-    // The transformers only see every copy of a duplicated path if duplicates are not dropped first.
+    // Hoplite's config parsers and Exposed's factories come from ServiceLoader, so their
+    // META-INF/services entries must be concatenated, which needs the duplicates kept.
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
 }

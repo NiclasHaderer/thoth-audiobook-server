@@ -29,9 +29,9 @@ class AudioFileAnalyzers(
 
         if (libAnalyzer.isEmpty()) {
             log.error {
-                "Library does not reference any available scanners"
-                " (available scanners: ${map { it.name }})"
-                " (library scanners: ${library.fileScanners.map { it.name }})"
+                "Library does not reference any available scanners" +
+                    " (available scanners: ${map { it.name }})" +
+                    " (library scanners: ${library.fileScanners.map { it.name }})"
             }
         }
 

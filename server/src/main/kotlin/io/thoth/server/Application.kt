@@ -1,6 +1,7 @@
 package io.thoth.server
 
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.log
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.engine.embeddedServer
@@ -19,6 +20,7 @@ import io.thoth.server.api.bookRouting
 import io.thoth.server.api.fileSystemRouting
 import io.thoth.server.api.imageRouting
 import io.thoth.server.api.libraryRouting
+import io.thoth.server.api.licenseRouting
 import io.thoth.server.api.metadataRouting
 import io.thoth.server.api.metadataAgentRouting
 import io.thoth.server.api.pingRouting
@@ -28,6 +30,7 @@ import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.DatabaseConnector
 import io.thoth.server.di.setupDependencyInjection
+import io.thoth.server.file.scanner.LibraryWatcher
 import io.thoth.server.plugins.auth.configureAuthentication
 import io.thoth.server.plugins.configureMonitoring
 import io.thoth.server.plugins.configureOpenApi
@@ -108,6 +111,9 @@ fun Application.routing() {
 
         // Routes for checking if the server is available
         pingRouting()
+
+        // Attribution for the dependencies shipped in the jar
+        licenseRouting()
     }
 }
 
@@ -117,12 +123,14 @@ fun Application.startBackgroundJobs() {
     scheduler.schedule(thothSchedules.fullScan)
     scheduler.launchNow(thothSchedules.fullScan)
     launch { scheduler.start() }
+    val watcher = get<LibraryWatcher>()
+    watcher.start()
+    monitor.subscribe(ApplicationStopping) { watcher.stop() }
 
     // Generate clients
     if (developmentMode) {
         launch {
             log.info("Generating clients")
-            // TODO generateTsClient("../thoth-web/src/client/generated/client/typescript")
             generateTsClient("gen/client/typescript")
             generateKotlinClient(
                 apiClientPackageName = "io.thoth.client.gen",

@@ -26,13 +26,27 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.union
 import org.koin.core.component.KoinComponent
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.UUID
+import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.getLastModifiedTime
 
 interface LibraryScanner {
     fun scanLibrary(library: LibraryEntity)
+
+    fun scanFolder(
+        folder: Path,
+        library: LibraryEntity,
+    )
+
+    fun cleanupLibrary(library: LibraryEntity)
+
+    fun shouldUpdate(path: Path): Boolean
+
+    fun rootOf(
+        path: Path,
+        library: LibraryEntity,
+    ): Path?
 }
 
 class LibraryScannerImpl :
@@ -41,54 +55,39 @@ class LibraryScannerImpl :
     companion object {
         private val mutex = Mutex()
         private val currentLibraryScans = mutableMapOf<UUID, Boolean>()
-        private val ignoredFolders = mutableListOf<Path>()
         private val log = logger {}
-
-        fun isIgnored(folder: Path): Boolean =
-            mutex.withGuard {
-                ignoredFolders.any { it.startsWith(folder) }
-            }
-
-        fun removeIgnoredFolder(folder: Path): Unit =
-            mutex.withGuard {
-                ignoredFolders.removeIf { it.absolutePathString() == folder.absolutePathString() }
-            }
-
-        // TODO we never un-ignore the folder
-        fun ignoreFolder(folder: Path): Unit =
-            mutex.withGuard {
-                if (!ignoredFolders.any { it.absolutePathString() == folder.absolutePathString() }) {
-                    return
-                }
-                ignoredFolders.add(folder)
-            }
     }
 
     override fun scanLibrary(library: LibraryEntity) {
-        try {
-            log.info { "Scanning library ${library.name}" }
+        // Claimed before the try, so bailing out cannot run the finally and clear the running scan's flag
+        val claimed =
             mutex.withGuard {
                 if (currentLibraryScans[library.id.value] == true) {
-                    log.info { "Skipping scan for library ${library.name}. Scan is already ongoing." }
-                    return
+                    false
+                } else {
+                    currentLibraryScans[library.id.value] = true
+                    true
                 }
-                currentLibraryScans[library.id.value] = true
             }
+        if (!claimed) {
+            log.info { "Skipping scan for library ${library.name}. Scan is already ongoing." }
+            return
+        }
+
+        try {
+            log.info { "Scanning library ${library.name}" }
             transaction { library.scanIndex += 1u }
 
-            for (folder in library.folders.map { Paths.get(it) }) {
+            for (folder in library.folders.map { libraryRoot(it) }) {
                 scanFolder(folder, library)
             }
             cleanupLibrary(library)
         } finally {
-            mutex.withGuard {
-                require(currentLibraryScans[library.id.value] == true, { "Library scan should have been ongoing" })
-                currentLibraryScans[library.id.value] = false
-            }
+            mutex.withGuard { currentLibraryScans[library.id.value] = false }
         }
     }
 
-    internal fun cleanupLibrary(library: LibraryEntity): Unit =
+    override fun cleanupLibrary(library: LibraryEntity): Unit =
         transaction {
             TracksTable.deleteWhere {
                 (TracksTable.library eq library.id) and (TracksTable.scanIndex less library.scanIndex)
@@ -123,33 +122,40 @@ class LibraryScannerImpl :
             }
         }
 
-    fun scanFolder(
+    override fun scanFolder(
         folder: Path,
         library: LibraryEntity,
     ) {
-        if (isIgnored(folder)) {
-            log.info { "Skipping '$folder' because it is ignored" }
+        // Resolved here so everything the walk hands downstream is already canonical
+        val target = realPath(folder)
+        if (rootOf(target, library)?.let { isIgnored(target, it) } != false) {
+            log.info { "Skipping '$folder' because it is ignored or outside the library" }
             return
         }
 
         walkFiles(
-            folder,
-            ignoreFolder = {
-                ignoreFolder(it)
-                TrackManager.removeFolder(it, library)
-            },
+            target,
+            ignoreFolder = { TrackManager.removeFolder(it, library) },
             addOrUpdate = { path, _ ->
-                if (shouldUpdate(path) && !isIgnored(path)) {
+                if (shouldUpdate(path)) {
                     TrackManager.addPath(path, library)
                 }
             },
         )
     }
 
-    private fun shouldUpdate(path: Path): Boolean =
+    override fun rootOf(
+        path: Path,
+        library: LibraryEntity,
+    ): Path? {
+        val target = realPath(path)
+        return library.folders.map { libraryRoot(it) }.firstOrNull { target.startsWith(it) }
+    }
+
+    override fun shouldUpdate(path: Path): Boolean =
         transaction {
             val dbTrack =
-                TrackEntity.findOne { TracksTable.path like path.absolutePathString() } ?: return@transaction true
+                TrackEntity.findOne { TracksTable.path eq path.absolutePathString() } ?: return@transaction true
             // If the track has already been imported and the access time has not changed skip
             if (dbTrack.hasBeenUpdated(path.getLastModifiedTime().toMillis())) return@transaction true
             // Mark as touched, so the tracks don't get removed

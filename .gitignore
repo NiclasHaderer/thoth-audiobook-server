@@ -82,3 +82,4 @@ dataSources
 .idea/dataSources.xml
 *.sqlite
 .kotlin
+data
