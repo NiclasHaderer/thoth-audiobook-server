@@ -1,0 +1,241 @@
+package io.thoth.openapi
+
+import io.ktor.resources.Resource
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.UserIdPrincipal
+import io.ktor.server.auth.bearer
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.dataconversion.DataConversion
+import io.ktor.server.resources.Resources
+import io.ktor.server.routing.routing
+import io.ktor.client.request.get as httpGet
+import io.ktor.server.testing.testApplication
+import io.swagger.v3.oas.models.OpenAPI
+import io.thoth.openapi.ktor.Description
+import io.thoth.openapi.ktor.Secured
+import io.thoth.openapi.ktor.Summary
+import io.thoth.openapi.ktor.Tagged
+import io.thoth.openapi.ktor.delete
+import io.thoth.openapi.ktor.get
+import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
+import io.thoth.openapi.ktor.plugins.OpenAPIRouting
+import io.thoth.openapi.ktor.post
+import io.thoth.openapi.serializion.kotlin.UUID_S
+import java.util.UUID
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+enum class SortDirection(
+    val direction: String,
+) {
+    ASC("ASC"),
+    DESC("DESC"),
+}
+
+enum class SpecItemKind {
+    Book,
+    Series,
+}
+
+interface SpecNamed {
+    val name: String
+}
+
+data class SpecItem(
+    val id: UUID,
+    val kind: SpecItemKind,
+    val total: Long,
+    val ratio: Double,
+    override val name: String,
+) : SpecNamed
+
+data class SpecPage<T>(
+    val items: List<T>,
+    val total: Long,
+)
+
+@Resource("spec")
+@Tagged("Spec")
+class SpecApi {
+    @Summary("List items", method = "GET")
+    @Resource("items")
+    class Items(
+        @Description("Which page to return") val page: Int = 0,
+        val order: SortDirection = SortDirection.ASC,
+        private val parent: SpecApi,
+    )
+
+    @Secured("bearer")
+    @Summary("Delete an item", method = "DELETE")
+    @Resource("items/{id}")
+    class Item(
+        val id: UUID_S,
+        private val parent: SpecApi,
+    )
+
+    @Summary("Ping", method = "POST")
+    @Resource("ping.check")
+    class Ping(
+        private val parent: SpecApi,
+    )
+}
+
+private fun Application.specRoutes() {
+    install(Resources)
+    install(DataConversion)
+    install(ContentNegotiation)
+    install(Authentication) { bearer("bearer") { authenticate { UserIdPrincipal("test") } } }
+    install(OpenAPIRouting) {
+        components {
+            securitySchemes {
+                http("bearer") {
+                    scheme = "bearer"
+                    bearerFormat = "JWT"
+                }
+            }
+        }
+    }
+
+    routing {
+        get<SpecApi.Items, SpecPage<SpecItem>> { TODO() }
+        delete<SpecApi.Item, Unit, Unit> { _, _ -> TODO() }
+        post<SpecApi.Ping, Unit, Unit> { _, _ -> TODO() }
+    }
+}
+
+private fun generateApi(): OpenAPI {
+    lateinit var api: OpenAPI
+    testApplication {
+        application {
+            specRoutes()
+            val config = attributes[OpenAPIConfigurationKey]
+            config.routeCollector.forEach { config.schemaHolder.addRouteToApi(it) }
+            api = config.schemaHolder.api
+        }
+        // The application block only runs once the client touches the server
+        client.httpGet("/")
+    }
+    return api
+}
+
+class SchemaGenerationTest {
+    private val api = generateApi()
+
+    private val listItems get() = api.paths["/spec/items"]!!.get
+    private val deleteItem get() = api.paths["/spec/items/{id}"]!!.delete
+    private val ping get() = api.paths["/spec/ping.check"]!!.post
+
+    @Test
+    fun `enums become string schemas with their values`() {
+        assertEquals("string", api.components.schemas["SpecItemKind"]!!.type)
+        assertContentEquals(listOf("Book", "Series"), api.components.schemas["SpecItemKind"]!!.enum)
+
+        // An enum with a constructor property must not leak that property as an object
+        assertEquals("string", api.components.schemas["SortDirection"]!!.type)
+        assertContentEquals(listOf("ASC", "DESC"), api.components.schemas["SortDirection"]!!.enum)
+    }
+
+    @Test
+    fun `enum query parameters reference the enum schema`() {
+        val order = listItems.parameters.first { it.name == "order" }
+        assertEquals("#/components/schemas/SortDirection", order.schema.`$ref`)
+    }
+
+    @Test
+    fun `component names stay within the allowed character set`() {
+        val allowed = "^[a-zA-Z0-9.\\-_]+$".toRegex()
+        for (name in api.components.schemas.keys) {
+            assertTrue(allowed.matches(name), "component name '$name' is not a valid key")
+        }
+        assertTrue("SpecPage_SpecItem" in api.components.schemas)
+    }
+
+    @Test
+    fun `allOf is only emitted when there is a super class`() {
+        assertNull(api.components.schemas["SpecPage_SpecItem"]!!.allOf)
+        assertEquals(1, api.components.schemas["SpecItem"]!!.allOf.size)
+    }
+
+    @Test
+    fun `whole numbers are integers and floating point numbers are not`() {
+        val item = api.components.schemas["SpecItem"]!!
+        assertEquals("integer", item.properties["total"]!!.type)
+        assertEquals("int64", item.properties["total"]!!.format)
+        assertEquals("number", item.properties["ratio"]!!.type)
+        assertEquals("integer", listItems.parameters.first { it.name == "page" }.schema.type)
+    }
+
+    @Test
+    fun `uuids use the uuid format`() {
+        val id = api.components.schemas["SpecItem"]!!.properties["id"]!!
+        assertEquals("string", id.type)
+        assertEquals("uuid", id.format)
+        assertNull(id.pattern)
+    }
+
+    @Test
+    fun `unit responses carry no body`() {
+        val response = ping.responses["204"]!!
+        assertNull(response.content)
+        assertEquals("No Content", response.description)
+    }
+
+    @Test
+    fun `unit request bodies are omitted`() {
+        assertNull(ping.requestBody)
+    }
+
+    @Test
+    fun `every operation has an id`() {
+        assertEquals("getSpecItems", listItems.operationId)
+        assertEquals("deleteSpecItemsById", deleteItem.operationId)
+        assertEquals("postSpecPingCheck", ping.operationId)
+
+        val ids = api.paths.values.flatMap { it.readOperations() }.map { it.operationId }
+        assertFalse(ids.any { it.isNullOrBlank() })
+        assertEquals(ids.size, ids.toSet().size, "operation ids are not unique")
+    }
+
+    @Test
+    fun `no response description is left empty`() {
+        val descriptions =
+            api.paths.values
+                .flatMap { it.readOperations() }
+                .flatMap { it.responses.values }
+                .map { it.description }
+        assertFalse(descriptions.any { it.isNullOrBlank() })
+        assertEquals("OK", listItems.responses["200"]!!.description)
+    }
+
+    @Test
+    fun `errors are documented`() {
+        val error = api.components.schemas["ErrorResponse"]!!
+        assertContentEquals(listOf("error", "status"), error.required)
+
+        for (operation in api.paths.values.flatMap { it.readOperations() }) {
+            val default = assertNotNull(operation.responses.default, "${operation.operationId} has no default response")
+            assertEquals(
+                "#/components/schemas/ErrorResponse",
+                default.content["application/json"]!!.schema.`$ref`,
+            )
+        }
+
+        // Only secured operations can answer with 401 or 403
+        assertNotNull(deleteItem.responses["401"])
+        assertNotNull(deleteItem.responses["403"])
+        assertNull(listItems.responses["401"])
+    }
+
+    @Test
+    fun `parameters can carry a description`() {
+        assertEquals("Which page to return", listItems.parameters.first { it.name == "page" }.description)
+        assertTrue(deleteItem.parameters.first { it.name == "id" }.required)
+    }
+}

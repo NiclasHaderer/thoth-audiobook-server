@@ -12,7 +12,7 @@ enum class OpenAPISchemaType(
 }
 
 class WebUiConfig internal constructor() {
-    val webUiVersion = "4.15.5"
+    val webUiVersion = swaggerUiWebjarVersion()
     private lateinit var _docsPath: String
     private lateinit var _schemaPath: String
 
@@ -53,6 +53,16 @@ val OpenAPIWebUI =
         val webUiServer = WebUiServer(pluginConfig)
         this.onCall { call -> webUiServer.interceptCall(call) }
     }
+
+private fun swaggerUiWebjarVersion(): String {
+    val properties =
+        WebUiConfig::class.java
+            .getResourceAsStream("/META-INF/maven/org.webjars/swagger-ui/pom.properties")
+            ?.use { java.util.Properties().apply { load(it) } }
+            ?: error("swagger-ui webjar is missing from the classpath")
+
+    return properties.getProperty("version") ?: error("swagger-ui webjar has no version in its pom.properties")
+}
 
 private fun String.prependIfMissing(char: Char): String =
     if (isNotEmpty() && this[0] != char) {

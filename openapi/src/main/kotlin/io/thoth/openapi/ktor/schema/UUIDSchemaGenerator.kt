@@ -11,10 +11,7 @@ class UUIDSchemaGenerator : SchemaGenerator() {
         classType: ClassType,
         generateSubType: GenerateSchemaSubtype,
     ): Schema<*> =
-        StringSchema()
-            .pattern("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
-            .minLength(36)
-            .maxLength(36)
+        StringSchema().format("uuid")
 
     override fun canGenerate(classType: ClassType): Boolean = classType.isSubclassOf(UUID::class)
 

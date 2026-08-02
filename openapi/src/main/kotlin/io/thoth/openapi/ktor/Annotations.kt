@@ -13,7 +13,7 @@ annotation class Tagged(
     val name: String,
 )
 
-@Target(AnnotationTarget.CLASS)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
 annotation class Description(
     val description: String,
 )

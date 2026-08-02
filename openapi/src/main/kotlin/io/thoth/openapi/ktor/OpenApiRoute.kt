@@ -34,12 +34,14 @@ class OpenApiRoute(
         val type: ClassType
         val origin: ClassType
         val optional: Boolean
+        val description: String?
     }
 
     data class PathParameter(
         override val name: String,
         override val type: ClassType,
         override val origin: ClassType,
+        override val description: String? = null,
     ) : Parameter {
         override val optional = false
     }
@@ -49,6 +51,7 @@ class OpenApiRoute(
         override val type: ClassType,
         override val origin: ClassType,
         override val optional: Boolean,
+        override val description: String? = null,
     ) : Parameter
 
     companion object {
@@ -139,6 +142,20 @@ class OpenApiRoute(
 
     val tags by lazy { requestParamsType.findAnnotationsFirstUp<Tagged>().map { it.name } }
 
+    val operationId by lazy {
+        val segments =
+            fullPath.split("/").filter { it.isNotBlank() }.joinToString("") { segment ->
+                val isPathParam = segment.startsWith("{") && segment.endsWith("}")
+                val words =
+                    segment
+                        .split("[^A-Za-z0-9]+".toRegex())
+                        .filter { it.isNotBlank() }
+                        .joinToString("") { it.replaceFirstChar(Char::uppercaseChar) }
+                if (isPathParam) "By$words" else words
+            }
+        method.value.lowercase() + segments
+    }
+
     init {
         assertParamsHierarchy()
     }
@@ -203,7 +220,14 @@ class OpenApiRoute(
                         "Class ${params.clazz.qualifiedName} has a path parameter $varName which is not declared as a member. " +
                             "You have to create a property with the name $varName",
                     )
-            pathParams.add(PathParameter(name = varName, type = params.forMember(varMember), origin = params))
+            pathParams.add(
+                PathParameter(
+                    name = varName,
+                    type = params.forMember(varMember),
+                    origin = params,
+                    description = varMember.findAnnotation<Description>()?.description,
+                ),
+            )
         }
         return pathParams
     }
@@ -239,7 +263,13 @@ class OpenApiRoute(
                     // Remove injected parent
                     it.returnType.classifier != params.parent?.clazz
                 }.map {
-                    QueryParameter(name = it.name, type = params.forMember(it), origin = params, optional = it.optional)
+                    QueryParameter(
+                        name = it.name,
+                        type = params.forMember(it),
+                        origin = params,
+                        optional = it.optional,
+                        description = it.findAnnotation<Description>()?.description,
+                    )
                 }
         return queryParams
     }

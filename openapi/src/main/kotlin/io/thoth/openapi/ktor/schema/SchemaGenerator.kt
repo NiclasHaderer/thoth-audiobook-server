@@ -54,6 +54,7 @@ abstract class SchemaGenerator {
 val schemaGenerators: List<SchemaGenerator> =
     listOf(
         DateSchemaGenerator(),
+        EnumSchemaGenerator(),
         FileSchemaGenerator(),
         ListSchemaGenerator(),
         MapSchemaGenerator(),

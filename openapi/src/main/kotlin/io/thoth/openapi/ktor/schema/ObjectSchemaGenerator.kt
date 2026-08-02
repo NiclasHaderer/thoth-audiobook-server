@@ -31,7 +31,9 @@ class ObjectSchemaGenerator : SchemaGenerator() {
                         val subSchema = generateSubType(classType.forMember(it))
                         it.name to subSchema.reference()
                     }
-            schema.allOf = superClasses.map { it.reference() }
+            if (superClasses.isNotEmpty()) {
+                schema.allOf = superClasses.map { it.reference() }
+            }
         }
     }
 
@@ -41,7 +43,8 @@ class ObjectSchemaGenerator : SchemaGenerator() {
     ): String {
         var schemaName = classType.simpleName
         if (classType.genericArguments.isNotEmpty()) {
-            schemaName += classType.genericArguments.joinToString(prefix = "<", postfix = ">") { it.simpleName }
+            // Component keys have to match ^[a-zA-Z0-9.\-_]+$, so generics cannot be spelled Foo<Bar>
+            schemaName += classType.genericArguments.joinToString(separator = "_", prefix = "_") { it.simpleName }
         }
         return schemaName
     }
