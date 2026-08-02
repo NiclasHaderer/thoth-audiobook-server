@@ -89,20 +89,27 @@ val generateLicenseReport =
                 )
             }
 
-            val licenseFile = Regex("^(meta-inf/)?(licen[cs]e|copying|notice)([.\\-_].*)?$", RegexOption.IGNORE_CASE)
+            val licenseFile = Regex("^(meta-inf/)?(licen[cs]e|copying)([.\\-_].*)?$", RegexOption.IGNORE_CASE)
+            val noticeFile = Regex("^(meta-inf/)?notice([.\\-_].*)?$", RegexOption.IGNORE_CASE)
 
             fun licenseText(jar: File): String? =
                 runCatching {
                     ZipFile(jar).use { zip ->
-                        val entry =
-                            zip
-                                .entries()
-                                .asSequence()
-                                .filter { !it.isDirectory && licenseFile.matches(it.name) && it.size < 200_000 }
+                        val entries = zip.entries().asSequence().filter { !it.isDirectory && it.size < 200_000 }.toList()
+
+                        fun read(name: Regex): String? =
+                            entries
+                                .filter { name.matches(it.name) }
                                 .minByOrNull { it.name.length }
-                        entry?.let { zip.getInputStream(it).readBytes().toString(Charsets.UTF_8).trim() }
+                                ?.let { zip.getInputStream(it).readBytes().toString(Charsets.UTF_8).trim() }
+                                ?.takeIf { it.isNotEmpty() }
+
+                        // Apache-2.0 section 4(d) requires the NOTICE to be redistributed alongside the license
+                        listOfNotNull(read(licenseFile), read(noticeFile)?.let { "NOTICE\n\n$it" })
+                            .joinToString("\n\n")
+                            .takeIf { it.isNotEmpty() }
                     }
-                }.getOrNull()?.takeIf { it.isNotEmpty() }
+                }.getOrNull()
 
             val artifacts =
                 runtimeClasspath
