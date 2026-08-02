@@ -1,51 +1,18 @@
 package io.thoth.server.database.migrations
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.UsersTable
-import io.thoth.server.di.serialization.JacksonSerialization
-import io.thoth.server.di.serialization.Serialization
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import java.io.File
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-class DatabaseMigratorTest {
-    private lateinit var dbFile: File
-
-    @BeforeTest
-    fun setup() {
-        // LibrariesTable's json columns resolve their serializer through Koin while the table object initializes,
-        // so Koin has to be up before any table is touched.
-        startKoin {
-            modules(
-                module {
-                    single { JacksonSerialization().apply { objectMapper = jacksonObjectMapper() } }
-                    single<Serialization> { get<JacksonSerialization>() }
-                },
-            )
-        }
-        dbFile = File.createTempFile("thoth-migrator-test", ".db")
-        Database.connect("jdbc:sqlite:${dbFile.absolutePath}", "org.sqlite.JDBC")
-    }
-
-    @AfterTest
-    fun teardown() {
-        stopKoin()
-        dbFile.delete()
-    }
-
+class DatabaseMigratorTest : ThothTest(migrate = false) {
     private fun appliedVersions(): List<Int> = transaction { SchemaTrackerEntity.all().map { it.version }.sorted() }
 
     private fun tableNames(): List<String> =

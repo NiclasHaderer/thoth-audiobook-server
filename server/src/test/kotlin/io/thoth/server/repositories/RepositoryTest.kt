@@ -1,40 +1,22 @@
 package io.thoth.server.repositories
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.http.HttpStatusCode
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.database.tables.AuthorBookTable
+import io.thoth.server.ThothTest
+import org.koin.mp.KoinPlatform.getKoin
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.GenreBookTable
-import io.thoth.server.database.tables.GenreSeriesTable
-import io.thoth.server.database.tables.GenresTable
-import io.thoth.server.database.tables.ImageTable
-import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryEntity
-import io.thoth.server.database.tables.LibraryUserTable
 import io.thoth.server.database.tables.SeriesAuthorTable
-import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.TracksTable
-import io.thoth.server.database.tables.UsersTable
-import io.thoth.server.di.serialization.JacksonSerialization
-import io.thoth.server.di.serialization.Serialization
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import java.io.File
 import java.util.UUID
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -44,58 +26,17 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class RepositoryTest {
-    private val libraryRepository = LibraryRepositoryImpl()
-    private val authorRepository = AuthorServiceImpl()
-    private val bookRepository = BookRepositoryImpl()
-    private val seriesRepository = SeriesRepositoryImpl()
+class RepositoryTest : ThothTest() {
+    private val libraryRepository by lazy { getKoin().get<LibraryRepository>() as LibraryRepositoryImpl }
+    private val authorRepository by lazy { getKoin().get<AuthorRepository>() }
+    private val bookRepository by lazy { getKoin().get<BookRepository>() }
+    private val seriesRepository by lazy { getKoin().get<SeriesRepository>() }
 
-    private lateinit var dbFile: File
     private var libId: UUID = UUID.randomUUID()
 
     @BeforeTest
-    fun setup() {
-        // LibrariesTable's json columns resolve their serializer through Koin while the table object initializes,
-        // so Koin has to be up before any table is touched.
-        startKoin {
-            modules(
-                module {
-                    single { JacksonSerialization().apply { objectMapper = jacksonObjectMapper() } }
-                    single<Serialization> { get<JacksonSerialization>() }
-                    single<LibraryRepository> { libraryRepository }
-                    single<AuthorRepository> { authorRepository }
-                    single<BookRepository> { bookRepository }
-                    single<SeriesRepository> { seriesRepository }
-                },
-            )
-        }
-        dbFile = File.createTempFile("thoth-repository-test", ".db")
-        Database.connect("jdbc:sqlite:${dbFile.absolutePath}", "org.sqlite.JDBC")
-        transaction {
-            SchemaUtils.create(
-                LibrariesTable,
-                ImageTable,
-                AuthorTable,
-                BooksTable,
-                SeriesTable,
-                GenresTable,
-                TracksTable,
-                UsersTable,
-                AuthorBookTable,
-                GenreBookTable,
-                GenreSeriesTable,
-                SeriesBookTable,
-                SeriesAuthorTable,
-                LibraryUserTable,
-            )
-        }
+    fun createLibrary() {
         libId = newLibrary("lib", "/media/books")
-    }
-
-    @AfterTest
-    fun teardown() {
-        stopKoin()
-        dbFile.delete()
     }
 
     private fun newLibrary(

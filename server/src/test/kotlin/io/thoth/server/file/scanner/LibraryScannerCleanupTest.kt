@@ -1,88 +1,29 @@
 package io.thoth.server.file.scanner
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
+import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.GenreBookTable
-import io.thoth.server.database.tables.GenreSeriesTable
-import io.thoth.server.database.tables.GenresTable
-import io.thoth.server.database.tables.ImageTable
-import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryEntity
-import io.thoth.server.database.tables.LibraryUserTable
 import io.thoth.server.database.tables.SeriesAuthorTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackEntity
 import io.thoth.server.database.tables.TracksTable
-import io.thoth.server.database.tables.UsersTable
-import io.thoth.server.di.serialization.JacksonSerialization
-import io.thoth.server.di.serialization.Serialization
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
-import java.io.File
 import java.util.UUID
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class LibraryScannerCleanupTest {
+class LibraryScannerCleanupTest : ThothTest() {
     private val scanner = LibraryScannerImpl()
-
-    private lateinit var dbFile: File
-
-    @BeforeTest
-    fun setup() {
-        // LibrariesTable's json columns resolve their serializer through Koin while the table object initializes,
-        // so Koin has to be up before any table is touched.
-        startKoin {
-            modules(
-                module {
-                    single { JacksonSerialization().apply { objectMapper = jacksonObjectMapper() } }
-                    single<Serialization> { get<JacksonSerialization>() }
-                },
-            )
-        }
-        dbFile = File.createTempFile("thoth-scanner-cleanup-test", ".db")
-        Database.connect("jdbc:sqlite:${dbFile.absolutePath}", "org.sqlite.JDBC")
-        transaction {
-            SchemaUtils.create(
-                LibrariesTable,
-                ImageTable,
-                AuthorTable,
-                BooksTable,
-                SeriesTable,
-                GenresTable,
-                TracksTable,
-                UsersTable,
-                AuthorBookTable,
-                GenreBookTable,
-                GenreSeriesTable,
-                SeriesBookTable,
-                SeriesAuthorTable,
-                LibraryUserTable,
-            )
-        }
-    }
-
-    @AfterTest
-    fun teardown() {
-        stopKoin()
-        dbFile.delete()
-    }
 
     private fun newLibrary(libraryName: String): UUID =
         transaction {
@@ -103,8 +44,16 @@ class LibraryScannerCleanupTest {
         trackScanIndex: ULong,
     ) = transaction {
         val lib = LibraryEntity[libraryId]
-        val bookAuthor = AuthorEntity.new { name = "$prefix Author"; library = lib }
-        val bookSeries = SeriesEntity.new { title = "$prefix Series"; library = lib }
+        val bookAuthor =
+            AuthorEntity.new {
+                name = "$prefix Author"
+                library = lib
+            }
+        val bookSeries =
+            SeriesEntity.new {
+                title = "$prefix Series"
+                library = lib
+            }
         val newBook =
             BookEntity.new {
                 title = "$prefix Book"

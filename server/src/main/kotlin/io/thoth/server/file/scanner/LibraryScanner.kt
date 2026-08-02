@@ -4,12 +4,14 @@ import io.thoth.server.common.extensions.findOne
 import io.thoth.server.common.extensions.withGuard
 import io.thoth.server.database.access.hasBeenUpdated
 import io.thoth.server.database.access.markAsTouched
+import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageTable
 import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackEntity
@@ -91,12 +93,20 @@ class LibraryScannerImpl :
             TracksTable.deleteWhere {
                 (TracksTable.library eq library.id) and (TracksTable.scanIndex less library.scanIndex)
             }
-            // Find all books that have no tracks and remove them
-            BookEntity.find { BooksTable.library eq library.id }.filter { it.tracks.empty() }.forEach { it.delete() }
-            // Find all authors that have no books and remove them
-            AuthorEntity.find { AuthorTable.library eq library.id }.filter { it.books.empty() }.forEach { it.delete() }
-            // Find all series that have no books and remove them
-            SeriesEntity.find { SeriesTable.library eq library.id }.filter { it.books.empty() }.forEach { it.delete() }
+            // Books first: deleting them cascades the link rows away, which is what leaves the authors
+            // and series below without books.
+            BooksTable.deleteWhere {
+                (BooksTable.library eq library.id) and
+                    (BooksTable.id notInSubQuery TracksTable.select(TracksTable.book))
+            }
+            AuthorTable.deleteWhere {
+                (AuthorTable.library eq library.id) and
+                    (AuthorTable.id notInSubQuery AuthorBookTable.select(AuthorBookTable.authors))
+            }
+            SeriesTable.deleteWhere {
+                (SeriesTable.library eq library.id) and
+                    (SeriesTable.id notInSubQuery SeriesBookTable.select(SeriesBookTable.series))
+            }
 
             // Delete unused images
             ImageTable.deleteWhere {

@@ -26,27 +26,28 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.logger.slf4jLogger
 
+fun thothModule(config: ThothConfig) =
+    module {
+        single { config }
+        single<MetadataAgents> {
+            // The cache sits below the search based lookups, so their searches and ID lookups hit it as well
+            MetadataAgents(listOf(SearchBasedMetadataAgent(CachingMetadataProvider(AudibleMetadataProvider()))))
+        }
+        single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
+        single<LibraryScanner> { LibraryScannerImpl() }
+        single { JacksonSerialization() }
+        single<Serialization> { get<JacksonSerialization>() }
+        single<BookRepository> { BookRepositoryImpl() }
+        single<AuthorRepository> { AuthorServiceImpl() }
+        single<SeriesRepository> { SeriesRepositoryImpl() }
+        single<LibraryRepository> { LibraryRepositoryImpl() }
+        single { Scheduler() }
+        single { ThothSchedules() }
+    }
+
 fun setupDependencyInjection(config: ThothConfig) {
     startKoin {
-        modules(
-            module {
-                single { config }
-                single<MetadataAgents> {
-                    // The cache sits below the search based lookups, so their searches and ID lookups hit it as well
-                    MetadataAgents(listOf(SearchBasedMetadataAgent(CachingMetadataProvider(AudibleMetadataProvider()))))
-                }
-                single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
-                single<LibraryScanner> { LibraryScannerImpl() }
-                single { JacksonSerialization() }
-                single<Serialization> { get<JacksonSerialization>() }
-                single<BookRepository> { BookRepositoryImpl() }
-                single<AuthorRepository> { AuthorServiceImpl() }
-                single<SeriesRepository> { SeriesRepositoryImpl() }
-                single<LibraryRepository> { LibraryRepositoryImpl() }
-                single { Scheduler() }
-                single { ThothSchedules() }
-            },
-        )
+        modules(thothModule(config))
         slf4jLogger()
     }
 }

@@ -13,7 +13,7 @@ import io.thoth.openapi.ktor.errors.configureStatusPages
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ErrorStatusTest {
+class ErrorStatusTest : ThothTest() {
     private fun assertAnswer(
         failure: Throwable,
         expected: HttpStatusCode,

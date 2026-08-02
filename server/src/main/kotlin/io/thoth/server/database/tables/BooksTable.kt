@@ -19,6 +19,6 @@ object BooksTable : UUIDTable("Books") {
     val providerRating = float("rating").nullable()
 
     // Relations
-    val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.CASCADE).nullable()
+    val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
 }

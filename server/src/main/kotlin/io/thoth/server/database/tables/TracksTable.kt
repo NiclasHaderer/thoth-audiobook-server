@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.javatime.datetime
 import java.time.LocalDateTime
@@ -12,8 +13,8 @@ object TracksTable : UUIDTable("Tracks") {
     val accessTime = long("accessTime")
     val updateTime = datetime("updateTime").default(LocalDateTime.now())
     val path = text("path").uniqueIndex()
-    val book = reference("book", BooksTable)
-    val library = reference("library", LibrariesTable)
+    val book = reference("book", BooksTable, onDelete = ReferenceOption.CASCADE)
+    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
     val scanIndex = ulong("scanIndex")
     val trackNr = integer("trackNr").nullable()
 }

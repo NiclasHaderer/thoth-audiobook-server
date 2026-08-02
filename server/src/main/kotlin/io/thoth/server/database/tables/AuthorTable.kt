@@ -18,6 +18,6 @@ object AuthorTable : UUIDTable("Authors") {
     val providerID = varchar("providerID", 255).nullable()
 
     // Relations
-    val imageID = reference("imageId", ImageTable, onDelete = ReferenceOption.CASCADE).nullable()
+    val imageID = reference("imageId", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
 }

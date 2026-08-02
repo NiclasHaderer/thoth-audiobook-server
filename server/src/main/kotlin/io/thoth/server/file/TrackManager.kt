@@ -197,7 +197,7 @@ object TrackManager : KoinComponent {
                     .new {
                         name = author
                         library = libraryModel
-                    }
+                    }.also { it.flush() }
             }
         }
 }

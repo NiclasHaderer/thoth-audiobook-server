@@ -14,6 +14,6 @@ object SeriesTable : UUIDTable("Series") {
     val providerID = varchar("providerID", 255).nullable()
 
     // Relations
-    val coverID = reference("cover", ImageTable).nullable()
+    val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
 }
