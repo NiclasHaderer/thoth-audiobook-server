@@ -43,7 +43,6 @@ class ObjectSchemaGenerator : SchemaGenerator() {
     ): String {
         var schemaName = classType.simpleName
         if (classType.genericArguments.isNotEmpty()) {
-            // Component keys have to match ^[a-zA-Z0-9.\-_]+$, so generics cannot be spelled Foo<Bar>
             schemaName += classType.genericArguments.joinToString(separator = "_", prefix = "_") { it.simpleName }
         }
         return schemaName

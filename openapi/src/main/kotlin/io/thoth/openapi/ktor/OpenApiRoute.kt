@@ -98,9 +98,11 @@ class OpenApiRoute(
 
     val description by lazy { requestParamsType.findAnnotation<Description>()?.description }
 
-    val summary by lazy {
-        requestParamsType.findAnnotations<Summary>().firstOrNull { it.method == this.method.value }?.summary
+    private val operation by lazy {
+        requestParamsType.findAnnotations<Summary>().firstOrNull { it.method == this.method.value }
     }
+
+    val summary by lazy { operation?.summary }
 
     val secured by lazy {
         if (requestParamsType.findAnnotation<NotSecured>() != null) {
@@ -123,12 +125,11 @@ class OpenApiRoute(
     val requestContentType by lazy { requestBody.first.contentType }
 
     val responseStatusCode by lazy {
-        if (responseBodyType.clazz == Unit::class) {
-            HttpStatusCode.NoContent
-        } else if (method == HttpMethod.Post) {
-            HttpStatusCode.Created
-        } else {
-            HttpStatusCode.OK
+        val declared = operation?.status?.takeIf { it != Summary.INFER_STATUS }
+        when {
+            declared != null -> HttpStatusCode.fromValue(declared)
+            responseBodyType.clazz == Unit::class -> HttpStatusCode.NoContent
+            else -> HttpStatusCode.OK
         }
     }
 

@@ -23,4 +23,9 @@ annotation class Description(
 annotation class Summary(
     val summary: String,
     val method: String,
-)
+    val status: Int = INFER_STATUS,
+) {
+    companion object {
+        const val INFER_STATUS = 0
+    }
+}

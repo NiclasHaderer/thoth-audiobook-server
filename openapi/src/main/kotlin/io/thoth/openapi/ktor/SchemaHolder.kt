@@ -128,7 +128,6 @@ class SchemaHolder {
                     mapOf(
                         "error" to StringSchema(),
                         "status" to IntegerSchema().format("int32"),
-                        // The handlers put an arbitrary payload here, most often a list of validation messages
                         "details" to Schema<Any>().nullable(true),
                     ),
                 ).required(listOf("error", "status"))

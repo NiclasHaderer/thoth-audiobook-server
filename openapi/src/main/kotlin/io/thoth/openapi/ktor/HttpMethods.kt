@@ -3,6 +3,7 @@
 package io.thoth.openapi.ktor
 
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
@@ -40,6 +41,7 @@ suspend inline fun <reified BODY : Any> ApplicationCall.parseBody(): BODY =
 suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RoutingContext.wrapHandler(
     noinline callback: suspend RoutingContext.(params: PARAMS, body: BODY) -> RESPONSE,
     params: PARAMS,
+    status: HttpStatusCode,
 ) {
     runBeforeBodyParsing(params)
     val parsedBody: BODY = call.parseBody()
@@ -48,8 +50,10 @@ suspend inline fun <PARAMS : Any, reified BODY : Any, reified RESPONSE> RoutingC
     val response: RESPONSE = this.callback(params, parsedBody)
     if (response is BaseResponse) {
         response.respond(call)
+    } else if (response is Unit) {
+        call.respond(status)
     } else {
-        call.respond(response ?: "")
+        call.respond(status, response ?: "")
     }
     if (params is AfterResponse) params.run { afterResponse() }
 }
@@ -65,7 +69,9 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
 ) {
     val routeCollector = application.attributes[OpenAPIConfigurationKey].routeCollector
 
-    routeCollector.addRoute(OpenApiRoute.create<PARAMS, BODY, RESPONSE>(method, this))
+    val openApiRoute = OpenApiRoute.create<PARAMS, BODY, RESPONSE>(method, this)
+    routeCollector.addRoute(openApiRoute)
+    val status = openApiRoute.responseStatusCode
 
     // Check if ktor should secure the route
     val ignoreSecured = PARAMS::class.findAnnotation<NotSecured>() != null
@@ -73,18 +79,20 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     if (secured != null && !ignoreSecured) {
         authenticate(secured.name) {
             if (PARAMS::class == Unit::class) {
-                method(method) { handle { wrapHandler(callback, Unit as PARAMS) } }
+                method(method) { handle { wrapHandler(callback, Unit as PARAMS, status) } }
             } else {
                 resource<PARAMS> {
-                    method(method) { resourceHandle<PARAMS> { params -> wrapHandler(callback, params) } }
+                    method(method) { resourceHandle<PARAMS> { params -> wrapHandler(callback, params, status) } }
                 }
             }
         }
     } else {
         if (PARAMS::class == Unit::class) {
-            method(method) { handle { wrapHandler(callback, Unit as PARAMS) } }
+            method(method) { handle { wrapHandler(callback, Unit as PARAMS, status) } }
         } else {
-            resource<PARAMS> { method(method) { resourceHandle<PARAMS> { params -> wrapHandler(callback, params) } } }
+            resource<PARAMS> {
+                method(method) { resourceHandle<PARAMS> { params -> wrapHandler(callback, params, status) } }
+            }
         }
     }
 }

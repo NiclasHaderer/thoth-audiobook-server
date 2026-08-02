@@ -119,7 +119,6 @@ private fun generateApi(): OpenAPI {
             config.routeCollector.forEach { config.schemaHolder.addRouteToApi(it) }
             api = config.schemaHolder.api
         }
-        // The application block only runs once the client touches the server
         client.httpGet("/")
     }
     return api
@@ -137,7 +136,6 @@ class SchemaGenerationTest {
         assertEquals("string", api.components.schemas["SpecItemKind"]!!.type)
         assertContentEquals(listOf("Book", "Series"), api.components.schemas["SpecItemKind"]!!.enum)
 
-        // An enum with a constructor property must not leak that property as an object
         assertEquals("string", api.components.schemas["SortDirection"]!!.type)
         assertContentEquals(listOf("ASC", "DESC"), api.components.schemas["SortDirection"]!!.enum)
     }
@@ -227,7 +225,6 @@ class SchemaGenerationTest {
             )
         }
 
-        // Only secured operations can answer with 401 or 403
         assertNotNull(deleteItem.responses["401"])
         assertNotNull(deleteItem.responses["403"])
         assertNull(listItems.responses["401"])
