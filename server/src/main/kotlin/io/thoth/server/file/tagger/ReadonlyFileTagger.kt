@@ -1,9 +1,9 @@
 package io.thoth.server.file.tagger
 
+import io.thoth.server.common.extensions.canonicalString
 import io.thoth.taglib.TagLibFile
 import java.nio.file.Path
 import java.time.LocalDate
-import kotlin.io.path.absolute
 import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.nameWithoutExtension
 
@@ -20,7 +20,7 @@ class ReadonlyFileTagger(
 
     val cover: ByteArray?
     val duration: Int
-    val path: String = filePath.absolute().normalize().toString()
+    val path: String = filePath.canonicalString()
     val lastModified: Long = filePath.getLastModifiedTime().toMillis()
 
     init {

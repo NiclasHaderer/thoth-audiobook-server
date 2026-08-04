@@ -17,21 +17,32 @@ import org.koin.core.component.inject
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
-fun sqliteUrl(databaseFile: Path): String =
+const val SQLITE_BUSY_TIMEOUT_MILLIS = 5000
+
+fun sqliteUrl(
+    databaseFile: Path,
+    busyTimeoutMillis: Int = SQLITE_BUSY_TIMEOUT_MILLIS,
+): String =
     "jdbc:sqlite:${databaseFile.absolutePathString()}" +
         "?journal_mode=WAL" +
         "&synchronous=NORMAL" +
         "&journal_size_limit=${64 * 1024 * 1024}" +
-        "&busy_timeout=5000" +
+        "&busy_timeout=$busyTimeoutMillis" +
         "&foreign_keys=ON" +
         // Negative means KiB, and it is per connection
         "&cache_size=-8000"
 
-fun sqliteDataSource(databaseFile: Path): HikariDataSource =
+fun sqliteDataSource(
+    databaseFile: Path,
+    importThreads: Int = 4,
+    busyTimeoutMillis: Int = SQLITE_BUSY_TIMEOUT_MILLIS,
+): HikariDataSource =
     hikariDataSource {
         driverClassName = "org.sqlite.JDBC"
-        jdbcUrl = sqliteUrl(databaseFile)
-        maximumPoolSize = 4
+        jdbcUrl = sqliteUrl(databaseFile, busyTimeoutMillis)
+        // WAL readers do not conflict with the writer, but the import workers all read concurrently and
+        // would otherwise starve the Ktor handlers out of the pool.
+        maximumPoolSize = 4 + importThreads
         transactionIsolation = "TRANSACTION_SERIALIZABLE"
     }
 
@@ -54,7 +65,7 @@ object DatabaseConnector : KoinComponent {
         val dataSource =
             when (dbConfig.type) {
                 DatabaseType.SQLITE -> {
-                    sqliteDataSource(config.sqliteFile)
+                    sqliteDataSource(config.sqliteFile, config.importThreads)
                 }
 
                 DatabaseType.POSTGRES -> {
@@ -77,7 +88,17 @@ object DatabaseConnector : KoinComponent {
 
     fun connect(dataSource: javax.sql.DataSource): Database {
         val database =
-            Database.connect(dataSource, databaseConfig = DatabaseConfig.invoke { useNestedTransactions = true })
+            Database.connect(
+                dataSource,
+                databaseConfig =
+                    DatabaseConfig.invoke {
+                        useNestedTransactions = true
+                        // A write that loses a race against another writer comes back as SQLITE_BUSY at once
+                        // instead of going through busy_timeout, and Exposed retries with no delay by default
+                        defaultMinRetryDelay = 50
+                        defaultMaxRetryDelay = 500
+                    },
+            )
 
         transaction(database) {
             val dialect = currentDialect

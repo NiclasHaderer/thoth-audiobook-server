@@ -23,15 +23,14 @@ class AudioFileAnalyzers(
 ) : List<AudioFileAnalyzer> by items {
     private val log = logger {}
 
-    fun forLibrary(library: LibraryEntity): AudioFileAnalyzerWrapper {
-        val libAnalyzer =
-            filter { analyzer -> analyzer.name in library.fileScanners.map { libScanner -> libScanner.name } }
+    fun forNames(names: List<String>): AudioFileAnalyzerWrapper {
+        val libAnalyzer = filter { analyzer -> analyzer.name in names }
 
         if (libAnalyzer.isEmpty()) {
             log.error {
                 "Library does not reference any available scanners" +
                     " (available scanners: ${map { it.name }})" +
-                    " (library scanners: ${library.fileScanners.map { it.name }})"
+                    " (library scanners: $names)"
             }
         }
 

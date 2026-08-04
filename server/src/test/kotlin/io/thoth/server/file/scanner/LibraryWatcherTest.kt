@@ -1,15 +1,24 @@
 package io.thoth.server.file.scanner
 
+import io.methvin.watcher.DirectoryChangeEvent
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
-import io.methvin.watcher.DirectoryChangeEvent
 import io.thoth.server.ThothTest
+import io.thoth.server.common.extensions.canonical
+import io.thoth.server.common.scheduling.Scheduler
+import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.database.tables.TrackEntity
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
 import java.util.UUID
 import kotlin.io.path.absolutePathString
@@ -24,14 +33,20 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class LibraryWatcherTest : ThothTest() {
-    private val watcher = LibraryWatcherImpl(debounce = 100.milliseconds)
+    private val watcher by lazy { getKoin().get<LibraryWatcher>() as LibraryWatcherImpl }
+
+    // An overflow is answered by dispatching a scan, so the scheduler has to actually be running
+    private val scheduler by lazy { getKoin().get<Scheduler>() }
+    private val schedulerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private lateinit var libraryRoot: Path
     private var libId: UUID = UUID.randomUUID()
+
+    // Settling costs one extra round trip per file, so keep it short or every assertion waits on it
+    override fun configure(dataDir: Path) = ThothConfig(dataDir = dataDir, settleMillis = 50)
 
     private val sourceMp3: Path =
         generateSequence(Path.of("").toAbsolutePath()) { it.parent }
@@ -54,13 +69,18 @@ class LibraryWatcherTest : ThothTest() {
                     }.id
                     .value
             }
+        schedulerScope.launch { scheduler.start() }
+        // Blocks until the tree is registered; watchAsync still has to get its event loop going after that
         watcher.start()
-        // The watcher registers asynchronously, so wait until it is actually listening
-        Thread.sleep(500)
+        Thread.sleep(300)
     }
 
     @AfterTest
-    fun stopWatcher() = watcher.stop()
+    fun stopWatcher() {
+        watcher.stop()
+        scheduler.stop()
+        schedulerScope.cancel()
+    }
 
     private fun addBook(
         author: String,
@@ -131,6 +151,9 @@ class LibraryWatcherTest : ThothTest() {
         eventually(describe = { "the book to import first" }) { titles() == listOf("A Book") }
         val marker = libraryRoot.resolve("An Author").resolve(IGNORE_FILE).createFile()
         eventually(describe = { "the book to be invalidated" }) { titles().isEmpty() }
+        // The OS coalesces changes over a short window, so a marker created and deleted inside the same one
+        // nets out to no event at all and the watcher never learns the folder came back
+        Thread.sleep(1000)
 
         marker.deleteExisting()
 
@@ -138,14 +161,18 @@ class LibraryWatcherTest : ThothTest() {
     }
 
     @Test
-    fun `an overflow event rescans the root it came from`() {
-        // Written straight to disk with the watcher deliberately not consulted, the way a dropped event
-        // leaves things: nothing is queued, so only the overflow handling can bring the book in.
-        watcher.stop()
+    fun `an overflow event triggers a library scan, not a subtree walk`() {
         addBook("An Author", "A Book")
-        assertEquals(emptyList(), titles(), "sanity: nothing imported while the watcher was down")
+        eventually(describe = { "the book to import first" }) { titles() == listOf("A Book") }
 
-        // The root the library reports is the one it registered, which is already resolved
+        // Deleted with the watcher down, which is what a dropped event leaves behind: nothing is queued, and
+        // a subtree walk could never find the file to reap it. Only a scan and its sweep can.
+        watcher.stop()
+        @OptIn(kotlin.io.path.ExperimentalPathApi::class)
+        libraryRoot.resolve("An Author").resolve("A Book").deleteRecursively()
+        addBook("Another Author", "Another Book")
+        assertEquals(listOf("A Book"), titles(), "sanity: nothing changed while the watcher was down")
+
         watcher.onEvent(
             DirectoryChangeEvent(
                 DirectoryChangeEvent.EventType.OVERFLOW,
@@ -153,11 +180,11 @@ class LibraryWatcherTest : ThothTest() {
                 null,
                 null,
                 1,
-                realPath(libraryRoot),
+                libraryRoot.canonical(),
             ),
         )
 
-        eventually(describe = { "the overflow rescan, saw ${titles()}" }) { titles() == listOf("A Book") }
+        eventually(describe = { "the overflow rescan, saw ${titles()}" }) { titles() == listOf("Another Book") }
     }
 
     @Test

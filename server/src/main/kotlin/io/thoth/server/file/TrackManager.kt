@@ -1,8 +1,11 @@
 package io.thoth.server.file
 
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.common.extensions.add
 import io.thoth.server.common.extensions.findOne
+import io.thoth.server.common.extensions.canonicalString
 import io.thoth.server.database.access.create
+import io.thoth.server.database.access.hasBeenUpdated
 import io.thoth.server.database.access.markAsTouched
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.BookEntity
@@ -12,26 +15,34 @@ import io.thoth.server.database.tables.TrackEntity
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
-import io.thoth.server.file.scanner.libraryRoot
+import io.thoth.server.file.scanner.LibraryEntityModel
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
+import org.jetbrains.exposed.v1.core.LikePattern
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
+import java.io.IOException
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
+import java.nio.file.attribute.BasicFileAttributes
+import java.util.UUID
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
-import kotlin.io.path.isRegularFile
+import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.readAttributes
 
-object TrackManager : KoinComponent {
+class TrackManager : KoinComponent {
     private val bookRepository by inject<BookRepository>()
     private val seriesRepository by inject<SeriesRepository>()
     private val authorRepository by inject<AuthorRepository>()
@@ -39,49 +50,97 @@ object TrackManager : KoinComponent {
 
     private val log = logger {}
 
-    fun addPath(
-        path: Path,
-        library: LibraryEntity,
-    ) {
-        require(path.isRegularFile()) {
-            "Only regular files can be added to a library, but '${path.absolute()}' is not one"
-        }
-        val (libPath, analyzer) =
-            transaction {
-                library.folders.map { libraryRoot(it) }.first { path.startsWith(it) } to analyzers.forLibrary(library)
-            }
-
-        val result =
-            analyzer.analyze(path, path.readAttributes(), libPath)
-                ?: return log.warn { "Could not extract al necessary information for '${path.absolute()}'" }
-
-        transaction { insertScanResult(result, library) }
-    }
-
-    fun removeFolder(
-        path: Path,
-        library: LibraryEntity,
-    ) {
-        // Rows hold normalised paths, and the separator keeps "/books/Dune" from also matching "/books/Dune 2"
-        val target = path.absolute().normalize().absolutePathString()
+    fun needsAnalysis(path: Path): Boolean =
         transaction {
-            val subtree = LikePattern.ofLiteral(target + File.separator) + "%"
-            TracksTable.deleteWhere {
-                ((TracksTable.path eq target) or (TracksTable.path like subtree)) and
-                    (TracksTable.library eq library.id)
-            }
+            val track =
+                TrackEntity.findOne { TracksTable.path eq path.canonicalString() } ?: return@transaction true
+            track.hasBeenUpdated(path.getLastModifiedTime().toMillis())
         }
+
+    fun analyze(
+        path: Path,
+        library: LibraryEntityModel,
+    ): AudioFileAnalysisResult? {
+        val attrs =
+            try {
+                path.readAttributes<BasicFileAttributes>()
+            } catch (_: Throwable) {
+                // Disappeared between being queued and being picked up, which is normal operation
+                return null
+            }
+        if (!attrs.isRegularFile) return null
+
+        val root = library.folders.firstOrNull { path.startsWith(it) }
+        if (root == null) {
+            log.error { "'${path.absolute()}' is not under any folder of library '${library.name}'" }
+            return null
+        }
+
+        return analyzers.forNames(library.fileScanners).analyze(path, attrs, root)
     }
 
-    private fun insertScanResult(
+    fun insert(
         scan: AudioFileAnalysisResult,
-        library: LibraryEntity,
-    ) {
+        libraryId: UUID,
+    ) = transaction {
+        val library = LibraryEntity[libraryId]
         val track = TrackEntity.findOne { TracksTable.path eq scan.path }
         if (track != null) {
             updateTrack(track, scan, library).also { track.markAsTouched() }
         } else {
             createTrack(scan, library)
+        }
+    }
+
+    fun touch(
+        paths: List<Path>,
+        libraryId: UUID,
+    ) = transaction {
+        val scanIndex = LibraryEntity[libraryId].scanIndex
+        TracksTable.update({
+            (TracksTable.library eq libraryId) and (TracksTable.path inList paths.map { it.canonicalString() })
+        }) {
+            it[TracksTable.scanIndex] = scanIndex
+        }
+    }
+
+    // Stamps a whole subtree as seen, for the parts of the tree a scan could not read: not knowing whether a
+    // file is still there must not read as knowing that it is gone
+    fun touchFolder(
+        path: Path,
+        libraryId: UUID,
+    ) = transaction {
+        val scanIndex = LibraryEntity[libraryId].scanIndex
+        val target = path.canonicalString()
+        val subtree = LikePattern.ofLiteral(target + File.separator) + "%"
+        TracksTable.update({
+            ((TracksTable.path eq target) or (TracksTable.path like subtree)) and
+                (TracksTable.library eq libraryId)
+        }) {
+            it[TracksTable.scanIndex] = scanIndex
+        }
+    }
+
+    fun removeFile(
+        path: Path,
+        libraryId: UUID,
+    ) = transaction {
+        TracksTable.deleteWhere {
+            (TracksTable.path eq path.canonicalString()) and
+                (TracksTable.library eq libraryId)
+        }
+    }
+
+    fun removeFolder(
+        path: Path,
+        libraryId: UUID,
+    ) = transaction {
+        // Rows hold normalised paths, and the separator keeps "/books/Dune" from also matching "/books/Dune 2"
+        val target = path.canonicalString()
+        val subtree = LikePattern.ofLiteral(target + File.separator) + "%"
+        TracksTable.deleteWhere {
+            ((TracksTable.path eq target) or (TracksTable.path like subtree)) and
+                (TracksTable.library eq libraryId)
         }
     }
 

@@ -30,6 +30,7 @@ import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.DatabaseConnector
 import io.thoth.server.di.setupDependencyInjection
+import io.thoth.server.file.scanner.LibraryImportPipeline
 import io.thoth.server.file.scanner.LibraryWatcher
 import io.thoth.server.plugins.auth.configureAuthentication
 import io.thoth.server.plugins.configureMonitoring
@@ -123,9 +124,16 @@ fun Application.startBackgroundJobs() {
     scheduler.schedule(thothSchedules.fullScan)
     scheduler.launchNow(thothSchedules.fullScan)
     launch { scheduler.start() }
-    val watcher = get<LibraryWatcher>()
-    watcher.start()
-    monitor.subscribe(ApplicationStopping) { watcher.stop() }
+    val pipeline = get<LibraryImportPipeline>().also {
+        it.start()
+    }
+    val watcher = get<LibraryWatcher>().also {
+        launch { it.start() }
+    }
+    monitor.subscribe(ApplicationStopping) {
+        watcher.stop()
+        pipeline.stop()
+    }
 
     // Generate clients
     if (developmentMode) {

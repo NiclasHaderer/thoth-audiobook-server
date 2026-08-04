@@ -3,6 +3,7 @@ package io.thoth.server.file.scanner
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
+import io.thoth.server.common.extensions.canonical
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.LibraryEntity
@@ -22,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class LibraryScannerIgnoreTest : ThothTest() {
-    private val scanner by lazy { getKoin().get<LibraryScanner>() }
+    private val pipeline by lazy { getKoin().get<LibraryImportPipeline>() }
 
     private lateinit var libraryRoot: Path
     private var libId: UUID = UUID.randomUUID()
@@ -61,7 +62,7 @@ class LibraryScannerIgnoreTest : ThothTest() {
         return folder
     }
 
-    private fun scan() = scanner.scanLibrary(transaction { LibraryEntity[libId] })
+    private fun scan() = pipeline.scanLibrary(libId)
 
     private fun titles() = transaction { BookEntity.all().map { it.title }.sorted() }
 
@@ -119,13 +120,15 @@ class LibraryScannerIgnoreTest : ThothTest() {
     }
 
     @Test
-    fun `a walk started below a marked folder still honours the marker`() {
+    fun `a subtree walk started below a marked folder still honours the marker`() {
         scan()
         libraryRoot.resolve("Dropped Author").resolve(IGNORE_FILE).createFile()
         val sneaky = book("Dropped Author", "Sneaky Book")
 
-        scanner.scanFolder(sneaky, transaction { LibraryEntity[libId] })
+        pipeline.enqueue(sneaky.canonical())
 
+        // Nothing should ever show up, so give the pool longer than a passing case would need
+        Thread.sleep(2000)
         assertEquals(listOf("Dropped Book", "Kept Book"), titles(), "the new book must not be imported")
     }
 }

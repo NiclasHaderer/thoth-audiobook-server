@@ -11,10 +11,12 @@ import io.thoth.server.di.serialization.Serialization
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.analyzer.impl.AudioFolderScanner
 import io.thoth.server.file.analyzer.impl.AudioTagScanner
-import io.thoth.server.file.scanner.LibraryScanner
+import io.thoth.server.file.TrackManager
+import io.thoth.server.file.scanner.LibraryCleanup
+import io.thoth.server.file.scanner.LibraryImportPipeline
+import io.thoth.server.file.scanner.LibraryRoots
 import io.thoth.server.file.scanner.LibraryWatcher
 import io.thoth.server.file.scanner.LibraryWatcherImpl
-import io.thoth.server.file.scanner.LibraryScannerImpl
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.AuthorServiceImpl
 import io.thoth.server.repositories.BookRepository
@@ -36,7 +38,10 @@ fun thothModule(config: ThothConfig) =
             MetadataAgents(listOf(SearchBasedMetadataAgent(CachingMetadataProvider(AudibleMetadataProvider()))))
         }
         single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
-        single<LibraryScanner> { LibraryScannerImpl() }
+        single { LibraryRoots() }
+        single { LibraryCleanup() }
+        single { TrackManager() }
+        single<LibraryImportPipeline> { LibraryImportPipeline() }
         single<LibraryWatcher> { LibraryWatcherImpl() }
         single { JacksonSerialization() }
         single<Serialization> { get<JacksonSerialization>() }

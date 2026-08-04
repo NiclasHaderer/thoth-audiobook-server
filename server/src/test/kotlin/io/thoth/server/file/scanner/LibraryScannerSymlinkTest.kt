@@ -19,7 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class LibraryScannerSymlinkTest : ThothTest() {
-    private val scanner by lazy { getKoin().get<LibraryScanner>() }
+    private val pipeline by lazy { getKoin().get<LibraryImportPipeline>() }
 
     private val sourceMp3: Path =
         generateSequence(Path.of("").toAbsolutePath()) { it.parent }
@@ -50,7 +50,7 @@ class LibraryScannerSymlinkTest : ThothTest() {
                 .value
         }
 
-    private fun scan(id: UUID) = scanner.scanLibrary(transaction { LibraryEntity[id] })
+    private fun scan(id: UUID) = pipeline.scanLibrary(id)
 
     private fun titles() = transaction { BookEntity.all().map { it.title }.sorted() }
 

@@ -1,5 +1,6 @@
 package io.thoth.server.repositories
 
+import io.thoth.server.common.extensions.canonical
 import io.thoth.models.Library
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.PartialUpdateLibrary
@@ -7,11 +8,11 @@ import io.thoth.server.api.UpdateLibrary
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.file.scanner.LibraryRoots
 import io.thoth.server.file.scanner.LibraryWatcher
-import io.thoth.server.file.scanner.libraryRoot
 import io.thoth.server.schedules.ThothSchedules
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Path
@@ -46,6 +47,7 @@ class LibraryRepositoryImpl :
     private val scheduler by inject<Scheduler>()
     private val schedules by inject<ThothSchedules>()
     private val watcher by inject<LibraryWatcher>()
+    private val roots by inject<LibraryRoots>()
 
     override fun raw(id: UUID): LibraryEntity =
         transaction {
@@ -54,7 +56,7 @@ class LibraryRepositoryImpl :
 
     override fun rescan(id: UUID) {
         val library = raw(id)
-        scheduler.dispatch(schedules.scanLibrary.build(library))
+        scheduler.dispatch(schedules.scanLibrary.build(library.id.value))
     }
 
     override fun get(id: UUID): Library = transaction { raw(id).toModel() }
@@ -88,8 +90,8 @@ class LibraryRepositoryImpl :
                 }
 
             if (needsScan) {
-                scheduler.dispatch(schedules.scanLibrary.build(library))
                 watcher.restart()
+                scheduler.dispatch(schedules.scanLibrary.build(library.id.value))
             }
             model
         }
@@ -112,31 +114,28 @@ class LibraryRepositoryImpl :
                     library to library.toModel()
                 }
 
-            scheduler.dispatch(schedules.scanLibrary.build(library))
             watcher.restart()
+            scheduler.dispatch(schedules.scanLibrary.build(library.id.value))
             model
         }
 
     fun overlappingFolders(
         id: UUID?,
         folders: List<String>,
-    ): Pair<Boolean, List<Path>> =
-        transaction {
-            val newFolders = folders.map { libraryRoot(it) }
-            val allFolders =
-                LibraryEntity
-                    .find { LibrariesTable.id neq id }
-                    .flatMap { it.folders }
-                    .map { libraryRoot(it) }
-            // Either direction is a conflict: a new folder nested inside an existing one, or an existing one
-            // nested inside a new one.
-            val overlaps =
-                newFolders.filter { newFolder ->
-                    allFolders.any { newFolder.startsWith(it) || it.startsWith(newFolder) }
-                }
+    ): Pair<Boolean, List<Path>> {
+        // Both sides have to be canonicalised the same way for the comparison to mean anything, so the
+        // existing side comes from the same projection the scanner compares paths against
+        val newFolders = folders.map { Path.of(it).canonical() }
+        val allFolders = roots.all().filter { it.id != id }.flatMap { it.folders }
+        // Either direction is a conflict: a new folder nested inside an existing one, or an existing one
+        // nested inside a new one.
+        val overlaps =
+            newFolders.filter { newFolder ->
+                allFolders.any { newFolder.startsWith(it) || it.startsWith(newFolder) }
+            }
 
-            Pair(overlaps.isNotEmpty(), overlaps)
-        }
+        return Pair(overlaps.isNotEmpty(), overlaps)
+    }
 
     private fun raiseForOverlaps(
         libraryId: UUID?,

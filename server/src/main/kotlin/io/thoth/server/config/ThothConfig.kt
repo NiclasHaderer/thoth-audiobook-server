@@ -30,8 +30,15 @@ data class ThothConfig(
     val tls: Boolean = false,
     val allowNewSignups: Boolean = true,
     val fullScanCron: Cron = "0 2 * * *".toCron(),
+    // 0 derives it from the CPU count. Keep low, if you have hdds if you have SSDs go wild
+    val scanThreads: Int = 0,
+    // How long a file has to keep the mtime before it is read
+    val settleMillis: Long = 2000,
     val database: DatabaseConfig = DatabaseConfig(),
 ) {
+    val importThreads: Int
+        get() = if (scanThreads > 0) scanThreads else (Runtime.getRuntime().availableProcessors() - 1).coerceIn(2, 6)
+
     val jwtKeyFile: Path get() = dataDir.resolve("jwt.pem")
     val sqliteFile: Path get() = dataDir.resolve("thoth.db")
 

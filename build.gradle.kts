@@ -21,6 +21,11 @@ subprojects {
             targetCompatibility = JavaVersion.VERSION_25
         }
     }
+    // Koin, Exposed's TransactionManager and the pipeline threads are all JVM-global, so classes may only
+    // run side by side in separate JVMs
+    tasks.withType<Test>().configureEach {
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+    }
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")

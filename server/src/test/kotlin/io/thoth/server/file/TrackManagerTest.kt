@@ -2,6 +2,7 @@ package io.thoth.server.file
 
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
+import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.BookEntity
@@ -10,9 +11,10 @@ import io.thoth.server.database.tables.SeriesAuthorTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.TrackEntity
-import io.thoth.server.ThothTest
+import io.thoth.server.file.scanner.LibraryRoots
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
 import java.util.UUID
 import kotlin.io.path.absolutePathString
@@ -23,7 +25,14 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class TrackManagerTest : ThothTest() {
+    private val trackManager by lazy { getKoin().get<TrackManager>() }
+    private val roots by lazy { getKoin().get<LibraryRoots>() }
     private var libId: UUID = UUID.randomUUID()
+
+    private fun addPath(path: Path) {
+        val library = roots.of(libId)!!
+        trackManager.insert(trackManager.analyze(path, library)!!, libId)
+    }
 
     private val testResources: Path =
         generateSequence(Path.of("").toAbsolutePath()) { it.parent }
@@ -58,7 +67,7 @@ class TrackManagerTest : ThothTest() {
 
     @Test
     fun `adding a file links its book, author and series`() {
-        TrackManager.addPath(bookWithSeries, transaction { LibraryEntity[libId] })
+        addPath(bookWithSeries)
 
         transaction {
             assertEquals(1L, TrackEntity.all().count(), "the track must be imported")
@@ -73,8 +82,7 @@ class TrackManagerTest : ThothTest() {
 
     @Test
     fun `adding a second file of the same book reuses the author and series`() {
-        val library = transaction { LibraryEntity[libId] }
-        TrackManager.addPath(bookWithSeries, library)
+        addPath(bookWithSeries)
         val second =
             bookWithSeries.parent
                 .toFile()
@@ -82,7 +90,7 @@ class TrackManagerTest : ThothTest() {
                 .first { it.isFile && it.extension == "mp3" && it.toPath() != bookWithSeries }
                 .toPath()
 
-        TrackManager.addPath(second, library)
+        addPath(second)
 
         transaction {
             assertEquals(2L, TrackEntity.all().count())

@@ -3,14 +3,11 @@ package io.thoth.server.file.scanner
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
-import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibraryEntity
-import io.thoth.server.database.tables.SeriesAuthorTable
-import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackEntity
@@ -23,7 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class LibraryScannerCleanupTest : ThothTest() {
-    private val scanner = LibraryScannerImpl()
+    private val cleanup = LibraryCleanup()
 
     private fun newLibrary(libraryName: String): UUID =
         transaction {
@@ -72,6 +69,11 @@ class LibraryScannerCleanupTest : ThothTest() {
         }
     }
 
+    private fun cleanup(libraryId: UUID) {
+        cleanup.removeStaleTracks(libraryId)
+        cleanup.removeOrphans(libraryId)
+    }
+
     private fun counts(libraryId: UUID) =
         transaction {
             listOf(
@@ -90,7 +92,7 @@ class LibraryScannerCleanupTest : ThothTest() {
         newBookWithTrack(other, "other", trackScanIndex = 1uL)
         transaction { LibraryEntity[scanned].scanIndex = 2uL }
 
-        scanner.cleanupLibrary(transaction { LibraryEntity[scanned] })
+        cleanup(scanned)
 
         assertEquals(
             listOf(1L, 1L, 1L, 1L),
@@ -105,7 +107,7 @@ class LibraryScannerCleanupTest : ThothTest() {
         newBookWithTrack(scanned, "scanned", trackScanIndex = 1uL)
         transaction { LibraryEntity[scanned].scanIndex = 2uL }
 
-        scanner.cleanupLibrary(transaction { LibraryEntity[scanned] })
+        cleanup(scanned)
 
         assertEquals(
             listOf(0L, 0L, 0L, 0L),
@@ -120,8 +122,23 @@ class LibraryScannerCleanupTest : ThothTest() {
         newBookWithTrack(scanned, "scanned", trackScanIndex = 2uL)
         transaction { LibraryEntity[scanned].scanIndex = 2uL }
 
-        scanner.cleanupLibrary(transaction { LibraryEntity[scanned] })
+        cleanup(scanned)
 
         assertEquals(listOf(1L, 1L, 1L, 1L), counts(scanned), "a touched track and its relations must survive")
+    }
+
+    @Test
+    fun `pruneOrphans never deletes a track`() {
+        val scanned = newLibrary("scanned")
+        newBookWithTrack(scanned, "scanned", trackScanIndex = 1uL)
+        transaction { LibraryEntity[scanned].scanIndex = 2uL }
+
+        cleanup.removeOrphans(scanned)
+
+        assertEquals(
+            listOf(1L, 1L, 1L, 1L),
+            counts(scanned),
+            "pruneOrphans runs outside a scan, so it must not act on scanIndex staleness",
+        )
     }
 }
