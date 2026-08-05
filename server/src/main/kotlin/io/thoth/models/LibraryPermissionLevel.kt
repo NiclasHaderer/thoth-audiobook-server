@@ -1,6 +1,6 @@
 package io.thoth.models
 
-enum class UpdatePermissions {
+enum class LibraryPermissionLevel {
     READONLY,
     READ_WRITE,
 }

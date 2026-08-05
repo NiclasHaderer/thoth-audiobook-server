@@ -47,6 +47,9 @@ class ReadonlyFileTagger(
     val book: String?
         get() = first("ALBUM")
 
+    val genres: List<String>
+        get() = properties["GENRE"].orEmpty().mapNotNull { it.trim().ifBlank { null } }.distinct()
+
     val language: String?
         get() = first("LANGUAGE")
 

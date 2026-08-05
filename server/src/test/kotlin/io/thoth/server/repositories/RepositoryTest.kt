@@ -1,8 +1,11 @@
 package io.thoth.server.repositories
 
 import io.ktor.http.HttpStatusCode
+import io.thoth.models.AuthorUpdate
+import io.thoth.models.BookUpdate
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
+import io.thoth.models.SeriesUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
 import org.koin.mp.KoinPlatform.getKoin
@@ -12,6 +15,7 @@ import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.database.tables.SeriesAuthorTable
 import io.thoth.server.database.tables.SeriesTable
+import io.thoth.server.database.tables.TrackEntity
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -105,6 +109,103 @@ class RepositoryTest : ThothTest() {
     }
 
     @Test
+    fun `renaming an author leaves the name the next scan matches on untouched`() {
+        val id = newAuthor("Terry Pratchet")
+        val renamed = authorRepository.modify(id, libId, authorRenamedTo("Terry Pratchett"))
+
+        assertEquals("Terry Pratchett", renamed.name, "the API must show the new name")
+        assertEquals(
+            id,
+            transaction { authorRepository.getOrCreate("Terry Pratchet", libId).id.value },
+            "a rescan finding the old name in the files must reuse the author instead of creating a second one",
+        )
+        assertEquals(1L, transaction { AuthorEntity.find { AuthorTable.library eq libId }.count() })
+    }
+
+    @Test
+    fun `a renamed author is findable under both names`() {
+        val id = newAuthor("Terry Pratchet")
+        authorRepository.modify(id, libId, authorRenamedTo("Terry Pratchett"))
+
+        assertEquals(listOf("Terry Pratchett"), authorRepository.search("Pratchett", libId).map { it.name })
+        assertEquals(listOf("Terry Pratchett"), authorRepository.search("Pratchet", libId).map { it.name })
+    }
+
+    @Test
+    fun `a scan whose tags carry the renamed author reuses it`() {
+        val id = newAuthor("Terry Pratchet")
+        authorRepository.modify(id, libId, authorRenamedTo("Terry Pratchett"))
+
+        // The tags on disk were corrected too, so discovery now sees the name only displayName knows about
+        assertEquals(id, transaction { authorRepository.getOrCreate("Terry Pratchett", libId).id.value })
+        assertEquals(1L, transaction { AuthorEntity.find { AuthorTable.library eq libId }.count() })
+    }
+
+    @Test
+    fun `renaming a series keeps it matchable under both titles`() {
+        val id = transaction { seriesRepository.create("Diskworld", libId, emptyList()).id.value }
+        val renamed = seriesRepository.modify(id, libId, seriesRenamedTo("Discworld"))
+
+        assertEquals("Discworld", renamed.title, "the API must show the new title")
+        assertEquals(id, seriesRepository.getOrCreate("Diskworld", libId, emptyList()).id.value)
+        assertEquals(id, seriesRepository.getOrCreate("Discworld", libId, emptyList()).id.value)
+        assertEquals(1L, transaction { SeriesTable.selectAll().count() })
+    }
+
+    @Test
+    fun `renaming a book keeps it matchable under both titles`() {
+        val id = transaction { bookRepository.create("Guards Guards", libId, emptyList(), emptyList()).id.value }
+        val renamed = bookRepository.modify(id, libId, bookRenamedTo("Guards! Guards!"))
+
+        assertEquals("Guards! Guards!", renamed.title, "the API must show the new title")
+        assertEquals(id, transaction { bookRepository.findByName("Guards Guards", emptyList(), libId)?.id?.value })
+        assertEquals(id, transaction { bookRepository.findByName("Guards! Guards!", emptyList(), libId)?.id?.value })
+    }
+
+    private fun seriesRenamedTo(newTitle: String) =
+        SeriesUpdate(
+            title = newTitle,
+            authors = null,
+            books = null,
+            provider = null,
+            providerID = null,
+            totalBooks = null,
+            primaryWorks = null,
+            cover = null,
+            description = null,
+        )
+
+    private fun bookRenamedTo(newTitle: String) =
+        BookUpdate(
+            title = newTitle,
+            authors = null,
+            series = null,
+            provider = null,
+            providerID = null,
+            providerRating = null,
+            releaseDate = null,
+            publisher = null,
+            language = null,
+            description = null,
+            narrator = null,
+            isbn = null,
+            cover = null,
+        )
+
+    private fun authorRenamedTo(newName: String) =
+        AuthorUpdate(
+            name = newName,
+            provider = null,
+            providerID = null,
+            biography = null,
+            image = null,
+            website = null,
+            bornIn = null,
+            birthDate = null,
+            deathDate = null,
+        )
+
+    @Test
     fun `author position reports the index in the requested order`() {
         newAuthor("Bbb")
         val first = newAuthor("Aaa")
@@ -179,6 +280,52 @@ class RepositoryTest : ThothTest() {
         assertEquals(
             listOf("The Antelope Mystery", "The Mule Mystery", "The Zebra Mystery"),
             bookRepository.search("mystery", libId).map { it.title },
+        )
+    }
+
+    private fun bookWithTracks(
+        bookTitle: String,
+        vararg tracks: Pair<String, Int?>,
+    ): UUID =
+        transaction {
+            val book = bookRepository.create(bookTitle, libId, emptyList(), emptyList())
+            tracks.forEach { (fileName, number) ->
+                TrackEntity.new {
+                    title = fileName
+                    duration = 60
+                    accessTime = 0
+                    path = "/media/books/$bookTitle/$fileName"
+                    trackNr = number
+                    scanIndex = 0uL
+                    this.book = book
+                    library = LibraryEntity[libId]
+                }
+            }
+            book.id.value
+        }
+
+    @Test
+    fun `tracks are returned in track number order`() {
+        val id = bookWithTracks("Numbered", "b.mp3" to 2, "c.mp3" to 10, "a.mp3" to 1)
+        assertEquals(listOf(1, 2, 10), bookRepository.get(id, libId).tracks.map { it.trackNr })
+    }
+
+    @Test
+    fun `tracks without numbers fall back to the natural order of their file names`() {
+        val id = bookWithTracks("Unnumbered", "Chapter 10.mp3" to null, "Chapter 2.mp3" to null)
+        assertEquals(
+            listOf("Chapter 2.mp3", "Chapter 10.mp3"),
+            bookRepository.get(id, libId).tracks.map { it.title },
+            "'10' must not sort before '2'",
+        )
+    }
+
+    @Test
+    fun `a single missing track number makes the whole book fall back to file names`() {
+        val id = bookWithTracks("Partly numbered", "Chapter 10.mp3" to 1, "Chapter 2.mp3" to null)
+        assertEquals(
+            listOf("Chapter 2.mp3", "Chapter 10.mp3"),
+            bookRepository.get(id, libId).tracks.map { it.title },
         )
     }
 

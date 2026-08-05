@@ -14,7 +14,6 @@ class AuthorDetailed(
     bornIn: String?,
     birthDate: LocalDate?,
     deathDate: LocalDate?,
-    library: NamedId,
     val books: List<Book>,
     val series: List<Series>,
 ) : Author(
@@ -28,7 +27,6 @@ class AuthorDetailed(
         bornIn = bornIn,
         birthDate = birthDate,
         deathDate = deathDate,
-        library = library,
     ) {
     companion object {
         fun fromModel(
@@ -48,7 +46,6 @@ class AuthorDetailed(
             series = series,
             provider = author.provider,
             providerID = author.providerID,
-            library = author.library,
         )
     }
 }

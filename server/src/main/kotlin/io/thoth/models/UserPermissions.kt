@@ -1,6 +1,6 @@
 package io.thoth.models
 
-class UserPermissions(
+data class UserPermissions(
     val isAdmin: Boolean,
     val libraries: List<LibraryPermissions>,
 )

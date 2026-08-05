@@ -8,7 +8,7 @@ import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.models.LibraryPermissions
-import io.thoth.models.UpdatePermissions
+import io.thoth.models.LibraryPermissionLevel
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.tables.LibrariesTable
@@ -32,7 +32,7 @@ fun resolveUserPermissions(userId: UUID): UserPermissions =
                 LibrariesTable.selectAll().map {
                     LibraryPermissions(
                         id = it[LibrariesTable.id].value,
-                        permissions = UpdatePermissions.READ_WRITE,
+                        permissions = LibraryPermissionLevel.READ_WRITE,
                         name = it[LibrariesTable.name],
                     )
                 }
@@ -73,7 +73,7 @@ fun RoutingContext.assertLibraryPermissions(vararg libraryIds: UUID) {
             principal.permissions.libraries.firstOrNull { allowedLib -> allowedLib.id == libId }
                 ?: throw ErrorResponse.forbidden("access", "Library $libId")
 
-        if (isWrite && library.permissions != UpdatePermissions.READ_WRITE) {
+        if (isWrite && library.permissions != LibraryPermissionLevel.READ_WRITE) {
             throw ErrorResponse.forbidden("modify", "Library $libId")
         }
     }

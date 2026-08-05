@@ -12,8 +12,10 @@ import io.thoth.server.database.access.fetchImage
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageEntity
+import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.SeriesTable
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
@@ -21,6 +23,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -55,7 +58,7 @@ class AuthorServiceImpl :
     ): AuthorEntity? =
         transaction {
             AuthorEntity
-                .find { (AuthorTable.name ilike escape(authorName)) and (AuthorTable.library eq libraryId) }
+                .find { namedExactly(authorName) and (AuthorTable.library eq libraryId) }
                 .firstOrNull()
         }
 
@@ -73,8 +76,8 @@ class AuthorServiceImpl :
     ): List<Author> =
         transaction {
             AuthorEntity
-                .find { (AuthorTable.name ilike "%${escape(query)}%") and (AuthorTable.library eq libraryId) }
-                .orderBy(AuthorTable.name.lowerCase() to SortOrder.ASC)
+                .find { matchesName(query) and (AuthorTable.library eq libraryId) }
+                .orderBy(AuthorTable.displayedName.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
         }
@@ -82,8 +85,8 @@ class AuthorServiceImpl :
     override fun search(query: String): List<Author> =
         transaction {
             AuthorEntity
-                .find { AuthorTable.name ilike "%${escape(query)}%" }
-                .orderBy(AuthorTable.name.lowerCase() to SortOrder.ASC)
+                .find { matchesName(query) }
+                .orderBy(AuthorTable.displayedName.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toModel() }
         }
@@ -108,7 +111,7 @@ class AuthorServiceImpl :
         val (metadataAgent, authorName, region) =
             transaction {
                 val library = libraryRepository.raw(libraryId)
-                AutoMatchQuery(metadataAgents.forLibrary(library), raw(id, libraryId).name, library.language)
+                AutoMatchQuery(metadataAgents.forLibrary(library), raw(id, libraryId).displayedName, library.language)
             }
         val result = runBlocking { metadataAgent.getAuthorByName(authorName, region).firstOrNull() }
         val newImage = fetchImage(result?.imageURL)
@@ -145,7 +148,7 @@ class AuthorServiceImpl :
         transaction {
             AuthorEntity
                 .find { AuthorTable.library eq libraryId }
-                .orderBy(AuthorTable.name.lowerCase() to order)
+                .orderBy(AuthorTable.displayedName.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.toModel() }
@@ -160,8 +163,16 @@ class AuthorServiceImpl :
 
             AuthorDetailed.fromModel(
                 author = author.toModel(),
-                books = author.books.orderBy(BooksTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
-                series = author.series.orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
+                books =
+                    author.books
+                        .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
+                        .with(BookEntity::authors, BookEntity::series, BookEntity::genres)
+                        .map { it.toModel() },
+                series =
+                    author.series
+                        .orderBy(SeriesTable.displayedTitle.lowerCase() to SortOrder.ASC)
+                        .with(SeriesEntity::authors, SeriesEntity::genres)
+                        .map { it.toModel() },
             )
         }
 
@@ -174,7 +185,7 @@ class AuthorServiceImpl :
         transaction {
             AuthorEntity
                 .find { AuthorTable.library eq libraryId }
-                .orderBy(AuthorTable.name.lowerCase() to order)
+                .orderBy(AuthorTable.displayedName.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.id.value }
@@ -188,7 +199,7 @@ class AuthorServiceImpl :
         transaction {
             AuthorEntity
                 .find { AuthorTable.library eq libraryId }
-                .orderBy(AuthorTable.name.lowerCase() to order)
+                .orderBy(AuthorTable.displayedName.lowerCase() to order)
                 .indexOfFirst { it.id.value == id }
                 .takeIf { it >= 0 }
                 ?.toLong()
@@ -205,7 +216,7 @@ class AuthorServiceImpl :
             val author = raw(id, libraryId)
             author
                 .apply {
-                    name = partial.name ?: author.name
+                    displayName = partial.name ?: author.displayName
                     provider = partial.provider ?: author.provider
                     providerID = partial.providerID ?: author.providerID
                     biography = partial.biography ?: author.biography
@@ -221,3 +232,12 @@ class AuthorServiceImpl :
     override fun total(libraryId: UUID): Long =
         transaction { AuthorEntity.find { AuthorTable.library eq libraryId }.count() }
 }
+
+// A rename only moves displayName, so the files keep matching on name. A later scan whose tags carry the new
+// spelling has to land on the same author too, which is why both columns are compared.
+private fun namedExactly(name: String): Op<Boolean> = eitherName(escape(name))
+
+private fun matchesName(query: String): Op<Boolean> = eitherName("%${escape(query)}%")
+
+private fun eitherName(pattern: String): Op<Boolean> =
+    (AuthorTable.name ilike pattern) or (AuthorTable.displayName ilike pattern)

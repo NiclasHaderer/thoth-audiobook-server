@@ -1,6 +1,6 @@
 package io.thoth.models
 
-class UpdateUserPermissions(
+data class UpdateUserPermissions(
     val isAdmin: Boolean,
     val libraries: List<UpdateLibraryPermissions>,
 )

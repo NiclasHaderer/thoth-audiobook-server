@@ -1,6 +1,5 @@
 package io.thoth.server.database.tables
 
-import io.thoth.models.NamedId
 import io.thoth.models.TitledId
 import io.thoth.models.Track
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -27,12 +26,10 @@ class TrackEntity(
         Track(
             id = id.value,
             title = title,
-            path = path,
             trackNr = trackNr,
             updateTime = updateTime,
             duration = duration,
             accessTime = accessTime,
-            book = TitledId(book.id.value, book.title),
-            library = NamedId(book.library.id.value, book.library.name),
+            book = TitledId(book.id.value, book.displayedTitle),
         )
 }

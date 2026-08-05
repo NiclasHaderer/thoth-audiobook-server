@@ -34,12 +34,19 @@ object SearchRepository {
                 .find { AuthorTable.library inList libsToSearch }
                 .fuzzy(
                     query,
-                ) { listOfNotNull(it.name) }
+                ) { listOfNotNull(it.name, it.displayName) }
                 .take(limit)
         val bookAuthors =
             BookEntity
                 .find { BooksTable.library inList libsToSearch }
-                .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.series.joinToString(",") { it.title }) }
+                .fuzzy(query) {
+                    listOfNotNull(
+                        it.title,
+                        it.displayTitle,
+                        it.narrator,
+                        it.series.joinToString(",") { it.displayedTitle },
+                    )
+                }
                 .take(limit)
                 .flatMap { it.authors }
         (authors + bookAuthors).distinctBy { it.id }.take(limit).map { it.toModel() }
@@ -55,12 +62,19 @@ object SearchRepository {
                 .find { SeriesTable.library inList libsToSearch }
                 .fuzzy(
                     query,
-                ) { listOfNotNull(it.title) }
+                ) { listOfNotNull(it.title, it.displayTitle) }
                 .take(limit)
         val authorSeries =
             BookEntity
                 .find { BooksTable.library inList libsToSearch }
-                .fuzzy(query) { listOfNotNull(it.title, it.narrator, it.authors.joinToString(",") { it.name }) }
+                .fuzzy(query) {
+                    listOfNotNull(
+                        it.title,
+                        it.displayTitle,
+                        it.narrator,
+                        it.authors.joinToString(",") { it.displayedName },
+                    )
+                }
                 .take(limit)
                 .flatMap { it.series }
         (series + authorSeries).distinctBy { it.id }.take(limit).map { it.toModel() }
@@ -76,15 +90,15 @@ object SearchRepository {
                 .find { BooksTable.library inList libsToSearch }
                 .fuzzy(
                     query,
-                ) { listOfNotNull(it.title) }
+                ) { listOfNotNull(it.title, it.displayTitle) }
                 .take(limit)
         val booksAndOther =
             BookEntity
                 .find { BooksTable.library inList libsToSearch }
                 .fuzzy(query) {
                     listOfNotNull(
-                        it.authors.joinToString(", ") { it.name },
-                        it.series.joinToString(",") { it.title },
+                        it.authors.joinToString(", ") { it.displayedName },
+                        it.series.joinToString(",") { it.displayedTitle },
                         it.narrator,
                     )
                 }.take(limit)

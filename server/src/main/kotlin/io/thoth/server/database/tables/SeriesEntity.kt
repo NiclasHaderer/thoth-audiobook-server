@@ -15,6 +15,7 @@ class SeriesEntity(
     companion object : UUIDEntityClass<SeriesEntity>(SeriesTable)
 
     var title by SeriesTable.title
+    var displayTitle by SeriesTable.displayTitle
     var totalBooks by SeriesTable.totalBooks
     var primaryWorks by SeriesTable.primaryWorks
     var coverID by SeriesTable.coverID
@@ -30,10 +31,14 @@ class SeriesEntity(
     var genres by GenreEntity via GenreSeriesTable
     var library by LibraryEntity referencedOn SeriesTable.library
 
+    /** [title] stays what the files were matched on; [displayTitle] is what a metadata match or an edit sets. */
+    val displayedTitle: String
+        get() = displayTitle ?: title
+
     fun toModel(authorOrder: SortOrder = SortOrder.ASC): Series =
         Series(
             id = id.value,
-            title = title,
+            title = displayedTitle,
             description = description,
             providerID = providerID,
             provider = provider,
@@ -43,9 +48,8 @@ class SeriesEntity(
             authors =
                 authors
                     .orderBy(
-                        AuthorTable.name.lowerCase() to authorOrder,
-                    ).map { NamedId(it.id.value, it.name) },
+                        AuthorTable.displayedName.lowerCase() to authorOrder,
+                    ).map { NamedId(it.id.value, it.displayedName) },
             genres = genres.map { NamedId(it.id.value, it.name) },
-            library = NamedId(library.id.value, library.name),
         )
 }

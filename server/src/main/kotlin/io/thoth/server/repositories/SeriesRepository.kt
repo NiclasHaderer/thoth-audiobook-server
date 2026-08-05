@@ -12,6 +12,7 @@ import io.thoth.server.common.extensions.toSizedIterable
 import io.thoth.server.database.access.fetchImage
 import io.thoth.server.database.access.getNewImage
 import io.thoth.server.database.tables.AuthorEntity
+import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageEntity
 import io.thoth.server.database.tables.SeriesEntity
@@ -23,6 +24,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -66,7 +68,7 @@ class SeriesRepositoryImpl :
     ): SeriesEntity? =
         transaction {
             SeriesEntity
-                .find { (SeriesTable.title ilike escape(seriesTitle)) and (SeriesTable.library eq libraryId) }
+                .find { titledExactly(seriesTitle) and (SeriesTable.library eq libraryId) }
                 .firstOrNull()
         }
 
@@ -88,7 +90,11 @@ class SeriesRepositoryImpl :
 
             SeriesDetailed.fromModel(
                 series = series.toModel(),
-                books = series.books.orderBy(BooksTable.title.lowerCase() to SortOrder.ASC).map { it.toModel() },
+                books =
+                    series.books
+                        .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
+                        .with(BookEntity::authors, BookEntity::series, BookEntity::genres)
+                        .map { it.toModel() },
             )
         }
 
@@ -101,9 +107,10 @@ class SeriesRepositoryImpl :
         transaction {
             SeriesEntity
                 .find { SeriesTable.library eq libraryId }
-                .orderBy(SeriesTable.title.lowerCase() to order)
+                .orderBy(SeriesTable.displayedTitle.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
+                .withRelations()
                 .map { it.toModel() }
         }
 
@@ -113,18 +120,20 @@ class SeriesRepositoryImpl :
     ): List<Series> =
         transaction {
             SeriesEntity
-                .find { (SeriesTable.title ilike "%${escape(query)}%") and (SeriesTable.library eq libraryId) }
-                .orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC)
+                .find { matchesTitle(query) and (SeriesTable.library eq libraryId) }
+                .orderBy(SeriesTable.displayedTitle.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
+                .withRelations()
                 .map { it.toModel() }
         }
 
     override fun search(query: String): List<Series> =
         transaction {
             SeriesEntity
-                .find { SeriesTable.title ilike "%${escape(query)}%" }
-                .orderBy(SeriesTable.title.lowerCase() to SortOrder.ASC)
+                .find { matchesTitle(query) }
+                .orderBy(SeriesTable.displayedTitle.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
+                .withRelations()
                 .map { it.toModel() }
         }
 
@@ -166,7 +175,7 @@ class SeriesRepositoryImpl :
         transaction {
             SeriesEntity
                 .find { SeriesTable.library eq libraryId }
-                .orderBy(SeriesTable.title.lowerCase() to order)
+                .orderBy(SeriesTable.displayedTitle.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.id.value }
@@ -180,7 +189,7 @@ class SeriesRepositoryImpl :
         transaction {
             SeriesEntity
                 .find { SeriesTable.library eq libraryId }
-                .orderBy(SeriesTable.title.lowerCase() to order)
+                .orderBy(SeriesTable.displayedTitle.lowerCase() to order)
                 .indexOfFirst { it.id.value == id }
                 .takeIf { it >= 0 }
                 ?.toLong()
@@ -197,7 +206,7 @@ class SeriesRepositoryImpl :
             val series = raw(id, libraryId)
 
             series.apply {
-                title = partial.title ?: title
+                displayTitle = partial.title ?: displayTitle
                 provider = partial.provider ?: provider
                 providerID = partial.providerID ?: providerID
                 totalBooks = partial.totalBooks ?: totalBooks
@@ -228,9 +237,9 @@ class SeriesRepositoryImpl :
                 val library = libraryRepository.raw(libraryId)
                 AutoMatchQuery(
                     metadataAgents.forLibrary(library),
-                    series.title,
+                    series.displayedTitle,
                     library.language,
-                    series.authors.joinToString(", ") { it.name },
+                    series.authors.joinToString(", ") { it.displayedName },
                 )
             }
 
@@ -268,3 +277,13 @@ class SeriesRepositoryImpl :
             SeriesEntity.find { SeriesTable.library eq libraryId }.count()
         }
 }
+
+private fun <T : Iterable<SeriesEntity>> T.withRelations(): T = with(SeriesEntity::authors, SeriesEntity::genres)
+
+// Same split as authors: title keeps tracking the files, displayTitle holds a rename, both stay matchable.
+private fun titledExactly(title: String): Op<Boolean> = eitherTitle(escape(title))
+
+private fun matchesTitle(query: String): Op<Boolean> = eitherTitle("%${escape(query)}%")
+
+private fun eitherTitle(pattern: String): Op<Boolean> =
+    (SeriesTable.title ilike pattern) or (SeriesTable.displayTitle ilike pattern)

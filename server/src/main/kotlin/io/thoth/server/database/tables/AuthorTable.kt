@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import org.jetbrains.exposed.v1.core.Coalesce
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.javatime.date
@@ -20,4 +21,6 @@ object AuthorTable : UUIDTable("Authors") {
     // Relations
     val imageID = reference("imageId", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
+
+    val displayedName = Coalesce(displayName, name)
 }

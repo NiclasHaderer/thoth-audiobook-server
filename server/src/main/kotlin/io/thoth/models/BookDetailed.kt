@@ -19,7 +19,6 @@ class BookDetailed(
     isbn: String?,
     coverID: UUID?,
     genres: List<NamedId>,
-    library: NamedId,
     val tracks: List<Track>,
 ) : Book(
         id = id,
@@ -37,39 +36,28 @@ class BookDetailed(
         providerRating = providerRating,
         publisher = publisher,
         genres = genres,
-        library = library,
     ) {
     companion object {
         fun fromModel(
             book: Book,
             tracks: List<Track>,
-        ): BookDetailed {
-            val sortedTracks =
-                if (tracks.any { it.trackNr == null }) {
-                    tracks.sortedBy { it.path }
-                } else {
-                    tracks.sortedBy { it.trackNr }
-                }
-
-            return BookDetailed(
-                id = book.id,
-                title = book.title,
-                releaseDate = book.releaseDate,
-                language = book.language,
-                description = book.description,
-                tracks = sortedTracks,
-                authors = book.authors,
-                narrator = book.narrator,
-                series = book.series,
-                coverID = book.coverID,
-                isbn = book.isbn,
-                provider = book.provider,
-                providerID = book.providerID,
-                providerRating = book.providerRating,
-                publisher = book.publisher,
-                genres = book.genres,
-                library = book.library,
-            )
-        }
+        ) = BookDetailed(
+            id = book.id,
+            title = book.title,
+            releaseDate = book.releaseDate,
+            language = book.language,
+            description = book.description,
+            tracks = tracks,
+            authors = book.authors,
+            narrator = book.narrator,
+            series = book.series,
+            coverID = book.coverID,
+            isbn = book.isbn,
+            provider = book.provider,
+            providerID = book.providerID,
+            providerRating = book.providerRating,
+            publisher = book.publisher,
+            genres = book.genres,
+        )
     }
 }

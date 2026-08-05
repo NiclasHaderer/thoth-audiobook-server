@@ -14,5 +14,4 @@ open class Author(
     val bornIn: String?,
     val birthDate: LocalDate?,
     val deathDate: LocalDate?,
-    val library: NamedId,
 )

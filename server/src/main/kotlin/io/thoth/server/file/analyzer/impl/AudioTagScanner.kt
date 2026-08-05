@@ -28,6 +28,7 @@ class AudioTagScanner : AudioFileAnalyzer {
             narrator = tags.narrator,
             series = tags.series,
             seriesIndex = tags.seriesIndex,
+            genres = tags.genres,
             cover = tags.cover,
             duration = tags.duration,
             path = tags.path,

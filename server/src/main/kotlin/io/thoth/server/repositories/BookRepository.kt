@@ -8,6 +8,7 @@ import io.thoth.models.BookUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
+import io.thoth.server.common.extensions.naturalOrder
 import io.thoth.server.common.extensions.toSizedIterable
 import io.thoth.server.database.access.fetchImage
 import io.thoth.server.database.access.getNewImage
@@ -25,6 +26,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -74,9 +76,10 @@ class BookRepositoryImpl :
         transaction {
             BookEntity
                 .find { BooksTable.library eq libraryId }
-                .orderBy(BooksTable.title.lowerCase() to order)
+                .orderBy(BooksTable.displayedTitle.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
+                .withRelations()
                 .map { it.toModel() }
         }
 
@@ -97,7 +100,7 @@ class BookRepositoryImpl :
         transaction {
             BookEntity
                 .find {
-                    val sameTitle = (BooksTable.title ilike escape(bookTitle)) and (BooksTable.library eq libraryId)
+                    val sameTitle = titledExactly(bookTitle) and (BooksTable.library eq libraryId)
                     // An empty author list would make `inList` match nothing, so books without authors are
                     // identified by title alone instead of never being found.
                     if (authorIds.isEmpty()) {
@@ -118,13 +121,15 @@ class BookRepositoryImpl :
     ): BookDetailed =
         transaction {
             val book = raw(id, libraryId)
-            val tracks =
-                TrackEntity
-                    .find { TracksTable.book eq id }
-                    .orderBy(
-                        TracksTable.trackNr to SortOrder.ASC,
-                    ).map { it.toModel() }
-            BookDetailed.fromModel(book.toModel(), tracks)
+            val tracks = TrackEntity.find { TracksTable.book eq id }.toList()
+            // Incomplete numbering cannot be trusted, so those books fall back to the file names
+            val ordered =
+                if (tracks.any { it.trackNr == null }) {
+                    tracks.sortedWith(compareBy(naturalOrder) { it.path })
+                } else {
+                    tracks.sortedBy { it.trackNr }
+                }
+            BookDetailed.fromModel(book.toModel(), ordered.map { it.toModel() })
         }
 
     override fun position(
@@ -133,15 +138,15 @@ class BookRepositoryImpl :
         order: SortOrder,
     ): Long =
         transaction {
-            val title = raw(id, libraryId).title.lowercase()
+            val title = raw(id, libraryId).displayedTitle.lowercase()
             BooksTable
                 .selectAll()
                 .where {
                     val precedes =
                         if (order == SortOrder.ASC) {
-                            BooksTable.title.lowerCase() less title
+                            BooksTable.displayedTitle.lowerCase() less title
                         } else {
-                            BooksTable.title.lowerCase() greater title
+                            BooksTable.displayedTitle.lowerCase() greater title
                         }
                     precedes and (BooksTable.library eq libraryId)
                 }.count()
@@ -157,7 +162,7 @@ class BookRepositoryImpl :
             BooksTable
                 .selectAll()
                 .where { BooksTable.library eq libraryId }
-                .orderBy(BooksTable.title.lowerCase() to order)
+                .orderBy(BooksTable.displayedTitle.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it[BooksTable.id].value }
@@ -169,18 +174,20 @@ class BookRepositoryImpl :
     ): List<Book> =
         transaction {
             BookEntity
-                .find { (BooksTable.title ilike "%${escape(query)}%") and (BooksTable.library eq libraryId) }
-                .orderBy(BooksTable.title.lowerCase() to SortOrder.ASC)
+                .find { matchesTitle(query) and (BooksTable.library eq libraryId) }
+                .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
+                .withRelations()
                 .map { it.toModel() }
         }
 
     override fun search(query: String): List<Book> =
         transaction {
             BookEntity
-                .find { BooksTable.title ilike "%${escape(query)}%" }
-                .orderBy(BooksTable.title.lowerCase() to SortOrder.ASC)
+                .find { matchesTitle(query) }
+                .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
+                .withRelations()
                 .map { it.toModel() }
         }
 
@@ -193,7 +200,7 @@ class BookRepositoryImpl :
         return transaction {
             val book = raw(id, libraryId)
             book.apply {
-                title = partial.title ?: title
+                displayTitle = partial.title ?: displayTitle
                 provider = partial.provider ?: provider
                 providerID = partial.providerID ?: providerID
                 providerRating = partial.providerRating ?: providerRating
@@ -250,9 +257,9 @@ class BookRepositoryImpl :
                 val library = libraryRepository.raw(libraryId)
                 AutoMatchQuery(
                     metadataAgents.forLibrary(library),
-                    book.title,
+                    book.displayedTitle,
                     library.language,
-                    book.authors.joinToString(", ") { it.name },
+                    book.authors.joinToString(", ") { it.displayedName },
                 )
             }
 
@@ -290,3 +297,14 @@ class BookRepositoryImpl :
         val authorName: String,
     )
 }
+
+private fun <T : Iterable<BookEntity>> T.withRelations(): T =
+    with(BookEntity::authors, BookEntity::series, BookEntity::genres)
+
+// Same split as authors: title keeps tracking the files, displayTitle holds a rename, both stay matchable.
+private fun titledExactly(title: String): Op<Boolean> = eitherTitle(escape(title))
+
+private fun matchesTitle(query: String): Op<Boolean> = eitherTitle("%${escape(query)}%")
+
+private fun eitherTitle(pattern: String): Op<Boolean> =
+    (BooksTable.title ilike pattern) or (BooksTable.displayTitle ilike pattern)

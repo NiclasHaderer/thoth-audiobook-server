@@ -1,10 +1,12 @@
 package io.thoth.server.database.tables
 
+import org.jetbrains.exposed.v1.core.Coalesce
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 
 object SeriesTable : UUIDTable("Series") {
     val title = varchar("title", 255)
+    val displayTitle = varchar("displayTitle", 255).nullable()
     val totalBooks = integer("totalBooks").nullable()
     val primaryWorks = integer("primaryWorks").nullable()
     val description = text("description").nullable()
@@ -16,4 +18,6 @@ object SeriesTable : UUIDTable("Series") {
     // Relations
     val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
+
+    val displayedTitle = Coalesce(displayTitle, title)
 }

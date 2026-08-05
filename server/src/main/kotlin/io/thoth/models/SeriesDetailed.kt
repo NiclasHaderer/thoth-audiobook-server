@@ -13,7 +13,6 @@ class SeriesDetailed(
     coverID: UUID?,
     description: String?,
     genres: List<NamedId>,
-    library: NamedId,
     val yearRange: YearRange?,
     val narrators: List<String>,
     val books: List<Book>,
@@ -28,29 +27,20 @@ class SeriesDetailed(
         coverID = coverID,
         description = description,
         genres = genres,
-        library = library,
     ) {
     companion object {
         fun fromModel(
             series: Series,
             books: List<Book>,
         ): SeriesDetailed {
-            val narrators = books.mapNotNull { it.narrator }.distinctBy { it }
             val years = books.mapNotNull { it.releaseDate }
-            val startDate = years.minOrNull()
-            val endDate = years.maxOrNull()
-
-            var yearRange: YearRange? = null
-            if (startDate != null && endDate != null) {
-                yearRange = YearRange(start = startDate.year, end = endDate.year)
-            }
 
             return SeriesDetailed(
                 id = series.id,
                 title = series.title,
                 totalBooks = series.totalBooks,
-                yearRange = yearRange,
-                narrators = narrators,
+                yearRange = years.minOrNull()?.let { YearRange(start = it.year, end = years.max().year) },
+                narrators = books.mapNotNull { it.narrator }.distinct(),
                 description = series.description,
                 books = books,
                 authors = series.authors,
@@ -59,7 +49,6 @@ class SeriesDetailed(
                 provider = series.provider,
                 providerID = series.providerID,
                 genres = series.genres,
-                library = series.library,
             )
         }
     }

@@ -25,7 +25,6 @@ class LibraryEntity(
             id = id.value,
             name = name,
             icon = icon,
-            scanIndex = scanIndex,
             preferEmbeddedMetadata = preferEmbeddedMetadata,
             folders = folders,
             metadataAgents = metadataAgents,

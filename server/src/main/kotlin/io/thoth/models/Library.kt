@@ -6,10 +6,9 @@ data class Library(
     val id: UUID,
     val name: String,
     val icon: String?,
-    val scanIndex: ULong,
     val preferEmbeddedMetadata: Boolean,
     val folders: List<String>,
     val metadataAgents: List<NamedMetadataAgent>,
     val fileScanners: List<FileScanner>,
-    var language: String,
+    val language: String,
 )

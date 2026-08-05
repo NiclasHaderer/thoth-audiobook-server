@@ -19,5 +19,4 @@ open class Book(
     val isbn: String?,
     val coverID: UUID?,
     val genres: List<NamedId>,
-    val library: NamedId,
 )

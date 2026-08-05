@@ -24,9 +24,10 @@ class DatabaseMigratorTest : ThothTest(migrate = false) {
 
     @Test
     fun `fresh database gets all migrations applied`() {
-        DatabaseMigrator().migrateDatabase()
+        val migrator = DatabaseMigrator()
+        migrator.migrateDatabase()
 
-        assertEquals(listOf(1, 2), appliedVersions())
+        assertEquals(migrator.knownVersions, appliedVersions())
         val tables = tableNames()
         for (table in listOf(
             "Libraries", "Authors", "Books", "Images", "Series", "Genres", "Tracks", "Users",
@@ -38,26 +39,30 @@ class DatabaseMigratorTest : ThothTest(migrate = false) {
 
     @Test
     fun `rerunning on an up-to-date database changes nothing`() {
-        DatabaseMigrator().migrateDatabase()
+        val migrator = DatabaseMigrator()
+        migrator.migrateDatabase()
         DatabaseMigrator().migrateDatabase()
 
-        assertEquals(listOf(1, 2), appliedVersions())
+        assertEquals(migrator.knownVersions, appliedVersions())
     }
 
     @Test
     fun `only missing migrations are applied on a partially migrated database`() {
-        DatabaseMigrator().migrateDatabase()
-        transaction { SchemaTrackerTable.deleteWhere { version eq 2 } }
+        val migrator = DatabaseMigrator()
+        migrator.migrateDatabase()
+        val newest = migrator.knownVersions.max()
+        transaction { SchemaTrackerTable.deleteWhere { version eq newest } }
 
-        // If migration 1 were re-applied, its tracker insert would violate the unique version index
+        // If an older migration were re-applied, its tracker insert would violate the unique version index
         DatabaseMigrator().migrateDatabase()
 
-        assertEquals(listOf(1, 2), appliedVersions())
+        assertEquals(migrator.knownVersions, appliedVersions())
     }
 
     @Test
     fun `refuses to run when the database is newer than the latest known migration`() {
-        DatabaseMigrator().migrateDatabase()
+        val migrator = DatabaseMigrator()
+        migrator.migrateDatabase()
         transaction {
             SchemaTrackerTable.insert {
                 it[version] = 99
@@ -67,7 +72,7 @@ class DatabaseMigratorTest : ThothTest(migrate = false) {
 
         val ex = assertFailsWith<IllegalStateException> { DatabaseMigrator().migrateDatabase() }
         assertTrue("refusing to start" in ex.message!!, "Unexpected message: ${ex.message}")
-        assertEquals(listOf(1, 2, 99), appliedVersions())
+        assertEquals(migrator.knownVersions + 99, appliedVersions())
     }
 
     @Test

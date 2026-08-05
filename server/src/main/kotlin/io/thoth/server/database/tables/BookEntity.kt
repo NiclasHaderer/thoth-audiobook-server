@@ -15,6 +15,7 @@ class BookEntity(
     companion object : UUIDEntityClass<BookEntity>(BooksTable)
 
     var title by BooksTable.title
+    var displayTitle by BooksTable.displayTitle
     var description by BooksTable.description
     var releaseDate by BooksTable.releaseDate
     var publisher by BooksTable.publisher
@@ -35,13 +36,17 @@ class BookEntity(
     var library by LibraryEntity referencedOn BooksTable.library
     val tracks by TrackEntity referrersOn TracksTable.book
 
+    /** [title] stays what the files were matched on; [displayTitle] is what a metadata match or an edit sets. */
+    val displayedTitle: String
+        get() = displayTitle ?: title
+
     fun toModel(
         authorOrder: SortOrder = SortOrder.ASC,
         seriesOrder: SortOrder = SortOrder.ASC,
     ): Book =
         Book(
             id = id.value,
-            title = title,
+            title = displayedTitle,
             description = description,
             providerID = providerID,
             provider = provider,
@@ -54,15 +59,14 @@ class BookEntity(
             publisher = publisher,
             authors =
                 authors
-                    .sortedBy { it.name.lowercase() }
-                    .map { NamedId(it.id.value, it.name) }
+                    .sortedBy { it.displayedName.lowercase() }
+                    .map { NamedId(it.id.value, it.displayedName) }
                     .let { if (authorOrder == SortOrder.DESC) it.reversed() else it },
             series =
                 series
-                    .sortedBy { it.title.lowercase() }
-                    .map { TitledId(it.id.value, it.title) }
+                    .sortedBy { it.displayedTitle.lowercase() }
+                    .map { TitledId(it.id.value, it.displayedTitle) }
                     .let { if (seriesOrder == SortOrder.DESC) it.reversed() else it },
             genres = genres.map { NamedId(it.id.value, it.name) },
-            library = NamedId(library.id.value, library.name),
         )
 }

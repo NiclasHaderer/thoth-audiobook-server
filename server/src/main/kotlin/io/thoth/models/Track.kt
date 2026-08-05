@@ -10,7 +10,5 @@ data class Track(
     val duration: Int,
     val accessTime: Long,
     val book: TitledId,
-    val path: String,
     val updateTime: LocalDateTime,
-    val library: NamedId,
 )

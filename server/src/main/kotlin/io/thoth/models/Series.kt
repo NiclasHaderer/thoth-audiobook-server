@@ -13,5 +13,4 @@ open class Series(
     val coverID: UUID?,
     val description: String?,
     val genres: List<NamedId>,
-    val library: NamedId,
 )

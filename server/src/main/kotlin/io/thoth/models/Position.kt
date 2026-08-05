@@ -8,11 +8,9 @@ data class Position(
     val id: UUID,
     val order: Order,
 ) {
-    enum class Order(
-        val order: String,
-    ) {
-        ASC("ASC"),
-        DESC("DESC"),
+    enum class Order {
+        ASC,
+        DESC,
         ;
 
         fun toSortOrder(): SortOrder =

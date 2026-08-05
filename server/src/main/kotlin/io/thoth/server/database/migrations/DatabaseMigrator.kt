@@ -57,6 +57,8 @@ class DatabaseMigrator {
         versions
     }
 
+    val knownVersions: List<Int> get() = databaseVersions.map { it.version }
+
     private val latestAppliedVersion by lazy {
         transaction {
             SchemaTrackerEntity

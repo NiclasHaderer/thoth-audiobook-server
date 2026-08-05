@@ -5,12 +5,15 @@ import io.thoth.server.common.extensions.add
 import io.thoth.server.common.extensions.findOne
 import io.thoth.server.common.extensions.canonicalString
 import io.thoth.server.database.access.create
+import io.thoth.server.database.access.getOrCreate
 import io.thoth.server.database.access.hasBeenUpdated
 import io.thoth.server.database.access.markAsTouched
 import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.BookEntity
+import io.thoth.server.database.tables.GenreEntity
 import io.thoth.server.database.tables.ImageEntity
 import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.database.tables.SeriesEntity
 import io.thoth.server.database.tables.TrackEntity
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
@@ -36,6 +39,7 @@ import java.io.IOException
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
@@ -157,6 +161,7 @@ class TrackManager : KoinComponent {
             book = dbBook
             trackNr = scan.trackNr
             scanIndex = libraryModel.scanIndex
+            updateTime = LocalDateTime.now()
             library = libraryModel
         }
     }
@@ -168,6 +173,9 @@ class TrackManager : KoinComponent {
     ): TrackEntity {
         val dbBook = getOrCreateBook(scan, libraryModel)
         return track.apply {
+            // Only when the file itself moved on. Stamping every pass would dirty the row on every rescan, and
+            // Exposed turns that into an UPDATE per track where an unchanged file used to cost nothing.
+            if (accessTime != scan.lastModified) updateTime = LocalDateTime.now()
             title = scan.title
             duration = scan.duration
             accessTime = scan.lastModified
@@ -216,14 +224,36 @@ class TrackManager : KoinComponent {
                 book.coverID
             }
 
-        return book.apply {
-            title = scan.book
-            coverID = dbImage
-            authors = SizedCollection(dbAuthors)
-            language = scan.language
-            description = scan.description
-            narrator = scan.narrator
-            series = series.add(dbSeries)
+        val dbGenres = GenreEntity.getOrCreate(scan.genres)
+
+        return book
+            .apply {
+                title = scan.book
+                coverID = dbImage
+                authors = SizedCollection(dbAuthors)
+                language = scan.language
+                description = scan.description
+                narrator = scan.narrator
+                series = series.add(dbSeries)
+                setGenres(dbGenres)
+            }.also { addSeriesGenres(it.series, dbGenres) }
+    }
+
+    // Rewriting an unchanged relation costs a DELETE plus an INSERT, and every track of a book comes through here
+    private fun BookEntity.setGenres(wanted: List<GenreEntity>) {
+        if (genres.map { it.id }.toSet() != wanted.map { it.id }.toSet()) genres = SizedCollection(wanted)
+    }
+
+    // A series has no tags of its own, so it collects the genres of its books
+    private fun addSeriesGenres(
+        series: Iterable<SeriesEntity>,
+        genres: List<GenreEntity>,
+    ) {
+        if (genres.isEmpty()) return
+        series.forEach { entry ->
+            val known = entry.genres.map { it.id }.toSet()
+            val missing = genres.filterNot { it.id in known }
+            if (missing.isNotEmpty()) entry.genres = SizedCollection(entry.genres + missing)
         }
     }
 
@@ -240,18 +270,21 @@ class TrackManager : KoinComponent {
             }
         val dbImage = if (scan.cover != null) ImageEntity.create(scan.cover!!) else null
         val dbSeriesList = if (dbSeries != null) listOf(dbSeries) else listOf()
+        val dbGenres = GenreEntity.getOrCreate(scan.genres)
 
         log.info { "Creating book ${scan.book}" }
-        return BookEntity.new {
-            title = scan.book
-            authors = SizedCollection(dbAuthor)
-            language = scan.language
-            description = scan.description
-            narrator = scan.narrator
-            series = SizedCollection(dbSeriesList)
-            coverID = dbImage?.id
-            library = libraryModel
-        }
+        return BookEntity
+            .new {
+                title = scan.book
+                authors = SizedCollection(dbAuthor)
+                language = scan.language
+                description = scan.description
+                narrator = scan.narrator
+                series = SizedCollection(dbSeriesList)
+                coverID = dbImage?.id
+                library = libraryModel
+                if (dbGenres.isNotEmpty()) genres = SizedCollection(dbGenres)
+            }.also { addSeriesGenres(dbSeriesList, dbGenres) }
     }
 
     private fun getOrCreateAuthors(

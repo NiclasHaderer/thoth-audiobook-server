@@ -50,6 +50,7 @@ class AudioFolderScanner : AudioFileAnalyzer {
             trackNr = tags.trackNr,
             narrator = tags.narrator,
             seriesIndex = tags.seriesIndex,
+            genres = tags.genres,
             cover = tags.cover,
             duration = tags.duration,
             path = tags.path,

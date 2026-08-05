@@ -1,7 +1,6 @@
 package io.thoth.server.database.tables
 
 import io.thoth.models.Author
-import io.thoth.models.NamedId
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
@@ -30,10 +29,14 @@ class AuthorEntity(
     var series by SeriesEntity via SeriesAuthorTable
     var library by LibraryEntity referencedOn AuthorTable.library
 
+    /** [name] stays the name the files were matched on; [displayName] is what a metadata match or an edit sets. */
+    val displayedName: String
+        get() = displayName ?: name
+
     fun toModel(): Author =
         Author(
             id = id.value,
-            name = name,
+            name = displayedName,
             biography = biography,
             provider = provider,
             birthDate = birthDate,
@@ -42,6 +45,5 @@ class AuthorEntity(
             imageID = imageID?.value,
             website = website,
             providerID = providerID,
-            library = NamedId(library.id.value, library.name),
         )
 }
