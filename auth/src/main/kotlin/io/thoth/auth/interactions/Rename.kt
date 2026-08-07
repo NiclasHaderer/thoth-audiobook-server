@@ -4,6 +4,7 @@ import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothRenameUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.thothAuthConfig
+import io.thoth.auth.withUserMutation
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
 import io.thoth.auth.utils.wrap
@@ -31,7 +32,8 @@ fun RoutingContext.renameUser(
         }
     }
 
-    var user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
-    user = config.renameUser(user, renamedUser.username)
-    return user.wrap()
+    return withUserMutation {
+        val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
+        config.renameUser(user, renamedUser.username).wrap()
+    }
 }

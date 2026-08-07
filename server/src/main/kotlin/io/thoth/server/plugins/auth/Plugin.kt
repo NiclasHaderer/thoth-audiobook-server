@@ -37,17 +37,6 @@ private fun <T> rejectDuplicateUsername(
         throw e
     }
 
-// The DB triggers (see 02_ENSURE_ADMIN_EXISTS) enforce "at least one admin"; translate their abort into a 400.
-private fun <T> translateLastAdminError(block: () -> T): T =
-    try {
-        block()
-    } catch (e: ExposedSQLException) {
-        if (e.message?.contains("only admin", ignoreCase = true) == true) {
-            throw ErrorResponse.userError("Cannot remove the only admin user.")
-        }
-        throw e
-    }
-
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
     val keyPair = getOrCreateKeyPair(thothConfig.jwtKeyFile)
@@ -109,7 +98,13 @@ fun Application.configureAuthentication() {
 
         listAllUsers { transaction { UserEntity.all().map { it.toExternalUser() } } }
 
-        deleteUser { transaction { translateLastAdminError { UserEntity.findById(it.id)?.delete() } } }
+        deleteUser {
+            transaction {
+                val dbUser = UserEntity.findById(it.id) ?: return@transaction
+                if (dbUser.admin) requireAnotherAdminExists(it.id)
+                dbUser.delete()
+            }
+        }
 
         renameUser { user, newName ->
             transaction {
@@ -129,7 +124,8 @@ fun Application.configureAuthentication() {
             transaction {
                 val dbUser = UserEntity.findById(currentUser.id)!!
 
-                translateLastAdminError { dbUser.also { it.admin = permissions.isAdmin }.flush() }
+                if (dbUser.admin && !permissions.isAdmin) requireAnotherAdminExists(currentUser.id)
+                dbUser.admin = permissions.isAdmin
                 LibraryUserTable.deleteWhere { LibraryUserTable.user eq currentUser.id }
                 permissions.libraries.forEach { permission ->
                     val library = LibraryEntity.findById(permission.id)!!

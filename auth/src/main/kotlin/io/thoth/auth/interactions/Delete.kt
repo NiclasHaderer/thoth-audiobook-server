@@ -2,6 +2,7 @@ package io.thoth.auth.interactions
 
 import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.thothAuthConfig
+import io.thoth.auth.withUserMutation
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
 import io.thoth.openapi.ktor.errors.ErrorResponse
@@ -22,6 +23,8 @@ fun RoutingContext.deleteUser(
         throw ErrorResponse.forbidden("Delete", "user")
     }
 
-    val user = config.getUserById(params.id) ?: throw ErrorResponse.userError("User not found")
-    config.deleteUser(user)
+    withUserMutation {
+        val user = config.getUserById(params.id) ?: throw ErrorResponse.userError("User not found")
+        config.deleteUser(user)
+    }
 }

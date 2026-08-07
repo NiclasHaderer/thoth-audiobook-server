@@ -3,6 +3,7 @@ package io.thoth.auth.interactions
 import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothChangePassword
 import io.thoth.auth.thothAuthConfig
+import io.thoth.auth.withUserMutation
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.hashPassword
 import io.thoth.auth.utils.passwordMatches
@@ -38,5 +39,5 @@ fun RoutingContext.changeUserPassword(
     }
 
     val newPassword = hashPassword(passwordChange.newPassword)
-    config.updatePassword(user, newPassword)
+    withUserMutation { config.updatePassword(user, newPassword) }
 }

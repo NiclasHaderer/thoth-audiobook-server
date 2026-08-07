@@ -4,6 +4,7 @@ import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothModifyPermissions
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.thothAuthConfig
+ import io.thoth.auth.withUserMutation
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
 import io.thoth.auth.utils.wrap
@@ -25,6 +26,8 @@ fun <UPDATE_PERMISSIONS> RoutingContext.modifyUserPermissions(
         throw ErrorResponse.forbidden("Modify", "permissions")
     }
 
-    val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
-    return config.updateUserPermissions(user, body.permissions).wrap()
+    return withUserMutation {
+        val user = config.getUserById(params.id) ?: throw ErrorResponse.notFound("User", params.id)
+        config.updateUserPermissions(user, body.permissions).wrap()
+    }
 }

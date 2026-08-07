@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 
 object LibraryUserTable : CompositeIdTable("LibraryUser") {
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
-    val user = reference("user", UsersTable, onDelete = ReferenceOption.CASCADE)
+    val user = reference("user", UsersTable, onDelete = ReferenceOption.CASCADE).index()
     var permissions = enumeration<LibraryPermissionLevel>("permissions")
     override val primaryKey = PrimaryKey(library, user)
 

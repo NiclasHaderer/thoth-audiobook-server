@@ -17,7 +17,7 @@ object SeriesTable : UUIDTable("Series") {
 
     // Relations
     val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
-    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
+    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
 
     val displayedTitle = Coalesce(displayTitle, title)
 }

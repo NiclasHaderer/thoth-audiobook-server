@@ -56,7 +56,12 @@ class LibraryWatcherImpl :
                 .fileTreeVisitor(IgnoreAwareVisitor)
                 .listener(::onEvent)
                 .build()
-                .also { it.watchAsync() }
+                .also { watcher ->
+                    // Nothing ever observes this future, so a watch loop that dies takes its exception with it
+                    watcher.watchAsync().whenComplete { _, error ->
+                        if (error != null) log.error(error) { "Watcher stopped" }
+                    }
+                }
         log.info { "Watching ${folders.size} library folder(s)" }
     }
 

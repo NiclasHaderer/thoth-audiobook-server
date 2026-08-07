@@ -5,6 +5,7 @@ import io.thoth.auth.models.ThothRegisterUser
 import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.thothAuthConfig
+import io.thoth.auth.withUserMutation
 import io.thoth.auth.utils.hashPassword
 import io.thoth.auth.utils.wrap
 import io.thoth.openapi.ktor.errors.ErrorResponse
@@ -34,9 +35,11 @@ fun RoutingContext.registerUser(
     }
 
     val passwordHash = hashPassword(user.password)
-    val isAdmin = config.firstUserIsAdmin && config.isFirstUser()
 
-    return config
-        .createUser(ThothRegisteredUser(username = user.username, passwordHash = passwordHash, admin = isAdmin))
-        .wrap()
+    return withUserMutation {
+        val isAdmin = config.firstUserIsAdmin && config.isFirstUser()
+        config
+            .createUser(ThothRegisteredUser(username = user.username, passwordHash = passwordHash, admin = isAdmin))
+            .wrap()
+    }
 }

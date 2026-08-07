@@ -6,7 +6,7 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.javatime.date
 
 object AuthorTable : UUIDTable("Authors") {
-    val name = varchar("name", 255)
+    val name = text("name")
     val displayName = varchar("displayName", 255).nullable()
     val biography = text("biography").nullable()
     val website = varchar("website", 255).nullable()
@@ -20,7 +20,7 @@ object AuthorTable : UUIDTable("Authors") {
 
     // Relations
     val imageID = reference("imageId", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
-    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
+    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
 
     val displayedName = Coalesce(displayName, name)
 }

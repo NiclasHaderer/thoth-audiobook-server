@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 
 object GenreSeriesTable : CompositeIdTable("GenreSeries") {
     val genre = reference("genre", GenresTable, onDelete = ReferenceOption.CASCADE)
-    val series = reference("Series", SeriesTable, onDelete = ReferenceOption.CASCADE)
+    val series = reference("Series", SeriesTable, onDelete = ReferenceOption.CASCADE).index()
     override val primaryKey = PrimaryKey(genre, series)
 
     init {
