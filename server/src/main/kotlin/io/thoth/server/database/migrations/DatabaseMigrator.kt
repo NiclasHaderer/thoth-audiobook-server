@@ -2,6 +2,8 @@ package io.thoth.server.database.migrations
 
 import io.github.classgraph.ClassGraph
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
+import io.thoth.server.common.exposed.syncViews
+import io.thoth.server.database.THOTH_VIEWS
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -74,6 +76,7 @@ class DatabaseMigrator {
     fun migrateDatabase() {
         transaction { SchemaUtils.create(SchemaTrackerTable) }
         migrateTo(latestAppliedVersion)
+        syncViews(THOTH_VIEWS)
     }
 
     private fun migrateTo(latestDbVersion: Int) {

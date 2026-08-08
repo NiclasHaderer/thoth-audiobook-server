@@ -44,13 +44,14 @@ fun newLibrary(
 fun newAuthor(
     name: String,
     libraryId: UUID,
+    displayName: String? = null,
 ): UUID =
     transaction {
         AuthorTable.insert(
             AuthorRow(
                 id = UUID.randomUUID(),
                 name = name,
-                displayName = null,
+                displayName = displayName,
                 biography = null,
                 website = null,
                 birthDate = null,
