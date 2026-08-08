@@ -1,22 +1,21 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.models.FileScanner
-import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
 import io.thoth.server.common.extensions.canonical
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.sqliteUrl
-import io.thoth.server.database.tables.AuthorEntity
-import io.thoth.server.database.tables.BookEntity
+import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
-import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.database.tables.SeriesAuthorTable
-import io.thoth.server.database.tables.SeriesEntity
-import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.newLibrary
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
@@ -70,17 +69,11 @@ class LibraryImportPipelineTest : ThothTest() {
         scanners: List<FileScanner> =
             listOf(FileScanner("AudioTagScanner"), FileScanner("AudioFolderScanner")),
     ): UUID =
-        transaction {
-            LibraryEntity
-                .new {
-                    name = "lib-${root.fileName}"
-                    folders = listOf(root.absolutePathString())
-                    metadataAgents = listOf(NamedMetadataAgent("audible"))
-                    fileScanners = scanners
-                    language = "en"
-                }.id
-                .value
-        }
+        newLibrary(
+            "lib-${root.fileName}",
+            folders = listOf(root.absolutePathString()),
+            fileScanners = scanners,
+        )
 
     private fun book(
         root: Path,
@@ -95,9 +88,9 @@ class LibraryImportPipelineTest : ThothTest() {
 
     private fun scan(id: UUID) = pipeline.scanLibrary(id)
 
-    private fun titles() = transaction { BookEntity.all().map { it.title }.sorted() }
+    private fun titles() = transaction { BooksTable.selectAll().map { it[BooksTable.title] }.sorted() }
 
-    private fun tracks() = transaction { TrackEntity.all().count() }
+    private fun tracks() = transaction { TracksTable.selectAll().count() }
 
     private fun eventually(
         timeout: Duration = 15.seconds,
@@ -136,11 +129,11 @@ class LibraryImportPipelineTest : ThothTest() {
         scan(library(root))
 
         transaction {
-            assertEquals(1L, AuthorEntity.all().count(), "the author must not be duplicated")
-            assertEquals(1L, SeriesEntity.all().count(), "the series must not be duplicated")
+            assertEquals(1L, AuthorTable.selectAll().count(), "the author must not be duplicated")
+            assertEquals(1L, SeriesTable.selectAll().count(), "the series must not be duplicated")
             assertEquals(1L, SeriesAuthorTable.selectAll().count(), "the series-author link must be written once")
-            assertEquals(3L, BookEntity.all().count())
-            assertEquals(5L, TrackEntity.all().count())
+            assertEquals(3L, BooksTable.selectAll().count())
+            assertEquals(5L, TracksTable.selectAll().count())
         }
     }
 
@@ -230,8 +223,11 @@ class LibraryImportPipelineTest : ThothTest() {
         assertTrue(titles().containsAll(listOf("A Book", "B Book")), "saw ${titles()}")
         assertEquals(
             2L,
-            transaction { TrackEntity.all().count { it.title.contains("Book") && !it.path.contains("Bad Author") } }
-                .toLong(),
+            transaction {
+                TracksTable
+                    .selectAll()
+                    .count { it[TracksTable.title].contains("Book") && !it[TracksTable.path].contains("Bad Author") }
+            }.toLong(),
             "both good tracks must be imported",
         )
     }
@@ -248,10 +244,11 @@ class LibraryImportPipelineTest : ThothTest() {
 
         val scannedId =
             transaction {
-                LibraryEntity
-                    .find { LibrariesTable.name eq "lib-scanned" }
-                    .first()
-                    .id.value
+                LibrariesTable
+                    .select(LibrariesTable.id)
+                    .where { LibrariesTable.name eq "lib-scanned" }
+                    .first()[LibrariesTable.id]
+                    .value
             }
         val scanning = Thread { scan(scannedId) }.also { it.start() }
         // The pool drains one queue at a time, so this sits in the watch queue until the scan is done
@@ -353,7 +350,7 @@ class LibraryImportPipelineTest : ThothTest() {
         assertEquals(2L, tracks(), "sanity: both books import first")
 
         // Every file now looks changed, so the scan has to re-analyze and write
-        transaction { TracksTable.update { it[accessTime] = 0 } }
+        transaction { TracksTable.update { it[fileModifiedAt] = 0 } }
         val snapshot = getKoin().get<LibraryRoots>().of(libId)!!
 
         // A competing connection holding the write lock for the whole scan, which is the real shape of the
@@ -380,7 +377,14 @@ class LibraryImportPipelineTest : ThothTest() {
 
         // Bumped here rather than through scanLibrary, so the locked window below contains nothing but the
         // scan's own writes. An unchanged rescan is all batched touches, which is where coalescing happens.
-        transaction { LibraryEntity[libId].scanIndex += 1u }
+        transaction {
+            val current =
+                LibrariesTable
+                    .select(LibrariesTable.scanIndex)
+                    .where { LibrariesTable.id eq libId }
+                    .single()[LibrariesTable.scanIndex]
+            LibrariesTable.update({ LibrariesTable.id eq libId }) { it[scanIndex] = current + 1uL }
+        }
         val snapshot = getKoin().get<LibraryRoots>().of(libId)!!
 
         // Held from the start so the first batch fails, and released well inside the retry budget so a later
@@ -412,7 +416,7 @@ class LibraryImportPipelineTest : ThothTest() {
         val track = folder.resolve("A Book 0.mp3")
         restorePermissions = track
         Files.setPosixFilePermissions(track, emptySet())
-        transaction { TracksTable.update { it[accessTime] = 0 } }
+        transaction { TracksTable.update { it[fileModifiedAt] = 0 } }
         scan(libId)
 
         assertEquals(2L, tracks(), "a file that could not be read must not be mistaken for a deleted one")
@@ -427,8 +431,12 @@ class LibraryImportPipelineTest : ThothTest() {
         assertEquals(1L, tracks(), "sanity: the book imports first")
 
         // A misconfigured library analyzes nothing at all, which must read as "cannot tell", not "all gone"
-        transaction { LibraryEntity[libId].fileScanners = listOf(FileScanner("NoSuchScanner")) }
-        transaction { TracksTable.update { it[accessTime] = 0 } }
+        transaction {
+            LibrariesTable.update({ LibrariesTable.id eq libId }) {
+                it[fileScanners] = listOf(FileScanner("NoSuchScanner"))
+            }
+        }
+        transaction { TracksTable.update { it[fileModifiedAt] = 0 } }
         scan(libId)
 
         assertEquals(1L, tracks(), "a library that analyzed nothing must not have everything reaped")

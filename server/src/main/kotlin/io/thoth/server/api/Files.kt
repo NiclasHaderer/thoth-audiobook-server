@@ -10,18 +10,17 @@ import io.thoth.openapi.ktor.responses.BinaryResponse
 import io.thoth.openapi.ktor.responses.FileResponse
 import io.thoth.openapi.ktor.responses.binaryResponse
 import io.thoth.openapi.ktor.responses.fileResponse
-import io.thoth.server.database.tables.AuthorEntity
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BookEntity
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.ImageEntity
-import io.thoth.server.database.tables.SeriesEntity
+import io.thoth.server.database.tables.ImageTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.plugins.auth.assertLibraryPermissions
 import io.thoth.server.plugins.auth.thothPrincipal
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
@@ -31,8 +30,13 @@ fun Routing.audioRouting() {
     get<Api.Files.Audio.Id, FileResponse> { (id) ->
         val (track, libraryId) =
             transaction {
-                val track = TrackEntity.findById(id) ?: throw ErrorResponse.notFound("Track", id)
-                track.path to track.library.id.value
+                val row =
+                    TracksTable
+                        .select(TracksTable.path, TracksTable.library)
+                        .where { TracksTable.id eq id }
+                        .firstOrNull()
+                        ?: throw ErrorResponse.notFound("Track", id)
+                row[TracksTable.path] to row[TracksTable.library].value
             }
         assertLibraryPermissions(libraryId)
         val path = Path.of(track)
@@ -51,18 +55,29 @@ fun Routing.imageRouting() {
     get<Api.Files.Images.Id, BinaryResponse> { (id) ->
         val permissions = thothPrincipal().permissions
         transaction {
-            val image = ImageEntity.findById(id) ?: throw ErrorResponse.notFound("Image", id)
+            val image =
+                ImageTable.selectAll().where { ImageTable.id eq id }.firstOrNull()
+                    ?: throw ErrorResponse.notFound("Image", id)
             if (!permissions.isAdmin) {
                 val allowed = permissions.libraries.mapTo(mutableSetOf()) { it.id }
                 val owningLibraries =
-                    BookEntity.find { BooksTable.coverID eq id }.map { it.library.id.value } +
-                        AuthorEntity.find { AuthorTable.imageID eq id }.map { it.library.id.value } +
-                        SeriesEntity.find { SeriesTable.coverID eq id }.map { it.library.id.value }
+                    BooksTable
+                        .select(BooksTable.library)
+                        .where { BooksTable.coverID eq id }
+                        .map { it[BooksTable.library].value } +
+                        AuthorTable
+                            .select(AuthorTable.library)
+                            .where { AuthorTable.imageID eq id }
+                            .map { it[AuthorTable.library].value } +
+                        SeriesTable
+                            .select(SeriesTable.library)
+                            .where { SeriesTable.coverID eq id }
+                            .map { it[SeriesTable.library].value }
                 if (owningLibraries.none { it in allowed }) {
                     throw ErrorResponse.forbidden("access", "Image $id")
                 }
             }
-            binaryResponse(image.blob.bytes)
+            binaryResponse(image[ImageTable.blob].bytes)
         }
     }
 }

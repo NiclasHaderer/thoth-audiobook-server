@@ -1,21 +1,25 @@
 package io.thoth.server.file
 
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
-import io.thoth.server.common.extensions.add
-import io.thoth.server.common.extensions.findOne
 import io.thoth.server.common.extensions.canonicalString
-import io.thoth.server.database.access.create
-import io.thoth.server.database.access.getOrCreate
-import io.thoth.server.database.access.hasBeenUpdated
-import io.thoth.server.database.access.markAsTouched
-import io.thoth.server.database.tables.AuthorEntity
-import io.thoth.server.database.tables.BookEntity
-import io.thoth.server.database.tables.GenreEntity
-import io.thoth.server.database.tables.ImageEntity
-import io.thoth.server.database.tables.LibraryEntity
-import io.thoth.server.database.tables.SeriesEntity
-import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.access.getOrCreateImage
+import io.thoth.server.database.access.getOrCreateGenres
+import io.thoth.server.database.tables.AuthorBookTable
+import io.thoth.server.database.tables.BookRow
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.GenreBookTable
+import io.thoth.server.database.tables.GenreSeriesTable
+import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryRow
+import io.thoth.server.database.tables.SeriesBookTable
+import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.addLinks
+import io.thoth.server.database.tables.insert
+import io.thoth.server.database.tables.replaceLinks
+import io.thoth.server.database.tables.toLibraryRow
+import io.thoth.server.database.tables.toTrackRow
+import io.thoth.server.database.tables.update
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.scanner.LibraryEntityModel
@@ -28,21 +32,19 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
-import java.io.IOException
-import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
-import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.io.path.absolute
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.readAttributes
 
@@ -56,9 +58,14 @@ class TrackManager : KoinComponent {
 
     fun needsAnalysis(path: Path): Boolean =
         transaction {
-            val track =
-                TrackEntity.findOne { TracksTable.path eq path.canonicalString() } ?: return@transaction true
-            track.hasBeenUpdated(path.getLastModifiedTime().toMillis())
+            val known =
+                TracksTable
+                    .select(TracksTable.fileModifiedAt)
+                    .where { TracksTable.path eq path.canonicalString() }
+                    .firstOrNull()
+                    ?.get(TracksTable.fileModifiedAt)
+                    ?: return@transaction true
+            known < path.getLastModifiedTime().toMillis()
         }
 
     fun analyze(
@@ -87,12 +94,35 @@ class TrackManager : KoinComponent {
         scan: AudioFileAnalysisResult,
         libraryId: UUID,
     ) = transaction {
-        val library = LibraryEntity[libraryId]
-        val track = TrackEntity.findOne { TracksTable.path eq scan.path }
+        val library = libraryRow(libraryId)
+        val bookId = getOrCreateBook(scan, library)
+        val track = TracksTable.selectAll().where { TracksTable.path eq scan.path }.firstOrNull()?.toTrackRow()
         if (track != null) {
-            updateTrack(track, scan, library).also { track.markAsTouched() }
+            TracksTable.update(
+                track.copy(
+                    title = scan.title,
+                    duration = scan.duration,
+                    fileModifiedAt = scan.lastModified,
+                    path = scan.path,
+                    book = bookId,
+                    trackNr = scan.trackNr,
+                    scanIndex = library.scanIndex,
+                ),
+            )
         } else {
-            createTrack(scan, library)
+            TracksTable.insert(
+                TrackRow(
+                    id = UUID.randomUUID(),
+                    title = scan.title,
+                    duration = scan.duration,
+                    fileModifiedAt = scan.lastModified,
+                    path = scan.path,
+                    book = bookId,
+                    library = library.id,
+                    scanIndex = library.scanIndex,
+                    trackNr = scan.trackNr,
+                ),
+            )
         }
     }
 
@@ -100,7 +130,7 @@ class TrackManager : KoinComponent {
         paths: List<Path>,
         libraryId: UUID,
     ) = transaction {
-        val scanIndex = LibraryEntity[libraryId].scanIndex
+        val scanIndex = libraryRow(libraryId).scanIndex
         TracksTable.update({
             (TracksTable.library eq libraryId) and (TracksTable.path inList paths.map { it.canonicalString() })
         }) {
@@ -114,7 +144,7 @@ class TrackManager : KoinComponent {
         path: Path,
         libraryId: UUID,
     ) = transaction {
-        val scanIndex = LibraryEntity[libraryId].scanIndex
+        val scanIndex = libraryRow(libraryId).scanIndex
         val target = path.canonicalString()
         val subtree = LikePattern.ofLiteral(target + File.separator) + "%"
         TracksTable.update({
@@ -148,157 +178,126 @@ class TrackManager : KoinComponent {
         }
     }
 
-    private fun createTrack(
-        scan: AudioFileAnalysisResult,
-        libraryModel: LibraryEntity,
-    ): TrackEntity {
-        val dbBook = getOrCreateBook(scan, libraryModel)
-        return TrackEntity.new {
-            title = scan.title
-            duration = scan.duration
-            accessTime = scan.lastModified
-            path = scan.path
-            book = dbBook
-            trackNr = scan.trackNr
-            scanIndex = libraryModel.scanIndex
-            updateTime = LocalDateTime.now()
-            library = libraryModel
-        }
-    }
+    context(_: Transaction)
+    private fun libraryRow(libraryId: UUID): LibraryRow =
+        LibrariesTable
+            .selectAll()
+            .where { LibrariesTable.id eq libraryId }
+            .single()
+            .toLibraryRow()
 
-    private fun updateTrack(
-        track: TrackEntity,
-        scan: AudioFileAnalysisResult,
-        libraryModel: LibraryEntity,
-    ): TrackEntity {
-        val dbBook = getOrCreateBook(scan, libraryModel)
-        return track.apply {
-            // Only when the file itself moved on. Stamping every pass would dirty the row on every rescan, and
-            // Exposed turns that into an UPDATE per track where an unchanged file used to cost nothing.
-            if (accessTime != scan.lastModified) updateTime = LocalDateTime.now()
-            title = scan.title
-            duration = scan.duration
-            accessTime = scan.lastModified
-            path = scan.path
-            book = dbBook
-            trackNr = scan.trackNr
-            scanIndex = libraryModel.scanIndex
-        }
-    }
-
+    context(_: Transaction)
     private fun getOrCreateBook(
         scan: AudioFileAnalysisResult,
-        libraryModel: LibraryEntity,
-    ): BookEntity {
-        val authors = getOrCreateAuthors(scan, libraryModel)
+        library: LibraryRow,
+    ): UUID {
+        val authorIds = getOrCreateAuthors(scan, library)
         val book =
             bookRepository.findByName(
                 bookTitle = scan.book,
-                authorIds = authors.map { it.id.value },
-                libraryId = libraryModel.id.value,
+                authorIds = authorIds,
+                libraryId = library.id,
             )
         return if (book != null) {
-            updateBook(book, scan, authors, libraryModel)
+            updateBook(book, scan, authorIds, library)
         } else {
             log.info { "Created new book: ${scan.book}" }
-            createBook(scan, authors, libraryModel)
+            createBook(scan, authorIds, library)
         }
     }
 
+    context(_: Transaction)
     private fun updateBook(
-        book: BookEntity,
+        book: BookRow,
         scan: AudioFileAnalysisResult,
-        dbAuthors: List<AuthorEntity>,
-        libraryModel: LibraryEntity,
-    ): BookEntity {
-        val dbSeries =
-            if (scan.series != null) {
-                seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthors)
-            } else {
-                null
-            }
-        val dbImage =
-            if (scan.cover != null && book.coverID == null) {
-                ImageEntity.create(scan.cover!!).id
-            } else {
-                book.coverID
-            }
+        authorIds: List<UUID>,
+        library: LibraryRow,
+    ): UUID {
+        val seriesId = scan.series?.let { seriesRepository.getOrCreate(it, library.id, authorIds).id }
+        val coverId = book.coverID ?: getOrCreateImage(scan.cover, null)
+        val genreIds = getOrCreateGenres(scan.genres)
 
-        val dbGenres = GenreEntity.getOrCreate(scan.genres)
-
-        return book
-            .apply {
-                title = scan.book
-                coverID = dbImage
-                authors = SizedCollection(dbAuthors)
-                language = scan.language
-                description = scan.description
-                narrator = scan.narrator
-                series = series.add(dbSeries)
-                setGenres(dbGenres)
-            }.also { addSeriesGenres(it.series, dbGenres) }
+        BooksTable.update(
+            book.copy(
+                title = scan.book,
+                coverID = coverId,
+                language = scan.language,
+                description = scan.description,
+                narrator = scan.narrator,
+            ),
+        )
+        AuthorBookTable.replaceLinks(AuthorBookTable.book, book.id, AuthorBookTable.authors, authorIds)
+        // TODO what to do on a rescan if the user changed things in the UI. Also think about what to do
+        //  if one of the tracks does not have a series
+        SeriesBookTable.addLinks(SeriesBookTable.book, book.id, SeriesBookTable.series, listOfNotNull(seriesId))
+        GenreBookTable.replaceLinks(GenreBookTable.book, book.id, GenreBookTable.genre, genreIds)
+        addSeriesGenres(seriesOfBook(book.id), genreIds)
+        return book.id
     }
 
-    // Rewriting an unchanged relation costs a DELETE plus an INSERT, and every track of a book comes through here
-    private fun BookEntity.setGenres(wanted: List<GenreEntity>) {
-        if (genres.map { it.id }.toSet() != wanted.map { it.id }.toSet()) genres = SizedCollection(wanted)
+    context(_: Transaction)
+    private fun createBook(
+        scan: AudioFileAnalysisResult,
+        authorIds: List<UUID>,
+        library: LibraryRow,
+    ): UUID {
+        val seriesId = scan.series?.let { seriesRepository.getOrCreate(it, library.id, authorIds).id }
+        val coverId = getOrCreateImage(scan.cover, null)
+        val genreIds = getOrCreateGenres(scan.genres)
+
+        log.info { "Creating book ${scan.book}" }
+        val row =
+            BookRow(
+                id = UUID.randomUUID(),
+                title = scan.book,
+                displayTitle = null,
+                releaseDate = null,
+                publisher = null,
+                language = scan.language,
+                description = scan.description,
+                narrator = scan.narrator,
+                isbn = null,
+                provider = null,
+                providerID = null,
+                providerRating = null,
+                coverID = coverId,
+                library = library.id,
+            )
+        BooksTable.insert(row)
+        AuthorBookTable.replaceLinks(AuthorBookTable.book, row.id, AuthorBookTable.authors, authorIds)
+        SeriesBookTable.replaceLinks(SeriesBookTable.book, row.id, SeriesBookTable.series, listOfNotNull(seriesId))
+        GenreBookTable.replaceLinks(GenreBookTable.book, row.id, GenreBookTable.genre, genreIds)
+        addSeriesGenres(listOfNotNull(seriesId), genreIds)
+        return row.id
     }
 
     // A series has no tags of its own, so it collects the genres of its books
+    context(_: Transaction)
     private fun addSeriesGenres(
-        series: Iterable<SeriesEntity>,
-        genres: List<GenreEntity>,
+        seriesIds: List<UUID>,
+        genreIds: List<UUID>,
     ) {
-        if (genres.isEmpty()) return
-        series.forEach { entry ->
-            val known = entry.genres.map { it.id }.toSet()
-            val missing = genres.filterNot { it.id in known }
-            if (missing.isNotEmpty()) entry.genres = SizedCollection(entry.genres + missing)
+        if (genreIds.isEmpty()) return
+        seriesIds.forEach { seriesId ->
+            GenreSeriesTable.addLinks(GenreSeriesTable.series, seriesId, GenreSeriesTable.genre, genreIds)
         }
     }
 
-    private fun createBook(
-        scan: AudioFileAnalysisResult,
-        dbAuthor: List<AuthorEntity>,
-        libraryModel: LibraryEntity,
-    ): BookEntity {
-        val dbSeries =
-            if (scan.series != null) {
-                seriesRepository.getOrCreate(scan.series!!, libraryModel.id.value, dbAuthor)
-            } else {
-                null
-            }
-        val dbImage = if (scan.cover != null) ImageEntity.create(scan.cover!!) else null
-        val dbSeriesList = if (dbSeries != null) listOf(dbSeries) else listOf()
-        val dbGenres = GenreEntity.getOrCreate(scan.genres)
-
-        log.info { "Creating book ${scan.book}" }
-        return BookEntity
-            .new {
-                title = scan.book
-                authors = SizedCollection(dbAuthor)
-                language = scan.language
-                description = scan.description
-                narrator = scan.narrator
-                series = SizedCollection(dbSeriesList)
-                coverID = dbImage?.id
-                library = libraryModel
-                if (dbGenres.isNotEmpty()) genres = SizedCollection(dbGenres)
-            }.also { addSeriesGenres(dbSeriesList, dbGenres) }
-    }
+    context(_: Transaction)
+    private fun seriesOfBook(bookId: UUID): List<UUID> =
+        SeriesBookTable
+            .select(SeriesBookTable.series)
+            .where { SeriesBookTable.book eq bookId }
+            .map { it[SeriesBookTable.series].value }
 
     private fun getOrCreateAuthors(
         scan: AudioFileAnalysisResult,
-        libraryModel: LibraryEntity,
-    ): List<AuthorEntity> =
+        library: LibraryRow,
+    ): List<UUID> =
         scan.authors.map { author ->
-            authorRepository.findByName(author, libraryModel.id.value) ?: run {
+            authorRepository.findByName(author, library.id)?.id ?: run {
                 log.info { "Creating author: $author" }
-                AuthorEntity
-                    .new {
-                        name = author
-                        library = libraryModel
-                    }.also { it.flush() }
+                authorRepository.create(author, library.id).id
             }
         }
 }

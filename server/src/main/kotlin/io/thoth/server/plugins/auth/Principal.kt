@@ -12,7 +12,9 @@ import io.thoth.models.LibraryPermissionLevel
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.tables.LibrariesTable
-import io.thoth.server.database.tables.UserEntity
+import io.thoth.server.database.tables.LibraryUserTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
@@ -26,7 +28,7 @@ class ThothPrincipalImpl(
 
 fun resolveUserPermissions(userId: UUID): UserPermissions =
     transaction {
-        val user = UserEntity.findById(userId) ?: throw ErrorResponse.notFound("User", userId)
+        val user = userRow(userId) ?: throw ErrorResponse.notFound("User", userId)
         val permissions: List<LibraryPermissions> =
             if (user.admin) {
                 LibrariesTable.selectAll().map {
@@ -37,7 +39,16 @@ fun resolveUserPermissions(userId: UUID): UserPermissions =
                     )
                 }
             } else {
-                user.permissions.map { it.toModel() }
+                (LibraryUserTable innerJoin LibrariesTable)
+                    .select(LibrariesTable.id, LibrariesTable.name, LibraryUserTable.permissions)
+                    .where { LibraryUserTable.user eq userId }
+                    .map {
+                        LibraryPermissions(
+                            id = it[LibrariesTable.id].value,
+                            permissions = it[LibraryUserTable.permissions],
+                            name = it[LibrariesTable.name],
+                        )
+                    }
             }
         UserPermissions(isAdmin = user.admin, libraries = permissions)
     }

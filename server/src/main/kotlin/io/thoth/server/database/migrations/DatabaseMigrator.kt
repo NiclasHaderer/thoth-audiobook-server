@@ -4,6 +4,8 @@ import io.github.classgraph.ClassGraph
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 private data class DatabaseVersion(
@@ -20,9 +22,9 @@ private data class DatabaseVersion(
             transaction {
                 log.info { "Applying migration ${this@DatabaseVersion}" }
                 migration.migrate()
-                SchemaTrackerEntity.new {
-                    date = System.currentTimeMillis() / 1000L
-                    version = this@DatabaseVersion.version
+                SchemaTrackerTable.insert {
+                    it[appliedAt] = System.currentTimeMillis()
+                    it[version] = this@DatabaseVersion.version
                 }
             }
         } catch (e: Exception) {
@@ -61,11 +63,11 @@ class DatabaseMigrator {
 
     private val latestAppliedVersion by lazy {
         transaction {
-            SchemaTrackerEntity
-                .all()
+            SchemaTrackerTable
+                .selectAll()
                 .orderBy(SchemaTrackerTable.version to SortOrder.DESC)
                 .firstOrNull()
-                ?.version ?: -1
+                ?.get(SchemaTrackerTable.version) ?: -1
         }
     }
 

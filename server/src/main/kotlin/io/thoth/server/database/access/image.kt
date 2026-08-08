@@ -1,44 +1,31 @@
 package io.thoth.server.database.access
 
-import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.common.extensions.isUUID
-import io.thoth.server.common.extensions.syncUriToFile
-import io.thoth.server.database.tables.ImageEntity
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import io.thoth.server.database.tables.ImageTable
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
 import java.util.UUID
 
-fun ImageEntity.Companion.create(imageBytes: ByteArray): ImageEntity = new { blob = ExposedBlob(imageBytes) }
+context(_: Transaction)
+private fun createImage(imageBytes: ByteArray): UUID =
+    ImageTable.insertAndGetId { it[blob] = ExposedBlob(imageBytes) }.value
 
-fun ImageEntity.areSame(newImageBytes: ByteArray): Boolean = blob.bytes.contentEquals(newImageBytes)
-
-sealed interface NewImage {
-    class Stored(
-        val id: UUID,
-    ) : NewImage
-
-    class Downloaded(
-        val bytes: ByteArray,
-    ) : NewImage
-}
-
-fun fetchImage(image: String?): NewImage? =
-    when {
-        image == null -> null
-        image.isUUID() -> NewImage.Stored(UUID.fromString(image))
-        else -> NewImage.Downloaded(image.syncUriToFile())
-    }
-
-fun ImageEntity.Companion.getNewImage(
-    newImage: NewImage?,
-    currentImageID: EntityID<UUID>?,
-    default: EntityID<UUID>?,
-): EntityID<UUID>? =
-    when (newImage) {
-        null -> default
-        is NewImage.Stored -> findById(newImage.id)?.id ?: throw ErrorResponse.notFound("Image", newImage.id)
-        is NewImage.Downloaded -> {
-            val originalImage = if (currentImageID != null) findById(currentImageID) else null
-            if (originalImage?.areSame(newImage.bytes) == true) currentImageID else create(newImage.bytes).id
+context(_: Transaction)
+fun getOrCreateImage(
+    newImage: ByteArray?,
+    currentImageID: UUID?,
+): UUID? {
+    if (newImage == null) return currentImageID
+    val currentBytes =
+        currentImageID?.let { id ->
+            ImageTable
+                .select(ImageTable.blob)
+                .where { ImageTable.id eq id }
+                .singleOrNull()
+                ?.get(ImageTable.blob)
+                ?.bytes
         }
-    }
+    return if (currentBytes?.contentEquals(newImage) == true) currentImageID else createImage(newImage)
+}

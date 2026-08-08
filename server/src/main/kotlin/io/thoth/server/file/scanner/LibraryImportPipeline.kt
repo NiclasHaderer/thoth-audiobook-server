@@ -4,10 +4,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.common.ConcurrentUniqQueue
 import io.thoth.server.common.extensions.hasAudioExtension
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Files
@@ -128,7 +131,14 @@ class LibraryImportPipeline :
         }
         log.info { "Scanning library '${library.name}'" }
         // The bump and the walk are one operation: everything the walk does not stamp is what the sweep collects
-        transaction { LibraryEntity[libraryId].scanIndex += 1u }
+        transaction {
+            val current =
+                LibrariesTable
+                    .select(LibrariesTable.scanIndex)
+                    .where { LibrariesTable.id eq libraryId }
+                    .single()[LibrariesTable.scanIndex]
+            LibrariesTable.update({ LibrariesTable.id eq libraryId }) { it[scanIndex] = current + 1uL }
+        }
         walkLibrary(library)
         return true
     }

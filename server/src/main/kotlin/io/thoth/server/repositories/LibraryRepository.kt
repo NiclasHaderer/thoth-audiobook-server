@@ -1,17 +1,21 @@
 package io.thoth.server.repositories
 
-import io.thoth.server.common.extensions.canonical
 import io.thoth.models.Library
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.PartialUpdateLibrary
 import io.thoth.server.api.UpdateLibrary
+import io.thoth.server.common.extensions.canonical
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.database.tables.LibrariesTable
-import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.database.tables.LibraryRow
+import io.thoth.server.database.tables.insert
+import io.thoth.server.database.tables.toLibraryRow
+import io.thoth.server.database.tables.update
 import io.thoth.server.file.scanner.LibraryRoots
 import io.thoth.server.file.scanner.LibraryWatcher
 import io.thoth.server.schedules.ThothSchedules
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -25,7 +29,7 @@ import kotlin.concurrent.withLock
 private val libraryMutationLock = ReentrantLock()
 
 interface LibraryRepository {
-    fun raw(id: UUID): LibraryEntity
+    fun raw(id: UUID): Library
 
     fun rescan(id: UUID)
 
@@ -49,19 +53,27 @@ class LibraryRepositoryImpl :
     private val watcher by inject<LibraryWatcher>()
     private val roots by inject<LibraryRoots>()
 
-    override fun raw(id: UUID): LibraryEntity =
+    override fun raw(id: UUID): Library = rawRow(id).toModel()
+
+    private fun rawRow(id: UUID): LibraryRow =
         transaction {
-            LibraryEntity.find { LibrariesTable.id eq id }.firstOrNull() ?: throw ErrorResponse.notFound("Library", id)
+            LibrariesTable
+                .selectAll()
+                .where { LibrariesTable.id eq id }
+                .firstOrNull()
+                ?.toLibraryRow()
+                ?: throw ErrorResponse.notFound("Library", id)
         }
 
     override fun rescan(id: UUID) {
         val library = raw(id)
-        scheduler.dispatch(schedules.scanLibrary.build(library.id.value))
+        scheduler.dispatch(schedules.scanLibrary.build(library.id))
     }
 
-    override fun get(id: UUID): Library = transaction { raw(id).toModel() }
+    override fun get(id: UUID): Library = raw(id)
 
-    override fun getAll(): List<Library> = transaction { LibraryEntity.all().map { it.toModel() } }
+    override fun getAll(): List<Library> =
+        transaction { LibrariesTable.selectAll().map { it.toLibraryRow().toModel() } }
 
     override fun modify(
         id: UUID,
@@ -70,52 +82,57 @@ class LibraryRepositoryImpl :
         libraryMutationLock.withLock {
             val needsScan =
                 partial.folders != null || partial.metadataAgents != null || partial.fileScanners != null
-            val (library, model) =
+            val model =
                 transaction {
                     if (partial.folders != null) {
                         raiseForOverlaps(id, partial.folders)
                     }
 
-                    val library = raw(id)
-                    library.apply {
-                        name = partial.name ?: name
-                        icon = partial.icon ?: icon
-                        folders = partial.folders ?: folders
-                        preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: preferEmbeddedMetadata
-                        metadataAgents = partial.metadataAgents ?: metadataAgents
-                        fileScanners = partial.fileScanners ?: fileScanners
-                        language = partial.language ?: language
-                    }
-                    library to library.toModel()
+                    val library = rawRow(id)
+                    val updated =
+                        library.copy(
+                            name = partial.name ?: library.name,
+                            icon = partial.icon ?: library.icon,
+                            folders = partial.folders ?: library.folders,
+                            preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: library.preferEmbeddedMetadata,
+                            metadataAgents = partial.metadataAgents ?: library.metadataAgents,
+                            fileScanners = partial.fileScanners ?: library.fileScanners,
+                            language = partial.language ?: library.language,
+                        )
+                    LibrariesTable.update(updated)
+                    updated.toModel()
                 }
 
             if (needsScan) {
                 watcher.restart()
-                scheduler.dispatch(schedules.scanLibrary.build(library.id.value))
+                scheduler.dispatch(schedules.scanLibrary.build(model.id))
             }
             model
         }
 
     override fun create(complete: UpdateLibrary): Library =
         libraryMutationLock.withLock {
-            val (library, model) =
+            val model =
                 transaction {
                     raiseForOverlaps(null, complete.folders)
-                    val library =
-                        LibraryEntity.new {
-                            name = complete.name
-                            icon = complete.icon
-                            folders = complete.folders
-                            preferEmbeddedMetadata = complete.preferEmbeddedMetadata
-                            metadataAgents = complete.metadataAgents
-                            fileScanners = complete.fileScanners
-                            language = complete.language
-                        }
-                    library to library.toModel()
+                    val row =
+                        LibraryRow(
+                            id = UUID.randomUUID(),
+                            name = complete.name,
+                            icon = complete.icon,
+                            scanIndex = 0uL,
+                            folders = complete.folders,
+                            preferEmbeddedMetadata = complete.preferEmbeddedMetadata,
+                            metadataAgents = complete.metadataAgents,
+                            fileScanners = complete.fileScanners,
+                            language = complete.language,
+                        )
+                    LibrariesTable.insert(row)
+                    row.toModel()
                 }
 
             watcher.restart()
-            scheduler.dispatch(schedules.scanLibrary.build(library.id.value))
+            scheduler.dispatch(schedules.scanLibrary.build(model.id))
             model
         }
 

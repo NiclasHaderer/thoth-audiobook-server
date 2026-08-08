@@ -3,27 +3,28 @@ package io.thoth.server.repositories
 import io.ktor.http.HttpStatusCode
 import io.thoth.models.AuthorUpdate
 import io.thoth.models.BookUpdate
-import io.thoth.models.FileScanner
-import io.thoth.models.NamedMetadataAgent
 import io.thoth.models.SeriesUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
-import org.koin.mp.KoinPlatform.getKoin
-import io.thoth.server.database.tables.AuthorEntity
+import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.database.tables.SeriesAuthorTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.update
+import io.thoth.server.newAuthor
+import io.thoth.server.newLibrary
+import io.thoth.server.newTrack
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.koin.mp.KoinPlatform.getKoin
 import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -40,33 +41,13 @@ class RepositoryTest : ThothTest() {
 
     @BeforeTest
     fun createLibrary() {
-        libId = newLibrary("lib", "/media/books")
+        libId = newLibrary("lib", folders = listOf("/media/books"))
     }
 
-    private fun newLibrary(
-        libraryName: String,
-        folder: String,
-    ) = transaction {
-        LibraryEntity
-            .new {
-                name = libraryName
-                folders = listOf(folder)
-                metadataAgents = listOf(NamedMetadataAgent("audible"))
-                fileScanners = listOf(FileScanner("AudioFolderScanner"))
-                language = "en"
-            }.id
-            .value
-    }
+    private fun newAuthor(authorName: String) = newAuthor(authorName, libId)
 
-    private fun newAuthor(authorName: String) =
-        transaction {
-            AuthorEntity
-                .new {
-                    name = authorName
-                    library = LibraryEntity[libId]
-                }.id
-                .value
-        }
+    private fun authorCount() =
+        transaction { AuthorTable.selectAll().where { AuthorTable.library eq libId }.count() }
 
     @Test
     fun `author findByName matches ignoring case`() {
@@ -95,17 +76,17 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `author search is scoped to the given library`() {
         newAuthor("Brandon Sanderson")
-        val otherLib = newLibrary("other", "/media/other")
+        val otherLib = newLibrary("other", folders = listOf("/media/other"))
         assertEquals(emptyList(), authorRepository.search("sanderson", otherLib).map { it.name })
         assertEquals(listOf("Brandon Sanderson"), authorRepository.search("sanderson").map { it.name })
     }
 
     @Test
     fun `author getOrCreate reuses an author that differs only in casing`() {
-        val first = transaction { authorRepository.getOrCreate("Terry Pratchett", libId).id.value }
-        val second = transaction { authorRepository.getOrCreate("terry pratchett", libId).id.value }
+        val first = authorRepository.getOrCreate("Terry Pratchett", libId).id
+        val second = authorRepository.getOrCreate("terry pratchett", libId).id
         assertEquals(first, second)
-        assertEquals(1L, transaction { AuthorEntity.find { AuthorTable.library eq libId }.count() })
+        assertEquals(1L, authorCount())
     }
 
     @Test
@@ -116,10 +97,10 @@ class RepositoryTest : ThothTest() {
         assertEquals("Terry Pratchett", renamed.name, "the API must show the new name")
         assertEquals(
             id,
-            transaction { authorRepository.getOrCreate("Terry Pratchet", libId).id.value },
+            authorRepository.getOrCreate("Terry Pratchet", libId).id,
             "a rescan finding the old name in the files must reuse the author instead of creating a second one",
         )
-        assertEquals(1L, transaction { AuthorEntity.find { AuthorTable.library eq libId }.count() })
+        assertEquals(1L, authorCount())
     }
 
     @Test
@@ -137,29 +118,29 @@ class RepositoryTest : ThothTest() {
         authorRepository.modify(id, libId, authorRenamedTo("Terry Pratchett"))
 
         // The tags on disk were corrected too, so discovery now sees the name only displayName knows about
-        assertEquals(id, transaction { authorRepository.getOrCreate("Terry Pratchett", libId).id.value })
-        assertEquals(1L, transaction { AuthorEntity.find { AuthorTable.library eq libId }.count() })
+        assertEquals(id, authorRepository.getOrCreate("Terry Pratchett", libId).id)
+        assertEquals(1L, authorCount())
     }
 
     @Test
     fun `renaming a series keeps it matchable under both titles`() {
-        val id = transaction { seriesRepository.create("Diskworld", libId, emptyList()).id.value }
+        val id = seriesRepository.create("Diskworld", libId, emptyList()).id
         val renamed = seriesRepository.modify(id, libId, seriesRenamedTo("Discworld"))
 
         assertEquals("Discworld", renamed.title, "the API must show the new title")
-        assertEquals(id, seriesRepository.getOrCreate("Diskworld", libId, emptyList()).id.value)
-        assertEquals(id, seriesRepository.getOrCreate("Discworld", libId, emptyList()).id.value)
+        assertEquals(id, seriesRepository.getOrCreate("Diskworld", libId, emptyList()).id)
+        assertEquals(id, seriesRepository.getOrCreate("Discworld", libId, emptyList()).id)
         assertEquals(1L, transaction { SeriesTable.selectAll().count() })
     }
 
     @Test
     fun `renaming a book keeps it matchable under both titles`() {
-        val id = transaction { bookRepository.create("Guards Guards", libId, emptyList(), emptyList()).id.value }
+        val id = bookRepository.create("Guards Guards", libId, emptyList(), emptyList()).id
         val renamed = bookRepository.modify(id, libId, bookRenamedTo("Guards! Guards!"))
 
         assertEquals("Guards! Guards!", renamed.title, "the API must show the new title")
-        assertEquals(id, transaction { bookRepository.findByName("Guards Guards", emptyList(), libId)?.id?.value })
-        assertEquals(id, transaction { bookRepository.findByName("Guards! Guards!", emptyList(), libId)?.id?.value })
+        assertEquals(id, bookRepository.findByName("Guards Guards", emptyList(), libId)?.id)
+        assertEquals(id, bookRepository.findByName("Guards! Guards!", emptyList(), libId)?.id)
     }
 
     private fun seriesRenamedTo(newTitle: String) =
@@ -224,31 +205,25 @@ class RepositoryTest : ThothTest() {
 
     @Test
     fun `book findByName finds a book that has no authors`() {
-        val created = transaction { bookRepository.create("Orphan Book", libId, emptyList(), emptyList()).id.value }
+        val created = bookRepository.create("Orphan Book", libId, emptyList(), emptyList()).id
         val found = bookRepository.findByName("Orphan Book", emptyList(), libId)
         assertNotNull(found, "a book without authors must still be findable by title")
-        assertEquals(created, transaction { found.id.value })
+        assertEquals(created, found.id)
     }
 
     @Test
     fun `book findByName stays scoped to the given authors`() {
-        transaction {
-            val wanted = authorRepository.getOrCreate("Wanted", libId)
-            val other = authorRepository.getOrCreate("Other", libId)
-            val book = bookRepository.create("Shared Title", libId, listOf(wanted), emptyList())
-            assertEquals(book.id, bookRepository.findByName("shared title", listOf(wanted.id.value), libId)?.id)
-            assertNull(bookRepository.findByName("Shared Title", listOf(other.id.value), libId))
-        }
+        val wanted = authorRepository.getOrCreate("Wanted", libId)
+        val other = authorRepository.getOrCreate("Other", libId)
+        val book = bookRepository.create("Shared Title", libId, listOf(wanted.id), emptyList())
+        assertEquals(book.id, bookRepository.findByName("shared title", listOf(wanted.id), libId)?.id)
+        assertNull(bookRepository.findByName("Shared Title", listOf(other.id), libId))
     }
 
     @Test
     fun `book findByName treats like wildcards as literals`() {
-        val authorId =
-            transaction {
-                val author = authorRepository.getOrCreate("Author", libId)
-                bookRepository.create("Book One", libId, listOf(author), emptyList())
-                author.id.value
-            }
+        val authorId = authorRepository.getOrCreate("Author", libId).id
+        bookRepository.create("Book One", libId, listOf(authorId), emptyList())
         assertNotNull(bookRepository.findByName("book one", listOf(authorId), libId), "sanity: the book exists")
         assertNull(bookRepository.findByName("Book_One", listOf(authorId), libId))
         assertNull(bookRepository.findByName("Book%", listOf(authorId), libId))
@@ -256,14 +231,32 @@ class RepositoryTest : ThothTest() {
     }
 
     @Test
+    fun `modify treats the book's own cover id as unchanged`() {
+        val id = bookRepository.create("Covered", libId, emptyList(), emptyList()).id
+        val cover = transaction { getOrCreateImage(byteArrayOf(1, 2, 3), null)!! }
+        transaction { BooksTable.update(bookRepository.raw(id, libId).copy(coverID = cover)) }
+
+        val result = bookRepository.modify(id, libId, bookRenamedTo("Covered").copy(cover = cover.toString()))
+
+        assertEquals(cover, result.coverID, "echoing the current cover id back must not touch the image")
+    }
+
+    @Test
+    fun `modify rejects an image id instead of linking someone else's image`() {
+        val id = bookRepository.create("Plain", libId, emptyList(), emptyList()).id
+        val foreignImage = transaction { getOrCreateImage(byteArrayOf(9, 9, 9), null)!! }
+
+        assertFails("an image id that is not the book's own must not be linkable") {
+            bookRepository.modify(id, libId, bookRenamedTo("Plain").copy(cover = foreignImage.toString()))
+        }
+        assertEquals(null, bookRepository.raw(id, libId).coverID)
+    }
+
+    @Test
     fun `book position reports the index in the requested order`() {
-        val (first, last) =
-            transaction {
-                val a = bookRepository.create("Aaa", libId, emptyList(), emptyList()).id.value
-                val c = bookRepository.create("Ccc", libId, emptyList(), emptyList()).id.value
-                bookRepository.create("Bbb", libId, emptyList(), emptyList())
-                a to c
-            }
+        val first = bookRepository.create("Aaa", libId, emptyList(), emptyList()).id
+        val last = bookRepository.create("Ccc", libId, emptyList(), emptyList()).id
+        bookRepository.create("Bbb", libId, emptyList(), emptyList())
         assertEquals(0L, bookRepository.position(first, libId, SortOrder.ASC))
         assertEquals(2L, bookRepository.position(first, libId, SortOrder.DESC))
         assertEquals(2L, bookRepository.position(last, libId, SortOrder.ASC))
@@ -272,11 +265,9 @@ class RepositoryTest : ThothTest() {
 
     @Test
     fun `book search orders results by title`() {
-        transaction {
-            bookRepository.create("The Zebra Mystery", libId, emptyList(), emptyList())
-            bookRepository.create("The Antelope Mystery", libId, emptyList(), emptyList())
-            bookRepository.create("The Mule Mystery", libId, emptyList(), emptyList())
-        }
+        bookRepository.create("The Zebra Mystery", libId, emptyList(), emptyList())
+        bookRepository.create("The Antelope Mystery", libId, emptyList(), emptyList())
+        bookRepository.create("The Mule Mystery", libId, emptyList(), emptyList())
         assertEquals(
             listOf("The Antelope Mystery", "The Mule Mystery", "The Zebra Mystery"),
             bookRepository.search("mystery", libId).map { it.title },
@@ -286,23 +277,19 @@ class RepositoryTest : ThothTest() {
     private fun bookWithTracks(
         bookTitle: String,
         vararg tracks: Pair<String, Int?>,
-    ): UUID =
-        transaction {
-            val book = bookRepository.create(bookTitle, libId, emptyList(), emptyList())
-            tracks.forEach { (fileName, number) ->
-                TrackEntity.new {
-                    title = fileName
-                    duration = 60
-                    accessTime = 0
-                    path = "/media/books/$bookTitle/$fileName"
-                    trackNr = number
-                    scanIndex = 0uL
-                    this.book = book
-                    library = LibraryEntity[libId]
-                }
-            }
-            book.id.value
+    ): UUID {
+        val book = bookRepository.create(bookTitle, libId, emptyList(), emptyList())
+        tracks.forEach { (fileName, number) ->
+            newTrack(
+                title = fileName,
+                path = "/media/books/$bookTitle/$fileName",
+                bookId = book.id,
+                libraryId = libId,
+                trackNr = number,
+            )
         }
+        return book.id
+    }
 
     @Test
     fun `tracks are returned in track number order`() {
@@ -331,28 +318,28 @@ class RepositoryTest : ThothTest() {
 
     @Test
     fun `series raw works without a surrounding transaction`() {
-        val id = transaction { seriesRepository.create("Mistborn", libId, emptyList()).id.value }
-        assertEquals(id, seriesRepository.raw(id, libId).id.value)
+        val id = seriesRepository.create("Mistborn", libId, emptyList()).id
+        assertEquals(id, seriesRepository.raw(id, libId).id)
     }
 
     @Test
     fun `series getOrCreate works without a surrounding transaction`() {
-        val id = seriesRepository.getOrCreate("Stormlight", libId, emptyList()).id.value
-        assertEquals(id, seriesRepository.getOrCreate("Stormlight", libId, emptyList()).id.value)
+        val id = seriesRepository.getOrCreate("Stormlight", libId, emptyList()).id
+        assertEquals(id, seriesRepository.getOrCreate("Stormlight", libId, emptyList()).id)
         assertEquals(1L, transaction { SeriesTable.selectAll().count() })
     }
 
     @Test
     fun `series getOrCreate links an author only once`() {
-        val author = transaction { authorRepository.getOrCreate("Sanderson", libId) }
-        seriesRepository.getOrCreate("Stormlight", libId, listOf(author))
-        seriesRepository.getOrCreate("Stormlight", libId, listOf(author))
+        val author = authorRepository.getOrCreate("Sanderson", libId)
+        seriesRepository.getOrCreate("Stormlight", libId, listOf(author.id))
+        seriesRepository.getOrCreate("Stormlight", libId, listOf(author.id))
         assertEquals(1L, transaction { SeriesAuthorTable.selectAll().count() })
     }
 
     @Test
     fun `series position rejects a series that is not in the library`() {
-        transaction { seriesRepository.create("Mistborn", libId, emptyList()) }
+        seriesRepository.create("Mistborn", libId, emptyList())
         val error = assertFailsWith<ErrorResponse> { seriesRepository.position(libId, libId, SortOrder.ASC) }
         assertEquals(HttpStatusCode.NotFound, error.status)
     }

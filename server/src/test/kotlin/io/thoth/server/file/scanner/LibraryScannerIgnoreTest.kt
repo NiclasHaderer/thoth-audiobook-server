@@ -1,13 +1,13 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.models.FileScanner
-import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
 import io.thoth.server.common.extensions.canonical
-import io.thoth.server.database.tables.AuthorEntity
-import io.thoth.server.database.tables.BookEntity
-import io.thoth.server.database.tables.LibraryEntity
-import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.newLibrary
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
@@ -40,17 +40,11 @@ class LibraryScannerIgnoreTest : ThothTest() {
         book("Kept Author", "Kept Book")
         book("Dropped Author", "Dropped Book")
         libId =
-            transaction {
-                LibraryEntity
-                    .new {
-                        name = "lib"
-                        folders = listOf(libraryRoot.absolutePathString())
-                        metadataAgents = listOf(NamedMetadataAgent("audible"))
-                        fileScanners = listOf(FileScanner("AudioTagScanner"), FileScanner("AudioFolderScanner"))
-                        language = "en"
-                    }.id
-                    .value
-            }
+            newLibrary(
+                "lib",
+                folders = listOf(libraryRoot.absolutePathString()),
+                fileScanners = listOf(FileScanner("AudioTagScanner"), FileScanner("AudioFolderScanner")),
+            )
     }
 
     private fun book(
@@ -64,11 +58,15 @@ class LibraryScannerIgnoreTest : ThothTest() {
 
     private fun scan() = pipeline.scanLibrary(libId)
 
-    private fun titles() = transaction { BookEntity.all().map { it.title }.sorted() }
+    private fun titles() = transaction { BooksTable.selectAll().map { it[BooksTable.title] }.sorted() }
 
     private fun counts() =
         transaction {
-            Triple(TrackEntity.all().count(), BookEntity.all().count(), AuthorEntity.all().count())
+            Triple(
+                TracksTable.selectAll().count(),
+                BooksTable.selectAll().count(),
+                AuthorTable.selectAll().count(),
+            )
         }
 
     @Test

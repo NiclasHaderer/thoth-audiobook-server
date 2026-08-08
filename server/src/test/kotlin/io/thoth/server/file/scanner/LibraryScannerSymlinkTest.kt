@@ -1,11 +1,11 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.models.FileScanner
-import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
-import io.thoth.server.database.tables.BookEntity
-import io.thoth.server.database.tables.LibraryEntity
-import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.newLibrary
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Files
@@ -38,21 +38,15 @@ class LibraryScannerSymlinkTest : ThothTest() {
     }
 
     private fun createLibrary(root: Path): UUID =
-        transaction {
-            LibraryEntity
-                .new {
-                    name = "lib"
-                    folders = listOf(root.absolutePathString())
-                    metadataAgents = listOf(NamedMetadataAgent("audible"))
-                    fileScanners = listOf(FileScanner("AudioTagScanner"), FileScanner("AudioFolderScanner"))
-                    language = "en"
-                }.id
-                .value
-        }
+        newLibrary(
+            "lib",
+            folders = listOf(root.absolutePathString()),
+            fileScanners = listOf(FileScanner("AudioTagScanner"), FileScanner("AudioFolderScanner")),
+        )
 
     private fun scan(id: UUID) = pipeline.scanLibrary(id)
 
-    private fun titles() = transaction { BookEntity.all().map { it.title }.sorted() }
+    private fun titles() = transaction { BooksTable.selectAll().map { it[BooksTable.title] }.sorted() }
 
     @Test
     fun `a symlinked folder inside the library is not descended into`() {
@@ -76,7 +70,7 @@ class LibraryScannerSymlinkTest : ThothTest() {
         scan(createLibrary(root))
 
         assertEquals(listOf("Real Book"), titles())
-        assertEquals(1L, transaction { TrackEntity.all().count() })
+        assertEquals(1L, transaction { TracksTable.selectAll().count() })
     }
 
     @Test

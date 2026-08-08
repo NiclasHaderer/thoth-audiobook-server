@@ -2,14 +2,13 @@ package io.thoth.server.file.scanner
 
 import io.methvin.watcher.DirectoryChangeEvent
 import io.thoth.models.FileScanner
-import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
 import io.thoth.server.common.extensions.canonical
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.tables.BookEntity
-import io.thoth.server.database.tables.LibraryEntity
-import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.newLibrary
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,6 +16,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
@@ -58,17 +58,11 @@ class LibraryWatcherTest : ThothTest() {
     fun startWatcher() {
         libraryRoot = dataDir.resolve("library").also { it.createDirectories() }
         libId =
-            transaction {
-                LibraryEntity
-                    .new {
-                        name = "lib"
-                        folders = listOf(libraryRoot.absolutePathString())
-                        metadataAgents = listOf(NamedMetadataAgent("audible"))
-                        fileScanners = listOf(FileScanner("AudioTagScanner"), FileScanner("AudioFolderScanner"))
-                        language = "en"
-                    }.id
-                    .value
-            }
+            newLibrary(
+                "lib",
+                folders = listOf(libraryRoot.absolutePathString()),
+                fileScanners = listOf(FileScanner("AudioTagScanner"), FileScanner("AudioFolderScanner")),
+            )
         schedulerScope.launch { scheduler.start() }
         // Blocks until the tree is registered; watchAsync still has to get its event loop going after that
         watcher.start()
@@ -91,9 +85,9 @@ class LibraryWatcherTest : ThothTest() {
         return folder
     }
 
-    private fun titles() = transaction { BookEntity.all().map { it.title }.sorted() }
+    private fun titles() = transaction { BooksTable.selectAll().map { it[BooksTable.title] }.sorted() }
 
-    private fun tracks() = transaction { TrackEntity.all().count() }
+    private fun tracks() = transaction { TracksTable.selectAll().count() }
 
     private fun eventually(
         timeout: Duration = 10.seconds,

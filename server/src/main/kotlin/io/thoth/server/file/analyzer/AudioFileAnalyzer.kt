@@ -1,6 +1,5 @@
 package io.thoth.server.file.analyzer
 
-import io.thoth.server.database.tables.LibraryEntity
 import io.thoth.server.file.analyzer.impl.AudioFileAnalyzerWrapper
 import io.thoth.server.file.tagger.ReadonlyFileTagger
 import io.github.oshai.kotlinlogging.KotlinLogging.logger

@@ -4,7 +4,7 @@ import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageTable
-import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TracksTable
@@ -24,7 +24,11 @@ class LibraryCleanup {
     // so calling this outside that window deletes tracks that were simply not visited yet.
     fun removeStaleTracks(libraryId: UUID): Unit =
         transaction {
-            val scanIndex = LibraryEntity[libraryId].scanIndex
+            val scanIndex =
+                LibrariesTable
+                    .select(LibrariesTable.scanIndex)
+                    .where { LibrariesTable.id eq libraryId }
+                    .single()[LibrariesTable.scanIndex]
             TracksTable.deleteWhere {
                 (TracksTable.library eq libraryId) and (TracksTable.scanIndex less scanIndex)
             }

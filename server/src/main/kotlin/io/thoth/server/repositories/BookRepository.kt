@@ -5,29 +5,32 @@ import io.thoth.metadata.MetadataAgents
 import io.thoth.models.Book
 import io.thoth.models.BookDetailed
 import io.thoth.models.BookUpdate
+import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
+import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.extensions.naturalOrder
-import io.thoth.server.common.extensions.toSizedIterable
-import io.thoth.server.database.access.fetchImage
-import io.thoth.server.database.access.getNewImage
+import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorBookTable
-import io.thoth.server.database.tables.AuthorEntity
-import io.thoth.server.database.tables.BookEntity
+import io.thoth.server.database.tables.BookRow
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.ImageEntity
-import io.thoth.server.database.tables.SeriesEntity
-import io.thoth.server.database.tables.TrackEntity
+import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.bookAuthors
+import io.thoth.server.database.tables.booksToModels
+import io.thoth.server.database.tables.insert
+import io.thoth.server.database.tables.replaceLinks
+import io.thoth.server.database.tables.toBookRow
+import io.thoth.server.database.tables.toModel
+import io.thoth.server.database.tables.toTrackRow
+import io.thoth.server.database.tables.update
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.dao.with
-import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -35,26 +38,26 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
 
-interface BookRepository : Repository<BookEntity, Book, BookDetailed, BookUpdate> {
+interface BookRepository : Repository<BookRow, Book, BookDetailed, BookUpdate> {
     fun findByName(
         bookTitle: String,
         authorIds: List<UUID>,
         libraryId: UUID,
-    ): BookEntity?
+    ): BookRow?
 
     fun getOrCreate(
         bookName: String,
         libraryId: UUID,
-        authors: List<AuthorEntity>,
-        series: List<SeriesEntity>,
-    ): BookEntity
+        authors: List<UUID>,
+        series: List<UUID>,
+    ): BookRow
 
     fun create(
         bookName: String,
         libraryId: UUID,
-        authors: List<AuthorEntity>,
-        series: List<SeriesEntity>,
-    ): BookEntity
+        authors: List<UUID>,
+        series: List<UUID>,
+    ): BookRow
 }
 
 class BookRepositoryImpl :
@@ -64,8 +67,10 @@ class BookRepositoryImpl :
     private val seriesRepository by inject<SeriesRepository>()
     private val libraryRepository by inject<LibraryRepository>()
     private val metadataAgents by inject<MetadataAgents>()
+    private val imageDownloader by inject<ImageDownloader>()
 
-    override fun total(libraryId: UUID) = transaction { BookEntity.find { BooksTable.library eq libraryId }.count() }
+    override fun total(libraryId: UUID) =
+        transaction { BooksTable.selectAll().where { BooksTable.library eq libraryId }.count() }
 
     override fun getAll(
         libraryId: UUID,
@@ -74,21 +79,27 @@ class BookRepositoryImpl :
         offset: Long,
     ): List<Book> =
         transaction {
-            BookEntity
-                .find { BooksTable.library eq libraryId }
-                .orderBy(BooksTable.displayedTitle.lowerCase() to order)
-                .offset(offset)
-                .limit(limit)
-                .withRelations()
-                .map { it.toModel() }
+            val rows =
+                BooksTable
+                    .selectAll()
+                    .where { BooksTable.library eq libraryId }
+                    .orderBy(BooksTable.displayedTitle.lowerCase() to order)
+                    .offset(offset)
+                    .limit(limit)
+                    .map { it.toBookRow() }
+            booksToModels(rows)
         }
 
     override fun raw(
         id: UUID,
         libraryId: UUID,
-    ): BookEntity =
+    ): BookRow =
         transaction {
-            BookEntity.find { BooksTable.id eq id and (BooksTable.library eq libraryId) }.firstOrNull()
+            BooksTable
+                .selectAll()
+                .where { BooksTable.id eq id and (BooksTable.library eq libraryId) }
+                .firstOrNull()
+                ?.toBookRow()
                 ?: throw ErrorResponse.notFound("Book", id)
         }
 
@@ -96,10 +107,11 @@ class BookRepositoryImpl :
         bookTitle: String,
         authorIds: List<UUID>,
         libraryId: UUID,
-    ): BookEntity? =
+    ): BookRow? =
         transaction {
-            BookEntity
-                .find {
+            BooksTable
+                .selectAll()
+                .where {
                     val sameTitle = titledExactly(bookTitle) and (BooksTable.library eq libraryId)
                     // An empty author list would make `inList` match nothing, so books without authors are
                     // identified by title alone instead of never being found.
@@ -113,6 +125,7 @@ class BookRepositoryImpl :
                         sameTitle and (BooksTable.id inSubQuery booksOfAuthors)
                     }
                 }.firstOrNull()
+                ?.toBookRow()
         }
 
     override fun get(
@@ -121,7 +134,11 @@ class BookRepositoryImpl :
     ): BookDetailed =
         transaction {
             val book = raw(id, libraryId)
-            val tracks = TrackEntity.find { TracksTable.book eq id }.toList()
+            val tracks =
+                TracksTable
+                    .selectAll()
+                    .where { TracksTable.book eq id }
+                    .map { it.toTrackRow() }
             // Incomplete numbering cannot be trusted, so those books fall back to the file names
             val ordered =
                 if (tracks.any { it.trackNr == null }) {
@@ -129,7 +146,8 @@ class BookRepositoryImpl :
                 } else {
                     tracks.sortedBy { it.trackNr }
                 }
-            BookDetailed.fromModel(book.toModel(), ordered.map { it.toModel() })
+            val bookRef = TitledId(book.id, book.displayedTitle)
+            BookDetailed.fromModel(book.toModel(), ordered.map { it.toModel(bookRef) })
         }
 
     override fun position(
@@ -173,22 +191,26 @@ class BookRepositoryImpl :
         libraryId: UUID,
     ): List<Book> =
         transaction {
-            BookEntity
-                .find { matchesTitle(query) and (BooksTable.library eq libraryId) }
-                .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
-                .limit(searchLimit)
-                .withRelations()
-                .map { it.toModel() }
+            val rows =
+                BooksTable
+                    .selectAll()
+                    .where { matchesTitle(query) and (BooksTable.library eq libraryId) }
+                    .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
+                    .limit(searchLimit)
+                    .map { it.toBookRow() }
+            booksToModels(rows)
         }
 
     override fun search(query: String): List<Book> =
         transaction {
-            BookEntity
-                .find { matchesTitle(query) }
-                .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
-                .limit(searchLimit)
-                .withRelations()
-                .map { it.toModel() }
+            val rows =
+                BooksTable
+                    .selectAll()
+                    .where { matchesTitle(query) }
+                    .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
+                    .limit(searchLimit)
+                    .map { it.toBookRow() }
+            booksToModels(rows)
         }
 
     override fun modify(
@@ -196,55 +218,75 @@ class BookRepositoryImpl :
         libraryId: UUID,
         partial: BookUpdate,
     ): Book {
-        val newCover = fetchImage(partial.cover)
+        val currentCover = raw(id, libraryId).coverID
+        val newCover = imageDownloader.download(partial.cover?.takeUnless { it == currentCover?.toString() })
         return transaction {
             val book = raw(id, libraryId)
-            book.apply {
-                displayTitle = partial.title ?: displayTitle
-                provider = partial.provider ?: provider
-                providerID = partial.providerID ?: providerID
-                providerRating = partial.providerRating ?: providerRating
-                releaseDate = partial.releaseDate ?: releaseDate
-                publisher = partial.publisher ?: publisher
-                language = partial.language ?: language
-                description = partial.description ?: description
-                narrator = partial.narrator ?: narrator
-                isbn = partial.isbn ?: isbn
-                coverID = ImageEntity.getNewImage(newCover, currentImageID = coverID, default = coverID)
-            }
+            val updated =
+                book.copy(
+                    displayTitle = partial.title ?: book.displayTitle,
+                    provider = partial.provider ?: book.provider,
+                    providerID = partial.providerID ?: book.providerID,
+                    providerRating = partial.providerRating ?: book.providerRating,
+                    releaseDate = partial.releaseDate ?: book.releaseDate,
+                    publisher = partial.publisher ?: book.publisher,
+                    language = partial.language ?: book.language,
+                    description = partial.description ?: book.description,
+                    narrator = partial.narrator ?: book.narrator,
+                    isbn = partial.isbn ?: book.isbn,
+                    coverID = getOrCreateImage(newCover, currentImageID = book.coverID),
+                )
+            BooksTable.update(updated)
             if (partial.authors != null) {
-                book.authors = partial.authors.map { authorRepository.raw(it, libraryId) }.toSizedIterable()
+                val authorIds = partial.authors.map { authorRepository.raw(it, libraryId).id }
+                AuthorBookTable.replaceLinks(AuthorBookTable.book, id, AuthorBookTable.authors, authorIds)
             }
             if (partial.series != null) {
-                book.series = partial.series.map { seriesRepository.raw(it, libraryId) }.toSizedIterable()
+                val seriesIds = partial.series.map { seriesRepository.raw(it, libraryId).id }
+                SeriesBookTable.replaceLinks(SeriesBookTable.book, id, SeriesBookTable.series, seriesIds)
             }
-            book.toModel()
+            updated.toModel()
         }
     }
 
     override fun create(
         bookName: String,
         libraryId: UUID,
-        authors: List<AuthorEntity>,
-        series: List<SeriesEntity>,
-    ): BookEntity =
+        authors: List<UUID>,
+        series: List<UUID>,
+    ): BookRow =
         transaction {
-            BookEntity
-                .new {
-                    title = bookName
-                    this.authors = SizedCollection(authors)
-                    this.series = SizedCollection(series)
-                }.also { it.library = libraryRepository.raw(libraryId) }
+            val row =
+                BookRow(
+                    id = UUID.randomUUID(),
+                    title = bookName,
+                    displayTitle = null,
+                    releaseDate = null,
+                    publisher = null,
+                    language = null,
+                    description = null,
+                    narrator = null,
+                    isbn = null,
+                    provider = null,
+                    providerID = null,
+                    providerRating = null,
+                    coverID = null,
+                    library = libraryRepository.raw(libraryId).id,
+                )
+            BooksTable.insert(row)
+            AuthorBookTable.replaceLinks(AuthorBookTable.book, row.id, AuthorBookTable.authors, authors)
+            SeriesBookTable.replaceLinks(SeriesBookTable.book, row.id, SeriesBookTable.series, series)
+            row
         }
 
     override fun getOrCreate(
         bookName: String,
         libraryId: UUID,
-        authors: List<AuthorEntity>,
-        series: List<SeriesEntity>,
-    ): BookEntity =
+        authors: List<UUID>,
+        series: List<UUID>,
+    ): BookRow =
         transaction {
-            findByName(bookName, authors.map { it.id.value }, libraryId) ?: create(bookName, libraryId, authors, series)
+            findByName(bookName, authors, libraryId) ?: create(bookName, libraryId, authors, series)
         }
 
     override fun autoMatch(
@@ -259,7 +301,7 @@ class BookRepositoryImpl :
                     metadataAgents.forLibrary(library),
                     book.displayedTitle,
                     library.language,
-                    book.authors.joinToString(", ") { it.displayedName },
+                    bookAuthors(listOf(id))[id].orEmpty().joinToString(", ") { it.name },
                 )
             }
 
@@ -297,9 +339,6 @@ class BookRepositoryImpl :
         val authorName: String,
     )
 }
-
-private fun <T : Iterable<BookEntity>> T.withRelations(): T =
-    with(BookEntity::authors, BookEntity::series, BookEntity::genres)
 
 // Same split as authors: title keeps tracking the files, displayTitle holds a rename, both stay matchable.
 private fun titledExactly(title: String): Op<Boolean> = eitherTitle(escape(title))

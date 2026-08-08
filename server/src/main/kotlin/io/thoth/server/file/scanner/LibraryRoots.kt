@@ -1,7 +1,10 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.server.common.extensions.canonical
-import io.thoth.server.database.tables.LibraryEntity
+import io.thoth.server.database.tables.LibrariesTable
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.nio.file.Path
 import java.util.UUID
@@ -16,17 +19,24 @@ data class LibraryEntityModel(
 )
 
 class LibraryRoots {
-    fun all(): List<LibraryEntityModel> = transaction { LibraryEntity.all().map { it.toRoot() } }
+    fun all(): List<LibraryEntityModel> = transaction { LibrariesTable.selectAll().map { it.toRoot() } }
 
-    fun of(id: UUID): LibraryEntityModel? = transaction { LibraryEntity.findById(id)?.toRoot() }
+    fun of(id: UUID): LibraryEntityModel? =
+        transaction {
+            LibrariesTable
+                .selectAll()
+                .where { LibrariesTable.id eq id }
+                .firstOrNull()
+                ?.toRoot()
+        }
 
     fun owning(path: Path): LibraryEntityModel? = all().firstOrNull { library -> library.folders.any { path.startsWith(it) } }
 
-    private fun LibraryEntity.toRoot() =
+    private fun ResultRow.toRoot() =
         LibraryEntityModel(
-            id = id.value,
-            name = name,
-            folders = folders.map { Path.of(it).canonical() },
-            fileScanners = fileScanners.map { it.name },
+            id = this[LibrariesTable.id].value,
+            name = this[LibrariesTable.name],
+            folders = this[LibrariesTable.folders].map { Path.of(it).canonical() },
+            fileScanners = this[LibrariesTable.fileScanners].map { it.name },
         )
 }

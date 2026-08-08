@@ -1,6 +1,5 @@
 package io.thoth.models
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 data class Track(
@@ -8,7 +7,6 @@ data class Track(
     val title: String,
     val trackNr: Int?,
     val duration: Int,
-    val accessTime: Long,
+    val fileModifiedAt: Long,
     val book: TitledId,
-    val updateTime: LocalDateTime,
 )

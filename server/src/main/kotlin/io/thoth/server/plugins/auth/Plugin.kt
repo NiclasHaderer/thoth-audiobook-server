@@ -10,19 +10,23 @@ import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.models.UpdateUserPermissions
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.common.extensions.findOne
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.tables.LibraryEntity
-import io.thoth.server.database.tables.LibraryUserEntity
+import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryUserTable
-import io.thoth.server.database.tables.UserEntity
+import io.thoth.server.database.tables.UserRow
 import io.thoth.server.database.tables.UsersTable
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import io.thoth.server.database.tables.insert
+import io.thoth.server.database.tables.toUserRow
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.ktor.ext.inject
+import java.util.UUID
 
 private fun <T> rejectDuplicateUsername(
     username: String,
@@ -36,6 +40,14 @@ private fun <T> rejectDuplicateUsername(
         }
         throw e
     }
+
+context(_: Transaction)
+internal fun userRow(id: UUID): UserRow? =
+    UsersTable
+        .selectAll()
+        .where { UsersTable.id eq id }
+        .firstOrNull()
+        ?.toUserRow()
 
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
@@ -73,73 +85,91 @@ fun Application.configureAuthentication() {
         }
 
         getUserByUsername { username ->
-            transaction { UserEntity.findOne { UsersTable.username eq username }?.toExternalUser() }
+            transaction {
+                UsersTable
+                    .selectAll()
+                    .where { UsersTable.username eq username }
+                    .firstOrNull()
+                    ?.toUserRow()
+                    ?.toExternalUser()
+            }
         }
 
         allowNewSignups { thothConfig.allowNewSignups }
 
-        getUserById { transaction { UserEntity.findById(it)?.toExternalUser() } }
+        getUserById { transaction { userRow(it)?.toExternalUser() } }
 
-        isFirstUser { transaction { UserEntity.count() == 0L } }
+        isFirstUser { transaction { UsersTable.selectAll().count() == 0L } }
 
         createUser { newUser ->
             transaction {
                 rejectDuplicateUsername(newUser.username) {
-                    UserEntity
-                        .new {
-                            username = newUser.username
-                            passwordHash = newUser.passwordHash
-                            admin = newUser.admin
-                        }.also { it.flush() }
-                        .toExternalUser()
+                    val row =
+                        UserRow(
+                            id = UUID.randomUUID(),
+                            username = newUser.username,
+                            passwordHash = newUser.passwordHash,
+                            admin = newUser.admin,
+                        )
+                    UsersTable.insert(row)
+                    row.toExternalUser()
                 }
             }
         }
 
-        listAllUsers { transaction { UserEntity.all().map { it.toExternalUser() } } }
+        listAllUsers { transaction { UsersTable.selectAll().map { it.toUserRow().toExternalUser() } } }
 
         deleteUser {
             transaction {
-                val dbUser = UserEntity.findById(it.id) ?: return@transaction
+                val dbUser = userRow(it.id) ?: return@transaction
                 if (dbUser.admin) requireAnotherAdminExists(it.id)
-                dbUser.delete()
+                UsersTable.deleteWhere { UsersTable.id eq dbUser.id }
             }
         }
 
         renameUser { user, newName ->
             transaction {
                 rejectDuplicateUsername(newName) {
-                    UserEntity.findById(user.id)!!.also { it.username = newName; it.flush() }.toExternalUser()
+                    UsersTable.update({ UsersTable.id eq user.id }) { it[username] = newName }
+                    userRow(user.id)!!.toExternalUser()
                 }
             }
         }
 
         updatePassword { user, newPassword ->
             transaction {
-                UserEntity.findById(user.id)!!.also { it.passwordHash = newPassword }.toExternalUser()
+                UsersTable.update({ UsersTable.id eq user.id }) { it[passwordHash] = newPassword }
+                userRow(user.id)!!.toExternalUser()
             }
         }
 
         updateUserPermissions { currentUser, permissions ->
             transaction {
-                val dbUser = UserEntity.findById(currentUser.id)!!
+                val dbUser = userRow(currentUser.id)!!
 
                 if (dbUser.admin && !permissions.isAdmin) requireAnotherAdminExists(currentUser.id)
-                dbUser.admin = permissions.isAdmin
+                UsersTable.update({ UsersTable.id eq dbUser.id }) { it[admin] = permissions.isAdmin }
                 LibraryUserTable.deleteWhere { LibraryUserTable.user eq currentUser.id }
                 permissions.libraries.forEach { permission ->
-                    val library = LibraryEntity.findById(permission.id)!!
-                    LibraryUserEntity.new {
-                        this.user = dbUser
-                        this.library = library
-                        this.permissions = permission.permissions
+                    val libraryId =
+                        LibrariesTable
+                            .select(LibrariesTable.id)
+                            .where { LibrariesTable.id eq permission.id }
+                            .single()[LibrariesTable.id]
+                    // TODO We are not super consistent with how we handle inserts. Sometimes we
+                    //  require the [table]Row, someitmes we do this instead. But this is a probelm for
+                    //  tomorrows Niclas...
+                    LibraryUserTable.insert {
+                        it[user] = dbUser.id
+                        it[library] = libraryId
+                        it[LibraryUserTable.permissions] = permission.permissions
                     }
                 }
-                dbUser.toExternalUser()
+                userRow(dbUser.id)!!.toExternalUser()
             }
         }
 
-        isAdminUser { user: ThothDatabaseUser -> transaction { UserEntity.findById(user.id)?.admin ?: false } }
+        isAdminUser { user: ThothDatabaseUser -> transaction { userRow(user.id)?.admin ?: false } }
 
         getUserPermissions { user: ThothDatabaseUser -> resolveUserPermissions(user.id) }
     }

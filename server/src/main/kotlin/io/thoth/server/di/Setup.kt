@@ -4,6 +4,7 @@ import io.thoth.metadata.CachingMetadataProvider
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.SearchBasedMetadataAgent
 import io.thoth.metadata.audible.client.AudibleMetadataProvider
+import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.di.serialization.JacksonSerialization
@@ -38,6 +39,7 @@ fun thothModule(config: ThothConfig) =
             MetadataAgents(listOf(SearchBasedMetadataAgent(CachingMetadataProvider(AudibleMetadataProvider()))))
         }
         single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
+        single { ImageDownloader() }
         single { LibraryRoots() }
         single { LibraryCleanup() }
         single { TrackManager() }
