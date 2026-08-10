@@ -3,23 +3,23 @@ package io.thoth.server.file
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.common.extensions.canonicalString
 import io.thoth.server.database.access.getOrCreateImage
-import io.thoth.server.database.access.getOrCreateGenres
-import io.thoth.server.database.tables.AuthorBookTable
-import io.thoth.server.database.tables.BookRow
+import io.thoth.server.database.tables.MetadataLayer
+import io.thoth.server.database.tables.replaceBookAuthors
+import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.GenreBookTable
-import io.thoth.server.database.tables.GenreSeriesTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryRow
-import io.thoth.server.database.tables.SeriesBookTable
+import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TracksTable
-import io.thoth.server.database.tables.addLinks
+import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.insert
-import io.thoth.server.database.tables.replaceLinks
+import io.thoth.server.database.tables.layer
+import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.toLibraryRow
 import io.thoth.server.database.tables.toTrackRow
 import io.thoth.server.database.tables.update
+import io.thoth.server.database.tables.write
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.scanner.LibraryEntityModel
@@ -193,109 +193,60 @@ class TrackManager : KoinComponent {
     ): UUID {
         val authorIds = getOrCreateAuthors(scan, library)
         val book =
-            bookRepository.findByName(
+            bookRepository.findByTaggedName(
                 bookTitle = scan.book,
                 authorIds = authorIds,
                 libraryId = library.id,
             )
-        return if (book != null) {
-            updateBook(book, scan, authorIds, library)
-        } else {
-            log.info { "Created new book: ${scan.book}" }
-            createBook(scan, authorIds, library)
-        }
+        val bookId =
+            book?.id ?: run {
+                log.info { "Created new book: ${scan.book}" }
+                BooksTable.create(library.id)
+            }
+        return writeFileLayer(bookId, scan, authorIds, library)
     }
 
+    // Only ever writes the file layer: whatever the user or a metadata agent said about this book lives in
+    // its own layer and survives any number of rescans.
     context(_: Transaction)
-    private fun updateBook(
-        book: BookRow,
+    private fun writeFileLayer(
+        bookId: UUID,
         scan: AudioFileAnalysisResult,
         authorIds: List<UUID>,
         library: LibraryRow,
     ): UUID {
-        val seriesId = scan.series?.let { seriesRepository.getOrCreate(it, library.id, authorIds).id }
-        val coverId = book.coverID ?: getOrCreateImage(scan.cover, null)
-        val genreIds = getOrCreateGenres(scan.genres)
+        val seriesId = scan.series?.let { seriesRepository.getOrCreate(it, library.id).id }
+        val file = BookFileMetadataTable.layer(bookId)
+        val genres = normalizeGenres(scan.genres)
 
-        BooksTable.update(
-            book.copy(
+        BookFileMetadataTable.write(
+            file.copy(
                 title = scan.book,
-                coverID = coverId,
+                coverID = getOrCreateImage(scan.cover, file.coverID),
                 language = scan.language,
                 description = scan.description,
                 narrator = scan.narrator,
+                releaseDate = scan.date,
+                genres = genres,
             ),
         )
-        AuthorBookTable.replaceLinks(AuthorBookTable.book, book.id, AuthorBookTable.authors, authorIds)
-        // TODO what to do on a rescan if the user changed things in the UI. Also think about what to do
-        //  if one of the tracks does not have a series
-        SeriesBookTable.addLinks(SeriesBookTable.book, book.id, SeriesBookTable.series, listOfNotNull(seriesId))
-        GenreBookTable.replaceLinks(GenreBookTable.book, book.id, GenreBookTable.genre, genreIds)
-        addSeriesGenres(seriesOfBook(book.id), genreIds)
-        return book.id
+        // The whole file layer is what the last imported track's tags say, relations included. Tracks of one
+        // book that disagree about their series or authors leave it up to whichever is imported last, the same
+        // way they already do for the title or the narrator.
+        replaceBookAuthors(bookId, MetadataLayer.FILE, authorIds)
+        replaceBookSeries(bookId, MetadataLayer.FILE, listOfNotNull(seriesId).associateWith { scan.seriesIndex })
+        return bookId
     }
 
-    context(_: Transaction)
-    private fun createBook(
-        scan: AudioFileAnalysisResult,
-        authorIds: List<UUID>,
-        library: LibraryRow,
-    ): UUID {
-        val seriesId = scan.series?.let { seriesRepository.getOrCreate(it, library.id, authorIds).id }
-        val coverId = getOrCreateImage(scan.cover, null)
-        val genreIds = getOrCreateGenres(scan.genres)
-
-        log.info { "Creating book ${scan.book}" }
-        val row =
-            BookRow(
-                id = UUID.randomUUID(),
-                title = scan.book,
-                displayTitle = null,
-                releaseDate = null,
-                publisher = null,
-                language = scan.language,
-                description = scan.description,
-                narrator = scan.narrator,
-                isbn = null,
-                provider = null,
-                providerID = null,
-                providerRating = null,
-                coverID = coverId,
-                library = library.id,
-            )
-        BooksTable.insert(row)
-        AuthorBookTable.replaceLinks(AuthorBookTable.book, row.id, AuthorBookTable.authors, authorIds)
-        SeriesBookTable.replaceLinks(SeriesBookTable.book, row.id, SeriesBookTable.series, listOfNotNull(seriesId))
-        GenreBookTable.replaceLinks(GenreBookTable.book, row.id, GenreBookTable.genre, genreIds)
-        addSeriesGenres(listOfNotNull(seriesId), genreIds)
-        return row.id
-    }
-
-    // A series has no tags of its own, so it collects the genres of its books
-    context(_: Transaction)
-    private fun addSeriesGenres(
-        seriesIds: List<UUID>,
-        genreIds: List<UUID>,
-    ) {
-        if (genreIds.isEmpty()) return
-        seriesIds.forEach { seriesId ->
-            GenreSeriesTable.addLinks(GenreSeriesTable.series, seriesId, GenreSeriesTable.genre, genreIds)
-        }
-    }
-
-    context(_: Transaction)
-    private fun seriesOfBook(bookId: UUID): List<UUID> =
-        SeriesBookTable
-            .select(SeriesBookTable.series)
-            .where { SeriesBookTable.book eq bookId }
-            .map { it[SeriesBookTable.series].value }
+    // The same genre spelled differently by two files is one genre
+    private fun normalizeGenres(names: List<String>): List<String> = names.distinctBy { it.lowercase() }
 
     private fun getOrCreateAuthors(
         scan: AudioFileAnalysisResult,
         library: LibraryRow,
     ): List<UUID> =
         scan.authors.map { author ->
-            authorRepository.findByName(author, library.id)?.id ?: run {
+            authorRepository.findByTaggedName(author, library.id)?.id ?: run {
                 log.info { "Creating author: $author" }
                 authorRepository.create(author, library.id).id
             }

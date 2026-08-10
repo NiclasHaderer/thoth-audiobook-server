@@ -7,7 +7,6 @@ import java.util.UUID
 
 data class SeriesUpdate(
     val title: String?,
-    val authors: List<UUID>?,
     val books: List<UUID>?,
     val provider: String?,
     val providerID: String?,
@@ -17,7 +16,6 @@ data class SeriesUpdate(
     val description: String?,
 ) : ValidateObject {
     override suspend fun RoutingContext.validateBody() {
-        if (authors?.isEmpty() == true) throw ErrorResponse.userError("A series must have at least one author")
         if (books?.isEmpty() == true) throw ErrorResponse.userError("A series must have at least one book")
     }
 }

@@ -3,6 +3,7 @@ package io.thoth.server.file.scanner
 import io.thoth.models.FileScanner
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.newLibrary
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -46,7 +47,7 @@ class LibraryScannerSymlinkTest : ThothTest() {
 
     private fun scan(id: UUID) = pipeline.scanLibrary(id)
 
-    private fun titles() = transaction { BooksTable.selectAll().map { it[BooksTable.title] }.sorted() }
+    private fun titles() = transaction { BookMetadataView.selectAll().map { it[BookMetadataView.title] }.sorted() }
 
     @Test
     fun `a symlinked folder inside the library is not descended into`() {

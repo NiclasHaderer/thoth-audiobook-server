@@ -7,8 +7,8 @@ import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.sqliteUrl
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.database.tables.LibrariesTable
-import io.thoth.server.database.tables.SeriesAuthorTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.newLibrary
@@ -88,7 +88,7 @@ class LibraryImportPipelineTest : ThothTest() {
 
     private fun scan(id: UUID) = pipeline.scanLibrary(id)
 
-    private fun titles() = transaction { BooksTable.selectAll().map { it[BooksTable.title] }.sorted() }
+    private fun titles() = transaction { BookMetadataView.selectAll().map { it[BookMetadataView.title] }.sorted() }
 
     private fun tracks() = transaction { TracksTable.selectAll().count() }
 
@@ -131,7 +131,6 @@ class LibraryImportPipelineTest : ThothTest() {
         transaction {
             assertEquals(1L, AuthorTable.selectAll().count(), "the author must not be duplicated")
             assertEquals(1L, SeriesTable.selectAll().count(), "the series must not be duplicated")
-            assertEquals(1L, SeriesAuthorTable.selectAll().count(), "the series-author link must be written once")
             assertEquals(3L, BooksTable.selectAll().count())
             assertEquals(5L, TracksTable.selectAll().count())
         }

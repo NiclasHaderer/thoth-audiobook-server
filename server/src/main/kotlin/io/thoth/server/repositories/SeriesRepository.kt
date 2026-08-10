@@ -11,21 +11,32 @@ import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
-import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.SeriesAuthorTable
-import io.thoth.server.database.tables.SeriesBookTable
-import io.thoth.server.database.tables.SeriesRow
+import io.thoth.server.database.tables.BookUserMetadataTable
+import io.thoth.server.database.tables.SeriesAgentMetadataTable
+import io.thoth.server.database.tables.MetadataLayer
+import io.thoth.server.database.tables.SeriesFileMetadataTable
+import io.thoth.server.database.tables.SeriesMetadata
+import io.thoth.server.database.tables.SeriesMetadataRow
+import io.thoth.server.database.views.SeriesRow
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.addLinks
-import io.thoth.server.database.tables.booksToModels
-import io.thoth.server.database.tables.insert
-import io.thoth.server.database.tables.replaceLinks
-import io.thoth.server.database.tables.seriesToModels
-import io.thoth.server.database.tables.toBookRow
-import io.thoth.server.database.tables.toModel
-import io.thoth.server.database.tables.toSeriesRow
-import io.thoth.server.database.tables.update
+import io.thoth.server.database.tables.SeriesUserMetadataTable
+import io.thoth.server.database.tables.bookIdsLinkedToSeries
+import io.thoth.server.database.views.bookSeries
+import io.thoth.server.database.views.booksToModels
+import io.thoth.server.database.tables.create
+import io.thoth.server.database.tables.layer
+import io.thoth.server.database.tables.replaceBookSeries
+import io.thoth.server.database.views.seriesToModels
+import io.thoth.server.database.views.toBookRow
+import io.thoth.server.database.views.toModel
+import io.thoth.server.database.views.toSeriesRow
+import io.thoth.server.database.tables.write
+import io.thoth.server.database.views.AuthorMetadataView
+import io.thoth.server.database.views.BookMetadataView
+import io.thoth.server.database.views.BookAuthorView
+import io.thoth.server.database.views.BookSeriesView
+import io.thoth.server.database.views.BookRow
+import io.thoth.server.database.views.SeriesMetadataView
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -40,7 +51,7 @@ import org.koin.core.component.inject
 import java.util.UUID
 
 interface SeriesRepository : Repository<SeriesRow, Series, SeriesDetailed, SeriesUpdate> {
-    fun findByName(
+    fun findByTaggedName(
         seriesTitle: String,
         libraryId: UUID,
     ): SeriesRow?
@@ -48,13 +59,11 @@ interface SeriesRepository : Repository<SeriesRow, Series, SeriesDetailed, Serie
     fun getOrCreate(
         seriesName: String,
         libraryId: UUID,
-        authors: List<UUID>,
     ): SeriesRow
 
     fun create(
         seriesName: String,
         libraryId: UUID,
-        authors: List<UUID>,
     ): SeriesRow
 }
 
@@ -71,16 +80,12 @@ class SeriesRepositoryImpl :
         val log = logger {}
     }
 
-    override fun findByName(
+    override fun findByTaggedName(
         seriesTitle: String,
         libraryId: UUID,
     ): SeriesRow? =
         transaction {
-            SeriesTable
-                .selectAll()
-                .where { titledExactly(seriesTitle) and (SeriesTable.library eq libraryId) }
-                .firstOrNull()
-                ?.toSeriesRow()
+            idOfTaggedName(escape(seriesTitle), libraryId)?.let { raw(it, libraryId) }
         }
 
     override fun raw(
@@ -88,9 +93,9 @@ class SeriesRepositoryImpl :
         libraryId: UUID,
     ): SeriesRow =
         transaction {
-            SeriesTable
+            SeriesMetadataView
                 .selectAll()
-                .where { SeriesTable.id eq id and (SeriesTable.library eq libraryId) }
+                .where { SeriesMetadataView.id eq id and (SeriesMetadataView.library eq libraryId) }
                 .firstOrNull()
                 ?.toSeriesRow()
                 ?: throw ErrorResponse.notFound("Series", id)
@@ -103,16 +108,9 @@ class SeriesRepositoryImpl :
         transaction {
             val series = raw(id = id, libraryId = libraryId)
 
-            val books =
-                (SeriesBookTable innerJoin BooksTable)
-                    .selectAll()
-                    .where { SeriesBookTable.series eq id }
-                    .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
-                    .map { it.toBookRow() }
-
             SeriesDetailed.fromModel(
                 series = series.toModel(),
-                books = booksToModels(books),
+                books = booksToModels(resolvedBooks(id)),
             )
         }
 
@@ -124,10 +122,10 @@ class SeriesRepositoryImpl :
     ): List<Series> =
         transaction {
             val rows =
-                SeriesTable
+                SeriesMetadataView
                     .selectAll()
-                    .where { SeriesTable.library eq libraryId }
-                    .orderBy(SeriesTable.displayedTitle.lowerCase() to order)
+                    .where { SeriesMetadataView.library eq libraryId }
+                    .orderBy(SeriesMetadataView.title.lowerCase() to order)
                     .offset(offset)
                     .limit(limit)
                     .map { it.toSeriesRow() }
@@ -140,10 +138,10 @@ class SeriesRepositoryImpl :
     ): List<Series> =
         transaction {
             val rows =
-                SeriesTable
+                SeriesMetadataView
                     .selectAll()
-                    .where { matchesTitle(query) and (SeriesTable.library eq libraryId) }
-                    .orderBy(SeriesTable.displayedTitle.lowerCase() to SortOrder.ASC)
+                    .where { matchesTitle(query) and (SeriesMetadataView.library eq libraryId) }
+                    .orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toSeriesRow() }
             seriesToModels(rows)
@@ -152,10 +150,10 @@ class SeriesRepositoryImpl :
     override fun search(query: String): List<Series> =
         transaction {
             val rows =
-                SeriesTable
+                SeriesMetadataView
                     .selectAll()
                     .where { matchesTitle(query) }
-                    .orderBy(SeriesTable.displayedTitle.lowerCase() to SortOrder.ASC)
+                    .orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toSeriesRow() }
             seriesToModels(rows)
@@ -164,41 +162,17 @@ class SeriesRepositoryImpl :
     override fun getOrCreate(
         seriesName: String,
         libraryId: UUID,
-        authors: List<UUID>,
-    ): SeriesRow =
-        transaction {
-            val series = findByName(seriesName, libraryId)
-            if (series != null) {
-                SeriesAuthorTable.addLinks(SeriesAuthorTable.series, series.id, SeriesAuthorTable.author, authors)
-                series
-            } else {
-                create(seriesName, libraryId, authors)
-            }
-        }
+    ): SeriesRow = transaction { findByTaggedName(seriesName, libraryId) ?: create(seriesName, libraryId) }
 
     override fun create(
         seriesName: String,
         libraryId: UUID,
-        authors: List<UUID>,
     ): SeriesRow =
         transaction {
             log.info { "Created series: $seriesName" }
-            val row =
-                SeriesRow(
-                    id = UUID.randomUUID(),
-                    title = seriesName,
-                    displayTitle = null,
-                    totalBooks = null,
-                    primaryWorks = null,
-                    description = null,
-                    provider = null,
-                    providerID = null,
-                    coverID = null,
-                    library = libraryRepository.raw(libraryId).id,
-                )
-            SeriesTable.insert(row)
-            SeriesAuthorTable.addLinks(SeriesAuthorTable.series, row.id, SeriesAuthorTable.author, authors)
-            row
+            val id = SeriesTable.create(libraryRepository.raw(libraryId).id)
+            SeriesFileMetadataTable.write(SeriesMetadataRow(series = id, title = seriesName))
+            raw(id, libraryId)
         }
 
     override fun sorting(
@@ -208,13 +182,13 @@ class SeriesRepositoryImpl :
         offset: Long,
     ): List<UUID> =
         transaction {
-            SeriesTable
+            SeriesMetadataView
                 .selectAll()
-                .where { SeriesTable.library eq libraryId }
-                .orderBy(SeriesTable.displayedTitle.lowerCase() to order)
+                .where { SeriesMetadataView.library eq libraryId }
+                .orderBy(SeriesMetadataView.title.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
-                .map { it[SeriesTable.id].value }
+                .map { it[SeriesMetadataView.id] }
         }
 
     override fun position(
@@ -223,17 +197,17 @@ class SeriesRepositoryImpl :
         order: SortOrder,
     ): Long =
         transaction {
-            val title = raw(id, libraryId).displayedTitle.lowercase()
-            SeriesTable
+            val title = raw(id, libraryId).title.lowercase()
+            SeriesMetadataView
                 .selectAll()
                 .where {
                     val precedes =
                         if (order == SortOrder.ASC) {
-                            SeriesTable.displayedTitle.lowerCase() less title
+                            SeriesMetadataView.title.lowerCase() less title
                         } else {
-                            SeriesTable.displayedTitle.lowerCase() greater title
+                            SeriesMetadataView.title.lowerCase() greater title
                         }
-                    precedes and (SeriesTable.library eq libraryId)
+                    precedes and (SeriesMetadataView.library eq libraryId)
                 }.count()
         }
 
@@ -245,31 +219,53 @@ class SeriesRepositoryImpl :
         val currentCover = raw(id, libraryId).coverID
         val newCover = imageDownloader.download(partial.cover?.takeUnless { it == currentCover?.toString() })
         return transaction {
-            val series = raw(id, libraryId)
-            val updated =
-                series.copy(
-                    displayTitle = partial.title ?: series.displayTitle,
-                    provider = partial.provider ?: series.provider,
-                    providerID = partial.providerID ?: series.providerID,
-                    totalBooks = partial.totalBooks ?: series.totalBooks,
-                    primaryWorks = partial.primaryWorks ?: series.primaryWorks,
-                    coverID = getOrCreateImage(newCover, currentImageID = series.coverID),
-                    description = partial.description ?: series.description,
-                )
-            SeriesTable.update(updated)
+            val user = SeriesUserMetadataTable.layer(id)
+            SeriesUserMetadataTable.write(
+                user.copy(
+                    title = partial.title ?: user.title,
+                    provider = partial.provider ?: user.provider,
+                    providerID = partial.providerID ?: user.providerID,
+                    totalBooks = partial.totalBooks ?: user.totalBooks,
+                    primaryWorks = partial.primaryWorks ?: user.primaryWorks,
+                    coverID = getOrCreateImage(newCover, currentImageID = user.coverID),
+                    description = partial.description ?: user.description,
+                ),
+            )
 
-            if (partial.authors != null) {
-                val authorIds = partial.authors.map { authorRepository.raw(it, libraryId).id }
-                SeriesAuthorTable.replaceLinks(SeriesAuthorTable.series, id, SeriesAuthorTable.author, authorIds)
-            }
             if (partial.books != null) {
-                val bookIds = partial.books.map { bookRepository.raw(it, libraryId).id }
-                SeriesBookTable.replaceLinks(SeriesBookTable.series, id, SeriesBookTable.book, bookIds)
+                setBooks(id, partial.books.map { bookRepository.raw(it, libraryId).id }.toSet())
             }
 
-            updated.toModel()
+            raw(id, libraryId).toModel()
         }
     }
+
+    context(_: Transaction)
+    private fun setBooks(
+        seriesId: UUID,
+        wanted: Set<UUID>,
+    ) {
+        // Every layer counts here, not just the winning one: dropping a book from the series has to write a
+        // user layer for a book whose file tags still name it, or the next scan puts it straight back.
+        val affected = (bookIdsLinkedToSeries(seriesId) + wanted).distinct()
+        // Read the current membership before writing, so each book keeps the series it already resolved to
+        val resolved = bookSeries(affected)
+        affected.forEach { bookId ->
+            val current = resolved[bookId].orEmpty().map { it.id }.toSet()
+            val next = if (bookId in wanted) current + seriesId else current - seriesId
+            replaceBookSeries(bookId, MetadataLayer.USER, next.associateWith { null })
+            BookUserMetadataTable.write(BookUserMetadataTable.layer(bookId).copy(seriesSet = true))
+        }
+    }
+
+    context(_: Transaction)
+    private fun resolvedBooks(seriesId: UUID): List<BookRow> =
+        BookMetadataView
+            .join(BookSeriesView, JoinType.INNER, BookMetadataView.id, BookSeriesView.book)
+            .selectAll()
+            .where { BookSeriesView.series eq seriesId }
+            .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
+            .map { it.toBookRow() }
 
     override fun autoMatch(
         id: UUID,
@@ -281,7 +277,7 @@ class SeriesRepositoryImpl :
                 val library = libraryRepository.raw(libraryId)
                 AutoMatchQuery(
                     metadataAgents.forLibrary(library),
-                    series.displayedTitle,
+                    series.title,
                     library.language,
                     seriesAuthorNames(id).joinToString(", "),
                 )
@@ -292,28 +288,32 @@ class SeriesRepositoryImpl :
                 metadataWrapper.getSeriesByName(title, region, authorName).firstOrNull()
             } ?: return transaction { raw(id, libraryId).toModel() }
 
-        return modify(
-            id,
-            libraryId,
-            SeriesUpdate(
-                title = seriesMetadata.title,
-                authors = null,
-                books = null,
-                provider = seriesMetadata.id.provider,
-                providerID = seriesMetadata.id.itemID,
-                totalBooks = seriesMetadata.totalBooks,
-                primaryWorks = seriesMetadata.primaryWorks,
-                cover = seriesMetadata.coverURL,
-                description = seriesMetadata.description,
-            ),
-        )
+        val newCover = imageDownloader.download(seriesMetadata.coverURL)
+        return transaction {
+            val agent = SeriesAgentMetadataTable.layer(id)
+            SeriesAgentMetadataTable.write(
+                agent.copy(
+                    title = seriesMetadata.title ?: agent.title,
+                    provider = seriesMetadata.id.provider,
+                    providerID = seriesMetadata.id.itemID,
+                    totalBooks = seriesMetadata.totalBooks ?: agent.totalBooks,
+                    primaryWorks = seriesMetadata.primaryWorks ?: agent.primaryWorks,
+                    description = seriesMetadata.description ?: agent.description,
+                    coverID = getOrCreateImage(newCover, currentImageID = agent.coverID),
+                ),
+            )
+            raw(id, libraryId).toModel()
+        }
     }
 
     private fun seriesAuthorNames(seriesId: UUID): List<String> =
-        (SeriesAuthorTable innerJoin AuthorTable)
-            .select(AuthorTable.name, AuthorTable.displayName)
-            .where { SeriesAuthorTable.series eq seriesId }
-            .map { it[AuthorTable.displayName] ?: it[AuthorTable.name] }
+        BookSeriesView
+            .join(BookAuthorView, JoinType.INNER, BookSeriesView.book, BookAuthorView.book)
+            .join(AuthorMetadataView, JoinType.INNER, BookAuthorView.author, AuthorMetadataView.id)
+            .select(AuthorMetadataView.name)
+            .where { BookSeriesView.series eq seriesId }
+            .map { it[AuthorMetadataView.name] }
+            .distinct()
 
     private data class AutoMatchQuery(
         val metadataWrapper: MetadataAgent,
@@ -328,10 +328,27 @@ class SeriesRepositoryImpl :
         }
 }
 
-// Same split as authors: title keeps tracking the files, displayTitle holds a rename, both stay matchable.
-private fun titledExactly(title: String): Op<Boolean> = eitherTitle(escape(title))
+context(_: Transaction)
+private fun idOfTaggedName(
+    pattern: String,
+    libraryId: UUID,
+): UUID? =
+    idInLayer(SeriesFileMetadataTable, pattern, libraryId)
+        ?: idInLayer(SeriesUserMetadataTable, pattern, libraryId)
+        ?: idInLayer(SeriesAgentMetadataTable, pattern, libraryId)
 
-private fun matchesTitle(query: String): Op<Boolean> = eitherTitle("%${escape(query)}%")
+context(_: Transaction)
+private fun idInLayer(
+    table: SeriesMetadata,
+    pattern: String,
+    libraryId: UUID,
+): UUID? =
+    (SeriesTable innerJoin table)
+        .select(SeriesTable.id)
+        .where { (table.title ilike pattern) and (SeriesTable.library eq libraryId) }
+        .firstOrNull()
+        ?.get(SeriesTable.id)
+        ?.value
 
-private fun eitherTitle(pattern: String): Op<Boolean> =
-    (SeriesTable.title ilike pattern) or (SeriesTable.displayTitle ilike pattern)
+private fun matchesTitle(query: String): Op<Boolean> =
+    SeriesMetadataView.title ilike "%${escape(query)}%"

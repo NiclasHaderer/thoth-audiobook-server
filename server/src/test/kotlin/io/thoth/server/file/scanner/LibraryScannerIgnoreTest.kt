@@ -5,6 +5,7 @@ import io.thoth.server.ThothTest
 import io.thoth.server.common.extensions.canonical
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.newLibrary
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -58,7 +59,7 @@ class LibraryScannerIgnoreTest : ThothTest() {
 
     private fun scan() = pipeline.scanLibrary(libId)
 
-    private fun titles() = transaction { BooksTable.selectAll().map { it[BooksTable.title] }.sorted() }
+    private fun titles() = transaction { BookMetadataView.selectAll().map { it[BookMetadataView.title] }.sorted() }
 
     private fun counts() =
         transaction {

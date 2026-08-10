@@ -10,25 +10,33 @@ import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
-import io.thoth.server.database.tables.AuthorBookTable
-import io.thoth.server.database.tables.AuthorRow
+import io.thoth.server.database.tables.AuthorAgentMetadataTable
+import io.thoth.server.database.tables.AuthorFileMetadataTable
+import io.thoth.server.database.tables.AuthorMetadata
+import io.thoth.server.database.tables.AuthorMetadataRow
+import io.thoth.server.database.views.AuthorRow
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.SeriesAuthorTable
-import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.booksToModels
-import io.thoth.server.database.tables.insert
-import io.thoth.server.database.tables.seriesToModels
-import io.thoth.server.database.tables.toAuthorRow
-import io.thoth.server.database.tables.toBookRow
-import io.thoth.server.database.tables.toSeriesRow
-import io.thoth.server.database.tables.update
+import io.thoth.server.database.tables.AuthorUserMetadataTable
+import io.thoth.server.database.views.booksToModels
+import io.thoth.server.database.tables.create
+import io.thoth.server.database.tables.layer
+import io.thoth.server.database.views.seriesToModels
+import io.thoth.server.database.views.toAuthorRow
+import io.thoth.server.database.views.toBookRow
+import io.thoth.server.database.views.toSeriesRow
+import io.thoth.server.database.tables.write
+import io.thoth.server.database.views.AuthorMetadataView
+import io.thoth.server.database.views.BookAuthorView
+import io.thoth.server.database.views.BookSeriesView
+import io.thoth.server.database.views.BookMetadataView
+import io.thoth.server.database.views.SeriesMetadataView
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -36,7 +44,7 @@ import org.koin.core.component.inject
 import java.util.UUID
 
 interface AuthorRepository : Repository<AuthorRow, Author, AuthorDetailed, AuthorUpdate> {
-    fun findByName(
+    fun findByTaggedName(
         authorName: String,
         libraryId: UUID,
     ): AuthorRow?
@@ -59,16 +67,12 @@ class AuthorServiceImpl :
     val libraryRepository by inject<LibraryRepository>()
     private val imageDownloader by inject<ImageDownloader>()
 
-    override fun findByName(
+    override fun findByTaggedName(
         authorName: String,
         libraryId: UUID,
     ): AuthorRow? =
         transaction {
-            AuthorTable
-                .selectAll()
-                .where { namedExactly(authorName) and (AuthorTable.library eq libraryId) }
-                .firstOrNull()
-                ?.toAuthorRow()
+            idOfTaggedName(escape(authorName), libraryId)?.let { raw(it, libraryId) }
         }
 
     override fun raw(
@@ -76,9 +80,9 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): AuthorRow =
         transaction {
-            AuthorTable
+            AuthorMetadataView
                 .selectAll()
-                .where { AuthorTable.id eq id and (AuthorTable.library eq libraryId) }
+                .where { AuthorMetadataView.id eq id and (AuthorMetadataView.library eq libraryId) }
                 .firstOrNull()
                 ?.toAuthorRow()
                 ?: throw ErrorResponse.notFound("Author", id)
@@ -89,20 +93,20 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): List<Author> =
         transaction {
-            AuthorTable
+            AuthorMetadataView
                 .selectAll()
-                .where { matchesName(query) and (AuthorTable.library eq libraryId) }
-                .orderBy(AuthorTable.displayedName.lowerCase() to SortOrder.ASC)
+                .where { matchesName(query) and (AuthorMetadataView.library eq libraryId) }
+                .orderBy(AuthorMetadataView.name.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toAuthorRow().toModel() }
         }
 
     override fun search(query: String): List<Author> =
         transaction {
-            AuthorTable
+            AuthorMetadataView
                 .selectAll()
                 .where { matchesName(query) }
-                .orderBy(AuthorTable.displayedName.lowerCase() to SortOrder.ASC)
+                .orderBy(AuthorMetadataView.name.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toAuthorRow().toModel() }
         }
@@ -110,30 +114,16 @@ class AuthorServiceImpl :
     override fun getOrCreate(
         authorName: String,
         libraryId: UUID,
-    ): AuthorRow = transaction { findByName(authorName, libraryId) ?: create(authorName, libraryId) }
+    ): AuthorRow = transaction { findByTaggedName(authorName, libraryId) ?: create(authorName, libraryId) }
 
     override fun create(
         authorName: String,
         libraryId: UUID,
     ): AuthorRow =
         transaction {
-            val row =
-                AuthorRow(
-                    id = UUID.randomUUID(),
-                    name = authorName,
-                    displayName = null,
-                    biography = null,
-                    website = null,
-                    birthDate = null,
-                    bornIn = null,
-                    deathDate = null,
-                    provider = null,
-                    providerID = null,
-                    imageID = null,
-                    library = libraryId,
-                )
-            AuthorTable.insert(row)
-            row
+            val id = AuthorTable.create(libraryRepository.raw(libraryId).id)
+            AuthorFileMetadataTable.write(AuthorMetadataRow(author = id, name = authorName))
+            raw(id, libraryId)
         }
 
     override fun autoMatch(
@@ -143,27 +133,27 @@ class AuthorServiceImpl :
         val (metadataAgent, authorName, region) =
             transaction {
                 val library = libraryRepository.raw(libraryId)
-                AutoMatchQuery(metadataAgents.forLibrary(library), raw(id, libraryId).displayedName, library.language)
+                AutoMatchQuery(metadataAgents.forLibrary(library), raw(id, libraryId).name, library.language)
             }
         val result = runBlocking { metadataAgent.getAuthorByName(authorName, region).firstOrNull() }
         val newImage = imageDownloader.download(result?.imageURL)
 
         return transaction {
-            val author = raw(id, libraryId)
-            val updated =
-                author.copy(
-                    displayName = result?.name ?: author.displayName,
-                    provider = result?.id?.provider ?: author.provider,
-                    providerID = result?.id?.itemID ?: author.providerID,
-                    biography = result?.biography ?: author.biography,
-                    website = result?.website ?: author.website,
-                    bornIn = result?.bornIn ?: author.bornIn,
-                    birthDate = result?.birthDate ?: author.birthDate,
-                    deathDate = result?.deathDate ?: author.deathDate,
-                    imageID = getOrCreateImage(newImage, currentImageID = author.imageID),
-                )
-            AuthorTable.update(updated)
-            updated.toModel()
+            val agent = AuthorAgentMetadataTable.layer(id)
+            AuthorAgentMetadataTable.write(
+                agent.copy(
+                    name = result?.name ?: agent.name,
+                    provider = result?.id?.provider ?: agent.provider,
+                    providerID = result?.id?.itemID ?: agent.providerID,
+                    biography = result?.biography ?: agent.biography,
+                    website = result?.website ?: agent.website,
+                    bornIn = result?.bornIn ?: agent.bornIn,
+                    birthDate = result?.birthDate ?: agent.birthDate,
+                    deathDate = result?.deathDate ?: agent.deathDate,
+                    imageID = getOrCreateImage(newImage, currentImageID = agent.imageID),
+                ),
+            )
+            raw(id, libraryId).toModel()
         }
     }
 
@@ -180,10 +170,10 @@ class AuthorServiceImpl :
         offset: Long,
     ): List<Author> =
         transaction {
-            AuthorTable
+            AuthorMetadataView
                 .selectAll()
-                .where { AuthorTable.library eq libraryId }
-                .orderBy(AuthorTable.displayedName.lowerCase() to order)
+                .where { AuthorMetadataView.library eq libraryId }
+                .orderBy(AuthorMetadataView.name.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.toAuthorRow().toModel() }
@@ -197,16 +187,23 @@ class AuthorServiceImpl :
             val author = raw(id, libraryId)
 
             val books =
-                (AuthorBookTable innerJoin BooksTable)
+                BookMetadataView
+                    .join(BookAuthorView, JoinType.INNER, BookMetadataView.id, BookAuthorView.book)
                     .selectAll()
-                    .where { AuthorBookTable.authors eq id }
-                    .orderBy(BooksTable.displayedTitle.lowerCase() to SortOrder.ASC)
+                    .where { BookAuthorView.author eq id }
+                    .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
                     .map { it.toBookRow() }
+            val seriesIds =
+                BookAuthorView
+                    .join(BookSeriesView, JoinType.INNER, BookAuthorView.book, BookSeriesView.book)
+                    .select(BookSeriesView.series)
+                    .where { BookAuthorView.author eq id }
+                    .mapTo(mutableSetOf()) { it[BookSeriesView.series] }
             val series =
-                (SeriesAuthorTable innerJoin SeriesTable)
+                SeriesMetadataView
                     .selectAll()
-                    .where { SeriesAuthorTable.author eq id }
-                    .orderBy(SeriesTable.displayedTitle.lowerCase() to SortOrder.ASC)
+                    .where { SeriesMetadataView.id inList seriesIds }
+                    .orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
                     .map { it.toSeriesRow() }
 
             AuthorDetailed.fromModel(
@@ -223,13 +220,13 @@ class AuthorServiceImpl :
         offset: Long,
     ): List<UUID> =
         transaction {
-            AuthorTable
+            AuthorMetadataView
                 .selectAll()
-                .where { AuthorTable.library eq libraryId }
-                .orderBy(AuthorTable.displayedName.lowerCase() to order)
+                .where { AuthorMetadataView.library eq libraryId }
+                .orderBy(AuthorMetadataView.name.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
-                .map { it[AuthorTable.id].value }
+                .map { it[AuthorMetadataView.id] }
         }
 
     override fun position(
@@ -238,17 +235,17 @@ class AuthorServiceImpl :
         order: SortOrder,
     ): Long =
         transaction {
-            val name = raw(id, libraryId).displayedName.lowercase()
-            AuthorTable
+            val name = raw(id, libraryId).name.lowercase()
+            AuthorMetadataView
                 .selectAll()
                 .where {
                     val precedes =
                         if (order == SortOrder.ASC) {
-                            AuthorTable.displayedName.lowerCase() less name
+                            AuthorMetadataView.name.lowerCase() less name
                         } else {
-                            AuthorTable.displayedName.lowerCase() greater name
+                            AuthorMetadataView.name.lowerCase() greater name
                         }
-                    precedes and (AuthorTable.library eq libraryId)
+                    precedes and (AuthorMetadataView.library eq libraryId)
                 }.count()
         }
 
@@ -260,21 +257,21 @@ class AuthorServiceImpl :
         val currentImage = raw(id, libraryId).imageID
         val newImage = imageDownloader.download(partial.image?.takeUnless { it == currentImage?.toString() })
         return transaction {
-            val author = raw(id, libraryId)
-            val updated =
-                author.copy(
-                    displayName = partial.name ?: author.displayName,
-                    provider = partial.provider ?: author.provider,
-                    providerID = partial.providerID ?: author.providerID,
-                    biography = partial.biography ?: author.biography,
-                    website = partial.website ?: author.website,
-                    bornIn = partial.bornIn ?: author.bornIn,
-                    birthDate = partial.birthDate ?: author.birthDate,
-                    deathDate = partial.deathDate ?: author.deathDate,
-                    imageID = getOrCreateImage(newImage, currentImageID = author.imageID),
-                )
-            AuthorTable.update(updated)
-            updated.toModel()
+            val user = AuthorUserMetadataTable.layer(id)
+            AuthorUserMetadataTable.write(
+                user.copy(
+                    name = partial.name ?: user.name,
+                    provider = partial.provider ?: user.provider,
+                    providerID = partial.providerID ?: user.providerID,
+                    biography = partial.biography ?: user.biography,
+                    website = partial.website ?: user.website,
+                    bornIn = partial.bornIn ?: user.bornIn,
+                    birthDate = partial.birthDate ?: user.birthDate,
+                    deathDate = partial.deathDate ?: user.deathDate,
+                    imageID = getOrCreateImage(newImage, currentImageID = user.imageID),
+                ),
+            )
+            raw(id, libraryId).toModel()
         }
     }
 
@@ -282,11 +279,27 @@ class AuthorServiceImpl :
         transaction { AuthorTable.selectAll().where { AuthorTable.library eq libraryId }.count() }
 }
 
-// A rename only moves displayName, so the files keep matching on name. A later scan whose tags carry the new
-// spelling has to land on the same author too, which is why both columns are compared.
-private fun namedExactly(name: String): Op<Boolean> = eitherName(escape(name))
+context(_: Transaction)
+private fun idOfTaggedName(
+    pattern: String,
+    libraryId: UUID,
+): UUID? =
+    idInLayer(AuthorFileMetadataTable, pattern, libraryId)
+        ?: idInLayer(AuthorUserMetadataTable, pattern, libraryId)
+        ?: idInLayer(AuthorAgentMetadataTable, pattern, libraryId)
 
-private fun matchesName(query: String): Op<Boolean> = eitherName("%${escape(query)}%")
+context(_: Transaction)
+private fun idInLayer(
+    table: AuthorMetadata,
+    pattern: String,
+    libraryId: UUID,
+): UUID? =
+    (AuthorTable innerJoin table)
+        .select(AuthorTable.id)
+        .where { (table.name ilike pattern) and (AuthorTable.library eq libraryId) }
+        .firstOrNull()
+        ?.get(AuthorTable.id)
+        ?.value
 
-private fun eitherName(pattern: String): Op<Boolean> =
-    (AuthorTable.name ilike pattern) or (AuthorTable.displayName ilike pattern)
+private fun matchesName(query: String): Op<Boolean> =
+    AuthorMetadataView.name ilike "%${escape(query)}%"

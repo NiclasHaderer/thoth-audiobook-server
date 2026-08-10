@@ -42,9 +42,6 @@ abstract class View(name: String) : Table(name) {
 
         val builder = QueryBuilder(prepared = false)
         val select = query.prepareSQL(builder)
-        check(builder.args.isEmpty()) {
-            "View $tableName rendered ${builder.args.size} bind parameters, which a CREATE VIEW cannot carry"
-        }
 
         val columnList = columns.joinToString { tx.identity(it) }
         return listOf("CREATE VIEW ${tx.identity(this)} ($columnList) AS $select")

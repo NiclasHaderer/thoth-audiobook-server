@@ -12,7 +12,7 @@ class SeriesDetailed(
     primaryWorks: Int?,
     coverID: UUID?,
     description: String?,
-    genres: List<NamedId>,
+    genres: List<String>,
     val yearRange: YearRange?,
     val narrators: List<String>,
     val books: List<Book>,

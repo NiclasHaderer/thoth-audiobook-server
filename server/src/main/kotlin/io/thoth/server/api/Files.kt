@@ -10,18 +10,30 @@ import io.thoth.openapi.ktor.responses.BinaryResponse
 import io.thoth.openapi.ktor.responses.FileResponse
 import io.thoth.openapi.ktor.responses.binaryResponse
 import io.thoth.openapi.ktor.responses.fileResponse
+import io.thoth.server.database.tables.AuthorAgentMetadataTable
+import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.AuthorUserMetadataTable
+import io.thoth.server.database.tables.BookAgentMetadataTable
+import io.thoth.server.database.tables.BookFileMetadataTable
+import io.thoth.server.database.tables.BookUserMetadataTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageTable
+import io.thoth.server.database.tables.SeriesAgentMetadataTable
+import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesTable
+import io.thoth.server.database.tables.SeriesUserMetadataTable
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.plugins.auth.assertLibraryPermissions
 import io.thoth.server.plugins.auth.thothPrincipal
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.unionAll
 import java.nio.file.Path
+import java.util.UUID
 import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.name
@@ -55,29 +67,32 @@ fun Routing.imageRouting() {
     get<Api.Files.Images.Id, BinaryResponse> { (id) ->
         val permissions = thothPrincipal().permissions
         transaction {
+            val allowed = permissions.libraries.mapTo(mutableSetOf()) { it.id }
+            val covers =
+                listOf(BookFileMetadataTable, BookAgentMetadataTable, BookUserMetadataTable)
+                    .map { cover(BooksTable, BooksTable.library, it, it.coverID, id, allowed) } +
+                    listOf(SeriesFileMetadataTable, SeriesAgentMetadataTable, SeriesUserMetadataTable)
+                        .map { cover(SeriesTable, SeriesTable.library, it, it.coverID, id, allowed) } +
+                    listOf(AuthorFileMetadataTable, AuthorAgentMetadataTable, AuthorUserMetadataTable)
+                        .map { cover(AuthorTable, AuthorTable.library, it, it.imageID, id, allowed) }
             val image =
-                ImageTable.selectAll().where { ImageTable.id eq id }.firstOrNull()
-                    ?: throw ErrorResponse.notFound("Image", id)
-            if (!permissions.isAdmin) {
-                val allowed = permissions.libraries.mapTo(mutableSetOf()) { it.id }
-                val owningLibraries =
-                    BooksTable
-                        .select(BooksTable.library)
-                        .where { BooksTable.coverID eq id }
-                        .map { it[BooksTable.library].value } +
-                        AuthorTable
-                            .select(AuthorTable.library)
-                            .where { AuthorTable.imageID eq id }
-                            .map { it[AuthorTable.library].value } +
-                        SeriesTable
-                            .select(SeriesTable.library)
-                            .where { SeriesTable.coverID eq id }
-                            .map { it[SeriesTable.library].value }
-                if (owningLibraries.none { it in allowed }) {
-                    throw ErrorResponse.forbidden("access", "Image $id")
-                }
-            }
+                covers
+                    .reduce { acc: AbstractQuery<*>, query -> acc.unionAll(query) }
+                    .limit(1)
+                    .firstOrNull() ?: throw ErrorResponse.notFound("Image", id)
             binaryResponse(image[ImageTable.blob].bytes)
         }
     }
 }
+
+private fun cover(
+    core: Table,
+    library: Column<EntityID<UUID>>,
+    layer: Table,
+    image: Column<EntityID<UUID>?>,
+    imageId: UUID,
+    allowed: Set<UUID>,
+): Query =
+    (core innerJoin layer innerJoin ImageTable)
+        .select(ImageTable.blob)
+        .where { (image eq imageId) and (library inList allowed) }

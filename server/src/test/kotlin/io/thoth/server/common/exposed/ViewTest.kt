@@ -1,10 +1,14 @@
 package io.thoth.server.common.exposed
 
 import io.thoth.server.ThothTest
+import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.AuthorUserMetadataTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.newAuthor
 import io.thoth.server.newLibrary
+import org.jetbrains.exposed.v1.core.Coalesce
+import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.eq
@@ -19,27 +23,30 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-private object AuthorDisplayView : View("AuthorDisplay") {
+private object ResolvedNameView : View("ResolvedName") {
     val id = javaUUID("id")
-    val displayedName = text("displayedName")
+    val resolvedName = text("resolvedName")
     val library = javaUUID("library")
 
     override fun body() =
-        AuthorTable.select(
-            AuthorTable.id,
-            AuthorTable.displayedName.alias("displayedName"),
-            AuthorTable.library,
-        )
+        AuthorTable
+            .join(AuthorFileMetadataTable, JoinType.LEFT, AuthorTable.id, AuthorFileMetadataTable.id)
+            .join(AuthorUserMetadataTable, JoinType.LEFT, AuthorTable.id, AuthorUserMetadataTable.id)
+            .select(
+                AuthorTable.id,
+                Coalesce(AuthorUserMetadataTable.name, AuthorFileMetadataTable.name).alias("resolvedName"),
+                AuthorTable.library,
+            )
 }
 
 private object LowercaseAuthorView : View("LowercaseAuthor") {
     val id = javaUUID("id")
-    val displayedName = text("displayedName")
+    val resolvedName = text("resolvedName")
 
     override fun body() =
-        AuthorDisplayView.select(
-            AuthorDisplayView.id,
-            AuthorDisplayView.displayedName.lowerCase().alias("displayedName"),
+        ResolvedNameView.select(
+            ResolvedNameView.id,
+            ResolvedNameView.resolvedName.lowerCase().alias("resolvedName"),
         )
 }
 
@@ -48,8 +55,8 @@ private object EnglishAuthorView : View("EnglishAuthor") {
     val name = text("name")
 
     override fun body() =
-        (AuthorTable innerJoin LibrariesTable)
-            .select(AuthorTable.id, AuthorTable.name)
+        (AuthorTable innerJoin LibrariesTable innerJoin AuthorFileMetadataTable)
+            .select(AuthorTable.id, AuthorFileMetadataTable.name)
             .where { LibrariesTable.language eq "en" }
 }
 
@@ -65,14 +72,22 @@ private object SwappedCompatibleView : View("SwappedCompatible") {
     val website = text("website")
     val name = text("name")
 
-    override fun body() = AuthorTable.select(AuthorTable.name, AuthorTable.website)
+    override fun body() =
+        AuthorFileMetadataTable.select(AuthorFileMetadataTable.name, AuthorFileMetadataTable.website)
 }
 
 private object UnaliasedView : View("Unaliased") {
     val id = javaUUID("id")
-    val displayedName = text("displayedName")
+    val resolvedName = text("resolvedName")
 
-    override fun body() = AuthorTable.select(AuthorTable.id, AuthorTable.displayedName)
+    override fun body() =
+        AuthorTable
+            .join(AuthorFileMetadataTable, JoinType.LEFT, AuthorTable.id, AuthorFileMetadataTable.id)
+            .join(AuthorUserMetadataTable, JoinType.LEFT, AuthorTable.id, AuthorUserMetadataTable.id)
+            .select(
+                AuthorTable.id,
+                Coalesce(AuthorUserMetadataTable.name, AuthorFileMetadataTable.name),
+            )
 }
 
 // Same arity, but a uuid column sits where the body selects text and vice versa
@@ -80,7 +95,8 @@ private object SwappedIncompatibleView : View("SwappedIncompatible") {
     val id = javaUUID("id")
     val name = text("name")
 
-    override fun body() = AuthorTable.select(AuthorTable.name, AuthorTable.id)
+    override fun body() =
+        (AuthorTable innerJoin AuthorFileMetadataTable).select(AuthorFileMetadataTable.name, AuthorTable.id)
 }
 
 class ViewTest : ThothTest() {
@@ -94,16 +110,16 @@ class ViewTest : ThothTest() {
     fun `view resolves a coalesce expression`() {
         createLibrary()
         newAuthor("Plain", libId)
-        newAuthor("Raw", libId, displayName = "Pretty")
-        syncViews(listOf(AuthorDisplayView))
+        newAuthor("Raw", libId, renamedTo = "Pretty")
+        syncViews(listOf(ResolvedNameView))
 
         val names =
             transaction {
-                AuthorDisplayView
+                ResolvedNameView
                     .selectAll()
-                    .where { AuthorDisplayView.library eq libId }
-                    .orderBy(AuthorDisplayView.displayedName to SortOrder.ASC)
-                    .map { it[AuthorDisplayView.displayedName] }
+                    .where { ResolvedNameView.library eq libId }
+                    .orderBy(ResolvedNameView.resolvedName to SortOrder.ASC)
+                    .map { it[ResolvedNameView.resolvedName] }
             }
 
         assertEquals(listOf("Plain", "Pretty"), names)
@@ -126,20 +142,20 @@ class ViewTest : ThothTest() {
     fun `syncing twice leaves a readable view`() {
         createLibrary()
         newAuthor("Plain", libId)
-        syncViews(listOf(AuthorDisplayView))
-        syncViews(listOf(AuthorDisplayView))
+        syncViews(listOf(ResolvedNameView))
+        syncViews(listOf(ResolvedNameView))
 
-        assertEquals(1, transaction { AuthorDisplayView.selectAll().count() })
+        assertEquals(1, transaction { ResolvedNameView.selectAll().count() })
     }
 
     @Test
     fun `a view built on another view is created after it`() {
         createLibrary()
-        newAuthor("Raw", libId, displayName = "Pretty")
+        newAuthor("Raw", libId, renamedTo = "Pretty")
         // Reverse order on purpose: the dependency has to be pulled forward
-        syncViews(listOf(LowercaseAuthorView, AuthorDisplayView))
+        syncViews(listOf(LowercaseAuthorView, ResolvedNameView))
 
-        val names = transaction { LowercaseAuthorView.selectAll().map { it[LowercaseAuthorView.displayedName] } }
+        val names = transaction { LowercaseAuthorView.selectAll().map { it[LowercaseAuthorView.resolvedName] } }
         assertEquals(listOf("pretty"), names)
     }
 
@@ -172,8 +188,8 @@ class ViewTest : ThothTest() {
     fun `an unnamed expression in the body is rejected`() {
         val error = assertFailsWith<IllegalStateException> { syncViews(listOf(UnaliasedView)) }
         assertEquals(
-            "View Unaliased selects an unnamed expression for column 'displayedName'. " +
-                "Add .alias(\"displayedName\") to it",
+            "View Unaliased selects an unnamed expression for column 'resolvedName'. " +
+                "Add .alias(\"resolvedName\") to it",
             error.message,
         )
     }

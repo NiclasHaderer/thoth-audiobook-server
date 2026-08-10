@@ -18,7 +18,7 @@ class BookDetailed(
     narrator: String?,
     isbn: String?,
     coverID: UUID?,
-    genres: List<NamedId>,
+    genres: List<String>,
     val tracks: List<Track>,
 ) : Book(
         id = id,

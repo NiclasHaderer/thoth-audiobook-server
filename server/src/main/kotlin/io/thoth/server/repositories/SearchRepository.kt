@@ -5,19 +5,19 @@ import io.thoth.models.Book
 import io.thoth.models.LibrarySearchResult
 import io.thoth.models.Series
 import io.thoth.server.common.extensions.fuzzy
-import io.thoth.server.database.tables.AuthorBookTable
-import io.thoth.server.database.tables.AuthorRow
-import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BookRow
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.SeriesBookTable
-import io.thoth.server.database.tables.SeriesRow
-import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.booksToModels
-import io.thoth.server.database.tables.seriesToModels
-import io.thoth.server.database.tables.toAuthorRow
-import io.thoth.server.database.tables.toBookRow
-import io.thoth.server.database.tables.toSeriesRow
+import io.thoth.server.database.views.AuthorRow
+import io.thoth.server.database.views.BookRow
+import io.thoth.server.database.views.SeriesRow
+import io.thoth.server.database.views.bookAuthors
+import io.thoth.server.database.views.bookSeries
+import io.thoth.server.database.views.booksToModels
+import io.thoth.server.database.views.seriesToModels
+import io.thoth.server.database.views.toAuthorRow
+import io.thoth.server.database.views.toBookRow
+import io.thoth.server.database.views.toSeriesRow
+import io.thoth.server.database.views.AuthorMetadataView
+import io.thoth.server.database.views.BookMetadataView
+import io.thoth.server.database.views.SeriesMetadataView
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -31,27 +31,29 @@ object SearchRepository {
         limit: Int = 5,
     ): LibrarySearchResult =
         transaction {
-            val books = BooksTable.selectAll().where { BooksTable.library inList libsToSearch }.map { it.toBookRow() }
+            val books =
+                BookMetadataView
+                    .selectAll()
+                    .where { BookMetadataView.library inList libsToSearch }
+                    .map { it.toBookRow() }
             val authors =
-                AuthorTable.selectAll().where { AuthorTable.library inList libsToSearch }.map { it.toAuthorRow() }
+                AuthorMetadataView
+                    .selectAll()
+                    .where { AuthorMetadataView.library inList libsToSearch }
+                    .map { it.toAuthorRow() }
             val series =
-                SeriesTable.selectAll().where { SeriesTable.library inList libsToSearch }.map { it.toSeriesRow() }
+                SeriesMetadataView
+                    .selectAll()
+                    .where { SeriesMetadataView.library inList libsToSearch }
+                    .map { it.toSeriesRow() }
 
-            val bookIds = books.map { it.id }
             val authorsById = authors.associateBy { it.id }
             val seriesById = series.associateBy { it.id }
+            val bookIds = books.map { it.id }
             val authorsByBook =
-                AuthorBookTable
-                    .selectAll()
-                    .where { AuthorBookTable.book inList bookIds }
-                    .groupBy({ it[AuthorBookTable.book].value }) { authorsById[it[AuthorBookTable.authors].value] }
-                    .mapValues { (_, rows) -> rows.filterNotNull() }
+                bookAuthors(bookIds).mapValues { (_, links) -> links.mapNotNull { authorsById[it.id] } }
             val seriesByBook =
-                SeriesBookTable
-                    .selectAll()
-                    .where { SeriesBookTable.book inList bookIds }
-                    .groupBy({ it[SeriesBookTable.book].value }) { seriesById[it[SeriesBookTable.series].value] }
-                    .mapValues { (_, rows) -> rows.filterNotNull() }
+                bookSeries(bookIds).mapValues { (_, links) -> links.mapNotNull { seriesById[it.id] } }
 
             val index = SearchIndex(books, authors, series, authorsByBook, seriesByBook)
             LibrarySearchResult(
@@ -76,16 +78,15 @@ object SearchRepository {
     ): List<Author> {
         val authors =
             index.authors
-                .fuzzy(query) { listOfNotNull(it.name, it.displayName) }
+                .fuzzy(query) { listOf(it.name) }
                 .take(limit)
         val bookAuthors =
             index.books
                 .fuzzy(query) {
                     listOfNotNull(
                         it.title,
-                        it.displayTitle,
                         it.narrator,
-                        index.seriesByBook[it.id]?.joinToString(",") { series -> series.displayedTitle },
+                        index.seriesByBook[it.id]?.joinToString(",") { series -> series.title },
                     )
                 }.take(limit)
                 .flatMap { index.authorsByBook[it.id].orEmpty() }
@@ -100,16 +101,15 @@ object SearchRepository {
     ): List<Series> {
         val series =
             index.series
-                .fuzzy(query) { listOfNotNull(it.title, it.displayTitle) }
+                .fuzzy(query) { listOf(it.title) }
                 .take(limit)
         val bookSeries =
             index.books
                 .fuzzy(query) {
                     listOfNotNull(
                         it.title,
-                        it.displayTitle,
                         it.narrator,
-                        index.authorsByBook[it.id]?.joinToString(",") { author -> author.displayedName },
+                        index.authorsByBook[it.id]?.joinToString(",") { author -> author.name },
                     )
                 }.take(limit)
                 .flatMap { index.seriesByBook[it.id].orEmpty() }
@@ -124,14 +124,14 @@ object SearchRepository {
     ): List<Book> {
         val books =
             index.books
-                .fuzzy(query) { listOfNotNull(it.title, it.displayTitle) }
+                .fuzzy(query) { listOf(it.title) }
                 .take(limit)
         val booksAndOther =
             index.books
                 .fuzzy(query) {
                     listOfNotNull(
-                        index.authorsByBook[it.id]?.joinToString(", ") { author -> author.displayedName },
-                        index.seriesByBook[it.id]?.joinToString(",") { series -> series.displayedTitle },
+                        index.authorsByBook[it.id]?.joinToString(", ") { author -> author.name },
+                        index.seriesByBook[it.id]?.joinToString(",") { series -> series.title },
                         it.narrator,
                     )
                 }.take(limit)
