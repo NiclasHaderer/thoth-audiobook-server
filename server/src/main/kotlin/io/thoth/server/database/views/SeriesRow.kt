@@ -51,6 +51,7 @@ fun seriesToModels(
     return rows.map { row ->
         Series(
             id = row.id,
+            libraryId = row.library,
             title = row.title,
             description = row.description,
             providerID = row.providerID,

@@ -4,6 +4,7 @@ import java.util.UUID
 
 open class Series(
     val id: UUID,
+    val libraryId: UUID,
     val authors: List<NamedId>,
     val title: String,
     val provider: String?,

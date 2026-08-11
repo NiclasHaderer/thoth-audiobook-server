@@ -5,6 +5,7 @@ import java.util.UUID
 
 class BookDetailed(
     id: UUID,
+    libraryId: UUID,
     authors: List<NamedId>,
     series: List<TitledId>,
     title: String,
@@ -22,6 +23,7 @@ class BookDetailed(
     val tracks: List<Track>,
 ) : Book(
         id = id,
+        libraryId = libraryId,
         title = title,
         releaseDate = releaseDate,
         language = language,
@@ -43,6 +45,7 @@ class BookDetailed(
             tracks: List<Track>,
         ) = BookDetailed(
             id = book.id,
+            libraryId = book.libraryId,
             title = book.title,
             releaseDate = book.releaseDate,
             language = book.language,

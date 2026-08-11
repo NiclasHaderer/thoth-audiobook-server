@@ -21,6 +21,7 @@ data class AuthorRow(
     fun toModel(): Author =
         Author(
             id = id,
+            libraryId = library,
             name = name,
             biography = biography,
             provider = provider,

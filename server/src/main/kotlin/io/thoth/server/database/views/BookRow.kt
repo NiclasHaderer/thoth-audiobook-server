@@ -66,6 +66,7 @@ fun booksToModels(
     return rows.map { row ->
         Book(
             id = row.id,
+            libraryId = row.library,
             title = row.title,
             description = row.description,
             providerID = row.providerID,

@@ -4,6 +4,7 @@ import java.util.UUID
 
 class SeriesDetailed(
     id: UUID,
+    libraryId: UUID,
     authors: List<NamedId>,
     title: String,
     provider: String?,
@@ -18,6 +19,7 @@ class SeriesDetailed(
     val books: List<Book>,
 ) : Series(
         id = id,
+        libraryId = libraryId,
         title = title,
         authors = authors,
         provider = provider,
@@ -37,6 +39,7 @@ class SeriesDetailed(
 
             return SeriesDetailed(
                 id = series.id,
+                libraryId = series.libraryId,
                 title = series.title,
                 totalBooks = series.totalBooks,
                 yearRange = years.minOrNull()?.let { YearRange(start = it.year, end = years.max().year) },

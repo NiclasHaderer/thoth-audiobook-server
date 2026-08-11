@@ -5,6 +5,7 @@ import java.util.UUID
 
 open class Author(
     val id: UUID,
+    val libraryId: UUID,
     val name: String,
     val provider: String?,
     val providerID: String?,

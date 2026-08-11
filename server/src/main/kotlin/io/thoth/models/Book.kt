@@ -5,6 +5,7 @@ import java.util.UUID
 
 open class Book(
     val id: UUID,
+    val libraryId: UUID,
     val authors: List<NamedId>,
     val series: List<TitledId>,
     val title: String,

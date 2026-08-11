@@ -5,6 +5,7 @@ import java.util.UUID
 
 class AuthorDetailed(
     id: UUID,
+    libraryId: UUID,
     name: String,
     provider: String?,
     providerID: String?,
@@ -18,6 +19,7 @@ class AuthorDetailed(
     val series: List<Series>,
 ) : Author(
         id = id,
+        libraryId = libraryId,
         name = name,
         provider = provider,
         providerID = providerID,
@@ -35,6 +37,7 @@ class AuthorDetailed(
             series: List<Series>,
         ) = AuthorDetailed(
             id = author.id,
+            libraryId = author.libraryId,
             name = author.name,
             biography = author.biography,
             imageID = author.imageID,
