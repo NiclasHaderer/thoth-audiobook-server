@@ -85,9 +85,8 @@ object SearchRepository {
                 .fuzzy(query) {
                     listOfNotNull(
                         it.title,
-                        it.narrator,
                         index.seriesByBook[it.id]?.joinToString(",") { series -> series.title },
-                    )
+                    ) + it.narrators
                 }.take(limit)
                 .flatMap { index.authorsByBook[it.id].orEmpty() }
         return (authors + bookAuthors).distinctBy { it.id }.take(limit).map { it.toModel() }
@@ -108,9 +107,8 @@ object SearchRepository {
                 .fuzzy(query) {
                     listOfNotNull(
                         it.title,
-                        it.narrator,
                         index.authorsByBook[it.id]?.joinToString(",") { author -> author.name },
-                    )
+                    ) + it.narrators
                 }.take(limit)
                 .flatMap { index.seriesByBook[it.id].orEmpty() }
         return seriesToModels((series + bookSeries).distinctBy { it.id }.take(limit))
@@ -132,8 +130,7 @@ object SearchRepository {
                     listOfNotNull(
                         index.authorsByBook[it.id]?.joinToString(", ") { author -> author.name },
                         index.seriesByBook[it.id]?.joinToString(",") { series -> series.title },
-                        it.narrator,
-                    )
+                    ) + it.narrators
                 }.take(limit)
         return booksToModels((books + booksAndOther).distinctBy { it.id }.take(limit))
     }

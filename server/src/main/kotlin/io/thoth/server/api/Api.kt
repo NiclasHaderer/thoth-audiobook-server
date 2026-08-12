@@ -368,6 +368,68 @@ class Api {
                 }
             }
 
+            @Resource("narrators")
+            @Tagged("Narrators")
+            data class Narrators(
+                private val parent: Id,
+            ) {
+                val libraryId
+                    get() = parent.libraryId
+
+                @Summary("List narrators", method = "GET")
+                @Resource("")
+                data class All(
+                    val limit: Int = 20,
+                    val offset: Long = 0,
+                    val order: Order = Order.ASC,
+                    private val parent: Narrators,
+                ) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+
+                @Summary("Get narrator", method = "GET")
+                @Resource("{name}")
+                data class Name(
+                    val name: String,
+                    private val parent: Narrators,
+                ) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+            }
+
+            @Resource("genres")
+            @Tagged("Genres")
+            data class Genres(
+                private val parent: Id,
+            ) {
+                val libraryId
+                    get() = parent.libraryId
+
+                @Summary("List genres", method = "GET")
+                @Resource("")
+                data class All(
+                    val limit: Int = 20,
+                    val offset: Long = 0,
+                    val order: Order = Order.ASC,
+                    private val parent: Genres,
+                ) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+
+                @Summary("Get genre", method = "GET")
+                @Resource("{name}")
+                data class Name(
+                    val name: String,
+                    private val parent: Genres,
+                ) {
+                    val libraryId
+                        get() = parent.libraryId
+                }
+            }
+
             @Resource("series")
             @Tagged("Series")
             data class Series(

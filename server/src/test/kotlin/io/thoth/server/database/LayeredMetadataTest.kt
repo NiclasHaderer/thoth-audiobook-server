@@ -59,7 +59,7 @@ class LayeredMetadataTest : ThothTest() {
     private fun scan(
         authors: List<String> = listOf("An Author"),
         description: String? = null,
-        narrator: String? = null,
+        narrators: List<String> = emptyList(),
         series: String? = null,
         book: String = "A Book",
     ) = AudioFileAnalysisResultImpl(
@@ -71,22 +71,22 @@ class LayeredMetadataTest : ThothTest() {
         path = "/media/books/$book/01.mp3",
         lastModified = 0,
         description = description,
-        narrator = narrator,
+        narrators = narrators,
     )
 
     private fun bookId() = transaction { bookRepository.findByTaggedName("A Book", emptyList(), libId)!!.id }
 
     @Test
     fun `a rescan keeps an edited field but still picks up the retagged ones`() {
-        trackManager.insert(scan(description = "From the tags", narrator = "First"), libId)
+        trackManager.insert(scan(description = "From the tags", narrators = listOf("First")), libId)
         val id = bookId()
 
         bookRepository.modify(id, libId, bookUpdate(description = "Mine"))
-        trackManager.insert(scan(description = "Retagged", narrator = "Second"), libId)
+        trackManager.insert(scan(description = "Retagged", narrators = listOf("Second")), libId)
 
         val book = bookRepository.raw(id, libId)
         assertEquals("Mine", book.description, "a rescan must not overwrite an edit")
-        assertEquals("Second", book.narrator, "a field nobody edited must follow the tags")
+        assertEquals(listOf("Second"), book.narrators, "a field nobody edited must follow the tags")
     }
 
     @Test
@@ -337,7 +337,7 @@ class LayeredMetadataTest : ThothTest() {
         publisher = null,
         language = null,
         description = description,
-        narrator = null,
+        narrators = null,
         isbn = null,
         cover = null,
     )

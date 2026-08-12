@@ -4,7 +4,6 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.LikePattern
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.test.Test
@@ -12,43 +11,21 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * The rendered SQL is asserted rather than executed: the PostgreSQL branch can be checked without a server by
- * declaring the dialect explicitly, which is the only way this project can cover it.
- */
+/** The rendered SQL is asserted rather than executed, since what is being covered is how it is built. */
 class ILikeOpTest {
     private object Sample : Table("sample") {
         val name = varchar("name", 255)
     }
 
-    private fun renderOnPostgres(build: () -> Op<Boolean>) = render(PostgreSQLDialect(), build)
-
-    private fun renderOnSqlite(build: () -> Op<Boolean>) = render(null, build)
-
-    private fun render(
-        dialect: PostgreSQLDialect?,
-        build: () -> Op<Boolean>,
-    ): String = withDialect(dialect) { build().toString() }
-
     // LikePattern.ofLiteral reads the dialect's wildcard set, so even building a pattern needs a transaction.
-    private fun <T> withDialect(
-        dialect: PostgreSQLDialect?,
-        body: () -> T,
-    ): T {
+    private fun renderOnSqlite(build: () -> Op<Boolean>): String {
         val db =
             Database.connect(
                 "jdbc:sqlite:file:ilike-op-test?mode=memory&cache=shared",
                 "org.sqlite.JDBC",
-                databaseConfig = DatabaseConfig { explicitDialect = dialect },
+                databaseConfig = DatabaseConfig {},
             )
-        return transaction(db) { body() }
-    }
-
-    @Test
-    fun `postgresql uses its native ILIKE`() {
-        val sql = renderOnPostgres { Sample.name ilike LikePattern("%foo%") }
-        assertTrue(sql.contains("ILIKE"), sql)
-        assertFalse(sql.contains("LOWER", ignoreCase = true), "no manual folding is needed on postgres: $sql")
+        return transaction(db) { build().toString() }
     }
 
     @Test
@@ -77,7 +54,6 @@ class ILikeOpTest {
     @Test
     fun `the escape clause is always declared so interpolated escapes are honoured`() {
         assertTrue(renderOnSqlite { Sample.name ilike "%foo%" }.contains("ESCAPE"))
-        assertTrue(renderOnPostgres { Sample.name ilike "%foo%" }.contains("ESCAPE"))
     }
 
     @Test

@@ -4,6 +4,7 @@ import io.ktor.server.routing.Routing
 import io.thoth.models.Library
 import io.thoth.models.LibrarySearchResult
 import io.thoth.openapi.ktor.errors.ErrorResponse
+import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
@@ -43,6 +44,18 @@ fun Routing.libraryRouting() {
             )
         }
         libraryRepository.create(postLibrary)
+    }
+
+    delete<Api.Libraries.Id, Unit, Unit> { (id), _ ->
+        val principal = thothPrincipal()
+        if (!principal.permissions.isAdmin) {
+            throw ErrorResponse.forbidden(
+                "Delete",
+                "library",
+                "Only admins can delete libraries",
+            )
+        }
+        libraryRepository.delete(id)
     }
 
     get<Api.Libraries.Search, LibrarySearchResult> {

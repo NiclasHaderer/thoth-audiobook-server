@@ -8,20 +8,6 @@ import io.thoth.server.common.extensions.toCron
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
-enum class DatabaseType {
-    SQLITE,
-    POSTGRES,
-}
-
-data class DatabaseConfig(
-    val type: DatabaseType = DatabaseType.SQLITE,
-    val host: String = "localhost",
-    val port: Int = 5432,
-    val name: String = "thoth",
-    val user: String = "thoth",
-    val password: String = "thoth",
-)
-
 data class ThothConfig(
     val dataDir: Path = Path.of("data"),
     val port: Int = 8080,
@@ -34,7 +20,6 @@ data class ThothConfig(
     val scanThreads: Int = 0,
     // How long a file has to keep the mtime before it is read
     val settleMillis: Long = 2000,
-    val database: DatabaseConfig = DatabaseConfig(),
 ) {
     val importThreads: Int
         get() = if (scanThreads > 0) scanThreads else (Runtime.getRuntime().availableProcessors() - 1).coerceIn(2, 6)

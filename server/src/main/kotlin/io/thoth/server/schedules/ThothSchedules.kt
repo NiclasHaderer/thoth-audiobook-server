@@ -5,6 +5,7 @@ import io.thoth.server.common.scheduling.EventTask
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.file.scanner.LibraryImportPipeline
+import io.thoth.server.file.scanner.ScanRequest
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -25,5 +26,9 @@ class ThothSchedules : KoinComponent {
                 libraries.forEach { pipeline.scanLibrary(it) }
             },
         )
-    val scanLibrary = EventTask<UUID>("Scan library", callback = { pipeline.scanLibrary(it.data) })
+    val scanLibrary =
+        EventTask<ScanRequest>(
+            "Scan library",
+            callback = { pipeline.scanLibrary(it.data.libraryId, it.data.reanalyze) },
+        )
 }

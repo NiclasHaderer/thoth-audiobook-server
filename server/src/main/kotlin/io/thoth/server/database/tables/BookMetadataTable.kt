@@ -25,7 +25,6 @@ sealed class BookMetadata(
     val publisher = varchar("publisher", 255).nullable()
     val language = varchar("language", 255).nullable()
     val description = text("description").nullable()
-    val narrator = varchar("narrator", 255).nullable()
     val isbn = varchar("isbn", 255).nullable()
     val provider = varchar("provider", 255).nullable()
     val providerID = varchar("providerID", 255).nullable()
@@ -33,6 +32,7 @@ sealed class BookMetadata(
     val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
 
     val genres = json<List<String>>("genres").nullable()
+    val narrators = json<List<String>>("narrators").nullable()
 
     // Claims the relation for this layer. Mostly this is the same as owning a link row, but an empty claim
     // has no row to carry an `addedBy`, so dropping a book's last series would otherwise read as "the user
@@ -54,13 +54,13 @@ data class BookMetadataRow(
     val publisher: String? = null,
     val language: String? = null,
     val description: String? = null,
-    val narrator: String? = null,
     val isbn: String? = null,
     val provider: String? = null,
     val providerID: String? = null,
     val providerRating: Float? = null,
     val coverID: UUID? = null,
     val genres: List<String>? = null,
+    val narrators: List<String>? = null,
     val authorsSet: Boolean = false,
     val seriesSet: Boolean = false,
 )
@@ -81,13 +81,13 @@ private fun ResultRow.toBookMetadataRow(table: BookMetadata): BookMetadataRow =
         publisher = this[table.publisher],
         language = this[table.language],
         description = this[table.description],
-        narrator = this[table.narrator],
         isbn = this[table.isbn],
         provider = this[table.provider],
         providerID = this[table.providerID],
         providerRating = this[table.providerRating],
         coverID = this[table.coverID]?.value,
         genres = this[table.genres],
+        narrators = this[table.narrators],
         authorsSet = this[table.authorsSet],
         seriesSet = this[table.seriesSet],
     )
@@ -108,13 +108,13 @@ private fun BookMetadata.write(
     stmt[publisher] = row.publisher
     stmt[language] = row.language
     stmt[description] = row.description
-    stmt[narrator] = row.narrator
     stmt[isbn] = row.isbn
     stmt[provider] = row.provider
     stmt[providerID] = row.providerID
     stmt[providerRating] = row.providerRating
     stmt[coverID] = row.coverID
     stmt[genres] = row.genres
+    stmt[narrators] = row.narrators
     stmt[authorsSet] = row.authorsSet
     stmt[seriesSet] = row.seriesSet
 }

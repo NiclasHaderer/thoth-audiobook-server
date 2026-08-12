@@ -13,7 +13,7 @@ class AudioFileAnalysisResultImpl(
     override val date: LocalDate? = null,
     override val language: String? = null,
     override val trackNr: Int? = null,
-    override val narrator: String? = null,
+    override val narrators: List<String> = emptyList(),
     override val series: String? = null,
     override val seriesIndex: Float? = null,
     override val genres: List<String> = emptyList(),
@@ -28,7 +28,7 @@ interface AudioFileAnalysisResult {
     val date: LocalDate?
     val language: String?
     val trackNr: Int?
-    val narrator: String?
+    val narrators: List<String>
     val series: String?
     val seriesIndex: Float?
     val genres: List<String>

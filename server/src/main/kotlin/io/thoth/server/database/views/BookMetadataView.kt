@@ -33,13 +33,13 @@ object BookMetadataView : View("BookMetadata") {
     val publisher = varchar("publisher", 255).nullable()
     val language = varchar("language", 255).nullable()
     val description = text("description").nullable()
-    val narrator = varchar("narrator", 255).nullable()
     val isbn = varchar("isbn", 255).nullable()
     val provider = varchar("provider", 255).nullable()
     val providerID = varchar("providerID", 255).nullable()
     val providerRating = float("rating").nullable()
     val cover = javaUUID("cover").nullable()
     val genres = json<List<String>>("genres").nullable()
+    val narrators = json<List<String>>("narrators").nullable()
 
     val authorsFrom = enumerationByName<MetadataLayer>("authorsFrom", 8)
     val seriesFrom = enumerationByName<MetadataLayer>("seriesFrom", 8)
@@ -58,13 +58,13 @@ object BookMetadataView : View("BookMetadata") {
                 resolve { publisher },
                 resolve { language },
                 resolve { description },
-                resolve { narrator },
                 resolve { isbn },
                 resolve { provider },
                 resolve { providerID },
                 resolve { providerRating },
                 resolve { coverID },
                 resolve { genres },
+                resolve { narrators },
                 layerOf({ authorsSet }, fileNames(AuthorBookTable.book, AuthorBookTable.addedBy), "authorsFrom"),
                 layerOf({ seriesSet }, fileNames(SeriesBookTable.book, SeriesBookTable.addedBy), "seriesFrom"),
             )

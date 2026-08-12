@@ -41,7 +41,6 @@ dependencies {
     implementation(libs.bundles.exposed)
     // Drivers
     implementation(libs.sqlite.jdbc)
-    implementation(libs.postgresql)
     implementation(libs.hikaricp)
     // Migration
     implementation(libs.classgraph)

@@ -225,7 +225,7 @@ class TrackManager : KoinComponent {
                 coverID = getOrCreateImage(scan.cover, file.coverID),
                 language = scan.language,
                 description = scan.description,
-                narrator = scan.narrator,
+                narrators = scan.narrators,
                 releaseDate = scan.date,
                 genres = genres,
             ),

@@ -67,6 +67,11 @@ class LibraryCleanup {
                     )
             }
 
+            removeOrphanedImages()
+        }
+
+    fun removeOrphanedImages(): Unit =
+        transaction {
             ImageTable.deleteWhere {
                 ImageTable.id notInSubQuery
                     BookFileMetadataTable

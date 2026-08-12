@@ -88,7 +88,7 @@ class LibraryWatcherImpl :
             val root = event.rootPath()?.canonical() ?: return
             val library = roots.owning(root) ?: return
             log.info { "Watch events were dropped, rescanning library '${library.name}'" }
-            scheduler.dispatch(schedules.scanLibrary.build(library.id))
+            scheduler.dispatch(schedules.scanLibrary.build(ScanRequest(library.id)))
             return
         }
 

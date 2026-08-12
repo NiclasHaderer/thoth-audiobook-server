@@ -92,6 +92,8 @@ class LibraryImportPipelineTest : ThothTest() {
 
     private fun tracks() = transaction { TracksTable.selectAll().count() }
 
+    private fun trackTitles() = transaction { TracksTable.selectAll().map { it[TracksTable.title] }.sorted() }
+
     private fun eventually(
         timeout: Duration = 15.seconds,
         describe: () -> String,
@@ -116,6 +118,24 @@ class LibraryImportPipelineTest : ThothTest() {
 
         assertEquals(listOf("A Book", "B Book", "C Book"), titles())
         assertEquals(3L, tracks())
+    }
+
+    @Test
+    fun `only a scan that asks for it re-reads a file that has not changed`() {
+        val root = dataDir.resolve("library").also { it.createDirectories() }
+        book(root, "An Author", "A Book")
+        val id = library(root)
+        scan(id)
+        val imported = trackTitles()
+
+        // Stands for an analysis that is stale for a reason the file cannot show: the scanners changed
+        transaction { TracksTable.update({ TracksTable.library eq id }) { it[title] = "Stale" } }
+
+        scan(id)
+        assertEquals(listOf("Stale"), trackTitles(), "an unchanged file must not be read again")
+
+        pipeline.scanLibrary(id, reanalyze = true)
+        assertEquals(imported, trackTitles(), "a re-analyzing scan must read it regardless of its mtime")
     }
 
     @Test

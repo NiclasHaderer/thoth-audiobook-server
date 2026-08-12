@@ -63,6 +63,11 @@ private sealed interface WriteCommand {
     ) : WriteCommand
 }
 
+data class ScanRequest(
+    val libraryId: UUID,
+    val reanalyze: Boolean = false,
+)
+
 @OptIn(ExperimentalAtomicApi::class)
 class LibraryImportPipeline :
     KoinComponent {
@@ -92,6 +97,7 @@ class LibraryImportPipeline :
 
     private class ScanState(
         val library: LibraryEntityModel,
+        val reanalyze: Boolean,
     ) {
         @Volatile
         var noNewFilesWillBeAdded = false
@@ -123,7 +129,10 @@ class LibraryImportPipeline :
 
     fun enqueue(path: Path) = watchQueue.add(path)
 
-    fun scanLibrary(libraryId: UUID): Boolean {
+    fun scanLibrary(
+        libraryId: UUID,
+        reanalyze: Boolean = false,
+    ): Boolean {
         val library = roots.of(libraryId)
         if (library == null) {
             log.warn { "Library $libraryId no longer exists, not scanning it" }
@@ -139,12 +148,15 @@ class LibraryImportPipeline :
                     .single()[LibrariesTable.scanIndex]
             LibrariesTable.update({ LibrariesTable.id eq libraryId }) { it[scanIndex] = current + 1uL }
         }
-        walkLibrary(library)
+        walkLibrary(library, reanalyze)
         return true
     }
 
-    internal fun walkLibrary(library: LibraryEntityModel) = onlyOneScanAtATimeLock.withLock {
-        val state = ScanState(library)
+    internal fun walkLibrary(
+        library: LibraryEntityModel,
+        reanalyze: Boolean = false,
+    ) = onlyOneScanAtATimeLock.withLock {
+        val state = ScanState(library, reanalyze)
         scanState = state
         // A joined thread is done, so this is the whole proof that no watch event is still being processed
         watchWorkers.forEach { it.join() }
@@ -240,7 +252,7 @@ class LibraryImportPipeline :
                 continue
             }
             try {
-                importFile(path, state.library)
+                importFile(path, state.library, state.reanalyze)
             } catch (throwable: Throwable) {
                 // Listed but unreadable. Keeping the stamp is the whole difference between "I could not read
                 // this" and "this is gone", and only the second one may delete a track.
@@ -317,8 +329,9 @@ class LibraryImportPipeline :
     private fun importFile(
         path: Path,
         library: LibraryEntityModel,
+        reanalyze: Boolean = false,
     ) {
-        if (!trackManager.needsAnalysis(path)) {
+        if (!reanalyze && !trackManager.needsAnalysis(path)) {
             dbWriterQueue.put(WriteCommand.TouchTracks(listOf(path), library.id))
             return
         }

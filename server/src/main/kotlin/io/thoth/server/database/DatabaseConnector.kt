@@ -2,12 +2,10 @@ package io.thoth.server.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.thoth.server.config.DatabaseType
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.migrations.DatabaseMigrator
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.DatabaseConfig
-import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -61,25 +59,7 @@ object DatabaseConnector : KoinComponent {
     private lateinit var dbInstance: Database
 
     fun connect() {
-        val dbConfig = config.database
-        val dataSource =
-            when (dbConfig.type) {
-                DatabaseType.SQLITE -> {
-                    sqliteDataSource(config.sqliteFile, config.importThreads)
-                }
-
-                DatabaseType.POSTGRES -> {
-                    hikariDataSource {
-                        driverClassName = "org.postgresql.Driver"
-                        jdbcUrl = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/${dbConfig.name}"
-                        username = dbConfig.user
-                        password = dbConfig.password
-                        maximumPoolSize = 10
-                    }
-                }
-            }
-
-        dbInstance = connect(dataSource)
+        dbInstance = connect(sqliteDataSource(config.sqliteFile, config.importThreads))
 
         log.info { "Migrating database" }
         DatabaseMigrator().migrateDatabase()
@@ -102,8 +82,8 @@ object DatabaseConnector : KoinComponent {
 
         transaction(database) {
             val dialect = currentDialect
-            require(dialect is SQLiteDialect || dialect is PostgreSQLDialect) {
-                "Unsupported database dialect '${dialect.name}'. Thoth supports only SQLite and PostgreSQL."
+            require(dialect is SQLiteDialect) {
+                "Unsupported database dialect '${dialect.name}'. Thoth runs on SQLite."
             }
         }
         return database

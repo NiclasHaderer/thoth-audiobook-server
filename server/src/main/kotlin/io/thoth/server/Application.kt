@@ -18,10 +18,12 @@ import io.thoth.server.api.authRoutes
 import io.thoth.server.api.authorRouting
 import io.thoth.server.api.bookRouting
 import io.thoth.server.api.fileSystemRouting
+import io.thoth.server.api.genreRouting
 import io.thoth.server.api.imageRouting
 import io.thoth.server.api.libraryRouting
 import io.thoth.server.api.licenseRouting
 import io.thoth.server.api.metadataRouting
+import io.thoth.server.api.narratorRouting
 import io.thoth.server.api.metadataAgentRouting
 import io.thoth.server.api.pingRouting
 import io.thoth.server.api.scannerRouting
@@ -102,6 +104,8 @@ fun Application.routing() {
         bookRouting()
         seriesRouting()
         authorRouting()
+        narratorRouting()
+        genreRouting()
 
         // Metadata for the resources
         metadataRouting()

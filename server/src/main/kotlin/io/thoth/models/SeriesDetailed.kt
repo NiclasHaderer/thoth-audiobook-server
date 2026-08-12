@@ -43,7 +43,7 @@ class SeriesDetailed(
                 title = series.title,
                 totalBooks = series.totalBooks,
                 yearRange = years.minOrNull()?.let { YearRange(start = it.year, end = years.max().year) },
-                narrators = books.mapNotNull { it.narrator }.distinct(),
+                narrators = books.flatMap { it.narrators }.distinct(),
                 description = series.description,
                 books = books,
                 authors = series.authors,

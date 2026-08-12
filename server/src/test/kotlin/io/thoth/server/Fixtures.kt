@@ -77,10 +77,14 @@ fun newBook(
     libraryId: UUID,
     authors: List<UUID> = emptyList(),
     series: List<UUID> = emptyList(),
+    narrators: List<String>? = null,
+    genres: List<String>? = null,
 ): UUID =
     transaction {
         val id = BooksTable.create(libraryId)
-        BookFileMetadataTable.write(BookMetadataRow(book = id, title = title))
+        BookFileMetadataTable.write(
+            BookMetadataRow(book = id, title = title, narrators = narrators, genres = genres),
+        )
         replaceBookAuthors(id, MetadataLayer.FILE, authors)
         replaceBookSeries(id, MetadataLayer.FILE, series.associateWith { null })
         id

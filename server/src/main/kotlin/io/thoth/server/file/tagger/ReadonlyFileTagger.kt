@@ -56,8 +56,13 @@ class ReadonlyFileTagger(
     val trackNr: Int?
         get() = first("TRACKNUMBER")?.substringBefore('/')?.trim()?.toIntOrNull()
 
-    val narrator: String?
-        get() = first("COMPOSER")
+    val narrators: List<String>
+        get() =
+            properties["COMPOSER"]
+                .orEmpty()
+                .flatMap { it.split(",") }
+                .mapNotNull { it.trim().ifBlank { null } }
+                .distinct()
 
     /**
      * The series name is written to ID3v2's TIT1, which TagLib reports as WORK; MP4 files keep the

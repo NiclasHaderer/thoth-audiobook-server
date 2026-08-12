@@ -11,10 +11,13 @@ import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.toLibraryRow
 import io.thoth.server.database.tables.update
+import io.thoth.server.file.scanner.LibraryCleanup
 import io.thoth.server.file.scanner.LibraryRoots
+import io.thoth.server.file.scanner.ScanRequest
 import io.thoth.server.file.scanner.LibraryWatcher
 import io.thoth.server.schedules.ThothSchedules
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -43,6 +46,8 @@ interface LibraryRepository {
     ): Library
 
     fun create(complete: UpdateLibrary): Library
+
+    fun delete(id: UUID)
 }
 
 class LibraryRepositoryImpl :
@@ -52,6 +57,7 @@ class LibraryRepositoryImpl :
     private val schedules by inject<ThothSchedules>()
     private val watcher by inject<LibraryWatcher>()
     private val roots by inject<LibraryRoots>()
+    private val cleanup by inject<LibraryCleanup>()
 
     override fun raw(id: UUID): Library = rawRow(id).toModel()
 
@@ -67,7 +73,7 @@ class LibraryRepositoryImpl :
 
     override fun rescan(id: UUID) {
         val library = raw(id)
-        scheduler.dispatch(schedules.scanLibrary.build(library.id))
+        scheduler.dispatch(schedules.scanLibrary.build(ScanRequest(library.id)))
     }
 
     override fun get(id: UUID): Library = raw(id)
@@ -82,6 +88,7 @@ class LibraryRepositoryImpl :
         libraryMutationLock.withLock {
             val needsScan =
                 partial.folders != null || partial.metadataAgents != null || partial.fileScanners != null
+            val reanalyze = partial.fileScanners != null
             val model =
                 transaction {
                     if (partial.folders != null) {
@@ -105,7 +112,7 @@ class LibraryRepositoryImpl :
 
             if (needsScan) {
                 watcher.restart()
-                scheduler.dispatch(schedules.scanLibrary.build(model.id))
+                scheduler.dispatch(schedules.scanLibrary.build(ScanRequest(model.id, reanalyze = reanalyze)))
             }
             model
         }
@@ -132,9 +139,20 @@ class LibraryRepositoryImpl :
                 }
 
             watcher.restart()
-            scheduler.dispatch(schedules.scanLibrary.build(model.id))
+            scheduler.dispatch(schedules.scanLibrary.build(ScanRequest(model.id)))
             model
         }
+
+    override fun delete(id: UUID) {
+        libraryMutationLock.withLock {
+            transaction {
+                val deleted = LibrariesTable.deleteWhere { LibrariesTable.id eq id }
+                if (deleted == 0) throw ErrorResponse.notFound("Library", id)
+                cleanup.removeOrphanedImages()
+            }
+            watcher.restart()
+        }
+    }
 
     fun overlappingFolders(
         id: UUID?,

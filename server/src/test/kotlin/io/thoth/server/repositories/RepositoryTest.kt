@@ -9,6 +9,7 @@ import io.thoth.server.ThothTest
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookFileMetadataTable
+import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.write
@@ -37,6 +38,8 @@ class RepositoryTest : ThothTest() {
     private val authorRepository by lazy { getKoin().get<AuthorRepository>() }
     private val bookRepository by lazy { getKoin().get<BookRepository>() }
     private val seriesRepository by lazy { getKoin().get<SeriesRepository>() }
+    private val narratorRepository by lazy { getKoin().get<NarratorRepository>() }
+    private val genreRepository by lazy { getKoin().get<GenreRepository>() }
 
     private var libId: UUID = UUID.randomUUID()
 
@@ -172,7 +175,7 @@ class RepositoryTest : ThothTest() {
             publisher = null,
             language = null,
             description = null,
-            narrator = null,
+            narrators = null,
             isbn = null,
             cover = null,
         )
@@ -352,6 +355,43 @@ class RepositoryTest : ThothTest() {
         seriesRepository.create("Mistborn", libId)
         val error = assertFailsWith<ErrorResponse> { seriesRepository.position(libId, libId, SortOrder.ASC) }
         assertEquals(HttpStatusCode.NotFound, error.status)
+    }
+
+    @Test
+    fun `narrators are counted across books, ignoring case`() {
+        newBook("One", libId, narrators = listOf("Jim Dale", "Stephen Fry"))
+        newBook("Two", libId, narrators = listOf("jim dale"))
+        newBook("Three", newLibrary("other", folders = listOf("/media/other")), narrators = listOf("Rob Inglis"))
+
+        assertEquals(
+            listOf("Jim Dale" to 2, "Stephen Fry" to 1),
+            narratorRepository.getAll(libId, SortOrder.ASC).map { it.name to it.bookCount },
+        )
+        val detailed = narratorRepository.get("JIM DALE", libId)
+        assertEquals("Jim Dale", detailed.name, "the answer uses the library's spelling, not the request's")
+        assertEquals(listOf("One", "Two"), detailed.books.map { it.title })
+        assertFailsWith<ErrorResponse> { narratorRepository.get("Rob Inglis", libId) }
+    }
+
+    @Test
+    fun `genres are counted across books`() {
+        newBook("One", libId, genres = listOf("Fantasy", "Sci-Fi"))
+        newBook("Two", libId, genres = listOf("Fantasy"))
+
+        assertEquals(
+            listOf("Fantasy" to 2, "Sci-Fi" to 1),
+            genreRepository.getAll(libId, SortOrder.ASC).map { it.name to it.bookCount },
+        )
+        assertEquals(listOf("One"), genreRepository.get("Sci-Fi", libId).books.map { it.title })
+    }
+
+    @Test
+    fun `deleting a library takes its content with it`() {
+        newBook("Doomed", libId)
+        libraryRepository.delete(libId)
+
+        assertFailsWith<ErrorResponse> { libraryRepository.get(libId) }
+        assertEquals(0L, transaction { BooksTable.selectAll().count() })
     }
 
     @Test

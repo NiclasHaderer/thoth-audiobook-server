@@ -42,7 +42,7 @@ internal fun searchHit(
     language = null,
     releaseDate = null,
     coverURL = null,
-    narrator = null,
+    narrators = emptyList(),
 )
 
 internal fun testBook(
@@ -57,7 +57,7 @@ internal fun testBook(
     releaseDate = null,
     coverURL = null,
     description = null,
-    narrator = null,
+    narrators = emptyList(),
     providerRating = null,
     publisher = null,
     language = null,

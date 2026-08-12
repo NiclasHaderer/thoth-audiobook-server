@@ -35,7 +35,7 @@ internal fun AudibleApiProduct.toMetadataBook(
         releaseDate = parseAudibleDate(releaseDate ?: issueDate),
         coverURL = coverURL(imageSize),
         description = audibleHtmlToText(publisherSummary ?: merchandisingSummary),
-        narrator = narrators.mapNotNull { it.name }.ifEmpty { null }?.joinToString(", "),
+        narrators = narrators.mapNotNull { it.name },
         providerRating = rating?.overallDistribution?.averageRating,
         publisher = publisherName,
         language = language,
@@ -54,7 +54,7 @@ internal fun AudibleApiProduct.toMetadataSearchBook(
         series = series.mapNotNull { it.toMetadataBookSeries(region) },
         releaseDate = parseAudibleDate(releaseDate ?: issueDate),
         coverURL = coverURL(imageSize),
-        narrator = narrators.mapNotNull { it.name }.ifEmpty { null }?.joinToString(", "),
+        narrators = narrators.mapNotNull { it.name },
         language = language,
     )
 

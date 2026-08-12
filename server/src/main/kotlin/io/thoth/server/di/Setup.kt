@@ -24,6 +24,10 @@ import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.BookRepositoryImpl
 import io.thoth.server.repositories.LibraryRepository
 import io.thoth.server.repositories.LibraryRepositoryImpl
+import io.thoth.server.repositories.GenreRepository
+import io.thoth.server.repositories.GenreRepositoryImpl
+import io.thoth.server.repositories.NarratorRepository
+import io.thoth.server.repositories.NarratorRepositoryImpl
 import io.thoth.server.repositories.SeriesRepository
 import io.thoth.server.repositories.SeriesRepositoryImpl
 import io.thoth.server.schedules.ThothSchedules
@@ -50,6 +54,8 @@ fun thothModule(config: ThothConfig) =
         single<BookRepository> { BookRepositoryImpl() }
         single<AuthorRepository> { AuthorServiceImpl() }
         single<SeriesRepository> { SeriesRepositoryImpl() }
+        single<NarratorRepository> { NarratorRepositoryImpl() }
+        single<GenreRepository> { GenreRepositoryImpl() }
         single<LibraryRepository> { LibraryRepositoryImpl() }
         single { Scheduler() }
         single { ThothSchedules() }
