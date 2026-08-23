@@ -104,28 +104,6 @@ class AudibleApiMappingTest {
     }
 
     @Test
-    fun `orders the books of a german marketplace series`() {
-        val series = product("series-de.json")
-
-        assertEquals("BookSeries", series.contentDeliveryType)
-        assertEquals("Dungeon Crawler Carl", series.title)
-        assertEquals(listOf("Matt Dinniman"), series.authors.map { it.name })
-        assertEquals(
-            listOf(
-                "B08V893CH7", // 1
-                "B0934Y5S4Y", // 2
-                "B094XLNS5Z", // 3
-                "B09GD4BP6B", // 4
-                "B09ZJ7S23V", // 5
-                "B0CDXYHNB1", // 6
-                "B0DK22WZKF", // 7
-                "B0FXY3N3LF", // 8
-            ),
-            series.seriesBookAsins(),
-        )
-    }
-
-    @Test
     fun `has no title for an unknown asin`() {
         val response = json.decodeFromString<AudibleApiProductResponse>("""{"product":{"asin":"NOTANASIN"}}""")
 

@@ -38,7 +38,19 @@ class AudibleSeriesScrapeTest {
                 series.description!!.startsWith("The apocalypse will be televised!"),
                 "description was '${series.description?.take(60)}...'",
             )
-            assertEquals("B08V893CH7", series.books?.first()?.id?.itemID)
+            assertEquals(
+                listOf(
+                    "B08V893CH7", // 1
+                    "B0934Y5S4Y", // 2
+                    "B094XLNS5Z", // 3
+                    "B09GD4BP6B", // 4
+                    "B09ZJ7S23V", // 5
+                    "B0CDXYHNB1", // 6
+                    "B0DK22WZKF", // 7
+                    "B0FXY3N3LF", // 8
+                ),
+                series.books?.take(8)?.map { it.id.itemID },
+            )
             assertEquals("Dungeon Crawler Carl", series.books?.first()?.title)
         }
 }

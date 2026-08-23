@@ -1,0 +1,107 @@
+package io.thoth.metadata.libby.client
+
+import kotlinx.coroutines.runBlocking
+import java.time.LocalDate
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+/** Queries the live Libby API, so it needs network access and breaks when the API changes. */
+class LibbyApiLiveTest {
+    private val philosophersStone = "11046339"
+    private val harryPotterSeries = "1890760"
+    private val stephenFry = "137205"
+
+    @Test
+    fun `maps a book`() =
+        runBlocking {
+            val book = assertNotNull(getLibbyBook("brooklyn", 500, philosophersStone))
+
+            assertEquals(philosophersStone, book.id.itemID)
+            assertEquals("libby", book.id.provider)
+            assertEquals("Harry Potter and the Philosopher's Stone", book.title)
+            assertEquals("https://share.libbyapp.com/title/$philosophersStone", book.link)
+            assertEquals(listOf("J. K. Rowling"), book.authors?.map { it.name })
+            assertEquals(listOf("218800"), book.authors?.map { it.id.itemID })
+            assertEquals(
+                "https://libbyapp.com/search/brooklyn/search/creator-218800/page-1",
+                book.authors?.first()?.link,
+            )
+            assertEquals(listOf("Stephen Fry"), book.narrators)
+            assertEquals(LocalDate.of(2024, 4, 18), book.releaseDate)
+            assertEquals("Pottermore Publishing", book.publisher)
+            assertEquals("english", book.language)
+            assertEquals("9781789392333", book.isbn)
+            assertTrue(book.providerRating!! > 0f, "rating was ${book.providerRating}")
+            assertTrue(book.coverURL!!.startsWith("https://"), "cover was '${book.coverURL}'")
+        }
+
+    @Test
+    fun `maps the series of a book`() =
+        runBlocking {
+            val book = assertNotNull(getLibbyBook("brooklyn", 500, philosophersStone))
+
+            assertEquals(listOf("Harry Potter"), book.series.map { it.title })
+            assertEquals(listOf(harryPotterSeries), book.series.map { it.id.itemID })
+            assertEquals(listOf(1f), book.series.map { it.index })
+            assertEquals(
+                "https://libbyapp.com/search/brooklyn/search/series-$harryPotterSeries/page-1",
+                book.series.first().link,
+            )
+        }
+
+    @Test
+    fun `turns the description into plain text`() =
+        runBlocking {
+            val book = assertNotNull(getLibbyBook("brooklyn", 500, philosophersStone))
+            val description = assertNotNull(book.description)
+
+            assertTrue(description.startsWith("Stephen Fry brings"), "description was '${description.take(60)}...'")
+            assertFalse(description.contains("<"), "description still contains markup")
+            assertFalse(description.contains("&"), "description still contains entities")
+        }
+
+    @Test
+    fun `searches for audiobooks`() =
+        runBlocking {
+            val hits = getLibbySearchResult("brooklyn", 500, keywords = "harry potter stephen fry")
+
+            val book = assertNotNull(hits.find { it.id.itemID == philosophersStone }, "hits were ${hits.map { it.title }}")
+            assertEquals("Harry Potter and the Philosopher's Stone", book.title)
+            assertEquals(listOf("Stephen Fry"), book.narrators)
+        }
+
+    @Test
+    fun `resolves a series with its ordered audiobooks`() =
+        runBlocking {
+            val series = assertNotNull(getLibbySeries("brooklyn", 500, harryPotterSeries))
+
+            assertEquals("Harry Potter", series.title)
+            assertTrue(series.authors!!.contains("J. K. Rowling"), "authors were ${series.authors}")
+            val books = assertNotNull(series.books)
+            assertTrue(books.size >= 7, "series only resolved ${books.size} books")
+            assertEquals(List(7) { it + 1f }, books.take(7).map { it.series.single().index })
+            assertTrue(books.first().title!!.startsWith("Harry Potter"), "first book was '${books.first().title}'")
+        }
+
+    @Test
+    fun `looks up an author by creator id`() =
+        runBlocking {
+            val author = assertNotNull(getLibbyAuthor("brooklyn", stephenFry))
+
+            assertEquals("Stephen Fry", author.name)
+            assertEquals(stephenFry, author.id.itemID)
+            assertEquals("libby", author.id.provider)
+        }
+
+    @Test
+    fun `returns null for unknown ids`() =
+        runBlocking {
+            assertNull(getLibbyBook("brooklyn", 500, "999999999"))
+            assertNull(getLibbySeries("brooklyn", 500, "999999999"))
+            assertNull(getLibbyAuthor("brooklyn", "999999999"))
+        }
+}

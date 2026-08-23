@@ -319,7 +319,6 @@ class AuthorServiceImpl :
         affected.forEach { bookId ->
             val current = resolved[bookId].orEmpty().map { it.id }.toSet()
             val next = if (bookId in wanted) current + authorId else current - authorId
-            // An unchanged set means the winning layer already says exactly that, so don't pin it to the user layer
             if (next == current) return@forEach
             if (next.isEmpty()) throw ErrorResponse.userError("A book must have at least one author")
             replaceBookAuthors(bookId, MetadataLayer.USER, next)
