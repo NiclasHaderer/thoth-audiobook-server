@@ -49,7 +49,7 @@ data class LibraryRow(
     val fileScanners: List<FileScanner>,
     val language: String,
 ) {
-    fun toModel(): Library =
+    fun toModel(bookCount: Long): Library =
         Library(
             id = id,
             name = name,
@@ -59,6 +59,7 @@ data class LibraryRow(
             metadataAgents = metadataAgents,
             fileScanners = fileScanners,
             language = language,
+            bookCount = bookCount,
         )
 }
 

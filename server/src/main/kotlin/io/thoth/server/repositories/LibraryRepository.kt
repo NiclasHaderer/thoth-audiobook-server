@@ -6,6 +6,7 @@ import io.thoth.server.api.PartialUpdateLibrary
 import io.thoth.server.api.UpdateLibrary
 import io.thoth.server.common.extensions.canonical
 import io.thoth.server.common.scheduling.Scheduler
+import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.insert
@@ -59,7 +60,9 @@ class LibraryRepositoryImpl :
     private val roots by inject<LibraryRoots>()
     private val cleanup by inject<LibraryCleanup>()
 
-    override fun raw(id: UUID): Library = rawRow(id).toModel()
+    override fun raw(id: UUID): Library = transaction { rawRow(id).toModel(bookCount(id)) }
+
+    private fun bookCount(id: UUID): Long = BooksTable.selectAll().where { BooksTable.library eq id }.count()
 
     private fun rawRow(id: UUID): LibraryRow =
         transaction {
@@ -79,7 +82,7 @@ class LibraryRepositoryImpl :
     override fun get(id: UUID): Library = raw(id)
 
     override fun getAll(): List<Library> =
-        transaction { LibrariesTable.selectAll().map { it.toLibraryRow().toModel() } }
+        transaction { LibrariesTable.selectAll().map { it.toLibraryRow() }.map { it.toModel(bookCount(it.id)) } }
 
     override fun modify(
         id: UUID,
@@ -107,7 +110,7 @@ class LibraryRepositoryImpl :
                             language = partial.language ?: library.language,
                         )
                     LibrariesTable.update(updated)
-                    updated.toModel()
+                    updated.toModel(bookCount(id))
                 }
 
             if (needsScan) {
@@ -135,7 +138,7 @@ class LibraryRepositoryImpl :
                             language = complete.language,
                         )
                     LibrariesTable.insert(row)
-                    row.toModel()
+                    row.toModel(0)
                 }
 
             watcher.restart()

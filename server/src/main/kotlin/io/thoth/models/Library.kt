@@ -11,4 +11,5 @@ data class Library(
     val metadataAgents: List<NamedMetadataAgent>,
     val fileScanners: List<FileScanner>,
     val language: String,
+    val bookCount: Long,
 )
