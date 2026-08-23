@@ -7,10 +7,6 @@ import java.time.LocalDate
 import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.nameWithoutExtension
 
-/**
- * Reads the audiobook fields out of TagLib's normalized property map. All native access happens in
- * the constructor so nothing has to be closed by callers.
- */
 class ReadonlyFileTagger(
     filePath: Path,
 ) {
@@ -35,7 +31,7 @@ class ReadonlyFileTagger(
         get() = first("TITLE") ?: Path.of(path).nameWithoutExtension
 
     val description: String?
-        get() = first("COMMENT")
+        get() = first("PODCASTDESC") ?: first("COMMENT")
 
     val date: LocalDate?
         get() = parseDate(first("ORIGINALDATE") ?: first("RELEASEDATE") ?: first("DATE"))
@@ -64,15 +60,11 @@ class ReadonlyFileTagger(
                 .mapNotNull { it.trim().ifBlank { null } }
                 .distinct()
 
-    /**
-     * The series name is written to ID3v2's TIT1, which TagLib reports as WORK; MP4 files keep the
-     * equivalent in the grouping atom, reported as GROUPING.
-     */
     val series: String?
-        get() = first("WORK") ?: first("GROUPING")
+        get() = first("WORK") ?: first("GROUPING") ?: first("SERIES")
 
     val seriesIndex: Float?
-        get() = first("CATALOGNUMBER")?.toFloatOrNull()
+        get() = (first("CATALOGNUMBER") ?: first("PART"))?.toFloatOrNull()
 
     private fun first(key: String): String? = properties[key]?.firstOrNull()?.ifBlank { null }
 

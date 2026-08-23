@@ -4,13 +4,15 @@
             <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="TRACE">
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
 
+    <!-- Application -->
+    <logger name="io.thoth" level="DEBUG"/>
     <!-- Ktor -->
-    <logger name="io.ktor" level="DEBUG"/>
-    <logger name="io.netty" level="INFO"/>
+    <logger name="io.ktor" level="INFO"/>
+    <logger name="io.netty" level="WARN"/>
     <!-- Audiotagger -->
     <logger name="org.jaudiotagger.tag" level="WARN"/>
     <!-- OpenAPI -->
