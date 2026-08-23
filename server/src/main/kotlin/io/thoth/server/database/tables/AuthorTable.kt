@@ -8,7 +8,15 @@ import java.util.UUID
 
 object AuthorTable : UUIDTable("Authors") {
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
+    val deferDeletionUntil = long("deferDeletionUntil").nullable()
 }
 
 context(_: Transaction)
-fun AuthorTable.create(libraryId: UUID): UUID = insertAndGetId { it[library] = libraryId }.value
+fun AuthorTable.create(
+    libraryId: UUID,
+    deferDeletionUntil: Long? = null,
+): UUID =
+    insertAndGetId {
+        it[library] = libraryId
+        it[this.deferDeletionUntil] = deferDeletionUntil
+    }.value

@@ -291,6 +291,7 @@ class Api {
 
             @Resource("authors")
             @Tagged("Authors")
+            @Summary("Create author", method = "POST", status = 201)
             data class Authors(
                 private val parent: Libraries.Id,
             ) {
@@ -432,6 +433,7 @@ class Api {
 
             @Resource("series")
             @Tagged("Series")
+            @Summary("Create series", method = "POST", status = 201)
             data class Series(
                 private val parent: Libraries.Id,
             ) {

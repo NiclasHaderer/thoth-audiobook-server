@@ -4,11 +4,13 @@ import io.ktor.server.routing.Routing
 import io.thoth.models.PaginatedResponse
 import io.thoth.models.Position
 import io.thoth.models.Series
+import io.thoth.models.SeriesCreate
 import io.thoth.models.SeriesDetailed
 import io.thoth.models.SeriesUpdate
 import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
+import io.thoth.openapi.ktor.post
 import io.thoth.server.repositories.SeriesRepository
 import org.koin.ktor.ext.inject
 import java.util.UUID
@@ -56,5 +58,10 @@ fun Routing.seriesRouting() {
 
     patch<Api.Libraries.Id.Series.Id, SeriesUpdate, Series> { id, patchSeries ->
         seriesRepository.modify(id = id.id, libraryId = id.libraryId, partial = patchSeries)
+    }
+
+    post<Api.Libraries.Id.Series, SeriesCreate, SeriesDetailed> { route, postSeries ->
+        val series = seriesRepository.createManual(postSeries.title, route.libraryId)
+        seriesRepository.get(series.id, route.libraryId)
     }
 }

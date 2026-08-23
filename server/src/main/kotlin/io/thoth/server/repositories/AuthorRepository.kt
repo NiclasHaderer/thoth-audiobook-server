@@ -39,6 +39,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
@@ -55,6 +56,11 @@ interface AuthorRepository : Repository<AuthorRow, Author, AuthorDetailed, Autho
     ): AuthorRow
 
     fun create(
+        authorName: String,
+        libraryId: UUID,
+    ): AuthorRow
+
+    fun createManual(
         authorName: String,
         libraryId: UUID,
     ): AuthorRow
@@ -123,6 +129,20 @@ class AuthorServiceImpl :
         transaction {
             val id = AuthorTable.create(libraryRepository.raw(libraryId).id)
             AuthorFileMetadataTable.write(AuthorMetadataRow(author = id, name = authorName))
+            raw(id, libraryId)
+        }
+
+    override fun createManual(
+        authorName: String,
+        libraryId: UUID,
+    ): AuthorRow =
+        transaction {
+            val id =
+                AuthorTable.create(
+                    libraryRepository.raw(libraryId).id,
+                    deferDeletionUntil = System.currentTimeMillis() + DEFER_DELETION_GRACE_MS,
+                )
+            AuthorUserMetadataTable.write(AuthorMetadataRow(author = id, name = authorName))
             raw(id, libraryId)
         }
 
@@ -271,6 +291,9 @@ class AuthorServiceImpl :
                     imageID = getOrCreateImage(newImage, currentImageID = user.imageID),
                 ),
             )
+            AuthorTable.update({ AuthorTable.id eq id }) {
+                it[deferDeletionUntil] = System.currentTimeMillis() + DEFER_DELETION_GRACE_MS
+            }
             raw(id, libraryId).toModel()
         }
     }

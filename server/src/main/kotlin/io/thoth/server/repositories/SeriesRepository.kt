@@ -46,6 +46,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
@@ -62,6 +63,11 @@ interface SeriesRepository : Repository<SeriesRow, Series, SeriesDetailed, Serie
     ): SeriesRow
 
     fun create(
+        seriesName: String,
+        libraryId: UUID,
+    ): SeriesRow
+
+    fun createManual(
         seriesName: String,
         libraryId: UUID,
     ): SeriesRow
@@ -175,6 +181,20 @@ class SeriesRepositoryImpl :
             raw(id, libraryId)
         }
 
+    override fun createManual(
+        seriesName: String,
+        libraryId: UUID,
+    ): SeriesRow =
+        transaction {
+            val id =
+                SeriesTable.create(
+                    libraryRepository.raw(libraryId).id,
+                    deferDeletionUntil = System.currentTimeMillis() + DEFER_DELETION_GRACE_MS,
+                )
+            SeriesUserMetadataTable.write(SeriesMetadataRow(series = id, title = seriesName))
+            raw(id, libraryId)
+        }
+
     override fun sorting(
         libraryId: UUID,
         order: SortOrder,
@@ -236,6 +256,9 @@ class SeriesRepositoryImpl :
                 setBooks(id, partial.books.map { bookRepository.raw(it, libraryId).id }.toSet())
             }
 
+            SeriesTable.update({ SeriesTable.id eq id }) {
+                it[deferDeletionUntil] = System.currentTimeMillis() + DEFER_DELETION_GRACE_MS
+            }
             raw(id, libraryId).toModel()
         }
     }

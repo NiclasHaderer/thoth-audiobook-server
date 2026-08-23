@@ -23,8 +23,11 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.notInSubQuery
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -54,17 +57,22 @@ class LibraryCleanup {
                 (BooksTable.library eq libraryId) and
                     (BooksTable.id notInSubQuery TracksTable.select(TracksTable.book))
             }
+            // Manually created or freshly edited entities carry a deferDeletionUntil timestamp and get a
+            // grace period before they count as orphans, so they survive until books are attached.
+            val now = System.currentTimeMillis()
             AuthorTable.deleteWhere {
                 (AuthorTable.library eq libraryId) and
                     (
                         AuthorTable.id notInSubQuery AuthorBookTable.select(AuthorBookTable.authors)
-                    )
+                    ) and
+                    (AuthorTable.deferDeletionUntil.isNull() or (AuthorTable.deferDeletionUntil lessEq now))
             }
             SeriesTable.deleteWhere {
                 (SeriesTable.library eq libraryId) and
                     (
                         SeriesTable.id notInSubQuery SeriesBookTable.select(SeriesBookTable.series)
-                    )
+                    ) and
+                    (SeriesTable.deferDeletionUntil.isNull() or (SeriesTable.deferDeletionUntil lessEq now))
             }
 
             removeOrphanedImages()

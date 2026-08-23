@@ -6,6 +6,7 @@ import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.create
 import io.thoth.server.newAuthor
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
@@ -100,6 +101,29 @@ class LibraryScannerCleanupTest : ThothTest() {
         cleanup(scanned)
 
         assertEquals(listOf(1L, 1L, 1L, 1L), counts(scanned), "a touched track and its relations must survive")
+    }
+
+    @Test
+    fun `orphans within their deferDeletionUntil grace period survive cleanup`() {
+        val scanned = newLibrary("scanned")
+        val now = System.currentTimeMillis()
+        val (keptAuthor, keptSeries) =
+            transaction {
+                AuthorTable.create(scanned, deferDeletionUntil = now - 1) // expired
+                SeriesTable.create(scanned, deferDeletionUntil = now - 1)
+                AuthorTable.create(scanned, deferDeletionUntil = now + 60_000) to
+                    SeriesTable.create(scanned, deferDeletionUntil = now + 60_000)
+            }
+
+        cleanup.removeOrphans(scanned)
+
+        val (authors, series) =
+            transaction {
+                AuthorTable.selectAll().map { it[AuthorTable.id].value } to
+                    SeriesTable.selectAll().map { it[SeriesTable.id].value }
+            }
+        assertEquals(listOf(keptAuthor), authors, "only the author inside the grace period must survive")
+        assertEquals(listOf(keptSeries), series, "only the series inside the grace period must survive")
     }
 
     @Test
