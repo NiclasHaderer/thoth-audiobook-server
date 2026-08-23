@@ -13,5 +13,6 @@ open class Series(
     val primaryWorks: Int?,
     val coverID: UUID?,
     val description: String?,
-     val genres: List<String>,
+    val genres: List<String>,
+    val bookCoverIDs: List<UUID>,
 )

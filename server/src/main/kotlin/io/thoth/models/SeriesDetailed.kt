@@ -14,6 +14,7 @@ class SeriesDetailed(
     coverID: UUID?,
     description: String?,
     genres: List<String>,
+    bookCoverIDs: List<UUID>,
     val yearRange: YearRange?,
     val narrators: List<String>,
     val books: List<Book>,
@@ -29,6 +30,7 @@ class SeriesDetailed(
         coverID = coverID,
         description = description,
         genres = genres,
+        bookCoverIDs = bookCoverIDs,
     ) {
     companion object {
         fun fromModel(
@@ -52,6 +54,7 @@ class SeriesDetailed(
                 provider = series.provider,
                 providerID = series.providerID,
                 genres = series.genres,
+                bookCoverIDs = series.bookCoverIDs,
             )
         }
     }

@@ -48,6 +48,7 @@ fun seriesToModels(
     val ids = rows.map { it.id }
     val authors = seriesAuthors(ids)
     val genres = seriesGenres(ids)
+    val bookCovers = seriesBookCovers(ids)
     return rows.map { row ->
         Series(
             id = row.id,
@@ -64,6 +65,7 @@ fun seriesToModels(
                     .sortedBy { it.name.lowercase() }
                     .let { if (authorOrder == SortOrder.DESC) it.reversed() else it },
             genres = genres[row.id].orEmpty(),
+            bookCoverIDs = bookCovers[row.id].orEmpty(),
         )
     }
 }
@@ -77,6 +79,16 @@ fun seriesAuthors(seriesIds: List<UUID>): Map<UUID, List<NamedId>> =
         .where { BookSeriesView.series inList seriesIds }
         .groupBy({ it[BookSeriesView.series] }) { NamedId(it[AuthorMetadataView.id], it[AuthorMetadataView.name]) }
         .mapValues { (_, authors) -> authors.distinctBy { it.id } }
+
+context(_: Transaction)
+fun seriesBookCovers(seriesIds: List<UUID>): Map<UUID, List<UUID>> =
+    BookSeriesView
+        .join(BookMetadataView, JoinType.INNER, BookSeriesView.book, BookMetadataView.id)
+        .select(BookSeriesView.series, BookSeriesView.index, BookMetadataView.cover)
+        .where { BookSeriesView.series inList seriesIds }
+        .orderBy(BookSeriesView.index to SortOrder.ASC_NULLS_LAST)
+        .groupBy({ it[BookSeriesView.series] }) { it[BookMetadataView.cover] }
+        .mapValues { (_, covers) -> covers.filterNotNull() }
 
 /** Likewise its genres, which are those of its books. */
 context(_: Transaction)
