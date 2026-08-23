@@ -29,7 +29,7 @@ private val browserHeaders =
         append("Sec-Fetch-User", "?1")
     }
 
-/** Authors are the only entity the Audible API does not expose, so their data has to be scraped. */
+/** The Audible API does not expose authors, so their data has to be scraped. */
 internal suspend fun getAudibleAuthor(
     region: AudibleRegions,
     imageSize: Int,

@@ -338,6 +338,7 @@ class LayeredMetadataTest : ThothTest() {
         language = null,
         description = description,
         narrators = null,
+        genres = null,
         isbn = null,
         cover = null,
     )

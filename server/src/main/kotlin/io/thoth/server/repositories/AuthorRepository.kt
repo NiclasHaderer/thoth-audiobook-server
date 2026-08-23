@@ -17,6 +17,11 @@ import io.thoth.server.database.tables.AuthorMetadataRow
 import io.thoth.server.database.views.AuthorRow
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.AuthorUserMetadataTable
+import io.thoth.server.database.tables.BookUserMetadataTable
+import io.thoth.server.database.tables.MetadataLayer
+import io.thoth.server.database.tables.bookIdsLinkedToAuthor
+import io.thoth.server.database.tables.replaceBookAuthors
+import io.thoth.server.database.views.bookAuthors
 import io.thoth.server.database.views.booksToModels
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
@@ -71,6 +76,7 @@ class AuthorServiceImpl :
     KoinComponent {
     val metadataAgents by inject<MetadataAgents>()
     val libraryRepository by inject<LibraryRepository>()
+    private val bookRepository by inject<BookRepository>()
     private val imageDownloader by inject<ImageDownloader>()
 
     override fun findByTaggedName(
@@ -291,10 +297,33 @@ class AuthorServiceImpl :
                     imageID = getOrCreateImage(newImage, currentImageID = user.imageID),
                 ),
             )
+
+            if (partial.books != null) {
+                setBooks(id, partial.books.map { bookRepository.raw(it, libraryId).id }.toSet())
+            }
+
             AuthorTable.update({ AuthorTable.id eq id }) {
                 it[deferDeletionUntil] = System.currentTimeMillis() + DEFER_DELETION_GRACE_MS
             }
             raw(id, libraryId).toModel()
+        }
+    }
+
+    context(_: Transaction)
+    private fun setBooks(
+        authorId: UUID,
+        wanted: Set<UUID>,
+    ) {
+        val affected = (bookIdsLinkedToAuthor(authorId) + wanted).distinct()
+        val resolved = bookAuthors(affected)
+        affected.forEach { bookId ->
+            val current = resolved[bookId].orEmpty().map { it.id }.toSet()
+            val next = if (bookId in wanted) current + authorId else current - authorId
+            // An unchanged set means the winning layer already says exactly that, so don't pin it to the user layer
+            if (next == current) return@forEach
+            if (next.isEmpty()) throw ErrorResponse.userError("A book must have at least one author")
+            replaceBookAuthors(bookId, MetadataLayer.USER, next)
+            BookUserMetadataTable.write(BookUserMetadataTable.layer(bookId).copy(authorsSet = true))
         }
     }
 

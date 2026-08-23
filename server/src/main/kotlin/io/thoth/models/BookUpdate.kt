@@ -18,6 +18,7 @@ data class BookUpdate(
     val language: String?,
     val description: String?,
     val narrators: List<String>?,
+    val genres: List<String>?,
     val isbn: String?,
     val cover: String?,
 ) : ValidateObject {

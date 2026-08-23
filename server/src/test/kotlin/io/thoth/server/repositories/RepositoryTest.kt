@@ -176,6 +176,7 @@ class RepositoryTest : ThothTest() {
             language = null,
             description = null,
             narrators = null,
+            genres = null,
             isbn = null,
             cover = null,
         )
@@ -191,6 +192,7 @@ class RepositoryTest : ThothTest() {
             bornIn = null,
             birthDate = null,
             deathDate = null,
+            books = null,
         )
 
     @Test

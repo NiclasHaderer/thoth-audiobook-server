@@ -10,10 +10,29 @@ import io.ktor.http.Headers
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
 
 private val log = logger {}
+
+/** Audible starts answering with 503s when it is hit too fast, so all requests are spaced out. */
+private const val REQUEST_SPACING_MS = 3_000L
+
+private val throttle = Mutex()
+private var nextRequestAt = 0L
+
+private suspend fun awaitRequestSlot() {
+    val waitFor =
+        throttle.withLock {
+            val slot = maxOf(System.currentTimeMillis(), nextRequestAt)
+            nextRequestAt = slot + REQUEST_SPACING_MS
+            slot - System.currentTimeMillis()
+        }
+    if (waitFor > 0) delay(waitFor)
+}
 
 private val client =
     HttpClient {
@@ -36,6 +55,7 @@ internal suspend fun fetchAudible(
     url: Url,
     extraHeaders: Headers = Headers.Empty,
 ): String? {
+    awaitRequestSlot()
     val response =
         try {
             client.get(url) { headers { appendAll(extraHeaders) } }

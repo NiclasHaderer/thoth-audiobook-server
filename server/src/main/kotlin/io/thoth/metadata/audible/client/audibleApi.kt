@@ -5,6 +5,7 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
 import io.thoth.metadata.appendOptional
+import io.thoth.metadata.htmlToText
 import io.thoth.metadata.audible.models.AudibleAgentId
 import io.thoth.metadata.audible.models.AudibleApiProduct
 import io.thoth.metadata.audible.models.AudibleApiProductResponse
@@ -103,7 +104,9 @@ internal suspend fun getAudibleSeries(
         id = AudibleAgentId(series.asin),
         title = series.title,
         link = audibleSeriesLink(region, series.asin),
-        description = audibleHtmlToText(series.publisherSummary ?: series.merchandisingSummary),
+        description =
+            htmlToText(series.publisherSummary ?: series.merchandisingSummary)
+                ?: getAudibleSeriesDescription(region, asin),
         // The relationships are the authority on the length of the series, not the books which could be resolved
         totalBooks = bookAsins.size,
         // Audible sequences excerpts and box sets right along the regular books, so the primary works are unknown

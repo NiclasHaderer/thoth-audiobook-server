@@ -225,6 +225,7 @@ class BookRepositoryImpl :
                     language = partial.language ?: user.language,
                     description = partial.description ?: user.description,
                     narrators = partial.narrators ?: user.narrators,
+                    genres = partial.genres ?: user.genres,
                     isbn = partial.isbn ?: user.isbn,
                     coverID = getOrCreateImage(newCover, currentImageID = user.coverID),
                     authorsSet = user.authorsSet || partial.authors != null,

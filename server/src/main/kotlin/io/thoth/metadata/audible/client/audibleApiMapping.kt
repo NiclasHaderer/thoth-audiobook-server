@@ -1,6 +1,7 @@
 package io.thoth.metadata.audible.client
 
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
+import io.thoth.metadata.htmlToText
 import io.thoth.metadata.audible.models.AudibleAgentId
 import io.thoth.metadata.audible.models.AudibleApiPerson
 import io.thoth.metadata.audible.models.AudibleApiProduct
@@ -11,16 +12,10 @@ import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.server.common.extensions.replaceAll
-import org.jsoup.parser.Parser
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
 private val log = logger {}
-
-private val htmlLineBreak = Regex("(?i)<br\\s*/?>|</p\\s*>")
-private val htmlTag = Regex("<[^>]+>")
-private val paddedNewline = Regex("[^\\S\n]*\n[^\\S\n]*")
-private val repeatedNewline = Regex("\n{3,}")
 
 internal fun AudibleApiProduct.toMetadataBook(
     region: AudibleRegions,
@@ -34,7 +29,7 @@ internal fun AudibleApiProduct.toMetadataBook(
         series = series.mapNotNull { it.toMetadataBookSeries(region) },
         releaseDate = parseAudibleDate(releaseDate ?: issueDate),
         coverURL = coverURL(imageSize),
-        description = audibleHtmlToText(publisherSummary ?: merchandisingSummary),
+        description = htmlToText(publisherSummary ?: merchandisingSummary),
         narrators = narrators.mapNotNull { it.name },
         providerRating = rating?.overallDistribution?.averageRating,
         publisher = publisherName,
@@ -106,17 +101,6 @@ internal fun audibleAuthorLink(
     region: AudibleRegions,
     asin: String,
 ) = "https://www.${region.host}/author/$asin"
-
-/** Audible serves summaries as HTML fragments, while the metadata responses are plain text. */
-internal fun audibleHtmlToText(html: String?): String? =
-    html
-        ?.replace(htmlLineBreak, "\n")
-        ?.replace(htmlTag, "")
-        ?.let { Parser.unescapeEntities(it, false) }
-        ?.replace(paddedNewline, "\n")
-        ?.replace(repeatedNewline, "\n\n")
-        ?.trim()
-        ?.ifEmpty { null }
 
 private fun parseAudibleDate(date: String?): LocalDate? =
     date?.let {
