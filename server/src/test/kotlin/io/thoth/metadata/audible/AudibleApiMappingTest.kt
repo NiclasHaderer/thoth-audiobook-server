@@ -1,5 +1,6 @@
 package io.thoth.metadata.audible
 
+import io.thoth.metadata.responses.MetadataLanguage
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import kotlin.test.Test
@@ -38,7 +39,7 @@ class AudibleApiMappingTest {
         assertEquals(LocalDate.of(2015, 11, 20), book.releaseDate)
         assertEquals("https://m.media-amazon.com/images/I/51xJbFMRsxL._SL500_.jpg", book.coverURL)
         assertEquals("Pottermore Publishing", book.publisher)
-        assertEquals("english", book.language)
+        assertEquals(MetadataLanguage.English, book.language)
         assertEquals("9781781102633", book.isbn)
         assertEquals(4.908434538641135f, book.providerRating)
     }

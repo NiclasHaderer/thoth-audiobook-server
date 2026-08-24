@@ -1,5 +1,6 @@
 package io.thoth.metadata
 
+import io.thoth.metadata.responses.MetadataRegion
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -18,7 +19,7 @@ class MetadataAgentWrapperTest {
     @Test
     fun `an ID lookup only goes to the agent it belongs to`() =
         runBlocking {
-            wrapper().getBookByID(providerId = "openLibrary", bookId = "b", region = "US")
+            wrapper().getBookByID(providerId = "openLibrary", bookId = "b", region = MetadataRegion.US)
 
             assertEquals(emptyList(), audible.bookLookups)
             assertEquals(listOf("b@US"), openLibrary.bookLookups)
@@ -27,13 +28,13 @@ class MetadataAgentWrapperTest {
     @Test
     fun `an ID of an unknown provider has no result`() =
         runBlocking {
-            assertNull(wrapper().getBookByID(providerId = "goodreads", bookId = "b", region = "US"))
+            assertNull(wrapper().getBookByID(providerId = "goodreads", bookId = "b", region = MetadataRegion.US))
         }
 
     @Test
     fun `a search asks every agent`() =
         runBlocking {
-            val found = wrapper().search(region = "US", title = "a")
+            val found = wrapper().search(region = MetadataRegion.US, title = "a")
 
             assertEquals(listOf("a", "b"), found.map { it.id.itemID })
         }
@@ -41,7 +42,7 @@ class MetadataAgentWrapperTest {
     @Test
     fun `a lookup by name hands out the results of the first agent before touching the second`() =
         runBlocking {
-            val first = wrapper().getBookByName("a", "US").first()
+            val first = wrapper().getBookByName("a", MetadataRegion.US).first()
 
             assertEquals("a", first.id.itemID)
             assertEquals(0, openLibrary.searchCalls.get())
@@ -50,7 +51,7 @@ class MetadataAgentWrapperTest {
     @Test
     fun `collecting a lookup by name walks through all agents`() =
         runBlocking {
-            val books = wrapper().getBookByName("a", "US").toList()
+            val books = wrapper().getBookByName("a", MetadataRegion.US).toList()
 
             assertEquals(listOf("a", "b"), books.map { it.id.itemID })
         }

@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
@@ -31,7 +32,7 @@ class CachingMetadataProvider(
     private val delegate: MetadataProvider,
 ) : MetadataProvider {
     override val name get() = delegate.name
-    override val supportedCountryCodes get() = delegate.supportedCountryCodes
+    override val supportedRegions get() = delegate.supportedRegions
 
     // Entries outlive the request which created them, so they must not be tied to its coroutine scope
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -42,7 +43,7 @@ class CachingMetadataProvider(
     private val seriesIdCache = buildCache<MetadataSeries?>()
 
     override suspend fun search(
-        region: String,
+        region: MetadataRegion,
         keywords: String?,
         title: String?,
         author: String?,
@@ -57,7 +58,7 @@ class CachingMetadataProvider(
     override suspend fun getAuthorByID(
         providerId: String,
         authorId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataAuthor? =
         authorIdCache.getOrLoad(keyOf(providerId, authorId, region)) {
             delegate.getAuthorByID(providerId, authorId, region)
@@ -66,7 +67,7 @@ class CachingMetadataProvider(
     override suspend fun getBookByID(
         providerId: String,
         bookId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataBook? =
         bookIdCache.getOrLoad(keyOf(providerId, bookId, region)) {
             delegate.getBookByID(providerId, bookId, region)
@@ -75,7 +76,7 @@ class CachingMetadataProvider(
     override suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataSeries? =
         seriesIdCache.getOrLoad(keyOf(providerId, seriesId, region)) {
             delegate.getSeriesByID(providerId, seriesId, region)

@@ -1,5 +1,7 @@
 package io.thoth.metadata.libby
 
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import kotlin.test.Test
@@ -19,7 +21,7 @@ class LibbyApiLiveTest {
     @Test
     fun `maps a book`() =
         runBlocking {
-            val book = assertNotNull(provider.getBookByID("libby", philosophersStone, "US"))
+            val book = assertNotNull(provider.getBookByID("libby", philosophersStone, MetadataRegion.US))
 
             assertEquals(philosophersStone, book.id.itemID)
             assertEquals("libby", book.id.provider)
@@ -34,7 +36,7 @@ class LibbyApiLiveTest {
             assertEquals(listOf("Stephen Fry"), book.narrators)
             assertEquals(LocalDate.of(2024, 4, 18), book.releaseDate)
             assertEquals("Pottermore Publishing", book.publisher)
-            assertEquals("english", book.language)
+            assertEquals(MetadataLanguage.English, book.language)
             assertEquals("9781789392333", book.isbn)
             assertTrue(book.providerRating!! > 0f, "rating was ${book.providerRating}")
             assertTrue(book.coverURL!!.startsWith("https://"), "cover was '${book.coverURL}'")
@@ -43,7 +45,7 @@ class LibbyApiLiveTest {
     @Test
     fun `maps the series of a book`() =
         runBlocking {
-            val book = assertNotNull(provider.getBookByID("libby", philosophersStone, "US"))
+            val book = assertNotNull(provider.getBookByID("libby", philosophersStone, MetadataRegion.US))
 
             assertEquals(listOf("Harry Potter"), book.series.map { it.title })
             assertEquals(listOf(harryPotterSeries), book.series.map { it.id.itemID })
@@ -57,7 +59,7 @@ class LibbyApiLiveTest {
     @Test
     fun `turns the description into plain text`() =
         runBlocking {
-            val book = assertNotNull(provider.getBookByID("libby", philosophersStone, "US"))
+            val book = assertNotNull(provider.getBookByID("libby", philosophersStone, MetadataRegion.US))
             val description = assertNotNull(book.description)
 
             assertTrue(description.startsWith("Stephen Fry brings"), "description was '${description.take(60)}...'")
@@ -68,7 +70,7 @@ class LibbyApiLiveTest {
     @Test
     fun `searches for audiobooks`() =
         runBlocking {
-            val hits = provider.search("US", keywords = "harry potter stephen fry")
+            val hits = provider.search(MetadataRegion.US, keywords = "harry potter stephen fry")
 
             val book = assertNotNull(hits.find { it.id.itemID == philosophersStone }, "hits were ${hits.map { it.title }}")
             assertEquals("Harry Potter and the Philosopher's Stone", book.title)
@@ -78,7 +80,7 @@ class LibbyApiLiveTest {
     @Test
     fun `resolves a series with its ordered audiobooks`() =
         runBlocking {
-            val series = assertNotNull(provider.getSeriesByID("libby", harryPotterSeries, "US"))
+            val series = assertNotNull(provider.getSeriesByID("libby", harryPotterSeries, MetadataRegion.US))
 
             assertEquals("Harry Potter", series.title)
             assertTrue(series.authors!!.contains("J. K. Rowling"), "authors were ${series.authors}")
@@ -91,7 +93,7 @@ class LibbyApiLiveTest {
     @Test
     fun `looks up an author by creator id`() =
         runBlocking {
-            val author = assertNotNull(provider.getAuthorByID("libby", stephenFry, "US"))
+            val author = assertNotNull(provider.getAuthorByID("libby", stephenFry, MetadataRegion.US))
 
             assertEquals("Stephen Fry", author.name)
             assertEquals(stephenFry, author.id.itemID)
@@ -101,8 +103,8 @@ class LibbyApiLiveTest {
     @Test
     fun `returns null for unknown ids`() =
         runBlocking {
-            assertNull(provider.getBookByID("libby", "999999999", "US"))
-            assertNull(provider.getSeriesByID("libby", "999999999", "US"))
-            assertNull(provider.getAuthorByID("libby", "999999999", "US"))
+            assertNull(provider.getBookByID("libby", "999999999", MetadataRegion.US))
+            assertNull(provider.getSeriesByID("libby", "999999999", MetadataRegion.US))
+            assertNull(provider.getAuthorByID("libby", "999999999", MetadataRegion.US))
         }
 }

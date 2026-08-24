@@ -2,6 +2,8 @@ package io.thoth.server.repositories
 
 import io.thoth.metadata.MetadataAgent
 import io.thoth.metadata.MetadataAgents
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.Book
 import io.thoth.models.BookDetailed
 import io.thoth.models.BookUpdate
@@ -272,22 +274,28 @@ class BookRepositoryImpl :
         id: UUID,
         libraryId: UUID,
     ): Book {
-        val (metadataWrapper, bookName, region, authorName) =
+        val (metadataWrapper, bookName, region, authorName, language) =
             transaction {
                 val book = raw(id, libraryId)
                 val library = libraryRepository.raw(libraryId)
                 AutoMatchQuery(
                     metadataAgents.forLibrary(library),
                     book.title,
-                    library.language,
+                    library.region,
                     bookAuthors(listOf(id))[id].orEmpty().joinToString(", ") { it.name },
+                    book.language ?: library.language,
                 )
             }
 
         val bookMetadata =
             runBlocking {
-                metadataWrapper.getBookByName(bookName = bookName, region = region, authorName = authorName)
-                    .firstOrNull()
+                metadataWrapper
+                    .getBookByName(
+                        bookName = bookName,
+                        region = region,
+                        authorName = authorName,
+                        language = language,
+                    ).firstOrNull()
             } ?: return transaction { raw(id, libraryId).toModel() }
 
         val newCover = imageDownloader.download(bookMetadata.coverURL)
@@ -319,8 +327,9 @@ class BookRepositoryImpl :
     private data class AutoMatchQuery(
         val metadataWrapper: MetadataAgent,
         val bookName: String,
-        val region: String,
+        val region: MetadataRegion,
         val authorName: String,
+        val language: MetadataLanguage,
     )
 }
 

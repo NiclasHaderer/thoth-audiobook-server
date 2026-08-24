@@ -1,5 +1,7 @@
 package io.thoth.models
 
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import java.util.UUID
 
 data class Library(
@@ -10,6 +12,7 @@ data class Library(
     val folders: List<String>,
     val metadataAgents: List<NamedMetadataAgent>,
     val fileScanners: List<FileScanner>,
-    val language: String,
+    val language: MetadataLanguage,
+    val region: MetadataRegion,
     val bookCount: Long,
 )

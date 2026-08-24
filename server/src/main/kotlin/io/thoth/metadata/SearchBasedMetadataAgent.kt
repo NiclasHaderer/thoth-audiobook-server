@@ -2,6 +2,8 @@ package io.thoth.metadata
 
 import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSeries
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -26,10 +28,11 @@ class SearchBasedMetadataAgent(
     MetadataProvider by provider {
     override fun getAuthorByName(
         authorName: String,
-        region: String,
+        region: MetadataRegion,
+        language: MetadataLanguage?,
     ): Flow<MetadataAuthor> =
         flow {
-            val hits = search(region = region, author = authorName)
+            val hits = search(region = region, author = authorName, language = language)
             val authorIds =
                 FuzzySearch
                     .extractSorted(authorName, hits) { hit -> hit.authors?.joinToString(", ") { it.name ?: "" } ?: "" }
@@ -42,11 +45,12 @@ class SearchBasedMetadataAgent(
 
     override fun getBookByName(
         bookName: String,
-        region: String,
+        region: MetadataRegion,
         authorName: String?,
+        language: MetadataLanguage?,
     ): Flow<MetadataBook> =
         flow {
-            val hits = search(region = region, title = bookName, author = authorName)
+            val hits = search(region = region, title = bookName, author = authorName, language = language)
             val bookIds =
                 FuzzySearch
                     .extractSorted(bookName, hits) { it.title ?: "" }
@@ -58,11 +62,14 @@ class SearchBasedMetadataAgent(
 
     override fun getSeriesByName(
         seriesName: String,
-        region: String,
+        region: MetadataRegion,
         authorName: String?,
+        language: MetadataLanguage?,
     ): Flow<MetadataSeries> =
         flow {
-            val hits = search(region = region, keywords = seriesName, author = authorName).flatMap { it.series }
+            val hits =
+                search(region = region, keywords = seriesName, author = authorName, language = language)
+                    .flatMap { it.series }
             val seriesIds =
                 FuzzySearch
                     .extractSorted(seriesName, hits) { it.title ?: "" }

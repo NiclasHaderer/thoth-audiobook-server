@@ -1,5 +1,6 @@
 package io.thoth.metadata
 
+import io.thoth.metadata.responses.MetadataRegion
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -18,7 +19,7 @@ class SearchBasedMetadataAgentTest {
         runBlocking {
             val provider = agentFor("a", "b")
 
-            SearchBasedMetadataAgent(provider).getBookByName("a", "US")
+            SearchBasedMetadataAgent(provider).getBookByName("a", MetadataRegion.US)
 
             assertEquals(0, provider.searchCalls.get())
             assertEquals(emptyList(), provider.bookLookups)
@@ -29,7 +30,7 @@ class SearchBasedMetadataAgentTest {
         runBlocking {
             val provider = agentFor(*Array(20) { "book-$it" })
 
-            val best = SearchBasedMetadataAgent(provider).getBookByName("book-0", "US").first()
+            val best = SearchBasedMetadataAgent(provider).getBookByName("book-0", MetadataRegion.US).first()
 
             assertEquals("book-0", best.id.itemID)
             assertEquals(1, provider.searchCalls.get())
@@ -41,7 +42,7 @@ class SearchBasedMetadataAgentTest {
         runBlocking {
             val provider = agentFor(*Array(20) { "book-$it" })
 
-            SearchBasedMetadataAgent(provider).getBookByName("book-0", "US").take(6).toList()
+            SearchBasedMetadataAgent(provider).getBookByName("book-0", MetadataRegion.US).take(6).toList()
 
             assertEquals(10, provider.bookLookups.size)
         }
@@ -51,7 +52,7 @@ class SearchBasedMetadataAgentTest {
         runBlocking {
             val provider = agentFor("Moby Dick", "Dick", "Moby Dick and Friends")
 
-            val books = SearchBasedMetadataAgent(provider).getBookByName("Moby Dick", "US").toList()
+            val books = SearchBasedMetadataAgent(provider).getBookByName("Moby Dick", MetadataRegion.US).toList()
 
             assertEquals("Moby Dick", books.first().id.itemID)
             assertEquals(3, books.size)
@@ -67,7 +68,7 @@ class SearchBasedMetadataAgentTest {
                     resolveBook = { if (it == "a") null else testBook(it) },
                 )
 
-            val books = SearchBasedMetadataAgent(provider).getBookByName("a", "US").toList()
+            val books = SearchBasedMetadataAgent(provider).getBookByName("a", MetadataRegion.US).toList()
 
             assertEquals(listOf("b", "c"), books.map { it.id.itemID })
         }
@@ -84,7 +85,7 @@ class SearchBasedMetadataAgentTest {
                         ),
                 )
 
-            val authors = SearchBasedMetadataAgent(provider).getAuthorByName("Twain", "US").toList()
+            val authors = SearchBasedMetadataAgent(provider).getAuthorByName("Twain", MetadataRegion.US).toList()
 
             assertEquals(listOf("Twain"), authors.map { it.id.itemID })
             assertEquals(listOf("Twain@US"), provider.authorLookups)
@@ -96,7 +97,7 @@ class SearchBasedMetadataAgentTest {
             val provider =
                 FakeMetadataProvider(hits = listOf(searchHit("book-1", series = listOf("Discworld"))))
 
-            val series = SearchBasedMetadataAgent(provider).getSeriesByName("Discworld", "US").toList()
+            val series = SearchBasedMetadataAgent(provider).getSeriesByName("Discworld", MetadataRegion.US).toList()
 
             assertEquals(listOf("Discworld"), series.map { it.id.itemID })
             assertEquals(listOf("Discworld@US"), provider.seriesLookups)

@@ -1,5 +1,6 @@
 package io.thoth.server.file.tagger
 
+import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.server.common.extensions.canonicalString
 import io.thoth.taglib.TagLibFile
 import java.nio.file.Path
@@ -46,8 +47,8 @@ class ReadonlyFileTagger(
     val genres: List<String>
         get() = properties["GENRE"].orEmpty().mapNotNull { it.trim().ifBlank { null } }.distinct()
 
-    val language: String?
-        get() = first("LANGUAGE")
+    val language: MetadataLanguage?
+        get() = MetadataLanguage.fromTag(first("LANGUAGE"))
 
     val trackNr: Int?
         get() = first("TRACKNUMBER")?.substringBefore('/')?.trim()?.toIntOrNull()

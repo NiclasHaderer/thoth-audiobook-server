@@ -3,6 +3,8 @@ package io.thoth.server.repositories
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.metadata.MetadataAgent
 import io.thoth.metadata.MetadataAgents
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.Series
 import io.thoth.models.SeriesDetailed
 import io.thoth.models.SeriesUpdate
@@ -295,21 +297,22 @@ class SeriesRepositoryImpl :
         id: UUID,
         libraryId: UUID,
     ): Series {
-        val (metadataWrapper, title, region, authorName) =
+        val (metadataWrapper, title, region, authorName, language) =
             transaction {
                 val series = raw(id, libraryId)
                 val library = libraryRepository.raw(libraryId)
                 AutoMatchQuery(
                     metadataAgents.forLibrary(library),
                     series.title,
-                    library.language,
+                    library.region,
                     seriesAuthorNames(id).joinToString(", "),
+                    library.language,
                 )
             }
 
         val seriesMetadata =
             runBlocking {
-                metadataWrapper.getSeriesByName(title, region, authorName).firstOrNull()
+                metadataWrapper.getSeriesByName(title, region, authorName, language).firstOrNull()
             } ?: return transaction { raw(id, libraryId).toModel() }
 
         val newCover = imageDownloader.download(seriesMetadata.coverURL)
@@ -342,8 +345,9 @@ class SeriesRepositoryImpl :
     private data class AutoMatchQuery(
         val metadataWrapper: MetadataAgent,
         val title: String,
-        val region: String,
+        val region: MetadataRegion,
         val authorName: String,
+        val language: MetadataLanguage,
     )
 
     override fun total(libraryId: UUID): Long =

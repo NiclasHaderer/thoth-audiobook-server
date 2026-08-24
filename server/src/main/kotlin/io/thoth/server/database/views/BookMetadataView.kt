@@ -1,5 +1,6 @@
 package io.thoth.server.database.views
 
+import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.server.common.exposed.View
 import io.thoth.server.common.exposed.layered
 import io.thoth.server.database.extensions.json
@@ -31,7 +32,7 @@ object BookMetadataView : View("BookMetadata") {
     val title = text("title")
     val releaseDate = date("releaseDate").nullable()
     val publisher = varchar("publisher", 255).nullable()
-    val language = varchar("language", 255).nullable()
+    val language = enumerationByName<MetadataLanguage>("language", 255).nullable()
     val description = text("description").nullable()
     val isbn = varchar("isbn", 255).nullable()
     val provider = varchar("provider", 255).nullable()

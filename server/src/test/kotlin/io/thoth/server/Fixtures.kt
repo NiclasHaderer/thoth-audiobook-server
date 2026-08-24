@@ -1,5 +1,7 @@
 package io.thoth.server
 
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.database.tables.MetadataLayer
@@ -31,6 +33,8 @@ fun newLibrary(
     scanIndex: ULong = 0uL,
     fileScanners: List<FileScanner> = listOf(FileScanner("AudioFolderScanner")),
     preferEmbeddedMetadata: Boolean = false,
+    region: MetadataRegion = MetadataRegion.US,
+    language: MetadataLanguage = MetadataLanguage.English,
 ): UUID =
     transaction {
         LibrariesTable.insert(
@@ -43,7 +47,8 @@ fun newLibrary(
                 preferEmbeddedMetadata = preferEmbeddedMetadata,
                 metadataAgents = listOf(NamedMetadataAgent("audible")),
                 fileScanners = fileScanners,
-                language = "en",
+                language = language,
+                region = region,
             ),
         )
     }

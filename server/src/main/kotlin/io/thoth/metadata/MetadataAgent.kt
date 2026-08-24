@@ -3,6 +3,7 @@ package io.thoth.metadata
 import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
@@ -11,10 +12,10 @@ import kotlinx.coroutines.flow.Flow
 /** The lookups a metadata provider has to implement itself. Everything else can be derived from them. */
 interface MetadataProvider {
     val name: String
-    val supportedCountryCodes: List<String>
+    val supportedRegions: List<MetadataRegion>
 
     suspend fun search(
-        region: String, // TODO make enum
+        region: MetadataRegion,
         keywords: String? = null,
         title: String? = null,
         author: String? = null,
@@ -26,19 +27,19 @@ interface MetadataProvider {
     suspend fun getAuthorByID(
         providerId: String,
         authorId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataAuthor?
 
     suspend fun getBookByID(
         providerId: String,
         bookId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataBook?
 
     suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataSeries?
 }
 
@@ -50,18 +51,21 @@ interface MetadataProvider {
 interface MetadataAgent : MetadataProvider {
     fun getAuthorByName(
         authorName: String,
-        region: String,
+        region: MetadataRegion,
+        language: MetadataLanguage? = null,
     ): Flow<MetadataAuthor>
 
     fun getBookByName(
         bookName: String,
-        region: String,
+        region: MetadataRegion,
         authorName: String? = null,
+        language: MetadataLanguage? = null,
     ): Flow<MetadataBook>
 
     fun getSeriesByName(
         seriesName: String,
-        region: String,
+        region: MetadataRegion,
         authorName: String? = null,
+        language: MetadataLanguage? = null,
     ): Flow<MetadataSeries>
 }

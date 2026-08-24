@@ -8,6 +8,6 @@ import org.koin.ktor.ext.inject
 fun Routing.metadataAgentRouting() {
     val scanners by inject<MetadataAgents>()
     get<Api.MetadataAgents, List<MetadataAgentApiModel>> {
-        scanners.map { MetadataAgentApiModel(it.name, it.supportedCountryCodes) }
+        scanners.map { MetadataAgentApiModel(it.name, it.supportedRegions) }
     }
 }

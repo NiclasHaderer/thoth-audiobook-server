@@ -1,5 +1,7 @@
 package io.thoth.metadata.audiobookdb
 
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import kotlin.test.Test
@@ -18,7 +20,7 @@ class AudiobookDbApiLiveTest {
     @Test
     fun `maps a book`() =
         runBlocking {
-            val book = assertNotNull(provider.getBookByID("audiobookdb", projectHailMary, "US"))
+            val book = assertNotNull(provider.getBookByID("audiobookdb", projectHailMary, MetadataRegion.US))
 
             assertEquals(projectHailMary, book.id.itemID)
             assertEquals("audiobookdb", book.id.provider)
@@ -30,7 +32,7 @@ class AudiobookDbApiLiveTest {
             assertEquals(listOf("Ray Porter"), book.narrators)
             assertEquals(LocalDate.of(2021, 5, 4), book.releaseDate)
             assertEquals("Audible Studios", book.publisher)
-            assertEquals("english", book.language)
+            assertEquals(MetadataLanguage.English, book.language)
             assertEquals("9781603935470", book.isbn)
             assertTrue(book.providerRating!! > 0f, "rating was ${book.providerRating}")
             assertTrue(book.coverURL!!.startsWith("https://"), "cover was '${book.coverURL}'")
@@ -40,7 +42,7 @@ class AudiobookDbApiLiveTest {
     @Test
     fun `searches for audiobooks`() =
         runBlocking {
-            val hits = provider.search("US", keywords = "project hail mary")
+            val hits = provider.search(MetadataRegion.US, keywords = "project hail mary")
 
             val book = assertNotNull(hits.find { it.id.itemID == projectHailMary }, "hits were ${hits.map { it.title }}")
             assertEquals("Project Hail Mary", book.title)
@@ -51,7 +53,7 @@ class AudiobookDbApiLiveTest {
     @Test
     fun `looks up an author`() =
         runBlocking {
-            val author = assertNotNull(provider.getAuthorByID("audiobookdb", andyWeir, "US"))
+            val author = assertNotNull(provider.getAuthorByID("audiobookdb", andyWeir, MetadataRegion.US))
 
             assertEquals("Andy Weir", author.name)
             assertEquals(andyWeir, author.id.itemID)
@@ -65,7 +67,7 @@ class AudiobookDbApiLiveTest {
     @Test
     fun `resolves a series with its books`() =
         runBlocking {
-            val series = assertNotNull(provider.getSeriesByID("audiobookdb", forwardCollection, "US"))
+            val series = assertNotNull(provider.getSeriesByID("audiobookdb", forwardCollection, MetadataRegion.US))
 
             assertEquals("Forward Collection", series.title)
             assertEquals("https://audiobookdb.org/series/$forwardCollection", series.link)
@@ -77,8 +79,8 @@ class AudiobookDbApiLiveTest {
     @Test
     fun `returns null for unknown ids`() =
         runBlocking {
-            assertNull(provider.getBookByID("audiobookdb", "zzzzzzzzzzzz", "US"))
-            assertNull(provider.getSeriesByID("audiobookdb", "zzzzzzzzzzzz", "US"))
-            assertNull(provider.getAuthorByID("audiobookdb", "zzzzzzzzzzzz", "US"))
+            assertNull(provider.getBookByID("audiobookdb", "zzzzzzzzzzzz", MetadataRegion.US))
+            assertNull(provider.getSeriesByID("audiobookdb", "zzzzzzzzzzzz", MetadataRegion.US))
+            assertNull(provider.getAuthorByID("audiobookdb", "zzzzzzzzzzzz", MetadataRegion.US))
         }
 }

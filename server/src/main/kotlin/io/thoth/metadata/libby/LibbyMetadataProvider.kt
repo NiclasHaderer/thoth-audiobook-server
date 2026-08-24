@@ -13,6 +13,7 @@ import io.thoth.metadata.responses.MetadataAgentIDImpl
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeriesImpl
@@ -28,10 +29,10 @@ class LibbyMetadataProvider(
 
     override val name = LIBBY_PROVIDER_NAME
 
-    override val supportedCountryCodes = listOf("US")
+    override val supportedRegions = listOf(MetadataRegion.US)
 
     override suspend fun search(
-        region: String,
+        region: MetadataRegion,
         keywords: String?,
         title: String?,
         author: String?,
@@ -57,7 +58,7 @@ class LibbyMetadataProvider(
     override suspend fun getAuthorByID(
         providerId: String,
         authorId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataAuthorImpl? {
         val parameters =
             Parameters.build {
@@ -87,13 +88,13 @@ class LibbyMetadataProvider(
     override suspend fun getBookByID(
         providerId: String,
         bookId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataBookImpl? = http.getJson<LibbyApiMedia>(apiUrl(listOf("media", bookId)))?.toMetadataBook(libraryKey, imageSize)
 
     override suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataSeriesImpl? {
         val series = http.getJson<LibbyApiSeriesResponse>(apiUrl(listOf("libraries", libraryKey, "series", seriesId))) ?: return null
 

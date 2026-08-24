@@ -2,6 +2,8 @@ package io.thoth.server.api
 
 import io.ktor.server.routing.RoutingContext
 import io.thoth.metadata.MetadataAgents
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.openapi.ktor.ValidateObject
@@ -16,7 +18,8 @@ data class UpdateLibrary(
     val preferEmbeddedMetadata: Boolean,
     val metadataAgents: List<NamedMetadataAgent>,
     val fileScanners: List<FileScanner>,
-    var language: String,
+    var language: MetadataLanguage,
+    var region: MetadataRegion,
 ) : ValidateObject {
     override suspend fun RoutingContext.validateBody() {
         requireNotEmpty(folders, "folder")
@@ -32,7 +35,8 @@ data class PartialUpdateLibrary(
     val preferEmbeddedMetadata: Boolean?,
     val metadataAgents: List<NamedMetadataAgent>?,
     val fileScanners: List<FileScanner>?,
-    val language: String?,
+    val language: MetadataLanguage?,
+    val region: MetadataRegion?,
 ) : ValidateObject {
     override suspend fun RoutingContext.validateBody() {
         // An absent list means "leave unchanged", so it is skipped. An empty one is an explicit new value and

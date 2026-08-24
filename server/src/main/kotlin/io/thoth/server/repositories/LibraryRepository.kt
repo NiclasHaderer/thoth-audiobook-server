@@ -108,6 +108,7 @@ class LibraryRepositoryImpl :
                             metadataAgents = partial.metadataAgents ?: library.metadataAgents,
                             fileScanners = partial.fileScanners ?: library.fileScanners,
                             language = partial.language ?: library.language,
+                            region = partial.region ?: library.region,
                         )
                     LibrariesTable.update(updated)
                     updated.toModel(bookCount(id))
@@ -136,6 +137,7 @@ class LibraryRepositoryImpl :
                             metadataAgents = complete.metadataAgents,
                             fileScanners = complete.fileScanners,
                             language = complete.language,
+                            region = complete.region,
                         )
                     LibrariesTable.insert(row)
                     row.toModel(0)

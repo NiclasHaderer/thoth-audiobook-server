@@ -1,5 +1,6 @@
 package io.thoth.models
 
+import io.thoth.metadata.responses.MetadataLanguage
 import java.time.LocalDate
 import java.util.UUID
 
@@ -14,7 +15,7 @@ open class Book(
     val providerRating: Float?,
     val releaseDate: LocalDate?,
     val publisher: String?,
-    val language: String?,
+    val language: MetadataLanguage?,
     val description: String?,
     val narrators: List<String>,
     val isbn: String?,

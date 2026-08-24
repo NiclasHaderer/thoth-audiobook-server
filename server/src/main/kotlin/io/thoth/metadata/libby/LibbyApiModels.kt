@@ -5,6 +5,7 @@ import io.thoth.metadata.parseDateOrNull
 import io.thoth.metadata.responses.MetadataAgentIDImpl
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
+import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import kotlinx.serialization.Serializable
@@ -53,7 +54,7 @@ internal data class LibbyApiMedia(
             narrators = creators.filter { it.role == NARRATOR_ROLE }.mapNotNull { it.name },
             providerRating = starRating,
             publisher = publisher?.name,
-            language = languages.firstOrNull()?.name?.lowercase(),
+            language = languages.firstOrNull()?.let { MetadataLanguage.fromTag(it.id ?: it.name) },
             isbn = formats.firstNotNullOfOrNull { it.isbn },
         )
 
@@ -70,7 +71,7 @@ internal data class LibbyApiMedia(
             releaseDate = parseDate(publishDate ?: estimatedReleaseDate),
             coverURL = coverURL(imageSize),
             narrators = creators.filter { it.role == NARRATOR_ROLE }.mapNotNull { it.name },
-            language = languages.firstOrNull()?.name?.lowercase(),
+            language = languages.firstOrNull()?.let { MetadataLanguage.fromTag(it.id ?: it.name) },
         )
 
     private fun coverURL(imageSize: Int): String? {

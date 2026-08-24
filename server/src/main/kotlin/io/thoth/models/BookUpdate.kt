@@ -1,6 +1,7 @@
 package io.thoth.models
 
 import io.ktor.server.routing.RoutingContext
+import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.openapi.ktor.ValidateObject
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.time.LocalDate
@@ -15,7 +16,7 @@ data class BookUpdate(
     val providerRating: Float?,
     val releaseDate: LocalDate?,
     val publisher: String?,
-    val language: String?,
+    val language: MetadataLanguage?,
     val description: String?,
     val narrators: List<String>?,
     val genres: List<String>?,

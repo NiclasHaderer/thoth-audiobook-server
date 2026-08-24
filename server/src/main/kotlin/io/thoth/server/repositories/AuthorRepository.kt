@@ -2,6 +2,8 @@ package io.thoth.server.repositories
 
 import io.thoth.metadata.MetadataAgent
 import io.thoth.metadata.MetadataAgents
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.Author
 import io.thoth.models.AuthorDetailed
 import io.thoth.models.AuthorUpdate
@@ -156,12 +158,17 @@ class AuthorServiceImpl :
         id: UUID,
         libraryId: UUID,
     ): Author {
-        val (metadataAgent, authorName, region) =
+        val (metadataAgent, authorName, region, language) =
             transaction {
                 val library = libraryRepository.raw(libraryId)
-                AutoMatchQuery(metadataAgents.forLibrary(library), raw(id, libraryId).name, library.language)
+                AutoMatchQuery(
+                    metadataAgents.forLibrary(library),
+                    raw(id, libraryId).name,
+                    library.region,
+                    library.language,
+                )
             }
-        val result = runBlocking { metadataAgent.getAuthorByName(authorName, region).firstOrNull() }
+        val result = runBlocking { metadataAgent.getAuthorByName(authorName, region, language).firstOrNull() }
         val newImage = imageDownloader.download(result?.imageURL)
 
         return transaction {
@@ -186,7 +193,8 @@ class AuthorServiceImpl :
     private data class AutoMatchQuery(
         val metadataAgent: MetadataAgent,
         val authorName: String,
-        val region: String,
+        val region: MetadataRegion,
+        val language: MetadataLanguage,
     )
 
     override fun getAll(

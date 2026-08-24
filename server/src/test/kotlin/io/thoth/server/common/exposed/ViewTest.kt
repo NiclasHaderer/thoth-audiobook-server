@@ -1,5 +1,6 @@
 package io.thoth.server.common.exposed
 
+import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorTable
@@ -57,7 +58,7 @@ private object EnglishAuthorView : View("EnglishAuthor") {
     override fun body() =
         (AuthorTable innerJoin LibrariesTable innerJoin AuthorFileMetadataTable)
             .select(AuthorTable.id, AuthorFileMetadataTable.name)
-            .where { LibrariesTable.language eq "en" }
+            .where { LibrariesTable.language eq MetadataLanguage.English }
 }
 
 private object MismatchedArityView : View("MismatchedArity") {
@@ -132,7 +133,7 @@ class ViewTest : ThothTest() {
         syncViews(listOf(EnglishAuthorView))
 
         val ddl = transaction { EnglishAuthorView.createStatement().single() }
-        assertContains(ddl, "'en'")
+        assertContains(ddl, "'English'")
 
         val names = transaction { EnglishAuthorView.selectAll().map { it[EnglishAuthorView.name] } }
         assertEquals(listOf("Tolkien"), names)

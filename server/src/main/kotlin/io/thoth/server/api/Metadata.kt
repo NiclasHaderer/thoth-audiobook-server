@@ -5,6 +5,8 @@ import io.thoth.metadata.MetadataAgent
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
 import io.thoth.openapi.ktor.errors.ErrorResponse
@@ -18,11 +20,11 @@ fun Routing.metadataRouting() {
     val metadataAgents by inject<MetadataAgents>()
     val libraryRepository by inject<LibraryRepository>()
 
-    fun agentFor(libraryId: UUID): Pair<MetadataAgent, String> =
-        libraryRepository.raw(libraryId).let { metadataAgents.forLibrary(it) to it.language }
+    fun agentFor(libraryId: UUID): LibraryAgent =
+        libraryRepository.raw(libraryId).let { LibraryAgent(metadataAgents.forLibrary(it), it.region, it.language) }
 
     get<Api.Libraries.Id.Metadata.Search, List<MetadataSearchBook>> {
-        val (metadataAgent, region) = agentFor(it.libraryId)
+        val (metadataAgent, region, language) = agentFor(it.libraryId)
 
         metadataAgent.search(
             region = region,
@@ -30,7 +32,8 @@ fun Routing.metadataRouting() {
             title = it.title,
             author = it.author,
             narrator = it.narrator,
-            language = it.language,
+            // An explicit language narrows the search further than the library default does
+            language = it.language ?: language,
             pageSize = it.pageSize,
         )
     }
@@ -42,8 +45,8 @@ fun Routing.metadataRouting() {
     }
 
     get<Api.Libraries.Id.Metadata.Author.Search, List<MetadataAuthor>> {
-        val (metadataAgent, region) = agentFor(it.libraryId)
-        metadataAgent.getAuthorByName(authorName = it.q, region = region).toList()
+        val (metadataAgent, region, language) = agentFor(it.libraryId)
+        metadataAgent.getAuthorByName(authorName = it.q, region = region, language = language).toList()
     }
 
     get<Api.Libraries.Id.Metadata.Book.Id, MetadataBook> {
@@ -53,8 +56,10 @@ fun Routing.metadataRouting() {
     }
 
     get<Api.Libraries.Id.Metadata.Book.Search, List<MetadataBook>> {
-        val (metadataAgent, region) = agentFor(it.libraryId)
-        metadataAgent.getBookByName(bookName = it.q, region = region, authorName = it.authorName).toList()
+        val (metadataAgent, region, language) = agentFor(it.libraryId)
+        metadataAgent
+            .getBookByName(bookName = it.q, region = region, authorName = it.authorName, language = language)
+            .toList()
     }
 
     get<Api.Libraries.Id.Metadata.Series.Id, MetadataSeries> {
@@ -63,7 +68,15 @@ fun Routing.metadataRouting() {
             ?: throw ErrorResponse.notFound("Series", it.id, "Provider ${it.provider}")
     }
     get<Api.Libraries.Id.Metadata.Series.Search, List<MetadataSeries>> {
-        val (metadataAgent, region) = agentFor(it.libraryId)
-        metadataAgent.getSeriesByName(seriesName = it.q, region = region, authorName = it.authorName).toList()
+        val (metadataAgent, region, language) = agentFor(it.libraryId)
+        metadataAgent
+            .getSeriesByName(seriesName = it.q, region = region, authorName = it.authorName, language = language)
+            .toList()
     }
 }
+
+private data class LibraryAgent(
+    val agent: MetadataAgent,
+    val region: MetadataRegion,
+    val language: MetadataLanguage,
+)

@@ -1,5 +1,6 @@
 package io.thoth.metadata.audible
 
+import io.thoth.metadata.responses.MetadataRegion
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,7 +29,7 @@ class AudibleSeriesScrapeTest {
     @Test
     fun `resolves a series with description and ordered books`() =
         runBlocking {
-            val series = assertNotNull(provider.getSeriesByID("audible", dungeonCrawlerCarl, "DE"))
+            val series = assertNotNull(provider.getSeriesByID("audible", dungeonCrawlerCarl, MetadataRegion.DE))
 
             assertEquals("Dungeon Crawler Carl", series.title)
             assertEquals(listOf("Matt Dinniman"), series.authors)

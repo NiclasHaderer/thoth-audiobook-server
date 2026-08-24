@@ -5,6 +5,7 @@ import io.thoth.metadata.parseDateOrNull
 import io.thoth.metadata.responses.MetadataAgentIDImpl
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
+import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.server.common.extensions.replaceAll
@@ -59,7 +60,7 @@ internal data class AudibleApiProduct(
             narrators = narrators.mapNotNull { it.name },
             providerRating = rating?.overallDistribution?.averageRating,
             publisher = publisherName,
-            language = language,
+            language = MetadataLanguage.fromTag(language),
             isbn = isbn,
         )
 
@@ -76,7 +77,7 @@ internal data class AudibleApiProduct(
             releaseDate = parseDate(releaseDate ?: issueDate),
             coverURL = coverURL(imageSize),
             narrators = narrators.mapNotNull { it.name },
-            language = language,
+            language = MetadataLanguage.fromTag(language),
         )
 
     /** ASINs of the books of a series, in the order Audible sequences them. */

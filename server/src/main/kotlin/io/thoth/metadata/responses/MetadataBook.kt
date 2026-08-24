@@ -8,7 +8,7 @@ interface MetadataSearchBook {
     val link: String?
     val authors: List<MetadataSearchAuthor>?
     val series: List<MetadataBookSeries>
-    val language: String?
+    val language: MetadataLanguage?
     val releaseDate: LocalDate?
     val coverURL: String?
     val narrators: List<String>
@@ -20,7 +20,7 @@ data class MetadataSearchBookImpl(
     override val link: String?,
     override val authors: List<MetadataSearchAuthor>?,
     override val series: List<MetadataBookSeries>,
-    override val language: String?,
+    override val language: MetadataLanguage?,
     override val releaseDate: LocalDate?,
     override val coverURL: String?,
     override val narrators: List<String>,
@@ -45,6 +45,6 @@ data class MetadataBookImpl(
     override val narrators: List<String>,
     override val providerRating: Float?,
     override val publisher: String?,
-    override val language: String?,
+    override val language: MetadataLanguage?,
     override val isbn: String?,
 ) : MetadataBook

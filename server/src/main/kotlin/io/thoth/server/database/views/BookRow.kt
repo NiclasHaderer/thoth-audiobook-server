@@ -1,5 +1,6 @@
 package io.thoth.server.database.views
 
+import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.models.Book
 import io.thoth.models.NamedId
 import io.thoth.models.TitledId
@@ -18,7 +19,7 @@ data class BookRow(
     val title: String,
     val releaseDate: LocalDate?,
     val publisher: String?,
-    val language: String?,
+    val language: MetadataLanguage?,
     val description: String?,
     val narrators: List<String>,
     val isbn: String?,

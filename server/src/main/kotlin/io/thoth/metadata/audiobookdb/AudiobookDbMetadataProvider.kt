@@ -13,6 +13,7 @@ import io.thoth.metadata.httpsApiUrl
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeriesImpl
@@ -40,10 +41,10 @@ class AudiobookDbMetadataProvider(
 
     override val name = AUDIOBOOKDB_PROVIDER_NAME
 
-    override val supportedCountryCodes = listOf("AU", "CA", "DE", "ES", "FR", "IN", "IT", "JP", "US", "UK")
+    override val supportedRegions = MetadataRegion.entries
 
     override suspend fun search(
-        region: String,
+        region: MetadataRegion,
         keywords: String?,
         title: String?,
         author: String?,
@@ -66,13 +67,13 @@ class AudiobookDbMetadataProvider(
     override suspend fun getAuthorByID(
         providerId: String,
         authorId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataAuthorImpl? = http.getJson<AudiobookDbApiPerson>(apiUrl(listOf("people", authorId)))?.toMetadataAuthor()
 
     override suspend fun getBookByID(
         providerId: String,
         bookId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataBookImpl? {
         val book = http.getJson<AudiobookDbApiBook>(apiUrl(listOf("books", bookId))) ?: return null
         return coroutineScope {
@@ -96,7 +97,7 @@ class AudiobookDbMetadataProvider(
     override suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataSeriesImpl? = http.getJson<AudiobookDbApiSeries>(apiUrl(listOf("series", seriesId)))?.toMetadataSeries()
 
     private fun apiUrl(

@@ -6,6 +6,7 @@ import io.thoth.metadata.responses.MetadataAgentIDImpl
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
+import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.metadata.responses.MetadataSeriesImpl
@@ -122,7 +123,7 @@ internal data class AudiobookDbApiBook(
                 ?: emptyList(),
             providerRating = rating,
             publisher = release?.publisher?.name,
-            language = (release?.language ?: originalLanguage)?.name?.lowercase(),
+            language = MetadataLanguage.fromTag((release?.language ?: originalLanguage)?.name),
             isbn = isbn,
         )
     }

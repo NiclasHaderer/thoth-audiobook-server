@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
@@ -20,13 +21,13 @@ class MetadataAgentWrapper(
     private val agentList: List<MetadataAgent>,
 ) : MetadataAgent {
     override val name = agentList.joinToString(", ") { it.name }
-    override val supportedCountryCodes: List<String>
-        get() = agentList.flatMap { it.supportedCountryCodes }.distinct()
+    override val supportedRegions: List<MetadataRegion>
+        get() = agentList.flatMap { it.supportedRegions }.distinct()
 
     private val agentsByName by lazy { agentList.associateBy { it.name } }
 
     override suspend fun search(
-        region: String,
+        region: MetadataRegion,
         keywords: String?,
         title: String?,
         author: String?,
@@ -55,39 +56,47 @@ class MetadataAgentWrapper(
     override suspend fun getAuthorByID(
         providerId: String,
         authorId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataAuthor? = agent(providerId)?.getAuthorByID(providerId = providerId, authorId = authorId, region = region)
 
     override suspend fun getBookByID(
         providerId: String,
         bookId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataBook? = agent(providerId)?.getBookByID(providerId = providerId, bookId = bookId, region = region)
 
     override suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataSeries? = agent(providerId)?.getSeriesByID(providerId = providerId, seriesId = seriesId, region = region)
 
     override fun getAuthorByName(
         authorName: String,
-        region: String,
-    ): Flow<MetadataAuthor> = fromEachAgent { it.getAuthorByName(authorName = authorName, region = region) }
+        region: MetadataRegion,
+        language: MetadataLanguage?,
+    ): Flow<MetadataAuthor> =
+        fromEachAgent { it.getAuthorByName(authorName = authorName, region = region, language = language) }
 
     override fun getBookByName(
         bookName: String,
-        region: String,
+        region: MetadataRegion,
         authorName: String?,
+        language: MetadataLanguage?,
     ): Flow<MetadataBook> =
-        fromEachAgent { it.getBookByName(bookName = bookName, region = region, authorName = authorName) }
+        fromEachAgent {
+            it.getBookByName(bookName = bookName, region = region, authorName = authorName, language = language)
+        }
 
     override fun getSeriesByName(
         seriesName: String,
-        region: String,
+        region: MetadataRegion,
         authorName: String?,
+        language: MetadataLanguage?,
     ): Flow<MetadataSeries> =
-        fromEachAgent { it.getSeriesByName(seriesName = seriesName, region = region, authorName = authorName) }
+        fromEachAgent {
+            it.getSeriesByName(seriesName = seriesName, region = region, authorName = authorName, language = language)
+        }
 
     /**
      * Every agent hands out its results best match first, so they are concatenated instead of ranked again: ranking

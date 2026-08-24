@@ -1,5 +1,7 @@
 package io.thoth.server.database.tables
 
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.FileScanner
 import io.thoth.models.Library
 import io.thoth.models.NamedMetadataAgent
@@ -34,8 +36,8 @@ object LibrariesTable : UUIDTable("Libraries") {
             }
         }
 
-    // TODO make enum
-    val language = varchar("language", 255)
+    val language = enumerationByName<MetadataLanguage>("language", 255)
+    val region = enumerationByName<MetadataRegion>("region", 255)
 }
 
 data class LibraryRow(
@@ -47,7 +49,8 @@ data class LibraryRow(
     val preferEmbeddedMetadata: Boolean,
     val metadataAgents: List<NamedMetadataAgent>,
     val fileScanners: List<FileScanner>,
-    val language: String,
+    val language: MetadataLanguage,
+    val region: MetadataRegion,
 ) {
     fun toModel(bookCount: Long): Library =
         Library(
@@ -59,6 +62,7 @@ data class LibraryRow(
             metadataAgents = metadataAgents,
             fileScanners = fileScanners,
             language = language,
+            region = region,
             bookCount = bookCount,
         )
 }
@@ -74,6 +78,7 @@ fun ResultRow.toLibraryRow(): LibraryRow =
         metadataAgents = this[LibrariesTable.metadataAgents],
         fileScanners = this[LibrariesTable.fileScanners],
         language = this[LibrariesTable.language],
+        region = this[LibrariesTable.region],
     )
 
 context(_: Transaction)
@@ -100,4 +105,5 @@ private fun write(
     stmt[LibrariesTable.metadataAgents] = row.metadataAgents
     stmt[LibrariesTable.fileScanners] = row.fileScanners
     stmt[LibrariesTable.language] = row.language
+    stmt[LibrariesTable.region] = row.region
 }

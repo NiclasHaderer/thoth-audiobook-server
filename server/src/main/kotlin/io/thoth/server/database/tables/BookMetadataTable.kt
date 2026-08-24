@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.server.database.extensions.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -23,7 +24,7 @@ sealed class BookMetadata(
     val title = text("title").nullable()
     val releaseDate = date("releaseDate").nullable()
     val publisher = varchar("publisher", 255).nullable()
-    val language = varchar("language", 255).nullable()
+    val language = enumerationByName<MetadataLanguage>("language", 255).nullable()
     val description = text("description").nullable()
     val isbn = varchar("isbn", 255).nullable()
     val provider = varchar("provider", 255).nullable()
@@ -52,7 +53,7 @@ data class BookMetadataRow(
     val title: String? = null,
     val releaseDate: LocalDate? = null,
     val publisher: String? = null,
-    val language: String? = null,
+    val language: MetadataLanguage? = null,
     val description: String? = null,
     val isbn: String? = null,
     val provider: String? = null,

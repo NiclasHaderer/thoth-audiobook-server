@@ -7,6 +7,7 @@ import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchBookImpl
@@ -103,7 +104,7 @@ internal class FakeMetadataProvider(
     private val hits: List<MetadataSearchBook> = emptyList(),
     private val resolveBook: suspend (String) -> MetadataBook? = { testBook(it) },
 ) : MetadataProvider {
-    override val supportedCountryCodes = listOf("US")
+    override val supportedRegions = listOf(MetadataRegion.US)
 
     val searchCalls = AtomicInteger()
     val bookLookups = CopyOnWriteArrayList<String>()
@@ -111,7 +112,7 @@ internal class FakeMetadataProvider(
     val seriesLookups = CopyOnWriteArrayList<String>()
 
     override suspend fun search(
-        region: String,
+        region: MetadataRegion,
         keywords: String?,
         title: String?,
         author: String?,
@@ -126,7 +127,7 @@ internal class FakeMetadataProvider(
     override suspend fun getAuthorByID(
         providerId: String,
         authorId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataAuthor? {
         authorLookups += "$authorId@$region"
         return testAuthor(authorId, name)
@@ -135,7 +136,7 @@ internal class FakeMetadataProvider(
     override suspend fun getBookByID(
         providerId: String,
         bookId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataBook? {
         bookLookups += "$bookId@$region"
         return resolveBook(bookId)
@@ -144,7 +145,7 @@ internal class FakeMetadataProvider(
     override suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataSeries? {
         seriesLookups += "$seriesId@$region"
         return testSeries(seriesId, name)

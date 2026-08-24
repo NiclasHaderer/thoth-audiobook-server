@@ -17,6 +17,7 @@ import io.thoth.metadata.responses.MetadataAgentIDImpl
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeriesImpl
@@ -33,11 +34,11 @@ class AudibleMetadataProvider(
 
     override val name = AUDIBLE_PROVIDER_NAME
 
-    override val supportedCountryCodes: List<String>
-        get() = AudibleRegions.entries.map { it.name }
+    override val supportedRegions: List<MetadataRegion>
+        get() = AudibleRegions.entries.map { it.region }
 
     override suspend fun search(
-        region: String,
+        region: MetadataRegion,
         keywords: String?,
         title: String?,
         author: String?,
@@ -72,13 +73,13 @@ class AudibleMetadataProvider(
     override suspend fun getAuthorByID(
         providerId: String,
         authorId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataAuthorImpl? = scrapeAuthor(AudibleRegions.from(region), authorId)
 
     override suspend fun getBookByID(
         providerId: String,
         bookId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataBookImpl? {
         val audibleRegion = AudibleRegions.from(region)
         val product = getProduct(audibleRegion, bookId) ?: return null
@@ -90,7 +91,7 @@ class AudibleMetadataProvider(
     override suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
-        region: String,
+        region: MetadataRegion,
     ): MetadataSeriesImpl? {
         val audibleRegion = AudibleRegions.from(region)
         val series = getProduct(audibleRegion, seriesId, listOf("relationships")) ?: return null

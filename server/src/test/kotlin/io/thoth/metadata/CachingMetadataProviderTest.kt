@@ -1,5 +1,6 @@
 package io.thoth.metadata
 
+import io.thoth.metadata.responses.MetadataRegion
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
@@ -21,8 +22,8 @@ class CachingMetadataProviderTest {
             val provider = FakeMetadataProvider()
             val caching = CachingMetadataProvider(provider)
 
-            caching.getBookByID("fake", "book-1", "US")
-            caching.getBookByID("fake", "book-1", "US")
+            caching.getBookByID("fake", "book-1", MetadataRegion.US)
+            caching.getBookByID("fake", "book-1", MetadataRegion.US)
 
             assertEquals(1, provider.bookLookups.size)
         }
@@ -33,8 +34,8 @@ class CachingMetadataProviderTest {
             val provider = FakeMetadataProvider()
             val caching = CachingMetadataProvider(provider)
 
-            caching.getBookByID("fake", "book-1", "US")
-            caching.getBookByID("fake", "book-1", "DE")
+            caching.getBookByID("fake", "book-1", MetadataRegion.US)
+            caching.getBookByID("fake", "book-1", MetadataRegion.DE)
 
             assertEquals(listOf("book-1@US", "book-1@DE"), provider.bookLookups)
         }
@@ -46,7 +47,7 @@ class CachingMetadataProviderTest {
             val provider = FakeMetadataProvider(resolveBook = { released.await(); testBook(it) })
             val caching = CachingMetadataProvider(provider)
 
-            val callers = (1..5).map { async { caching.getBookByID("fake", "book-1", "US") } }
+            val callers = (1..5).map { async { caching.getBookByID("fake", "book-1", MetadataRegion.US) } }
             while (provider.bookLookups.isEmpty()) delay(1)
             released.complete(Unit)
 
@@ -61,8 +62,8 @@ class CachingMetadataProviderTest {
             val provider = FakeMetadataProvider(resolveBook = { released.await(); testBook(it) })
             val caching = CachingMetadataProvider(provider)
 
-            val stays = async { caching.getBookByID("fake", "book-1", "US") }
-            val givesUp = launch { caching.getBookByID("fake", "book-1", "US") }
+            val stays = async { caching.getBookByID("fake", "book-1", MetadataRegion.US) }
+            val givesUp = launch { caching.getBookByID("fake", "book-1", MetadataRegion.US) }
             // Both callers have to arrive at the shared entry before one of them walks away
             while (provider.bookLookups.isEmpty()) delay(1)
             givesUp.cancelAndJoin()
@@ -84,10 +85,10 @@ class CachingMetadataProviderTest {
                 )
             val caching = CachingMetadataProvider(provider)
 
-            val failure = assertFailsWith<IOException> { caching.getBookByID("fake", "book-1", "US") }
+            val failure = assertFailsWith<IOException> { caching.getBookByID("fake", "book-1", MetadataRegion.US) }
 
             assertEquals("provider is down", failure.message)
-            assertEquals("book-1", assertNotNull(caching.getBookByID("fake", "book-1", "US")).id.itemID)
+            assertEquals("book-1", assertNotNull(caching.getBookByID("fake", "book-1", MetadataRegion.US)).id.itemID)
         }
 
     @Test
@@ -96,8 +97,8 @@ class CachingMetadataProviderTest {
             val provider = FakeMetadataProvider(resolveBook = { null })
             val caching = CachingMetadataProvider(provider)
 
-            assertNull(caching.getBookByID("fake", "book-1", "US"))
-            assertNull(caching.getBookByID("fake", "book-1", "US"))
+            assertNull(caching.getBookByID("fake", "book-1", MetadataRegion.US))
+            assertNull(caching.getBookByID("fake", "book-1", MetadataRegion.US))
 
             assertEquals(2, provider.bookLookups.size)
         }

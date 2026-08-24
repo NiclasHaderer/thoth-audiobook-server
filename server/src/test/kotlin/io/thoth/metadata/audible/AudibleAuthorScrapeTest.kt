@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 
 /** Scrapes the live Audible pages, so it needs network access and breaks when Audible changes its markup. */
 class AudibleAuthorScrapeTest {
-    private val provider = AudibleMetadataProvider()
+    private val provider = AudibleMetadataProvider(imageSize = IMAGE_SIZE)
     private val rowling = "B000AP9A6K"
 
     @Test
@@ -55,9 +55,9 @@ class AudibleAuthorScrapeTest {
     @Test
     fun `requests the author image in the configured resolution`() =
         runBlocking {
-            val image = assertNotNull(AudibleMetadataProvider(imageSize = 900).scrapeAuthor(AudibleRegions.US, rowling)).imageURL
+            val image = assertNotNull(provider.scrapeAuthor(AudibleRegions.US, rowling)).imageURL
 
-            assertTrue(image!!.contains("_SX900_"), "image was '$image'")
+            assertTrue(image!!.contains("_SX${IMAGE_SIZE}_"), "image was '$image'")
             HttpClient().use { client ->
                 val response = client.head(image)
                 assertTrue(response.status.isSuccess(), "$image answered ${response.status}")
@@ -76,4 +76,8 @@ class AudibleAuthorScrapeTest {
             // caller, so what comes back depends on where the test runs.
             assertNull(provider.scrapeAuthor(AudibleRegions.US, "NOTANASIN"))
         }
+
+    private companion object {
+        const val IMAGE_SIZE = 900
+    }
 }

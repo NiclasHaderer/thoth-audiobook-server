@@ -52,4 +52,8 @@ fun Routing.authorRouting() {
         val author = authorService.createManual(postAuthor.name, route.libraryId)
         authorService.get(author.id, route.libraryId)
     }
+
+    post<Api.Libraries.Id.Authors.Id.AutoMatch, Unit, Author> { id, _ ->
+        authorService.autoMatch(id.id, id.libraryId)
+    }
 }
