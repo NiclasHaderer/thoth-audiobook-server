@@ -1,10 +1,9 @@
-package io.thoth.metadata.audible.client
+package io.thoth.metadata.audible
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.head
 import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
-import io.thoth.metadata.audible.models.AudibleRegions
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,14 +14,15 @@ import kotlin.test.assertTrue
 
 /** Scrapes the live Audible pages, so it needs network access and breaks when Audible changes its markup. */
 class AudibleAuthorScrapeTest {
+    private val provider = AudibleMetadataProvider()
     private val rowling = "B000AP9A6K"
 
     @Test
     fun `serves the pages in the language of the region`() =
         runBlocking {
             // audible.de also serves the Netherlands and picks the language by the IP of the server otherwise
-            val german = getAudiblePage(AudibleRegions.DE, listOf("author", rowling))
-            val japanese = getAudiblePage(AudibleRegions.JP, listOf("author", rowling))
+            val german = provider.scrapePage(AudibleRegions.DE, listOf("author", rowling))
+            val japanese = provider.scrapePage(AudibleRegions.JP, listOf("author", rowling))
 
             assertEquals("de-DE", german?.selectFirst("html")?.attr("lang"))
             assertEquals("ja-JP", japanese?.selectFirst("html")?.attr("lang"))
@@ -31,7 +31,7 @@ class AudibleAuthorScrapeTest {
     @Test
     fun `scrapes name, image and biography of an author`() =
         runBlocking {
-            val author = assertNotNull(getAudibleAuthor(AudibleRegions.US, 500, rowling))
+            val author = assertNotNull(provider.scrapeAuthor(AudibleRegions.US, rowling))
 
             assertEquals("J.K. Rowling", author.name)
             assertEquals(rowling, author.id.itemID)
@@ -44,8 +44,8 @@ class AudibleAuthorScrapeTest {
     @Test
     fun `scrapes the biography in the language of the region`() =
         runBlocking {
-            val english = assertNotNull(getAudibleAuthor(AudibleRegions.US, 500, rowling)).biography
-            val german = assertNotNull(getAudibleAuthor(AudibleRegions.DE, 500, rowling)).biography
+            val english = assertNotNull(provider.scrapeAuthor(AudibleRegions.US, rowling)).biography
+            val german = assertNotNull(provider.scrapeAuthor(AudibleRegions.DE, rowling)).biography
 
             assertNotNull(english)
             assertNotNull(german)
@@ -55,7 +55,7 @@ class AudibleAuthorScrapeTest {
     @Test
     fun `requests the author image in the configured resolution`() =
         runBlocking {
-            val image = assertNotNull(getAudibleAuthor(AudibleRegions.US, 900, rowling)).imageURL
+            val image = assertNotNull(AudibleMetadataProvider(imageSize = 900).scrapeAuthor(AudibleRegions.US, rowling)).imageURL
 
             assertTrue(image!!.contains("_SX900_"), "image was '$image'")
             HttpClient().use { client ->
@@ -74,6 +74,6 @@ class AudibleAuthorScrapeTest {
             // Audible answers an ASIN it does not know with a 404. A book ASIN cannot be used to cover the guard
             // against pages which are no author profile: /author/<book asin> redirects to the marketplace of the
             // caller, so what comes back depends on where the test runs.
-            assertNull(getAudibleAuthor(AudibleRegions.US, 500, "NOTANASIN"))
+            assertNull(provider.scrapeAuthor(AudibleRegions.US, "NOTANASIN"))
         }
 }

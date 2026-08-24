@@ -1,8 +1,5 @@
-package io.thoth.metadata.audible.client
+package io.thoth.metadata.audible
 
-import io.thoth.metadata.audible.models.AudibleApiProductResponse
-import io.thoth.metadata.audible.models.AudibleApiProductsResponse
-import io.thoth.metadata.audible.models.AudibleRegions
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import kotlin.test.Test

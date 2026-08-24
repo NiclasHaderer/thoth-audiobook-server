@@ -8,7 +8,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
-import io.thoth.metadata.audible.client.AudibleUnavailableException
+import io.thoth.metadata.MetadataProviderUnavailableException
 import io.thoth.openapi.ktor.errors.configureStatusPages
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,7 +28,7 @@ class ErrorStatusTest : ThothTest() {
 
     @Test
     fun `an unreachable metadata provider is answered with a bad gateway`() =
-        assertAnswer(AudibleUnavailableException("Audible is not answering"), HttpStatusCode.BadGateway)
+        assertAnswer(MetadataProviderUnavailableException("Audible is not answering"), HttpStatusCode.BadGateway)
 
     @Test
     fun `any other failure is still answered with an internal server error`() =

@@ -12,7 +12,7 @@ import io.thoth.openapi.client.kotlin.generateKotlinClient
 import io.thoth.openapi.client.typescript.generateTsClient
 import io.thoth.openapi.ktor.errors.ErrorStatuses
 import io.thoth.openapi.ktor.errors.configureStatusPages
-import io.thoth.metadata.audible.client.AudibleUnavailableException
+import io.thoth.metadata.MetadataProviderUnavailableException
 import io.thoth.server.api.audioRouting
 import io.thoth.server.api.authRoutes
 import io.thoth.server.api.authorRouting
@@ -76,7 +76,7 @@ fun Application.applicationModule(config: ThothConfig) {
 
 fun Application.plugins() {
     configureStatusPages {
-        status<AudibleUnavailableException>(HttpStatusCode.BadGateway)
+        status<MetadataProviderUnavailableException>(HttpStatusCode.BadGateway)
     }
     configureRouting()
     val mapper = configureSerialization()

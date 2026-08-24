@@ -1,4 +1,4 @@
-package io.thoth.metadata.libby.client
+package io.thoth.metadata.libby
 
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
@@ -11,6 +11,7 @@ import kotlin.test.assertTrue
 
 /** Queries the live Libby API, so it needs network access and breaks when the API changes. */
 class LibbyApiLiveTest {
+    private val provider = LibbyMetadataProvider(libraryKey = "brooklyn", imageSize = 500)
     private val philosophersStone = "11046339"
     private val harryPotterSeries = "1890760"
     private val stephenFry = "137205"
@@ -18,7 +19,7 @@ class LibbyApiLiveTest {
     @Test
     fun `maps a book`() =
         runBlocking {
-            val book = assertNotNull(getLibbyBook("brooklyn", 500, philosophersStone))
+            val book = assertNotNull(provider.getBookByID("libby", philosophersStone, "US"))
 
             assertEquals(philosophersStone, book.id.itemID)
             assertEquals("libby", book.id.provider)
@@ -42,7 +43,7 @@ class LibbyApiLiveTest {
     @Test
     fun `maps the series of a book`() =
         runBlocking {
-            val book = assertNotNull(getLibbyBook("brooklyn", 500, philosophersStone))
+            val book = assertNotNull(provider.getBookByID("libby", philosophersStone, "US"))
 
             assertEquals(listOf("Harry Potter"), book.series.map { it.title })
             assertEquals(listOf(harryPotterSeries), book.series.map { it.id.itemID })
@@ -56,7 +57,7 @@ class LibbyApiLiveTest {
     @Test
     fun `turns the description into plain text`() =
         runBlocking {
-            val book = assertNotNull(getLibbyBook("brooklyn", 500, philosophersStone))
+            val book = assertNotNull(provider.getBookByID("libby", philosophersStone, "US"))
             val description = assertNotNull(book.description)
 
             assertTrue(description.startsWith("Stephen Fry brings"), "description was '${description.take(60)}...'")
@@ -67,7 +68,7 @@ class LibbyApiLiveTest {
     @Test
     fun `searches for audiobooks`() =
         runBlocking {
-            val hits = getLibbySearchResult("brooklyn", 500, keywords = "harry potter stephen fry")
+            val hits = provider.search("US", keywords = "harry potter stephen fry")
 
             val book = assertNotNull(hits.find { it.id.itemID == philosophersStone }, "hits were ${hits.map { it.title }}")
             assertEquals("Harry Potter and the Philosopher's Stone", book.title)
@@ -77,7 +78,7 @@ class LibbyApiLiveTest {
     @Test
     fun `resolves a series with its ordered audiobooks`() =
         runBlocking {
-            val series = assertNotNull(getLibbySeries("brooklyn", 500, harryPotterSeries))
+            val series = assertNotNull(provider.getSeriesByID("libby", harryPotterSeries, "US"))
 
             assertEquals("Harry Potter", series.title)
             assertTrue(series.authors!!.contains("J. K. Rowling"), "authors were ${series.authors}")
@@ -90,7 +91,7 @@ class LibbyApiLiveTest {
     @Test
     fun `looks up an author by creator id`() =
         runBlocking {
-            val author = assertNotNull(getLibbyAuthor("brooklyn", stephenFry))
+            val author = assertNotNull(provider.getAuthorByID("libby", stephenFry, "US"))
 
             assertEquals("Stephen Fry", author.name)
             assertEquals(stephenFry, author.id.itemID)
@@ -100,8 +101,8 @@ class LibbyApiLiveTest {
     @Test
     fun `returns null for unknown ids`() =
         runBlocking {
-            assertNull(getLibbyBook("brooklyn", 500, "999999999"))
-            assertNull(getLibbySeries("brooklyn", 500, "999999999"))
-            assertNull(getLibbyAuthor("brooklyn", "999999999"))
+            assertNull(provider.getBookByID("libby", "999999999", "US"))
+            assertNull(provider.getSeriesByID("libby", "999999999", "US"))
+            assertNull(provider.getAuthorByID("libby", "999999999", "US"))
         }
 }

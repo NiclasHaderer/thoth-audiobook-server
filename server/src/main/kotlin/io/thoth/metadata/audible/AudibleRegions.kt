@@ -1,4 +1,4 @@
-package io.thoth.metadata.audible.models
+package io.thoth.metadata.audible
 
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 

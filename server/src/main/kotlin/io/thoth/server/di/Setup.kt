@@ -3,8 +3,9 @@ package io.thoth.server.di
 import io.thoth.metadata.CachingMetadataProvider
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.SearchBasedMetadataAgent
-import io.thoth.metadata.audible.client.AudibleMetadataProvider
-import io.thoth.metadata.libby.client.LibbyMetadataProvider
+import io.thoth.metadata.audible.AudibleMetadataProvider
+import io.thoth.metadata.audiobookdb.AudiobookDbMetadataProvider
+import io.thoth.metadata.libby.LibbyMetadataProvider
 import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
@@ -45,6 +46,7 @@ fun thothModule(config: ThothConfig) =
                 listOf(
                     SearchBasedMetadataAgent(CachingMetadataProvider(AudibleMetadataProvider())),
                     SearchBasedMetadataAgent(CachingMetadataProvider(LibbyMetadataProvider())),
+                    SearchBasedMetadataAgent(CachingMetadataProvider(AudiobookDbMetadataProvider())),
                 ),
             )
         }

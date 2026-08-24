@@ -1,6 +1,5 @@
-package io.thoth.metadata.audible.client
+package io.thoth.metadata.audible
 
-import io.thoth.metadata.audible.models.AudibleRegions
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -10,13 +9,14 @@ import kotlin.test.assertTrue
 
 /** Scrapes the live Audible pages, so it needs network access and breaks when Audible changes its markup. */
 class AudibleSeriesScrapeTest {
+    private val provider = AudibleMetadataProvider()
     private val dungeonCrawlerCarl = "B0937FGLYC"
 
     @Test
     fun `scrapes the description of a series`() =
         runBlocking {
             val description =
-                assertNotNull(getAudibleSeriesDescription(AudibleRegions.DE, dungeonCrawlerCarl))
+                assertNotNull(provider.scrapeSeriesDescription(AudibleRegions.DE, dungeonCrawlerCarl))
 
             assertTrue(
                 description.startsWith("The apocalypse will be televised!"),
@@ -28,7 +28,7 @@ class AudibleSeriesScrapeTest {
     @Test
     fun `resolves a series with description and ordered books`() =
         runBlocking {
-            val series = assertNotNull(getAudibleSeries(AudibleRegions.DE, 500, dungeonCrawlerCarl))
+            val series = assertNotNull(provider.getSeriesByID("audible", dungeonCrawlerCarl, "DE"))
 
             assertEquals("Dungeon Crawler Carl", series.title)
             assertEquals(listOf("Matt Dinniman"), series.authors)
