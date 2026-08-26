@@ -6,10 +6,14 @@ import io.ktor.http.ParametersBuilder
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
+import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSearchCount
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import me.xdrop.fuzzywuzzy.FuzzySearch
 import org.jsoup.parser.Parser
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -83,3 +87,21 @@ internal fun htmlToText(html: String?): String? =
         ?.replace(repeatedNewline, "\n\n")
         ?.trim()
         ?.ifEmpty { null }
+
+private const val RESOLUTION_WINDOW = 5
+
+internal fun <T> resolveInWindows(
+    ids: List<String>,
+    resolve: suspend (String) -> T?,
+): Flow<T> =
+    flow {
+        ids.chunked(RESOLUTION_WINDOW).forEach { window ->
+            val resolved = coroutineScope { window.map { async { resolve(it) } }.awaitAll() }
+            resolved.filterNotNull().forEach { emit(it) }
+        }
+    }
+
+internal fun <T : MetadataSearchBook> List<T>.narratorFirst(narrator: String?): List<T> {
+    if (narrator.isNullOrBlank()) return this
+    return sortedByDescending { hit -> hit.narrators.maxOfOrNull { FuzzySearch.tokenSetRatio(narrator, it) } ?: 0 }
+}

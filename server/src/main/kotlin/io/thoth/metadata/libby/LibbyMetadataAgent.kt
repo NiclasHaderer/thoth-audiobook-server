@@ -3,7 +3,7 @@ package io.thoth.metadata.libby
 import io.ktor.http.Parameters
 import io.ktor.http.Url
 import io.thoth.metadata.MetadataHttpClient
-import io.thoth.metadata.MetadataProvider
+import io.thoth.metadata.SearchBasedMetadataAgent
 import io.thoth.metadata.ThrottleConfig
 import io.thoth.metadata.appendOptional
 import io.thoth.metadata.fetchChunked
@@ -21,10 +21,10 @@ import io.thoth.metadata.toResultCount
 import java.time.Duration
 import kotlin.collections.get
 
-class LibbyMetadataProvider(
+class LibbyMetadataAgent(
     private val libraryKey: String = "brooklyn",
     private val imageSize: Int = 500,
-) : MetadataProvider {
+) : SearchBasedMetadataAgent() {
     private val http = MetadataHttpClient("Libby", throttle = ThrottleConfig(requests = 10, window = Duration.ofSeconds(1)))
 
     override val name = LIBBY_PROVIDER_NAME

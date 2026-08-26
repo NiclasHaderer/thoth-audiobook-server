@@ -63,33 +63,31 @@ internal data class AudiobookDbApiCredit(
 )
 
 @Serializable
-internal data class AudiobookDbApiListBook(
+internal data class AudiobookDbApiListRelease(
     val id: String,
     val title: String? = null,
     val image: AudiobookDbApiImage? = null,
-    val authors: List<AudiobookDbApiIdName> = emptyList(),
-    val series: AudiobookDbApiListSeries? = null,
+    val narrators: List<AudiobookDbApiIdName> = emptyList(),
+    val releaseDate: String? = null,
+    val publisher: AudiobookDbApiIdName? = null,
+    val language: AudiobookDbApiNamed? = null,
 ) {
+    val metadataLanguage: MetadataLanguage?
+        get() = MetadataLanguage.fromTag(language?.name)
+
+    // The authors and the series live on the book behind the release, which a search hit does not name
     fun toMetadataSearchBook(): MetadataSearchBookImpl =
         MetadataSearchBookImpl(
             id = MetadataAgentIDImpl(AUDIOBOOKDB_PROVIDER_NAME, id),
             title = title,
-            link = bookLink(id),
-            authors = authors.map { it.toMetadataAuthor() },
-            series = listOfNotNull(series?.toMetadataBookSeries()),
-            language = null,
-            releaseDate = null,
+            link = releaseLink(id),
+            authors = null,
+            series = emptyList(),
+            language = metadataLanguage,
+            releaseDate = parseDate(releaseDate),
             coverURL = image?.url,
-            narrators = emptyList(),
+            narrators = narrators.mapNotNull { it.name },
         )
-}
-
-@Serializable
-internal data class AudiobookDbApiListSeries(
-    val ordinal: Int? = null,
-    val series: AudiobookDbApiIdTitle? = null,
-) {
-    fun toMetadataBookSeries(): MetadataBookSeriesImpl? = series?.toMetadataBookSeries(ordinal?.toFloat())
 }
 
 @Serializable
@@ -102,32 +100,8 @@ internal data class AudiobookDbApiBook(
     val coverImage: AudiobookDbApiImage? = null,
     val images: List<AudiobookDbApiImage> = emptyList(),
     val people: List<AudiobookDbApiCredit> = emptyList(),
-    val releases: List<AudiobookDbApiRelease> = emptyList(),
     val series: List<AudiobookDbApiBookSeries> = emptyList(),
-) {
-    fun toMetadataBook(
-        isbn: String?,
-        rating: Float?,
-    ): MetadataBookImpl {
-        val release = releases.firstOrNull()
-        return MetadataBookImpl(
-            id = MetadataAgentIDImpl(AUDIOBOOKDB_PROVIDER_NAME, id),
-            title = title,
-            link = bookLink(id),
-            authors = people.filter { it.role?.name == AUTHOR_ROLE }.mapNotNull { it.person?.toMetadataAuthor() },
-            series = series.mapNotNull { it.toMetadataBookSeries() },
-            releaseDate = parseDate(release?.releaseDate ?: originallyPublishedAt),
-            coverURL = coverImage?.url ?: images.firstOrNull()?.url ?: release?.images?.firstOrNull()?.url,
-            description = htmlToText(description),
-            narrators = release?.people?.filter { it.role?.name == NARRATOR_ROLE }?.mapNotNull { it.person?.name }
-                ?: emptyList(),
-            providerRating = rating,
-            publisher = release?.publisher?.name,
-            language = MetadataLanguage.fromTag((release?.language ?: originalLanguage)?.name),
-            isbn = isbn,
-        )
-    }
-}
+)
 
 @Serializable
 internal data class AudiobookDbApiBookSeries(
@@ -138,19 +112,40 @@ internal data class AudiobookDbApiBookSeries(
 }
 
 @Serializable
-internal data class AudiobookDbApiRelease(
+internal data class AudiobookDbApiReleaseDetail(
     val id: String,
+    val title: String? = null,
+    val description: String? = null,
+    val isbn: String? = null,
     val releaseDate: String? = null,
     val language: AudiobookDbApiNamed? = null,
     val publisher: AudiobookDbApiIdName? = null,
     val people: List<AudiobookDbApiCredit> = emptyList(),
     val images: List<AudiobookDbApiImage> = emptyList(),
-)
-
-@Serializable
-internal data class AudiobookDbApiReleaseDetail(
-    val isbn: String? = null,
-)
+    val book: AudiobookDbApiIdTitle? = null,
+) {
+    fun toMetadataBook(
+        book: AudiobookDbApiBook?,
+        rating: Float?,
+    ): MetadataBookImpl =
+        MetadataBookImpl(
+            id = MetadataAgentIDImpl(AUDIOBOOKDB_PROVIDER_NAME, id),
+            title = title ?: book?.title,
+            link = releaseLink(id),
+            authors =
+                book?.people?.filter { it.role?.name == AUTHOR_ROLE }?.mapNotNull { it.person?.toMetadataAuthor() }
+                    ?: emptyList(),
+            series = book?.series?.mapNotNull { it.toMetadataBookSeries() } ?: emptyList(),
+            releaseDate = parseDate(releaseDate ?: book?.originallyPublishedAt),
+            coverURL = images.firstOrNull()?.url ?: book?.coverImage?.url ?: book?.images?.firstOrNull()?.url,
+            description = htmlToText(description) ?: htmlToText(book?.description),
+            narrators = people.filter { it.role?.name == NARRATOR_ROLE }.mapNotNull { it.person?.name },
+            providerRating = rating,
+            publisher = publisher?.name,
+            language = MetadataLanguage.fromTag((language ?: book?.originalLanguage)?.name),
+            isbn = isbn,
+        )
+}
 
 @Serializable
 internal data class AudiobookDbApiPerson(
@@ -244,6 +239,8 @@ internal data class AudiobookDbApiRatingChip(
 )
 
 private fun bookLink(bookId: String) = "https://audiobookdb.org/books/$bookId"
+
+private fun releaseLink(releaseId: String) = "https://audiobookdb.org/releases/$releaseId"
 
 private fun authorLink(personId: String) = "https://audiobookdb.org/people/$personId"
 

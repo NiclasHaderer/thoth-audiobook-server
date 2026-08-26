@@ -12,14 +12,14 @@ import kotlin.test.assertEquals
  * A lookup by name resolves one provider ID per result, so what matters is how many of them a caller has to pay for.
  */
 class SearchBasedMetadataAgentTest {
-    private fun agentFor(vararg hits: String) = FakeMetadataProvider(hits = hits.map { searchHit(it) })
+    private fun agentFor(vararg hits: String) = FakeMetadataAgent(hits = hits.map { searchHit(it) })
 
     @Test
     fun `nothing is requested before the flow is collected`() =
         runBlocking {
             val provider = agentFor("a", "b")
 
-            SearchBasedMetadataAgent(provider).getBookByName("a", MetadataRegion.US)
+            provider.getBookByName("a", MetadataRegion.US)
 
             assertEquals(0, provider.searchCalls.get())
             assertEquals(emptyList(), provider.bookLookups)
@@ -30,7 +30,7 @@ class SearchBasedMetadataAgentTest {
         runBlocking {
             val provider = agentFor(*Array(20) { "book-$it" })
 
-            val best = SearchBasedMetadataAgent(provider).getBookByName("book-0", MetadataRegion.US).first()
+            val best = provider.getBookByName("book-0", MetadataRegion.US).first()
 
             assertEquals("book-0", best.id.itemID)
             assertEquals(1, provider.searchCalls.get())
@@ -42,7 +42,7 @@ class SearchBasedMetadataAgentTest {
         runBlocking {
             val provider = agentFor(*Array(20) { "book-$it" })
 
-            SearchBasedMetadataAgent(provider).getBookByName("book-0", MetadataRegion.US).take(6).toList()
+            provider.getBookByName("book-0", MetadataRegion.US).take(6).toList()
 
             assertEquals(10, provider.bookLookups.size)
         }
@@ -52,7 +52,7 @@ class SearchBasedMetadataAgentTest {
         runBlocking {
             val provider = agentFor("Moby Dick", "Dick", "Moby Dick and Friends")
 
-            val books = SearchBasedMetadataAgent(provider).getBookByName("Moby Dick", MetadataRegion.US).toList()
+            val books = provider.getBookByName("Moby Dick", MetadataRegion.US).toList()
 
             assertEquals("Moby Dick", books.first().id.itemID)
             assertEquals(3, books.size)
@@ -63,12 +63,12 @@ class SearchBasedMetadataAgentTest {
     fun `hits which cannot be resolved are skipped instead of ending the flow`() =
         runBlocking {
             val provider =
-                FakeMetadataProvider(
+                FakeMetadataAgent(
                     hits = listOf("a", "b", "c").map { searchHit(it) },
                     resolveBook = { if (it == "a") null else testBook(it) },
                 )
 
-            val books = SearchBasedMetadataAgent(provider).getBookByName("a", MetadataRegion.US).toList()
+            val books = provider.getBookByName("a", MetadataRegion.US).toList()
 
             assertEquals(listOf("b", "c"), books.map { it.id.itemID })
         }
@@ -77,7 +77,7 @@ class SearchBasedMetadataAgentTest {
     fun `an author shared by several hits is only looked up once`() =
         runBlocking {
             val provider =
-                FakeMetadataProvider(
+                FakeMetadataAgent(
                     hits =
                         listOf(
                             searchHit("book-1", authors = listOf("Twain")),
@@ -85,7 +85,7 @@ class SearchBasedMetadataAgentTest {
                         ),
                 )
 
-            val authors = SearchBasedMetadataAgent(provider).getAuthorByName("Twain", MetadataRegion.US).toList()
+            val authors = provider.getAuthorByName("Twain", MetadataRegion.US).toList()
 
             assertEquals(listOf("Twain"), authors.map { it.id.itemID })
             assertEquals(listOf("Twain@US"), provider.authorLookups)
@@ -95,12 +95,35 @@ class SearchBasedMetadataAgentTest {
     fun `the series of the hits are resolved, not the hits themselves`() =
         runBlocking {
             val provider =
-                FakeMetadataProvider(hits = listOf(searchHit("book-1", series = listOf("Discworld"))))
+                FakeMetadataAgent(hits = listOf(searchHit("book-1", series = listOf("Discworld"))))
 
-            val series = SearchBasedMetadataAgent(provider).getSeriesByName("Discworld", MetadataRegion.US).toList()
+            val series = provider.getSeriesByName("Discworld", MetadataRegion.US).toList()
 
             assertEquals(listOf("Discworld"), series.map { it.id.itemID })
             assertEquals(listOf("Discworld@US"), provider.seriesLookups)
             assertEquals(emptyList(), provider.bookLookups)
+        }
+
+    @Test
+    fun `keywords and the author narrow the search down alongside the title`() =
+        runBlocking {
+            val provider = agentFor("apple")
+
+            provider.getBookByName("apple", MetadataRegion.US, keywords = "fruit", authorName = "Twain").toList()
+
+            assertEquals(
+                listOf(SearchQuery(keywords = "fruit", title = "apple", author = "Twain")),
+                provider.searchQueries,
+            )
+        }
+
+    @Test
+    fun `the title is what the hits are ranked against, not the order they arrived in`() =
+        runBlocking {
+            val provider = agentFor("zebra", "apple")
+
+            val books = provider.getBookByName("apple", MetadataRegion.US).toList()
+
+            assertEquals(listOf("apple", "zebra"), books.map { it.id.itemID })
         }
 }

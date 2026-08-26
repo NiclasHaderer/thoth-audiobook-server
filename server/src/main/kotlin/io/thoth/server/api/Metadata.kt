@@ -7,14 +7,18 @@ import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
-import io.thoth.metadata.responses.MetadataSearchBook
 import io.thoth.metadata.responses.MetadataSeries
+import io.thoth.metadata.toResultCount
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.ktor.get
 import io.thoth.server.repositories.LibraryRepository
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import org.koin.ktor.ext.inject
 import java.util.UUID
+
+private const val DEFAULT_SEARCH_RESULTS = 20
+private const val MAX_SEARCH_RESULTS = 100
 
 fun Routing.metadataRouting() {
     val metadataAgents by inject<MetadataAgents>()
@@ -22,21 +26,6 @@ fun Routing.metadataRouting() {
 
     fun agentFor(libraryId: UUID): LibraryAgent =
         libraryRepository.raw(libraryId).let { LibraryAgent(metadataAgents.forLibrary(it), it.region, it.language) }
-
-    get<Api.Libraries.Id.Metadata.Search, List<MetadataSearchBook>> {
-        val (metadataAgent, region, language) = agentFor(it.libraryId)
-
-        metadataAgent.search(
-            region = region,
-            keywords = it.keywords,
-            title = it.title,
-            author = it.author,
-            narrator = it.narrator,
-            // An explicit language narrows the search further than the library default does
-            language = it.language ?: language,
-            pageSize = it.pageSize,
-        )
-    }
 
     get<Api.Libraries.Id.Metadata.Author.Id, MetadataAuthor> {
         val (metadataAgent, region) = agentFor(it.libraryId)
@@ -58,7 +47,16 @@ fun Routing.metadataRouting() {
     get<Api.Libraries.Id.Metadata.Book.Search, List<MetadataBook>> {
         val (metadataAgent, region, language) = agentFor(it.libraryId)
         metadataAgent
-            .getBookByName(bookName = it.q, region = region, authorName = it.authorName, language = language)
+            .getBookByName(
+                bookName = it.q,
+                region = region,
+                keywords = it.keywords,
+                authorName = it.authorName,
+                narrator = it.narrator,
+                // An explicit language narrows the search further than the library default does
+                language = it.language ?: language,
+            )
+            .take(it.pageSize?.toResultCount(MAX_SEARCH_RESULTS) ?: DEFAULT_SEARCH_RESULTS)
             .toList()
     }
 

@@ -27,6 +27,7 @@ internal fun searchHit(
     title: String = id,
     authors: List<String> = emptyList(),
     series: List<String> = emptyList(),
+    narrators: List<String> = emptyList(),
     provider: String = "fake",
 ) = MetadataSearchBookImpl(
     id = TestId(id, provider),
@@ -43,7 +44,7 @@ internal fun searchHit(
     language = null,
     releaseDate = null,
     coverURL = null,
-    narrators = emptyList(),
+    narrators = narrators,
 )
 
 internal fun testBook(
@@ -95,18 +96,15 @@ internal fun testSeries(
     books = null,
 )
 
-/**
- * Provider which answers from a fixed list of hits and records what it was asked for, so the lookups derived from it can
- * be checked for the requests they cause.
- */
-internal class FakeMetadataProvider(
+internal class FakeMetadataAgent(
     override val name: String = "fake",
     private val hits: List<MetadataSearchBook> = emptyList(),
     private val resolveBook: suspend (String) -> MetadataBook? = { testBook(it) },
-) : MetadataProvider {
+) : SearchBasedMetadataAgent() {
     override val supportedRegions = listOf(MetadataRegion.US)
 
     val searchCalls = AtomicInteger()
+    val searchQueries = CopyOnWriteArrayList<SearchQuery>()
     val bookLookups = CopyOnWriteArrayList<String>()
     val authorLookups = CopyOnWriteArrayList<String>()
     val seriesLookups = CopyOnWriteArrayList<String>()
@@ -121,6 +119,7 @@ internal class FakeMetadataProvider(
         pageSize: MetadataSearchCount?,
     ): List<MetadataSearchBook> {
         searchCalls.incrementAndGet()
+        searchQueries += SearchQuery(keywords = keywords, title = title, author = author)
         return hits
     }
 
@@ -128,7 +127,7 @@ internal class FakeMetadataProvider(
         providerId: String,
         authorId: String,
         region: MetadataRegion,
-    ): MetadataAuthor? {
+    ): MetadataAuthor {
         authorLookups += "$authorId@$region"
         return testAuthor(authorId, name)
     }
@@ -146,8 +145,14 @@ internal class FakeMetadataProvider(
         providerId: String,
         seriesId: String,
         region: MetadataRegion,
-    ): MetadataSeries? {
+    ): MetadataSeries {
         seriesLookups += "$seriesId@$region"
         return testSeries(seriesId, name)
     }
 }
+
+internal data class SearchQuery(
+    val keywords: String?,
+    val title: String?,
+    val author: String?,
+)

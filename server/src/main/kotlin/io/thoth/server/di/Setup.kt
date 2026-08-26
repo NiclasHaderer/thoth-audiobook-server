@@ -1,11 +1,9 @@
 package io.thoth.server.di
 
-import io.thoth.metadata.CachingMetadataProvider
 import io.thoth.metadata.MetadataAgents
-import io.thoth.metadata.SearchBasedMetadataAgent
-import io.thoth.metadata.audible.AudibleMetadataProvider
-import io.thoth.metadata.audiobookdb.AudiobookDbMetadataProvider
-import io.thoth.metadata.libby.LibbyMetadataProvider
+import io.thoth.metadata.audible.AudibleMetadataAgent
+import io.thoth.metadata.audiobookdb.AudiobookDbMetadataAgent
+import io.thoth.metadata.libby.LibbyMetadataAgent
 import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
@@ -41,14 +39,7 @@ fun thothModule(config: ThothConfig) =
     module {
         single { config }
         single<MetadataAgents> {
-            // The cache sits below the search based lookups, so their searches and ID lookups hit it as well
-            MetadataAgents(
-                listOf(
-                    SearchBasedMetadataAgent(CachingMetadataProvider(AudibleMetadataProvider())),
-                    SearchBasedMetadataAgent(CachingMetadataProvider(LibbyMetadataProvider())),
-                    SearchBasedMetadataAgent(CachingMetadataProvider(AudiobookDbMetadataProvider())),
-                ),
-            )
+            MetadataAgents(listOf(AudibleMetadataAgent(), LibbyMetadataAgent(), AudiobookDbMetadataAgent()))
         }
         single<AudioFileAnalyzers> { AudioFileAnalyzers(listOf(AudioTagScanner(), AudioFolderScanner())) }
         single { ImageDownloader() }

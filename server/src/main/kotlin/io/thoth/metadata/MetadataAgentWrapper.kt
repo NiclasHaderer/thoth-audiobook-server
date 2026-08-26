@@ -5,12 +5,7 @@ import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
-import io.thoth.metadata.responses.MetadataSearchBook
-import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -25,33 +20,6 @@ class MetadataAgentWrapper(
         get() = agentList.flatMap { it.supportedRegions }.distinct()
 
     private val agentsByName by lazy { agentList.associateBy { it.name } }
-
-    override suspend fun search(
-        region: MetadataRegion,
-        keywords: String?,
-        title: String?,
-        author: String?,
-        narrator: String?,
-        language: MetadataLanguage?,
-        pageSize: MetadataSearchCount?,
-    ): List<MetadataSearchBook> =
-        coroutineScope {
-            agentList
-                .map {
-                    async {
-                        it.search(
-                            region = region,
-                            keywords = keywords,
-                            title = title,
-                            author = author,
-                            narrator = narrator,
-                            language = language,
-                            pageSize = pageSize,
-                        )
-                    }
-                }.awaitAll()
-                .flatten()
-        }
 
     override suspend fun getAuthorByID(
         providerId: String,
@@ -81,11 +49,20 @@ class MetadataAgentWrapper(
     override fun getBookByName(
         bookName: String,
         region: MetadataRegion,
+        keywords: String?,
         authorName: String?,
+        narrator: String?,
         language: MetadataLanguage?,
     ): Flow<MetadataBook> =
         fromEachAgent {
-            it.getBookByName(bookName = bookName, region = region, authorName = authorName, language = language)
+            it.getBookByName(
+                bookName = bookName,
+                region = region,
+                keywords = keywords,
+                authorName = authorName,
+                narrator = narrator,
+                language = language,
+            )
         }
 
     override fun getSeriesByName(

@@ -21,6 +21,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
 
 private const val MAX_LOGGED_BODY = 500
+private const val CACHE_KEY_SEPARATOR = "--thoth--"
 
 /** A provider could not be reached or answered something unusable. Distinct from it not having the requested item. */
 class MetadataProviderUnavailableException(
@@ -40,6 +41,7 @@ internal class MetadataHttpClient(
     private val defaultHeaders: Headers = Headers.Empty,
 ) {
     private val throttle = throttle?.let { RequestThrottle(it) }
+    private val cache = ResponseCache()
 
     private val client =
         HttpClient {
@@ -58,6 +60,23 @@ internal class MetadataHttpClient(
     suspend fun fetch(
         url: Url,
         extraHeaders: Headers = Headers.Empty,
+    ): String? = cache.getOrLoad(cacheKey(url, extraHeaders)) { request(url, extraHeaders) }
+
+    private fun cacheKey(
+        url: Url,
+        extraHeaders: Headers,
+    ): String =
+        if (extraHeaders.isEmpty()) {
+            url.toString()
+        } else {
+            url.toString() + extraHeaders.entries().sortedBy { it.key }.joinToString(prefix = CACHE_KEY_SEPARATOR) {
+                "${it.key}=${it.value.joinToString(",")}"
+            }
+        }
+
+    private suspend fun request(
+        url: Url,
+        extraHeaders: Headers,
     ): String? {
         throttle?.awaitSlot()
         val response =

@@ -7,7 +7,7 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
 import io.thoth.metadata.MetadataHttpClient
-import io.thoth.metadata.MetadataProvider
+import io.thoth.metadata.SearchBasedMetadataAgent
 import io.thoth.metadata.ThrottleConfig
 import io.thoth.metadata.appendOptional
 import io.thoth.metadata.fetchChunked
@@ -27,9 +27,9 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import java.time.Duration
 
-class AudibleMetadataProvider(
+class AudibleMetadataAgent(
     private val imageSize: Int = 500,
-) : MetadataProvider {
+) : SearchBasedMetadataAgent() {
     private val http = MetadataHttpClient("Audible", throttle = ThrottleConfig(requests = 1, window = Duration.ofSeconds(3)))
 
     override val name = AUDIBLE_PROVIDER_NAME

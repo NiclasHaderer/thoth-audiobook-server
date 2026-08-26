@@ -9,12 +9,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class MetadataAgentWrapperTest {
-    private val audible = FakeMetadataProvider(name = "audible", hits = listOf(searchHit("a", provider = "audible")))
+    private val audible = FakeMetadataAgent(name = "audible", hits = listOf(searchHit("a", provider = "audible")))
     private val openLibrary =
-        FakeMetadataProvider(name = "openLibrary", hits = listOf(searchHit("b", provider = "openLibrary")))
+        FakeMetadataAgent(name = "openLibrary", hits = listOf(searchHit("b", provider = "openLibrary")))
 
     private fun wrapper() =
-        MetadataAgentWrapper(listOf(SearchBasedMetadataAgent(audible), SearchBasedMetadataAgent(openLibrary)))
+        MetadataAgentWrapper(listOf(audible, openLibrary))
 
     @Test
     fun `an ID lookup only goes to the agent it belongs to`() =
@@ -29,14 +29,6 @@ class MetadataAgentWrapperTest {
     fun `an ID of an unknown provider has no result`() =
         runBlocking {
             assertNull(wrapper().getBookByID(providerId = "goodreads", bookId = "b", region = MetadataRegion.US))
-        }
-
-    @Test
-    fun `a search asks every agent`() =
-        runBlocking {
-            val found = wrapper().search(region = MetadataRegion.US, title = "a")
-
-            assertEquals(listOf("a", "b"), found.map { it.id.itemID })
         }
 
     @Test

@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 
 /** Scrapes the live Audible pages, so it needs network access and breaks when Audible changes its markup. */
 class AudibleAuthorScrapeTest {
-    private val provider = AudibleMetadataProvider(imageSize = IMAGE_SIZE)
+    private val provider = AudibleMetadataAgent(imageSize = IMAGE_SIZE)
     private val rowling = "B000AP9A6K"
 
     @Test

@@ -520,21 +520,6 @@ class Api {
                 val libraryId
                     get() = parent.libraryId
 
-                @Summary("Search metadata", method = "GET")
-                @Resource("search")
-                data class Search(
-                    val keywords: String? = null,
-                    val title: String? = null,
-                    val author: String? = null,
-                    val narrator: String? = null,
-                    val language: MetadataLanguage? = null,
-                    val pageSize: MetadataSearchCount? = null,
-                    private val parent: Metadata,
-                ) {
-                    val libraryId
-                        get() = parent.libraryId
-                }
-
                 @Resource("author")
                 data class Author(
                     private val parent: Metadata,
@@ -580,7 +565,11 @@ class Api {
                     @Resource("search")
                     data class Search(
                         val q: String,
+                        val keywords: String? = null,
                         val authorName: String? = null,
+                        val narrator: String? = null,
+                        val language: MetadataLanguage? = null,
+                        val pageSize: MetadataSearchCount? = null,
                         private val parent: Book,
                     ) {
                         val libraryId

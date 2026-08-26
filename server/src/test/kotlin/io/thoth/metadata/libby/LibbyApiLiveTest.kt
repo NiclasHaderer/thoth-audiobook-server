@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 
 /** Queries the live Libby API, so it needs network access and breaks when the API changes. */
 class LibbyApiLiveTest {
-    private val provider = LibbyMetadataProvider(libraryKey = "brooklyn", imageSize = 500)
+    private val provider = LibbyMetadataAgent(libraryKey = "brooklyn", imageSize = 500)
     private val philosophersStone = "11046339"
     private val harryPotterSeries = "1890760"
     private val stephenFry = "137205"
