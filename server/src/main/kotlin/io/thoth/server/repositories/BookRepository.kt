@@ -83,6 +83,7 @@ class BookRepositoryImpl :
         transaction { BooksTable.selectAll().where { BooksTable.library eq libraryId }.count() }
 
     override fun getAll(
+        userId: UUID,
         libraryId: UUID,
         order: SortOrder,
         limit: Int,
@@ -97,7 +98,7 @@ class BookRepositoryImpl :
                     .offset(offset)
                     .limit(limit)
                     .map { it.toBookRow() }
-            booksToModels(rows)
+            booksToModels(rows, userId)
         }
 
     override fun raw(
@@ -123,6 +124,7 @@ class BookRepositoryImpl :
         }
 
     override fun get(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
     ): BookDetailed =
@@ -141,7 +143,7 @@ class BookRepositoryImpl :
                     tracks.sortedBy { it.trackNr }
                 }
             val bookRef = TitledId(book.id, book.title)
-            BookDetailed.fromModel(book.toModel(), ordered.map { it.toModel(bookRef) })
+            BookDetailed.fromModel(book.toModel(userId), ordered.map { it.toModel(bookRef) })
         }
 
     override fun position(
@@ -181,6 +183,7 @@ class BookRepositoryImpl :
         }
 
     override fun search(
+        userId: UUID,
         query: String,
         libraryId: UUID,
     ): List<Book> =
@@ -192,10 +195,13 @@ class BookRepositoryImpl :
                     .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toBookRow() }
-            booksToModels(rows)
+            booksToModels(rows, userId)
         }
 
-    override fun search(query: String): List<Book> =
+    override fun search(
+        userId: UUID,
+        query: String,
+    ): List<Book> =
         transaction {
             val rows =
                 BookMetadataView
@@ -204,10 +210,11 @@ class BookRepositoryImpl :
                     .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toBookRow() }
-            booksToModels(rows)
+            booksToModels(rows, userId)
         }
 
     override fun modify(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
         partial: BookUpdate,
@@ -242,7 +249,7 @@ class BookRepositoryImpl :
                 val seriesIds = partial.series.map { seriesRepository.raw(it, libraryId).id }
                 replaceBookSeries(id, MetadataLayer.USER, seriesIds.associateWith { null })
             }
-            raw(id, libraryId).toModel()
+            raw(id, libraryId).toModel(userId)
         }
     }
 
@@ -271,6 +278,7 @@ class BookRepositoryImpl :
         }
 
     override fun autoMatch(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
     ): Book {
@@ -298,7 +306,7 @@ class BookRepositoryImpl :
                         narrator = narrator,
                         language = language,
                     ).firstOrNull()
-            } ?: return transaction { raw(id, libraryId).toModel() }
+            } ?: return transaction { raw(id, libraryId).toModel(userId) }
 
         val newCover = imageDownloader.download(bookMetadata.coverURL)
         // `bookMetadata.authors` and `.series` are deliberately dropped. Matching an entity updates that
@@ -322,7 +330,7 @@ class BookRepositoryImpl :
                     coverID = getOrCreateImage(newCover, currentImageID = agent.coverID),
                 ),
             )
-            raw(id, libraryId).toModel()
+            raw(id, libraryId).toModel(userId)
         }
     }
 

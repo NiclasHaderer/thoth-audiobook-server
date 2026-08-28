@@ -110,6 +110,7 @@ class SeriesRepositoryImpl :
         }
 
     override fun get(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
     ): SeriesDetailed =
@@ -118,11 +119,12 @@ class SeriesRepositoryImpl :
 
             SeriesDetailed.fromModel(
                 series = series.toModel(),
-                books = booksToModels(resolvedBooks(id)),
+                books = booksToModels(resolvedBooks(id), userId),
             )
         }
 
     override fun getAll(
+        userId: UUID,
         libraryId: UUID,
         order: SortOrder,
         limit: Int,
@@ -141,6 +143,7 @@ class SeriesRepositoryImpl :
         }
 
     override fun search(
+        userId: UUID,
         query: String,
         libraryId: UUID,
     ): List<Series> =
@@ -155,7 +158,10 @@ class SeriesRepositoryImpl :
             seriesToModels(rows)
         }
 
-    override fun search(query: String): List<Series> =
+    override fun search(
+        userId: UUID,
+        query: String,
+    ): List<Series> =
         transaction {
             val rows =
                 SeriesMetadataView
@@ -234,6 +240,7 @@ class SeriesRepositoryImpl :
         }
 
     override fun modify(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
         partial: SeriesUpdate,
@@ -294,6 +301,7 @@ class SeriesRepositoryImpl :
             .map { it.toBookRow() }
 
     override fun autoMatch(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
     ): Series {

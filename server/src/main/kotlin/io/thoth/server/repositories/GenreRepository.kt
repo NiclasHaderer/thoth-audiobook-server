@@ -21,6 +21,7 @@ interface GenreRepository {
     ): List<Genre>
 
     fun get(
+        userId: UUID,
         name: String,
         libraryId: UUID,
     ): GenreDetailed
@@ -42,6 +43,7 @@ class GenreRepositoryImpl : GenreRepository {
         }
 
     override fun get(
+        userId: UUID,
         name: String,
         libraryId: UUID,
     ): GenreDetailed =
@@ -49,7 +51,7 @@ class GenreRepositoryImpl : GenreRepository {
             val match =
                 BookMetadataView.genres.booksInGroup(name, libraryId)
                     ?: throw ErrorResponse.notFound("Genre", name)
-            GenreDetailed(name = match.name, books = booksToModels(match.books))
+            GenreDetailed(name = match.name, books = booksToModels(match.books, userId))
         }
 
     override fun total(libraryId: UUID): Long = transaction { BookMetadataView.genres.bookGroupCount(libraryId) }

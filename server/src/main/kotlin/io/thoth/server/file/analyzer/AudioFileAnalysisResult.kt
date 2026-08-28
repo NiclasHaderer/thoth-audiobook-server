@@ -7,7 +7,7 @@ class AudioFileAnalysisResultImpl(
     override val title: String,
     override val authors: List<String>,
     override val book: String,
-    override val duration: Int,
+    override val durationMs: Long,
     override val path: String,
     override val lastModified: Long,
     override val description: String? = null,
@@ -34,7 +34,7 @@ interface AudioFileAnalysisResult {
     val seriesIndex: Float?
     val genres: List<String>
     val cover: ByteArray?
-    val duration: Int
+    val durationMs: Long
     val path: String
     val lastModified: Long
 }

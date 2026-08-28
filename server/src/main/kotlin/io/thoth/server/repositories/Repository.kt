@@ -17,11 +17,13 @@ interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API> {
     ): RAW
 
     fun get(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
     ): DETAILED
 
     fun getAll(
+        userId: UUID,
         libraryId: UUID,
         order: SortOrder,
         limit: Int = 20,
@@ -29,11 +31,15 @@ interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API> {
     ): List<NORMAL>
 
     fun search(
+        userId: UUID,
         query: String,
         libraryId: UUID,
     ): List<NORMAL>
 
-    fun search(query: String): List<NORMAL>
+    fun search(
+        userId: UUID,
+        query: String,
+    ): List<NORMAL>
 
     fun sorting(
         libraryId: UUID,
@@ -49,12 +55,14 @@ interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API> {
     ): Long
 
     fun modify(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
         partial: PARTIAL_API,
     ): NORMAL
 
     fun autoMatch(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
     ): NORMAL

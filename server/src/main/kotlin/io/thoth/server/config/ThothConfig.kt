@@ -20,6 +20,8 @@ data class ThothConfig(
     val scanThreads: Int = 0,
     // How long a file has to keep the mtime before it is read
     val settleMillis: Long = 2000,
+    // Progress older than this drops out of "continue listening", but stays resumable
+    val continueListeningWeeks: Int = 8,
 ) {
     val importThreads: Int
         get() = if (scanThreads > 0) scanThreads else (Runtime.getRuntime().availableProcessors() - 1).coerceIn(2, 6)

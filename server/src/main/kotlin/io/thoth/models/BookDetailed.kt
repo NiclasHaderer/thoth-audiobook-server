@@ -21,6 +21,9 @@ class BookDetailed(
     isbn: String?,
     coverID: UUID?,
     genres: List<String>,
+    durationMs: Long,
+    positionMs: Long,
+    status: PlayStatus,
     val tracks: List<Track>,
 ) : Book(
         id = id,
@@ -39,6 +42,9 @@ class BookDetailed(
         providerRating = providerRating,
         publisher = publisher,
         genres = genres,
+        durationMs = durationMs,
+        positionMs = positionMs,
+        status = status,
     ) {
     companion object {
         fun fromModel(
@@ -62,6 +68,9 @@ class BookDetailed(
             providerRating = book.providerRating,
             publisher = book.publisher,
             genres = book.genres,
+            durationMs = book.durationMs,
+            positionMs = book.positionMs,
+            status = book.status,
         )
     }
 }

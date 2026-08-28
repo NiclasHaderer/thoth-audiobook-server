@@ -52,7 +52,7 @@ class AudioFolderScanner : AudioFileAnalyzer {
             seriesIndex = tags.seriesIndex,
             genres = tags.genres,
             cover = tags.cover,
-            duration = tags.duration,
+            durationMs = tags.durationMs,
             path = tags.path,
             lastModified = tags.lastModified,
         )

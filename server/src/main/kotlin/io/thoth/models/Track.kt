@@ -6,7 +6,7 @@ data class Track(
     val id: UUID,
     val title: String,
     val trackNr: Int?,
-    val duration: Int,
+    val durationMs: Long,
     val fileModifiedAt: Long,
     val book: TitledId,
 )

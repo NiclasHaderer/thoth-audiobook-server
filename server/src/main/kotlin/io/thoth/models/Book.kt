@@ -21,4 +21,7 @@ open class Book(
     val isbn: String?,
     val coverID: UUID?,
     val genres: List<String>,
+    val durationMs: Long,
+    val positionMs: Long,
+    val status: PlayStatus,
 )

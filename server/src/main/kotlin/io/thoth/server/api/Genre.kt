@@ -7,6 +7,7 @@ import io.thoth.models.PaginatedResponse
 import io.thoth.openapi.ktor.get
 import io.thoth.server.repositories.GenreRepository
 import org.koin.ktor.ext.inject
+import io.thoth.server.plugins.auth.thothPrincipal
 
 fun Routing.genreRouting() {
     val genreRepository by inject<GenreRepository>()
@@ -20,5 +21,5 @@ fun Routing.genreRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Genres.Name, GenreDetailed> { genreRepository.get(it.name, it.libraryId) }
+    get<Api.Libraries.Id.Genres.Name, GenreDetailed> { genreRepository.get(thothPrincipal().userId, it.name, it.libraryId) }
 }

@@ -14,13 +14,14 @@ import io.thoth.openapi.ktor.post
 import io.thoth.server.repositories.AuthorRepository
 import org.koin.ktor.ext.inject
 import java.util.UUID
+import io.thoth.server.plugins.auth.thothPrincipal
 
 fun Routing.authorRouting() {
     val authorService by inject<AuthorRepository>()
 
     get<Api.Libraries.Id.Authors.All, PaginatedResponse<Author>> {
         PaginatedResponse(
-            items = authorService.getAll(it.libraryId, it.order.toSortOrder(), it.limit, it.offset),
+            items = authorService.getAll(thothPrincipal().userId, it.libraryId, it.order.toSortOrder(), it.limit, it.offset),
             limit = it.limit,
             offset = it.offset,
             total = authorService.total(it.libraryId),
@@ -38,22 +39,22 @@ fun Routing.authorRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Authors.Id, AuthorDetailed> { authorService.get(it.id, it.libraryId) }
+    get<Api.Libraries.Id.Authors.Id, AuthorDetailed> { authorService.get(thothPrincipal().userId, it.id, it.libraryId) }
 
     get<Api.Libraries.Id.Authors.Autocomplete, List<NamedId>> {
-        authorService.search(it.q, it.libraryId).map { NamedId(it.id, it.name) }
+        authorService.search(thothPrincipal().userId, it.q, it.libraryId).map { NamedId(it.id, it.name) }
     }
 
     patch<Api.Libraries.Id.Authors.Id, AuthorUpdate, Author> { id, patchAuthor ->
-        authorService.modify(id.id, id.libraryId, patchAuthor)
+        authorService.modify(thothPrincipal().userId, id.id, id.libraryId, patchAuthor)
     }
 
     post<Api.Libraries.Id.Authors, AuthorCreate, AuthorDetailed> { route, postAuthor ->
         val author = authorService.createManual(postAuthor.name, route.libraryId)
-        authorService.get(author.id, route.libraryId)
+        authorService.get(thothPrincipal().userId, author.id, route.libraryId)
     }
 
     post<Api.Libraries.Id.Authors.Id.AutoMatch, Unit, Author> { id, _ ->
-        authorService.autoMatch(id.id, id.libraryId)
+        authorService.autoMatch(thothPrincipal().userId, id.id, id.libraryId)
     }
 }

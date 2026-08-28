@@ -28,6 +28,8 @@ import io.thoth.server.repositories.GenreRepository
 import io.thoth.server.repositories.GenreRepositoryImpl
 import io.thoth.server.repositories.NarratorRepository
 import io.thoth.server.repositories.NarratorRepositoryImpl
+import io.thoth.server.repositories.ProgressRepository
+import io.thoth.server.repositories.ProgressRepositoryImpl
 import io.thoth.server.repositories.SeriesRepository
 import io.thoth.server.repositories.SeriesRepositoryImpl
 import io.thoth.server.schedules.ThothSchedules
@@ -56,6 +58,7 @@ fun thothModule(config: ThothConfig) =
         single<NarratorRepository> { NarratorRepositoryImpl() }
         single<GenreRepository> { GenreRepositoryImpl() }
         single<LibraryRepository> { LibraryRepositoryImpl() }
+        single<ProgressRepository> { ProgressRepositoryImpl() }
         single { Scheduler() }
         single { ThothSchedules() }
     }

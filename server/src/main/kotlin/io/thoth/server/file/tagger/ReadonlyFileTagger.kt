@@ -16,7 +16,7 @@ class ReadonlyFileTagger(
     private val properties: Map<String, List<String>>
 
     val cover: ByteArray?
-    val duration: Int
+    val durationMs: Long
     val path: String = filePath.canonicalString()
     val lastModified: Long = filePath.getLastModifiedTime().toMillis()
 
@@ -24,7 +24,7 @@ class ReadonlyFileTagger(
         TagLibFile(filePath).use { file ->
             properties = file.properties()
             cover = file.pictures().firstOrNull()?.data
-            duration = file.lengthInSeconds
+            durationMs = file.lengthInSeconds * 1000L
         }
     }
 

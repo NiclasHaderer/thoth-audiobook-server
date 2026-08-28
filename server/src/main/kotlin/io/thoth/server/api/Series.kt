@@ -14,12 +14,14 @@ import io.thoth.openapi.ktor.post
 import io.thoth.server.repositories.SeriesRepository
 import org.koin.ktor.ext.inject
 import java.util.UUID
+import io.thoth.server.plugins.auth.thothPrincipal
 
 fun Routing.seriesRouting() {
     val seriesRepository by inject<SeriesRepository>()
     get<Api.Libraries.Id.Series.All, PaginatedResponse<Series>> {
         PaginatedResponse(
             seriesRepository.getAll(
+                userId = thothPrincipal().userId,
                 libraryId = it.libraryId,
                 order = it.order.toSortOrder(),
                 limit = it.limit,
@@ -48,24 +50,24 @@ fun Routing.seriesRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Series.Id, SeriesDetailed> { seriesRepository.get(id = it.id, libraryId = it.libraryId) }
+    get<Api.Libraries.Id.Series.Id, SeriesDetailed> { seriesRepository.get(userId = thothPrincipal().userId, id = it.id, libraryId = it.libraryId) }
 
     get<Api.Libraries.Id.Series.Autocomplete, List<TitledId>> {
         seriesRepository
-            .search(query = it.q, libraryId = it.libraryId)
+            .search(userId = thothPrincipal().userId, query = it.q, libraryId = it.libraryId)
             .map { series -> TitledId(id = series.id, title = series.title) }
     }
 
     patch<Api.Libraries.Id.Series.Id, SeriesUpdate, Series> { id, patchSeries ->
-        seriesRepository.modify(id = id.id, libraryId = id.libraryId, partial = patchSeries)
+        seriesRepository.modify(userId = thothPrincipal().userId, id = id.id, libraryId = id.libraryId, partial = patchSeries)
     }
 
     post<Api.Libraries.Id.Series, SeriesCreate, SeriesDetailed> { route, postSeries ->
         val series = seriesRepository.createManual(postSeries.title, route.libraryId)
-        seriesRepository.get(series.id, route.libraryId)
+        seriesRepository.get(thothPrincipal().userId, series.id, route.libraryId)
     }
 
     post<Api.Libraries.Id.Series.Id.AutoMatch, Unit, Series> { id, _ ->
-        seriesRepository.autoMatch(id.id, id.libraryId)
+        seriesRepository.autoMatch(thothPrincipal().userId, id.id, id.libraryId)
     }
 }

@@ -103,6 +103,7 @@ class AuthorServiceImpl :
         }
 
     override fun search(
+        userId: UUID,
         query: String,
         libraryId: UUID,
     ): List<Author> =
@@ -115,7 +116,10 @@ class AuthorServiceImpl :
                 .map { it.toAuthorRow().toModel() }
         }
 
-    override fun search(query: String): List<Author> =
+    override fun search(
+        userId: UUID,
+        query: String,
+    ): List<Author> =
         transaction {
             AuthorMetadataView
                 .selectAll()
@@ -155,6 +159,7 @@ class AuthorServiceImpl :
         }
 
     override fun autoMatch(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
     ): Author {
@@ -198,6 +203,7 @@ class AuthorServiceImpl :
     )
 
     override fun getAll(
+        userId: UUID,
         libraryId: UUID,
         order: SortOrder,
         limit: Int,
@@ -214,6 +220,7 @@ class AuthorServiceImpl :
         }
 
     override fun get(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
     ): AuthorDetailed =
@@ -242,7 +249,7 @@ class AuthorServiceImpl :
 
             AuthorDetailed.fromModel(
                 author = author.toModel(),
-                books = booksToModels(books),
+                books = booksToModels(books, userId),
                 series = seriesToModels(series),
             )
         }
@@ -284,6 +291,7 @@ class AuthorServiceImpl :
         }
 
     override fun modify(
+        userId: UUID,
         id: UUID,
         libraryId: UUID,
         partial: AuthorUpdate,

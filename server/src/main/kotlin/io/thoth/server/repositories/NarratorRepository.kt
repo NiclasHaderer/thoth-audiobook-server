@@ -21,6 +21,7 @@ interface NarratorRepository {
     ): List<Narrator>
 
     fun get(
+        userId: UUID,
         name: String,
         libraryId: UUID,
     ): NarratorDetailed
@@ -42,6 +43,7 @@ class NarratorRepositoryImpl : NarratorRepository {
         }
 
     override fun get(
+        userId: UUID,
         name: String,
         libraryId: UUID,
     ): NarratorDetailed =
@@ -49,7 +51,7 @@ class NarratorRepositoryImpl : NarratorRepository {
             val match =
                 BookMetadataView.narrators.booksInGroup(name, libraryId)
                     ?: throw ErrorResponse.notFound("Narrator", name)
-            NarratorDetailed(name = match.name, books = booksToModels(match.books))
+            NarratorDetailed(name = match.name, books = booksToModels(match.books, userId))
         }
 
     override fun total(libraryId: UUID): Long =

@@ -66,6 +66,6 @@ fun Routing.libraryRouting() {
                 "This is still under construction. Currently only the parameter 'q' is supported",
             )
 
-        SearchRepository.everywhere(query, libsToSearch)
+        SearchRepository.everywhere(query, libsToSearch, thothPrincipal().userId)
     }
 }

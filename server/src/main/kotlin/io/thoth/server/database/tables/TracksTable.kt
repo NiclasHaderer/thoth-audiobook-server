@@ -15,7 +15,7 @@ import java.util.UUID
 
 object TracksTable : UUIDTable("Tracks") {
     val title = text("title")
-    val duration = integer("duration")
+    val durationMs = long("durationMs")
     val fileModifiedAt = long("fileModifiedAt")
     val path = text("path").uniqueIndex()
     val book = reference("book", BooksTable, onDelete = ReferenceOption.CASCADE).index()
@@ -27,7 +27,7 @@ object TracksTable : UUIDTable("Tracks") {
 data class TrackRow(
     val id: UUID,
     val title: String,
-    val duration: Int,
+    val durationMs: Long,
     val fileModifiedAt: Long,
     val path: String,
     val book: UUID,
@@ -40,7 +40,7 @@ data class TrackRow(
             id = id,
             title = title,
             trackNr = trackNr,
-            duration = duration,
+            durationMs = durationMs,
             fileModifiedAt = fileModifiedAt,
             book = book,
         )
@@ -50,7 +50,7 @@ fun ResultRow.toTrackRow(): TrackRow =
     TrackRow(
         id = this[TracksTable.id].value,
         title = this[TracksTable.title],
-        duration = this[TracksTable.duration],
+        durationMs = this[TracksTable.durationMs],
         fileModifiedAt = this[TracksTable.fileModifiedAt],
         path = this[TracksTable.path],
         book = this[TracksTable.book].value,
@@ -76,7 +76,7 @@ private fun write(
 ) {
     stmt[TracksTable.id] = row.id
     stmt[TracksTable.title] = row.title
-    stmt[TracksTable.duration] = row.duration
+    stmt[TracksTable.durationMs] = row.durationMs
     stmt[TracksTable.fileModifiedAt] = row.fileModifiedAt
     stmt[TracksTable.path] = row.path
     stmt[TracksTable.book] = row.book

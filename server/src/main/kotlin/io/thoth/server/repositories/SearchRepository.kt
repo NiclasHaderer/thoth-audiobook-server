@@ -28,6 +28,7 @@ object SearchRepository {
     fun everywhere(
         query: String,
         libsToSearch: List<UUID>,
+        userId: UUID,
         limit: Int = 5,
     ): LibrarySearchResult =
         transaction {
@@ -57,7 +58,7 @@ object SearchRepository {
 
             val index = SearchIndex(books, authors, series, authorsByBook, seriesByBook)
             LibrarySearchResult(
-                books = everywhereBook(query, index, limit),
+                books = everywhereBook(query, index, userId, limit),
                 series = everywhereSeries(query, index, limit),
                 authors = everywhereAuthor(query, index, limit),
             )
@@ -118,6 +119,7 @@ object SearchRepository {
     private fun everywhereBook(
         query: String,
         index: SearchIndex,
+        userId: UUID,
         limit: Int,
     ): List<Book> {
         val books =
@@ -132,6 +134,6 @@ object SearchRepository {
                         index.seriesByBook[it.id]?.joinToString(",") { series -> series.title },
                     ) + it.narrators
                 }.take(limit)
-        return booksToModels((books + booksAndOther).distinctBy { it.id }.take(limit))
+        return booksToModels((books + booksAndOther).distinctBy { it.id }.take(limit), userId)
     }
 }

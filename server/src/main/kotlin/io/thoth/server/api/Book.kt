@@ -13,12 +13,14 @@ import io.thoth.openapi.ktor.post
 import io.thoth.server.repositories.BookRepository
 import org.koin.ktor.ext.inject
 import java.util.UUID
+import io.thoth.server.plugins.auth.thothPrincipal
 
 fun Routing.bookRouting() {
     val bookRepository by inject<BookRepository>()
     get<Api.Libraries.Id.Books.All, PaginatedResponse<Book>> { route ->
         val books =
             bookRepository.getAll(
+                userId = thothPrincipal().userId,
                 libraryId = route.libraryId,
                 order = route.order.toSortOrder(),
                 limit = route.limit,
@@ -48,18 +50,18 @@ fun Routing.bookRouting() {
     }
 
     get<Api.Libraries.Id.Books.Id, BookDetailed> { route ->
-        bookRepository.get(id = route.id, libraryId = route.libraryId)
+        bookRepository.get(userId = thothPrincipal().userId, id = route.id, libraryId = route.libraryId)
     }
 
     get<Api.Libraries.Id.Books.Autocomplete, List<TitledId>> { route ->
-        bookRepository.search(route.q, route.libraryId).map { TitledId(it.id, it.title) }
+        bookRepository.search(thothPrincipal().userId, route.q, route.libraryId).map { TitledId(it.id, it.title) }
     }
 
     patch<Api.Libraries.Id.Books.Id, BookUpdate, Book> { route, patch ->
-        bookRepository.modify(route.id, route.libraryId, patch)
+        bookRepository.modify(thothPrincipal().userId, route.id, route.libraryId, patch)
     }
 
     post<Api.Libraries.Id.Books.Id.AutoMatch, Unit, Book> { id, _ ->
-        bookRepository.autoMatch(id.id, id.libraryId)
+        bookRepository.autoMatch(thothPrincipal().userId, id.id, id.libraryId)
     }
 }

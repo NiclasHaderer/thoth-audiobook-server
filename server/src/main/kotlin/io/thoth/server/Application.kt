@@ -22,6 +22,7 @@ import io.thoth.server.api.genreRouting
 import io.thoth.server.api.imageRouting
 import io.thoth.server.api.libraryRouting
 import io.thoth.server.api.licenseRouting
+import io.thoth.server.api.meRouting
 import io.thoth.server.api.metadataRouting
 import io.thoth.server.api.narratorRouting
 import io.thoth.server.api.metadataAgentRouting
@@ -109,6 +110,9 @@ fun Application.routing() {
 
         // Metadata for the resources
         metadataRouting()
+
+        // Per-user listening progress and history
+        meRouting()
 
         // Static files
         audioRouting()

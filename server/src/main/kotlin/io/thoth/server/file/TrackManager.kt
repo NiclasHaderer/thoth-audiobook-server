@@ -101,7 +101,7 @@ class TrackManager : KoinComponent {
             TracksTable.update(
                 track.copy(
                     title = scan.title,
-                    duration = scan.duration,
+                    durationMs = scan.durationMs,
                     fileModifiedAt = scan.lastModified,
                     path = scan.path,
                     book = bookId,
@@ -114,7 +114,7 @@ class TrackManager : KoinComponent {
                 TrackRow(
                     id = UUID.randomUUID(),
                     title = scan.title,
-                    duration = scan.duration,
+                    durationMs = scan.durationMs,
                     fileModifiedAt = scan.lastModified,
                     path = scan.path,
                     book = bookId,
