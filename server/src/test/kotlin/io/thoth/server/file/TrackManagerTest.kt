@@ -37,6 +37,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import java.time.Instant
 
 class TrackManagerTest : ThothTest() {
     private val trackManager by lazy { getKoin().get<TrackManager>() }
@@ -143,9 +144,9 @@ class TrackManagerTest : ThothTest() {
         authors = listOf("Dan Brown"),
         book = "Angels and Demons",
         series = "Robert Langdon",
-        duration = 60,
+        durationMs = 60_000,
         path = fileName,
-        lastModified = 0,
+        lastModified = Instant.EPOCH,
         cover = cover,
     )
 
@@ -206,9 +207,9 @@ class TrackManagerTest : ThothTest() {
             authors = listOf("Dan Brown"),
             book = "Angels and Demons",
             series = series,
-            duration = 60,
+            durationMs = 60_000,
             path = bookWithSeries.absolutePathString(),
-            lastModified = 0,
+            lastModified = Instant.EPOCH,
         )
 
     // The test files carry no tags at all, so a scan result is handed to the importer directly
@@ -218,9 +219,9 @@ class TrackManagerTest : ThothTest() {
             authors = listOf("Dan Brown"),
             book = "Angels and Demons",
             series = "Robert Langdon",
-            duration = 60,
+            durationMs = 60_000,
             path = bookWithSeries.absolutePathString(),
-            lastModified = 0,
+            lastModified = Instant.EPOCH,
             genres = genres.toList(),
         )
 

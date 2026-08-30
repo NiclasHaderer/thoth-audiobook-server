@@ -4,17 +4,19 @@ import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.javatime.timestamp
+import java.time.Instant
 import java.util.UUID
 
 object AuthorTable : UUIDTable("Authors") {
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
-    val deferDeletionUntil = long("deferDeletionUntil").nullable()
+    val deferDeletionUntil = timestamp("deferDeletionUntil").nullable()
 }
 
 context(_: Transaction)
 fun AuthorTable.create(
     libraryId: UUID,
-    deferDeletionUntil: Long? = null,
+    deferDeletionUntil: Instant? = null,
 ): UUID =
     insertAndGetId {
         it[library] = libraryId

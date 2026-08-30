@@ -1,5 +1,6 @@
 package io.thoth.server.file
 
+import io.thoth.server.common.extensions.lastModifiedInstant
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.common.extensions.canonicalString
 import io.thoth.server.database.access.getOrCreateImage
@@ -65,7 +66,7 @@ class TrackManager : KoinComponent {
                     .firstOrNull()
                     ?.get(TracksTable.fileModifiedAt)
                     ?: return@transaction true
-            known < path.getLastModifiedTime().toMillis()
+            known < path.lastModifiedInstant()
         }
 
     fun analyze(

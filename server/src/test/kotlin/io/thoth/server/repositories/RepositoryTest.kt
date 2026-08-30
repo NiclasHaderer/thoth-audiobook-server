@@ -16,6 +16,7 @@ import io.thoth.server.database.tables.write
 import io.thoth.server.newAuthor
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
+import io.thoth.server.newUser
 import io.thoth.server.newTrack
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
@@ -42,10 +43,12 @@ class RepositoryTest : ThothTest() {
     private val genreRepository by lazy { getKoin().get<GenreRepository>() }
 
     private var libId: UUID = UUID.randomUUID()
+    private var userId: UUID = UUID.randomUUID()
 
     @BeforeTest
     fun createLibrary() {
         libId = newLibrary("lib", folders = listOf("/media/books"))
+        userId = newUser("test-user", admin = true)
     }
 
     private fun newAuthor(authorName: String) = newAuthor(authorName, libId)
@@ -72,17 +75,17 @@ class RepositoryTest : ThothTest() {
     fun `author search matches ignoring case and escapes wildcards`() {
         newAuthor("Brandon Sanderson")
         newAuthor("100% Author")
-        assertEquals(listOf("Brandon Sanderson"), authorRepository.search("sanderson", libId).map { it.name })
-        assertEquals(listOf("100% Author"), authorRepository.search("100%", libId).map { it.name })
-        assertEquals(emptyList(), authorRepository.search("Brandon_Sanderson", libId).map { it.name })
+        assertEquals(listOf("Brandon Sanderson"), authorRepository.search(userId, "sanderson", libId).map { it.name })
+        assertEquals(listOf("100% Author"), authorRepository.search(userId, "100%", libId).map { it.name })
+        assertEquals(emptyList(), authorRepository.search(userId, "Brandon_Sanderson", libId).map { it.name })
     }
 
     @Test
     fun `author search is scoped to the given library`() {
         newAuthor("Brandon Sanderson")
         val otherLib = newLibrary("other", folders = listOf("/media/other"))
-        assertEquals(emptyList(), authorRepository.search("sanderson", otherLib).map { it.name })
-        assertEquals(listOf("Brandon Sanderson"), authorRepository.search("sanderson").map { it.name })
+        assertEquals(emptyList(), authorRepository.search(userId, "sanderson", otherLib).map { it.name })
+        assertEquals(listOf("Brandon Sanderson"), authorRepository.search(userId, "sanderson").map { it.name })
     }
 
     @Test
@@ -96,7 +99,7 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `renaming an author leaves the name the next scan matches on untouched`() {
         val id = newAuthor("Terry Pratchet")
-        val renamed = authorRepository.modify(id, libId, authorRenamedTo("Terry Pratchett"))
+        val renamed = authorRepository.modify(userId, id, libId, authorRenamedTo("Terry Pratchett"))
 
         assertEquals("Terry Pratchett", renamed.name, "the API must show the new name")
         assertEquals(
@@ -110,12 +113,12 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `search only matches the name the user is shown`() {
         val id = newAuthor("Unknown Author")
-        authorRepository.modify(id, libId, authorRenamedTo("Terry Pratchett"))
+        authorRepository.modify(userId, id, libId, authorRenamedTo("Terry Pratchett"))
 
-        assertEquals(listOf("Terry Pratchett"), authorRepository.search("Pratchett", libId).map { it.name })
+        assertEquals(listOf("Terry Pratchett"), authorRepository.search(userId, "Pratchett", libId).map { it.name })
         assertEquals(
             emptyList(),
-            authorRepository.search("Unknown", libId).map { it.name },
+            authorRepository.search(userId, "Unknown", libId).map { it.name },
             "a spelling that only the files know is never displayed, so it must not produce a hit",
         )
     }
@@ -123,7 +126,7 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `a scan whose tags carry the renamed author reuses it`() {
         val id = newAuthor("Terry Pratchet")
-        authorRepository.modify(id, libId, authorRenamedTo("Terry Pratchett"))
+        authorRepository.modify(userId, id, libId, authorRenamedTo("Terry Pratchett"))
 
         // The tags on disk were corrected too, so discovery now sees the name only the user layer knows about
         assertEquals(id, authorRepository.getOrCreate("Terry Pratchett", libId).id)
@@ -133,7 +136,7 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `renaming a series keeps it matchable under both titles`() {
         val id = seriesRepository.create("Diskworld", libId).id
-        val renamed = seriesRepository.modify(id, libId, seriesRenamedTo("Discworld"))
+        val renamed = seriesRepository.modify(userId, id, libId, seriesRenamedTo("Discworld"))
 
         assertEquals("Discworld", renamed.title, "the API must show the new title")
         assertEquals(id, seriesRepository.getOrCreate("Diskworld", libId).id)
@@ -144,7 +147,7 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `renaming a book keeps it matchable under both titles`() {
         val id = bookRepository.create("Guards Guards", libId, emptyList(), emptyList()).id
-        val renamed = bookRepository.modify(id, libId, bookRenamedTo("Guards! Guards!"))
+        val renamed = bookRepository.modify(userId, id, libId, bookRenamedTo("Guards! Guards!"))
 
         assertEquals("Guards! Guards!", renamed.title, "the API must show the new title")
         assertEquals(id, bookRepository.findByTaggedName("Guards Guards", emptyList(), libId)?.id)
@@ -245,7 +248,7 @@ class RepositoryTest : ThothTest() {
         val cover = transaction { getOrCreateImage(byteArrayOf(1, 2, 3), null)!! }
         transaction { BookFileMetadataTable.write(BookFileMetadataTable.layer(id).copy(coverID = cover)) }
 
-        val result = bookRepository.modify(id, libId, bookRenamedTo("Covered").copy(cover = cover.toString()))
+        val result = bookRepository.modify(userId, id, libId, bookRenamedTo("Covered").copy(cover = cover.toString()))
 
         assertEquals(cover, result.coverID, "echoing the current cover id back must not touch the image")
     }
@@ -256,7 +259,7 @@ class RepositoryTest : ThothTest() {
         val foreignImage = transaction { getOrCreateImage(byteArrayOf(9, 9, 9), null)!! }
 
         assertFails("an image id that is not the book's own must not be linkable") {
-            bookRepository.modify(id, libId, bookRenamedTo("Plain").copy(cover = foreignImage.toString()))
+            bookRepository.modify(userId, id, libId, bookRenamedTo("Plain").copy(cover = foreignImage.toString()))
         }
         assertEquals(null, bookRepository.raw(id, libId).coverID)
     }
@@ -279,7 +282,7 @@ class RepositoryTest : ThothTest() {
         bookRepository.create("The Mule Mystery", libId, emptyList(), emptyList())
         assertEquals(
             listOf("The Antelope Mystery", "The Mule Mystery", "The Zebra Mystery"),
-            bookRepository.search("mystery", libId).map { it.title },
+            bookRepository.search(userId, "mystery", libId).map { it.title },
         )
     }
 
@@ -303,7 +306,7 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `tracks are returned in track number order`() {
         val id = bookWithTracks("Numbered", "b.mp3" to 2, "c.mp3" to 10, "a.mp3" to 1)
-        assertEquals(listOf(1, 2, 10), bookRepository.get(id, libId).tracks.map { it.trackNr })
+        assertEquals(listOf(1, 2, 10), bookRepository.get(userId, id, libId).tracks.map { it.trackNr })
     }
 
     @Test
@@ -311,7 +314,7 @@ class RepositoryTest : ThothTest() {
         val id = bookWithTracks("Unnumbered", "Chapter 10.mp3" to null, "Chapter 2.mp3" to null)
         assertEquals(
             listOf("Chapter 2.mp3", "Chapter 10.mp3"),
-            bookRepository.get(id, libId).tracks.map { it.title },
+            bookRepository.get(userId, id, libId).tracks.map { it.title },
             "'10' must not sort before '2'",
         )
     }
@@ -321,7 +324,7 @@ class RepositoryTest : ThothTest() {
         val id = bookWithTracks("Partly numbered", "Chapter 10.mp3" to 1, "Chapter 2.mp3" to null)
         assertEquals(
             listOf("Chapter 2.mp3", "Chapter 10.mp3"),
-            bookRepository.get(id, libId).tracks.map { it.title },
+            bookRepository.get(userId, id, libId).tracks.map { it.title },
         )
     }
 
@@ -347,7 +350,7 @@ class RepositoryTest : ThothTest() {
 
         assertEquals(
             listOf("Sanderson"),
-            seriesRepository.get(series.id, libId).authors.map { it.name },
+            seriesRepository.get(userId, series.id, libId).authors.map { it.name },
             "two books by one author must credit them once",
         )
     }
@@ -369,10 +372,10 @@ class RepositoryTest : ThothTest() {
             listOf("Jim Dale" to 2, "Stephen Fry" to 1),
             narratorRepository.getAll(libId, SortOrder.ASC).map { it.name to it.bookCount },
         )
-        val detailed = narratorRepository.get("JIM DALE", libId)
+        val detailed = narratorRepository.get(userId, "JIM DALE", libId)
         assertEquals("Jim Dale", detailed.name, "the answer uses the library's spelling, not the request's")
         assertEquals(listOf("One", "Two"), detailed.books.map { it.title })
-        assertFailsWith<ErrorResponse> { narratorRepository.get("Rob Inglis", libId) }
+        assertFailsWith<ErrorResponse> { narratorRepository.get(userId, "Rob Inglis", libId) }
     }
 
     @Test
@@ -384,7 +387,7 @@ class RepositoryTest : ThothTest() {
             listOf("Fantasy" to 2, "Sci-Fi" to 1),
             genreRepository.getAll(libId, SortOrder.ASC).map { it.name to it.bookCount },
         )
-        assertEquals(listOf("One"), genreRepository.get("Sci-Fi", libId).books.map { it.title })
+        assertEquals(listOf("One"), genreRepository.get(userId, "Sci-Fi", libId).books.map { it.title })
     }
 
     @Test

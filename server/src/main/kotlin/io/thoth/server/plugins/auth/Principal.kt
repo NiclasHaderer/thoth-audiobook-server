@@ -10,6 +10,7 @@ import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.models.LibraryPermissions
 import io.thoth.models.LibraryPermissionLevel
 import io.thoth.models.UserPermissions
+import io.thoth.openapi.ktor.RouteParamsKey
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryUserTable
@@ -73,11 +74,20 @@ fun RoutingContext.thothPrincipal(): ThothPrincipalImpl =
 
 fun RoutingContext.thothPrincipalOrNull(): ThothPrincipalImpl? = call.principal()
 
+/**
+ * Marks a route whose writes only ever touch the calling user's own state - listening progress and
+ * the like. Such a route needs library membership, but not write permission on the library itself:
+ * a READONLY member still gets to track what they listened to.
+ */
+interface UserScoped
+
 fun RoutingContext.assertLibraryPermissions(vararg libraryIds: UUID) {
     val principal = thothPrincipal()
 
     val readonlyMethods = listOf(HttpMethod.Head, HttpMethod.Get, HttpMethod.Options)
-    val isWrite = !readonlyMethods.contains(call.request.httpMethod)
+    val isWrite =
+        !readonlyMethods.contains(call.request.httpMethod) &&
+            call.attributes.getOrNull(RouteParamsKey) !is UserScoped
 
     libraryIds.forEach { libId ->
         val library =

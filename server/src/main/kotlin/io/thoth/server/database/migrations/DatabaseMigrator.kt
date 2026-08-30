@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.Instant
 
 private data class DatabaseVersion(
     val version: Int,
@@ -25,7 +26,7 @@ private data class DatabaseVersion(
                 log.info { "Applying migration ${this@DatabaseVersion}" }
                 migration.migrate()
                 SchemaTrackerTable.insert {
-                    it[appliedAt] = System.currentTimeMillis()
+                    it[appliedAt] = Instant.now()
                     it[version] = this@DatabaseVersion.version
                 }
             }

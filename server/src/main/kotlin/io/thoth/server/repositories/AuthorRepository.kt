@@ -50,6 +50,7 @@ import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
+import java.time.Instant
 
 interface AuthorRepository : Repository<AuthorRow, Author, AuthorDetailed, AuthorUpdate> {
     fun findByTaggedName(
@@ -152,7 +153,7 @@ class AuthorServiceImpl :
             val id =
                 AuthorTable.create(
                     libraryRepository.raw(libraryId).id,
-                    deferDeletionUntil = System.currentTimeMillis() + DEFER_DELETION_GRACE_MS,
+                    deferDeletionUntil = Instant.now().plus(DEFER_DELETION_GRACE),
                 )
             AuthorUserMetadataTable.write(AuthorMetadataRow(author = id, name = authorName))
             raw(id, libraryId)
@@ -319,7 +320,7 @@ class AuthorServiceImpl :
             }
 
             AuthorTable.update({ AuthorTable.id eq id }) {
-                it[deferDeletionUntil] = System.currentTimeMillis() + DEFER_DELETION_GRACE_MS
+                it[deferDeletionUntil] = Instant.now().plus(DEFER_DELETION_GRACE)
             }
             raw(id, libraryId).toModel()
         }

@@ -43,6 +43,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import java.time.Instant
 
 class LibraryImportPipelineTest : ThothTest() {
     private val pipeline by lazy { getKoin().get<LibraryImportPipeline>() }
@@ -369,7 +370,7 @@ class LibraryImportPipelineTest : ThothTest() {
         assertEquals(2L, tracks(), "sanity: both books import first")
 
         // Every file now looks changed, so the scan has to re-analyze and write
-        transaction { TracksTable.update { it[fileModifiedAt] = 0 } }
+        transaction { TracksTable.update { it[fileModifiedAt] = Instant.EPOCH } }
         val snapshot = getKoin().get<LibraryRoots>().of(libId)!!
 
         // A competing connection holding the write lock for the whole scan, which is the real shape of the
@@ -435,7 +436,7 @@ class LibraryImportPipelineTest : ThothTest() {
         val track = folder.resolve("A Book 0.mp3")
         restorePermissions = track
         Files.setPosixFilePermissions(track, emptySet())
-        transaction { TracksTable.update { it[fileModifiedAt] = 0 } }
+        transaction { TracksTable.update { it[fileModifiedAt] = Instant.EPOCH } }
         scan(libId)
 
         assertEquals(2L, tracks(), "a file that could not be read must not be mistaken for a deleted one")
@@ -455,7 +456,7 @@ class LibraryImportPipelineTest : ThothTest() {
                 it[fileScanners] = listOf(FileScanner("NoSuchScanner"))
             }
         }
-        transaction { TracksTable.update { it[fileModifiedAt] = 0 } }
+        transaction { TracksTable.update { it[fileModifiedAt] = Instant.EPOCH } }
         scan(libId)
 
         assertEquals(1L, tracks(), "a library that analyzed nothing must not have everything reaped")

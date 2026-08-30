@@ -2,6 +2,7 @@ package io.thoth.server.file.analyzer
 
 import io.thoth.metadata.responses.MetadataLanguage
 import java.time.LocalDate
+import java.time.Instant
 
 class AudioFileAnalysisResultImpl(
     override val title: String,
@@ -9,7 +10,7 @@ class AudioFileAnalysisResultImpl(
     override val book: String,
     override val durationMs: Long,
     override val path: String,
-    override val lastModified: Long,
+    override val lastModified: Instant,
     override val description: String? = null,
     override val date: LocalDate? = null,
     override val language: MetadataLanguage? = null,
@@ -36,5 +37,5 @@ interface AudioFileAnalysisResult {
     val cover: ByteArray?
     val durationMs: Long
     val path: String
-    val lastModified: Long
+    val lastModified: Instant
 }

@@ -25,6 +25,7 @@ import io.thoth.openapi.ktor.Tagged
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import io.thoth.server.plugins.auth.Guards
+import io.thoth.server.plugins.auth.UserScoped
 import io.thoth.server.plugins.auth.assertLibraryPermissions
 
 @Resource("api")
@@ -130,6 +131,28 @@ class Api {
                 private val parent: User,
             ) : ThothCurrentUserParams
         }
+    }
+
+    @Secured(Guards.Normal)
+    @Resource("me")
+    @Tagged("Me")
+    data class Me(
+        private val parent: Api,
+    ) {
+        @Summary("Get continue listening", method = "GET")
+        @Resource("continue-listening")
+        data class ContinueListening(
+            val limit: Int = 20,
+            private val parent: Me,
+        )
+
+        @Summary("Get listening history", method = "GET")
+        @Resource("history")
+        data class History(
+            val limit: Int = 20,
+            val offset: Long = 0,
+            private val parent: Me,
+        )
     }
 
     @Summary("Ping server", method = "POST")
@@ -285,6 +308,42 @@ class Api {
 
                         val id
                             get() = parent.id
+                    }
+
+                    @Summary("Set book progress", method = "PUT", status = 204)
+                    @Resource("progress")
+                    data class Progress(
+                        private val parent: Id,
+                    ) : UserScoped {
+                        val libraryId
+                            get() = parent.libraryId
+
+                        val id
+                            get() = parent.id
+
+                        @Summary("Set book finished", method = "PUT", status = 204)
+                        @Resource("finished")
+                        data class Finished(
+                            private val parent: Progress,
+                        ) : UserScoped {
+                            val libraryId
+                                get() = parent.libraryId
+
+                            val id
+                                get() = parent.id
+                        }
+
+                        @Summary("Set book dismissed", method = "PUT", status = 204)
+                        @Resource("dismissed")
+                        data class Dismissed(
+                            private val parent: Progress,
+                        ) : UserScoped {
+                            val libraryId
+                                get() = parent.libraryId
+
+                            val id
+                                get() = parent.id
+                        }
                     }
                 }
             }

@@ -19,6 +19,7 @@ import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import java.time.Instant
 
 class LibraryScannerCleanupTest : ThothTest() {
     private val cleanup = LibraryCleanup()
@@ -106,13 +107,13 @@ class LibraryScannerCleanupTest : ThothTest() {
     @Test
     fun `orphans within their deferDeletionUntil grace period survive cleanup`() {
         val scanned = newLibrary("scanned")
-        val now = System.currentTimeMillis()
+        val now = Instant.now()
         val (keptAuthor, keptSeries) =
             transaction {
-                AuthorTable.create(scanned, deferDeletionUntil = now - 1) // expired
-                SeriesTable.create(scanned, deferDeletionUntil = now - 1)
-                AuthorTable.create(scanned, deferDeletionUntil = now + 60_000) to
-                    SeriesTable.create(scanned, deferDeletionUntil = now + 60_000)
+                AuthorTable.create(scanned, deferDeletionUntil = now.minusMillis(1)) // expired
+                SeriesTable.create(scanned, deferDeletionUntil = now.minusMillis(1))
+                AuthorTable.create(scanned, deferDeletionUntil = now.plusSeconds(60)) to
+                    SeriesTable.create(scanned, deferDeletionUntil = now.plusSeconds(60))
             }
 
         cleanup.removeOrphans(scanned)

@@ -26,6 +26,7 @@ import io.thoth.server.newAuthor
 import io.thoth.server.newBook
 import io.thoth.server.newSeries
 import io.thoth.server.newLibrary
+import io.thoth.server.newUser
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
@@ -43,6 +44,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import java.time.Instant
 
 class LayeredMetadataTest : ThothTest() {
     private val bookRepository by lazy { getKoin().get<BookRepository>() }
@@ -50,10 +52,12 @@ class LayeredMetadataTest : ThothTest() {
     private val trackManager by lazy { getKoin().get<TrackManager>() }
 
     private var libId: UUID = UUID.randomUUID()
+    private var userId: UUID = UUID.randomUUID()
 
     @BeforeTest
     fun createLibrary() {
         libId = newLibrary("lib", folders = listOf("/media/books"))
+        userId = newUser("test-user", admin = true)
     }
 
     private fun scan(
@@ -67,9 +71,9 @@ class LayeredMetadataTest : ThothTest() {
         authors = authors,
         book = book,
         series = series,
-        duration = 60,
+        durationMs = 60_000,
         path = "/media/books/$book/01.mp3",
-        lastModified = 0,
+        lastModified = Instant.EPOCH,
         description = description,
         narrators = narrators,
     )
@@ -81,7 +85,7 @@ class LayeredMetadataTest : ThothTest() {
         trackManager.insert(scan(description = "From the tags", narrators = listOf("First")), libId)
         val id = bookId()
 
-        bookRepository.modify(id, libId, bookUpdate(description = "Mine"))
+        bookRepository.modify(userId, id, libId, bookUpdate(description = "Mine"))
         trackManager.insert(scan(description = "Retagged", narrators = listOf("Second")), libId)
 
         val book = bookRepository.raw(id, libId)
@@ -137,7 +141,7 @@ class LayeredMetadataTest : ThothTest() {
         assertEquals(listOf("Tagged Author"), authorNames(id), "sanity: the tags name an author")
         val chosen = newAuthor("Chosen Author", libId)
 
-        bookRepository.modify(id, libId, bookUpdate(authors = listOf(chosen)))
+        bookRepository.modify(userId, id, libId, bookUpdate(authors = listOf(chosen)))
         trackManager.insert(scan(authors = listOf("Tagged Author")), libId)
 
         assertEquals(listOf("Chosen Author"), authorNames(id), "the tags must not add their author back")
@@ -164,7 +168,7 @@ class LayeredMetadataTest : ThothTest() {
     fun `a rescan keeps updating the file layer underneath an override`() {
         trackManager.insert(scan(description = "From the tags"), libId)
         val id = bookId()
-        bookRepository.modify(id, libId, bookUpdate(description = "Mine"))
+        bookRepository.modify(userId, id, libId, bookUpdate(description = "Mine"))
 
         trackManager.insert(scan(description = "Retagged"), libId)
 
@@ -187,7 +191,7 @@ class LayeredMetadataTest : ThothTest() {
     fun `the file layer takes on an author the tags added underneath an override`() {
         trackManager.insert(scan(authors = listOf("Tagged Author")), libId)
         val id = bookId()
-        bookRepository.modify(id, libId, bookUpdate(authors = listOf(newAuthor("Chosen Author", libId))))
+        bookRepository.modify(userId, id, libId, bookUpdate(authors = listOf(newAuthor("Chosen Author", libId))))
 
         trackManager.insert(scan(authors = listOf("Tagged Author", "Second Author")), libId)
 
@@ -204,13 +208,13 @@ class LayeredMetadataTest : ThothTest() {
         trackManager.insert(scan(series = "Tagged Series"), libId)
         val id = bookId()
         assertEquals(1L, fileLayerSeriesCount(id), "sanity: the tags linked a series")
-        bookRepository.modify(id, libId, bookUpdate(series = listOf(newSeries("Chosen Series", libId))))
+        bookRepository.modify(userId, id, libId, bookUpdate(series = listOf(newSeries("Chosen Series", libId))))
 
         trackManager.insert(scan(series = null), libId)
 
         assertEquals(
             listOf("Chosen Series"),
-            bookRepository.get(id, libId).series.map { it.title },
+            bookRepository.get(userId, id, libId).series.map { it.title },
             "the user's series is what is displayed",
         )
         assertEquals(0L, fileLayerSeriesCount(id), "the tags no longer name a series, so nor may the file layer")
@@ -248,7 +252,7 @@ class LayeredMetadataTest : ThothTest() {
     fun `the book a retagged file leaves behind is cleaned up with its edits`() {
         trackManager.insert(scan(authors = listOf("Tagged Author")), libId)
         val original = bookId()
-        bookRepository.modify(original, libId, bookUpdate(description = "Mine"))
+        bookRepository.modify(userId, original, libId, bookUpdate(description = "Mine"))
 
         trackManager.insert(scan(authors = listOf("Other Author")), libId)
         getKoin().get<LibraryCleanup>().removeOrphans(libId)
@@ -267,7 +271,7 @@ class LayeredMetadataTest : ThothTest() {
             listOf("First Author", "Second Author"),
             getKoin().get<SeriesRepository>().let { repo ->
                 val id = transaction { repo.findByTaggedName("Shared", libId)!!.id }
-                repo.get(id, libId).authors.map { it.name }.sorted()
+                repo.get(userId, id, libId).authors.map { it.name }.sorted()
             },
             "and it is credited to both of them",
         )
@@ -283,12 +287,12 @@ class LayeredMetadataTest : ThothTest() {
         trackManager.insert(scan(), libId)
         val id = bookId()
 
-        bookRepository.modify(id, libId, bookUpdate(title = "My Better Title"))
+        bookRepository.modify(userId, id, libId, bookUpdate(title = "My Better Title"))
         trackManager.insert(scan(), libId)
 
         assertEquals("My Better Title", bookRepository.raw(id, libId).title)
         assertEquals(id, bookId(), "the tags still name the old title, which is what the file layer holds")
-        assertEquals(1, bookRepository.getAll(libId, SortOrder.ASC).size)
+        assertEquals(1, bookRepository.getAll(userId, libId, SortOrder.ASC).size)
     }
 
     @Test
@@ -297,7 +301,7 @@ class LayeredMetadataTest : ThothTest() {
         val id = bookId()
         val extra = newAuthor("Hand Picked", libId)
 
-        bookRepository.modify(id, libId, bookUpdate(authors = listOf(extra)))
+        bookRepository.modify(userId, id, libId, bookUpdate(authors = listOf(extra)))
         getKoin().get<LibraryCleanup>().removeOrphans(libId)
 
         assertEquals(listOf("Hand Picked"), authorNames(id))
@@ -319,7 +323,7 @@ class LayeredMetadataTest : ThothTest() {
         }
     }
 
-    private fun authorNames(bookId: UUID) = bookRepository.get(bookId, libId).authors.map { it.name }
+    private fun authorNames(bookId: UUID) = bookRepository.get(userId, bookId, libId).authors.map { it.name }
 
     private fun bookUpdate(
         title: String? = null,

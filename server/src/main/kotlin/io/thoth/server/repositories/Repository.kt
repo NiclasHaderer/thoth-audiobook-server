@@ -2,10 +2,11 @@ package io.thoth.server.repositories
 
 import org.jetbrains.exposed.v1.core.SortOrder
 import java.util.UUID
+import java.time.Duration
 
 // Grace period during which a manually created (or freshly edited) author/series survives
 // orphan cleanup even though no book links to it yet
-const val DEFER_DELETION_GRACE_MS = 60 * 60 * 1000L
+val DEFER_DELETION_GRACE: Duration = Duration.ofHours(1)
 
 interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API> {
     val searchLimit: Int

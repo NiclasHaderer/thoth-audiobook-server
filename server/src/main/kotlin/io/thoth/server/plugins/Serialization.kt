@@ -9,12 +9,15 @@ import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.thoth.openapi.serializion.jackson.CustomInstantDesSerializer
+import io.thoth.openapi.serializion.jackson.CustomInstantSerializer
 import io.thoth.openapi.serializion.jackson.CustomLocalDateDesSerializer
 import io.thoth.openapi.serializion.jackson.CustomLocalDateSerializer
 import io.thoth.openapi.serializion.jackson.CustomLocalDateTimeDesSerializer
 import io.thoth.openapi.serializion.jackson.CustomLocalDateTimeSerializer
 import io.thoth.server.di.serialization.JacksonSerialization
 import org.koin.ktor.ext.get
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -33,6 +36,8 @@ fun Application.configureSerialization(): ObjectMapper {
                     addDeserializer(LocalDateTime::class.java, CustomLocalDateTimeDesSerializer())
                     addSerializer(LocalDate::class.java, CustomLocalDateSerializer())
                     addDeserializer(LocalDate::class.java, CustomLocalDateDesSerializer())
+                    addSerializer(Instant::class.java, CustomInstantSerializer())
+                    addDeserializer(Instant::class.java, CustomInstantDesSerializer())
                 },
             )
             serialization.objectMapper = this

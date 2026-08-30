@@ -52,6 +52,7 @@ import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
+import java.time.Instant
 
 interface SeriesRepository : Repository<SeriesRow, Series, SeriesDetailed, SeriesUpdate> {
     fun findByTaggedName(
@@ -197,7 +198,7 @@ class SeriesRepositoryImpl :
             val id =
                 SeriesTable.create(
                     libraryRepository.raw(libraryId).id,
-                    deferDeletionUntil = System.currentTimeMillis() + DEFER_DELETION_GRACE_MS,
+                    deferDeletionUntil = Instant.now().plus(DEFER_DELETION_GRACE),
                 )
             SeriesUserMetadataTable.write(SeriesMetadataRow(series = id, title = seriesName))
             raw(id, libraryId)
@@ -266,7 +267,7 @@ class SeriesRepositoryImpl :
             }
 
             SeriesTable.update({ SeriesTable.id eq id }) {
-                it[deferDeletionUntil] = System.currentTimeMillis() + DEFER_DELETION_GRACE_MS
+                it[deferDeletionUntil] = Instant.now().plus(DEFER_DELETION_GRACE)
             }
             raw(id, libraryId).toModel()
         }

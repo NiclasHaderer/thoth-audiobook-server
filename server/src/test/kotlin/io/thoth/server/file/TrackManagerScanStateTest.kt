@@ -19,6 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import java.time.Instant
 
 class TrackManagerScanStateTest : ThothTest() {
     private val trackManager by lazy { getKoin().get<TrackManager>() }
@@ -33,7 +34,7 @@ class TrackManagerScanStateTest : ThothTest() {
         path: Path,
         trackLibrary: UUID,
         bookLibrary: UUID = trackLibrary,
-        fileModifiedAt: Long = 1000,
+        fileModifiedAt: Instant = Instant.ofEpochMilli(1000),
     ): UUID {
         val book = newBook("A Book", bookLibrary)
         return newTrack(
@@ -48,7 +49,7 @@ class TrackManagerScanStateTest : ThothTest() {
     @Test
     fun `an unchanged file needs no analysis`() {
         val path = fileWithMtime(1000)
-        trackAt(path, newLibrary("lib"), fileModifiedAt = 1000)
+        trackAt(path, newLibrary("lib"), fileModifiedAt = Instant.ofEpochMilli(1000))
 
         assertFalse(trackManager.needsAnalysis(path))
     }
@@ -56,7 +57,7 @@ class TrackManagerScanStateTest : ThothTest() {
     @Test
     fun `a file with a newer mtime needs analysis`() {
         val path = fileWithMtime(2000)
-        trackAt(path, newLibrary("lib"), fileModifiedAt = 1000)
+        trackAt(path, newLibrary("lib"), fileModifiedAt = Instant.ofEpochMilli(1000))
 
         assertTrue(trackManager.needsAnalysis(path))
     }

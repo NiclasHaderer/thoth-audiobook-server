@@ -33,6 +33,7 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.union
 import java.util.UUID
+import java.time.Instant
 
 class LibraryCleanup {
     // Only ever correct straight after a completed scan: anything the walk did not stamp is treated as gone,
@@ -59,7 +60,7 @@ class LibraryCleanup {
             }
             // Manually created or freshly edited entities carry a deferDeletionUntil timestamp and get a
             // grace period before they count as orphans, so they survive until books are attached.
-            val now = System.currentTimeMillis()
+            val now = Instant.now()
             AuthorTable.deleteWhere {
                 (AuthorTable.library eq libraryId) and
                     (

@@ -5,6 +5,9 @@ import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.extension
 import kotlin.io.path.name
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import kotlin.io.path.getLastModifiedTime
 
 private fun Path.hasParent() = this.parent != null && this.parent.name.isNotEmpty()
 
@@ -43,3 +46,5 @@ private val AUDIO_EXTENSIONS =
     setOf("mp3", "flac", "ogg", "opus", "aac", "m4a", "m4p", "m4b", "aiff", "wav", "wma", "dsf")
 
 fun Path.hasAudioExtension(): Boolean = this.extension.lowercase() in AUDIO_EXTENSIONS
+
+fun Path.lastModifiedInstant(): Instant = getLastModifiedTime().toInstant().truncatedTo(ChronoUnit.MILLIS)

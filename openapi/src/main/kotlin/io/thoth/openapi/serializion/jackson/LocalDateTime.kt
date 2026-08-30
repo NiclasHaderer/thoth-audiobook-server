@@ -57,3 +57,22 @@ class CustomLocalDateDesSerializer : StdDeserializer<LocalDate?>(LocalDate::clas
         return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
     }
 }
+
+class CustomInstantSerializer : StdSerializer<Instant>(Instant::class.java) {
+    @Throws(IOException::class)
+    override fun serialize(
+        value: Instant,
+        gen: JsonGenerator,
+        sp: SerializerProvider,
+    ) {
+        gen.writeNumber(value.toEpochMilli())
+    }
+}
+
+class CustomInstantDesSerializer : StdDeserializer<Instant?>(Instant::class.java) {
+    @Throws(IOException::class)
+    override fun deserialize(
+        jsonparser: JsonParser,
+        context: DeserializationContext?,
+    ): Instant = Instant.ofEpochMilli(jsonparser.text.toLong())
+}
