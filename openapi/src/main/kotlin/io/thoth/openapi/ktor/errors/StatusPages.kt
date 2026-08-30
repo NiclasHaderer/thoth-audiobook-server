@@ -12,17 +12,34 @@ import io.ktor.server.plugins.ParameterConversionException
 import io.ktor.server.plugins.UnsupportedMediaTypeException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.plugins.statuspages.StatusPagesConfig
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 @PublishedApi
-internal fun <T> formatException(
+internal fun logCommitted(
+    logger: KLogger,
+    call: ApplicationCall,
+    cause: Throwable,
+) {
+    logger.error(cause) {
+        "Failed after the response to ${call.request.httpMethod.value} ${call.request.path()} was committed, " +
+            "so the client received a truncated body"
+    }
+}
+
+@PublishedApi
+internal fun <T : Throwable> formatException(
+    logger: KLogger,
     statusCode: HttpStatusCode,
     cb: ((cause: T) -> Unit)? = null,
 ): suspend (call: ApplicationCall, cause: T) -> Unit =
     { call, cause ->
-        if (!call.response.isSent) {
+        if (call.response.isSent) {
+            logCommitted(logger, call, cause)
+        } else {
             call.respond(
                 statusCode,
                 hashMapOf("error" to cause.toString(), "status" to statusCode.value, "details" to null),
@@ -37,7 +54,7 @@ class ErrorStatuses
         @PublishedApi internal val logger: KLogger,
     ) {
     inline fun <reified T : Throwable> status(statusCode: HttpStatusCode) {
-            config.exception<T>(formatException(statusCode) { logger.warn(it) { it.message } })
+            config.exception<T>(formatException(logger, statusCode) { logger.warn(it) { it.message } })
         }
     }
 
@@ -47,21 +64,22 @@ fun Application.configureStatusPages(errorStatuses: ErrorStatuses.() -> Unit = {
         ErrorStatuses(this, logger).apply(errorStatuses)
 
         exception<ErrorResponse> { call, cause ->
-            if (call.response.isSent) return@exception
+            if (call.response.isSent) return@exception logCommitted(logger, call, cause)
             call.respond(
                 cause.status,
                 hashMapOf("error" to cause.error, "status" to cause.status.value, "details" to cause.details),
             )
         }
 
-        exception<Throwable>(formatException(HttpStatusCode.InternalServerError) { logger.error(it) { it.message } })
-        exception<BadRequestException>(formatException(HttpStatusCode.BadRequest))
-        exception<MissingRequestParameterException>(formatException(HttpStatusCode.BadRequest))
-        exception<ParameterConversionException>(formatException(HttpStatusCode.BadRequest))
-        exception<ContentTransformationException>(formatException(HttpStatusCode.InternalServerError))
-        exception<CannotTransformContentToTypeException>(formatException(HttpStatusCode.UnsupportedMediaType))
-        exception<UnsupportedMediaTypeException>(formatException(HttpStatusCode.UnsupportedMediaType))
-        exception<MissingRequestParameterException>(formatException(HttpStatusCode.BadRequest))
+        exception<Throwable>(
+            formatException(logger, HttpStatusCode.InternalServerError) { logger.error(it) { it.message } },
+        )
+        exception<BadRequestException>(formatException(logger, HttpStatusCode.BadRequest))
+        exception<MissingRequestParameterException>(formatException(logger, HttpStatusCode.BadRequest))
+        exception<ParameterConversionException>(formatException(logger, HttpStatusCode.BadRequest))
+        exception<ContentTransformationException>(formatException(logger, HttpStatusCode.InternalServerError))
+        exception<CannotTransformContentToTypeException>(formatException(logger, HttpStatusCode.UnsupportedMediaType))
+        exception<UnsupportedMediaTypeException>(formatException(logger, HttpStatusCode.UnsupportedMediaType))
 
         val statuses = HttpStatusCode.allStatusCodes.filter { it.value >= 400 }.toTypedArray()
         status(*statuses) { statusCode ->

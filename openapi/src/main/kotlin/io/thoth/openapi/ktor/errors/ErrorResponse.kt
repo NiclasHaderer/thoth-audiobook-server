@@ -21,6 +21,11 @@ class ErrorResponse private constructor(
             details: Any? = null,
         ): ErrorResponse = ErrorResponse(HttpStatusCode.NotFound, "$type '$actual' not found", details)
 
+        fun missing(
+            error: String,
+            details: Any? = null,
+        ): ErrorResponse = ErrorResponse(HttpStatusCode.NotFound, error, details)
+
         fun userError(
             error: String,
             details: Any? = null,

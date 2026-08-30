@@ -6,6 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ImageDownloaderTest {
     private val downloader = ImageDownloader()
@@ -64,5 +65,18 @@ class ImageDownloaderTest {
     @Test
     fun `a host that does not resolve is rejected`() {
         assertFailsWith<ErrorResponse> { downloader.download("http://nothing.invalid/cover.png") }
+    }
+
+    @Test
+    fun `cover urls of the metadata agents are downloadable`() {
+        listOf(
+            // OverDrive puts braces in its paths, which are not legal in a URI and have to be escaped
+            "https://img1.od-cdn.com/ImageType-150/3450-1/{5F39B28A-C85F-4679-A65E-E2087CF874D8}IMG150.JPG",
+            // audiobookdb serves the bytes from a path whose last segment carries a colon
+            "https://cdn.audiobookdb.org/" +
+                "ec1e0d1a4ebb4193802a63d5c6319447089494beb549e4a86a1a325cf78d0e17/source.jpg:book",
+        ).forEach { url ->
+            assertTrue(downloader.download(url)!!.isNotEmpty(), "$url downloaded nothing")
+        }
     }
 }

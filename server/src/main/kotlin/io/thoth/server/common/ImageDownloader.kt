@@ -6,11 +6,12 @@ import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLBuilder
+import io.ktor.http.takeFrom
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.runBlocking
 import java.net.InetAddress
-import java.net.URI
 import java.util.Base64
 
 private const val MAX_IMAGE_BYTES = 16 * 1024 * 1024
@@ -72,7 +73,7 @@ class ImageDownloader(
             val location = response.headers[HttpHeaders.Location]
             when {
                 response.status.isRedirect() && location != null ->
-                    Outcome.Redirect(URI(url).resolve(location).toString())
+                    Outcome.Redirect(URLBuilder(url).takeFrom(location).buildString())
 
                 response.status != HttpStatusCode.OK ->
                     throw ErrorResponse.userError("Image URL returned ${response.status.value}")
@@ -117,17 +118,18 @@ private fun imageTooLarge() =
 
 // Rejects everything that is not an ordinary public http(s) endpoint
 private fun publicHttpUrl(target: String): String {
-    val uri =
+    // java.net.URI would reject special characters, the ktor parser does the parsing and normalises them
+    val url =
         try {
-            URI(target)
+            URLBuilder().takeFrom(target).apply { pathSegments = pathSegments }.build()
         } catch (_: Exception) {
             throw ErrorResponse.userError("Image URL is not a valid URL")
         }
-    val scheme = uri.scheme?.lowercase()
+    val scheme = url.protocol.name
     if (scheme != "http" && scheme != "https") {
         throw ErrorResponse.userError("Image URL must be http or https")
     }
-    val host = uri.host ?: throw ErrorResponse.userError("Image URL has no host")
+    val host = url.host.ifEmpty { throw ErrorResponse.userError("Image URL has no host") }
 
     val addresses =
         try {
@@ -138,7 +140,7 @@ private fun publicHttpUrl(target: String): String {
     if (addresses.any { it.isPrivate() }) {
         throw ErrorResponse.userError("Image URL must point at a public address")
     }
-    return uri.toString()
+    return url.toString()
 }
 
 private fun InetAddress.isPrivate(): Boolean {

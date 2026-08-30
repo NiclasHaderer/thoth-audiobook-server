@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.javatime.timestamp
+import io.thoth.server.database.extensions.timestampMillis
 import java.time.Instant
 import java.util.UUID
 
@@ -17,7 +17,7 @@ object ProgressLogTable : UUIDTable("ProgressLog") {
     val book = reference("book", BooksTable, onDelete = ReferenceOption.CASCADE)
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
     val positionMs = long("positionMs")
-    val at = timestamp("at")
+    val at = timestampMillis("at")
 
     init {
         index(false, user, at)

@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.javatime.timestamp
+import io.thoth.server.database.extensions.timestampMillis
 import java.time.Instant
 import java.util.UUID
 
@@ -19,9 +19,9 @@ object UserBookProgressTable : CompositeIdTable("UserBookProgress") {
     val book = reference("book", BooksTable, onDelete = ReferenceOption.CASCADE)
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
     val positionMs = long("positionMs")
-    val updatedAt = timestamp("updatedAt")
-    val finishedAt = timestamp("finishedAt").nullable()
-    val dismissedAt = timestamp("dismissedAt").nullable()
+    val updatedAt = timestampMillis("updatedAt")
+    val finishedAt = timestampMillis("finishedAt").nullable()
+    val dismissedAt = timestampMillis("dismissedAt").nullable()
 
     override val primaryKey = PrimaryKey(user, book)
 

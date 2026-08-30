@@ -43,7 +43,7 @@ class AudiobookDbApiLiveTest {
             assertEquals(MetadataLanguage.English, book.language)
             assertEquals("9781603935470", book.isbn)
             assertTrue(book.providerRating!! > 0f, "rating was ${book.providerRating}")
-            assertTrue(book.coverURL!!.startsWith("https://"), "cover was '${book.coverURL}'")
+            assertTrue(book.coverURL!!.contains("/source."), "cover was '${book.coverURL}'")
             assertTrue(book.description!!.startsWith("Ryland Grace"), "description was '${book.description?.take(60)}...'")
         }
 
@@ -56,7 +56,7 @@ class AudiobookDbApiLiveTest {
             assertEquals("Project Hail Mary", book.title)
             assertEquals(listOf("Ray Porter"), book.narrators)
             assertEquals(MetadataLanguage.English, book.language)
-            assertTrue(book.coverURL!!.startsWith("https://"), "cover was '${book.coverURL}'")
+            assertTrue(book.coverURL!!.contains("/source."), "cover was '${book.coverURL}'")
         }
 
     @Test

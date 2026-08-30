@@ -322,7 +322,7 @@ class SeriesRepositoryImpl :
         val seriesMetadata =
             runBlocking {
                 metadataWrapper.getSeriesByName(title, region, authorName, language).firstOrNull()
-            } ?: return transaction { raw(id, libraryId).toModel() }
+            } ?: throw noMatch(title)
 
         val newCover = imageDownloader.download(seriesMetadata.coverURL)
         return transaction {

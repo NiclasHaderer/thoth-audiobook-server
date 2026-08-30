@@ -41,6 +41,7 @@ fun newLibrary(
     preferEmbeddedMetadata: Boolean = false,
     region: MetadataRegion = MetadataRegion.US,
     language: MetadataLanguage = MetadataLanguage.English,
+    metadataAgents: List<NamedMetadataAgent> = listOf(NamedMetadataAgent("audible")),
 ): UUID =
     transaction {
         LibrariesTable.insert(
@@ -51,7 +52,7 @@ fun newLibrary(
                 scanIndex = scanIndex,
                 folders = folders,
                 preferEmbeddedMetadata = preferEmbeddedMetadata,
-                metadataAgents = listOf(NamedMetadataAgent("audible")),
+                metadataAgents = metadataAgents,
                 fileScanners = fileScanners,
                 language = language,
                 region = region,

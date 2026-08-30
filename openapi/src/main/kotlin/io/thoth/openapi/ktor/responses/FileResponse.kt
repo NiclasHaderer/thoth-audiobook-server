@@ -17,7 +17,7 @@ class FileResponse(
     constructor(path: String) : this(Path.of(path))
 
     init {
-        if (!path.exists() && path.isRegularFile()) {
+        if (!path.exists() || !path.isRegularFile()) {
             throw ErrorResponse.notFound("file", path.pathString)
         }
     }

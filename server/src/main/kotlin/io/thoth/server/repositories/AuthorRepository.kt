@@ -174,21 +174,24 @@ class AuthorServiceImpl :
                     library.language,
                 )
             }
-        val result = runBlocking { metadataAgent.getAuthorByName(authorName, region, language).firstOrNull() }
-        val newImage = imageDownloader.download(result?.imageURL)
+        val result =
+            runBlocking {
+                metadataAgent.getAuthorByName(authorName, region, language).firstOrNull()
+            } ?: throw noMatch(authorName)
+        val newImage = imageDownloader.download(result.imageURL)
 
         return transaction {
             val agent = AuthorAgentMetadataTable.layer(id)
             AuthorAgentMetadataTable.write(
                 agent.copy(
-                    name = result?.name ?: agent.name,
-                    provider = result?.id?.provider ?: agent.provider,
-                    providerID = result?.id?.itemID ?: agent.providerID,
-                    biography = result?.biography ?: agent.biography,
-                    website = result?.website ?: agent.website,
-                    bornIn = result?.bornIn ?: agent.bornIn,
-                    birthDate = result?.birthDate ?: agent.birthDate,
-                    deathDate = result?.deathDate ?: agent.deathDate,
+                    name = result.name ?: agent.name,
+                    provider = result.id.provider,
+                    providerID = result.id.itemID,
+                    biography = result.biography ?: agent.biography,
+                    website = result.website ?: agent.website,
+                    bornIn = result.bornIn ?: agent.bornIn,
+                    birthDate = result.birthDate ?: agent.birthDate,
+                    deathDate = result.deathDate ?: agent.deathDate,
                     imageID = getOrCreateImage(newImage, currentImageID = agent.imageID),
                 ),
             )

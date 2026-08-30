@@ -16,6 +16,7 @@ import io.thoth.server.database.tables.write
 import io.thoth.server.newAuthor
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
+import io.thoth.server.newSeries
 import io.thoth.server.newUser
 import io.thoth.server.newTrack
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -426,5 +427,24 @@ class RepositoryTest : ThothTest() {
             libraryRepository.overlappingFolders(null, listOf("/media/booksomething")).first,
             "a sibling with a shared name prefix is not nested",
         )
+    }
+
+    @Test
+    fun `auto match reports a 404 when no agent has a match`() {
+        // A library without agents can never match, which keeps the assertion off the live metadata APIs
+        val agentless = newLibrary("agentless", folders = listOf("/media/agentless"), metadataAgents = emptyList())
+        val author = newAuthor("Nobody", agentless)
+        val series = newSeries("No Series", agentless)
+        val book = newBook("No Book", agentless, authors = listOf(author), series = listOf(series))
+
+        listOf(
+            "No Book" to { bookRepository.autoMatch(userId, book, agentless) },
+            "Nobody" to { authorRepository.autoMatch(userId, author, agentless) },
+            "No Series" to { seriesRepository.autoMatch(userId, series, agentless) },
+        ).forEach { (searchedFor, match) ->
+            val error = assertFailsWith<ErrorResponse>(searchedFor) { match() }
+            assertEquals(HttpStatusCode.NotFound, error.status)
+            assertEquals("No metadata agent of the library had a match for '$searchedFor'", error.error)
+        }
     }
 }

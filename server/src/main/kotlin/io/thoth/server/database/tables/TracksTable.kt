@@ -11,14 +11,14 @@ import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.javatime.timestamp
+import io.thoth.server.database.extensions.timestampMillis
 import java.time.Instant
 import java.util.UUID
 
 object TracksTable : UUIDTable("Tracks") {
     val title = text("title")
     val durationMs = long("durationMs")
-    val fileModifiedAt = timestamp("fileModifiedAt")
+    val fileModifiedAt = timestampMillis("fileModifiedAt")
     val path = text("path").uniqueIndex()
     val book = reference("book", BooksTable, onDelete = ReferenceOption.CASCADE).index()
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()

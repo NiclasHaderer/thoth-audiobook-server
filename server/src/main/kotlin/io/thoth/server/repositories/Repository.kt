@@ -1,5 +1,6 @@
 package io.thoth.server.repositories
 
+import io.thoth.openapi.ktor.errors.ErrorResponse
 import org.jetbrains.exposed.v1.core.SortOrder
 import java.util.UUID
 import java.time.Duration
@@ -7,6 +8,9 @@ import java.time.Duration
 // Grace period during which a manually created (or freshly edited) author/series survives
 // orphan cleanup even though no book links to it yet
 val DEFER_DELETION_GRACE: Duration = Duration.ofHours(1)
+
+fun noMatch(searchedFor: String): ErrorResponse =
+    ErrorResponse.missing("No metadata agent of the library had a match for '$searchedFor'")
 
 interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API> {
     val searchLimit: Int

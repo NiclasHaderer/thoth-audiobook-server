@@ -2,14 +2,10 @@ package io.thoth.server
 
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
-import io.ktor.server.application.install
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import io.thoth.metadata.MetadataProviderUnavailableException
-import io.thoth.openapi.ktor.errors.configureStatusPages
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

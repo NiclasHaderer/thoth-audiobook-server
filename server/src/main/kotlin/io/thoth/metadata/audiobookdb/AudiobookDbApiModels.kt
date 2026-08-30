@@ -54,7 +54,12 @@ internal data class AudiobookDbApiNamed(
 @Serializable
 internal data class AudiobookDbApiImage(
     val url: String? = null,
-)
+    val sourceUrl: String? = null,
+) {
+    /** [url] only names the image record and answers a 404, the bytes sit behind [sourceUrl]. */
+    val fileUrl: String?
+        get() = sourceUrl ?: url
+}
 
 @Serializable
 internal data class AudiobookDbApiCredit(
@@ -85,7 +90,7 @@ internal data class AudiobookDbApiListRelease(
             series = emptyList(),
             language = metadataLanguage,
             releaseDate = parseDate(releaseDate),
-            coverURL = image?.url,
+            coverURL = image?.fileUrl,
             narrators = narrators.mapNotNull { it.name },
         )
 }
@@ -137,7 +142,10 @@ internal data class AudiobookDbApiReleaseDetail(
                     ?: emptyList(),
             series = book?.series?.mapNotNull { it.toMetadataBookSeries() } ?: emptyList(),
             releaseDate = parseDate(releaseDate ?: book?.originallyPublishedAt),
-            coverURL = images.firstOrNull()?.url ?: book?.coverImage?.url ?: book?.images?.firstOrNull()?.url,
+            coverURL =
+                images.firstOrNull()?.fileUrl
+                    ?: book?.coverImage?.fileUrl
+                    ?: book?.images?.firstOrNull()?.fileUrl,
             description = htmlToText(description) ?: htmlToText(book?.description),
             narrators = people.filter { it.role?.name == NARRATOR_ROLE }.mapNotNull { it.person?.name },
             providerRating = rating,
@@ -163,7 +171,7 @@ internal data class AudiobookDbApiPerson(
             id = MetadataAgentIDImpl(AUDIOBOOKDB_PROVIDER_NAME, id),
             name = name,
             link = authorLink(id),
-            imageURL = images.firstOrNull()?.url,
+            imageURL = images.firstOrNull()?.fileUrl,
             biography = htmlToText(description),
             website = links.firstOrNull(),
             bornIn = birthPlace,
@@ -194,7 +202,7 @@ internal data class AudiobookDbApiSeries(
             totalBooks = books.size,
             primaryWorks = null,
             books = books,
-            coverURL = images.firstOrNull()?.url ?: books.firstOrNull()?.coverURL,
+            coverURL = images.firstOrNull()?.fileUrl ?: books.firstOrNull()?.coverURL,
             authors = null,
         )
     }
@@ -215,7 +223,7 @@ internal data class AudiobookDbApiSeriesEntry(
             series = listOf(series.toMetadataBookSeries(ordinal?.toFloatOrNull())),
             language = null,
             releaseDate = null,
-            coverURL = book.images.firstOrNull()?.url,
+            coverURL = book.images.firstOrNull()?.fileUrl,
             narrators = emptyList(),
         )
     }

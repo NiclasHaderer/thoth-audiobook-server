@@ -306,7 +306,7 @@ class BookRepositoryImpl :
                         narrator = narrator,
                         language = language,
                     ).firstOrNull()
-            } ?: return transaction { raw(id, libraryId).toModel(userId) }
+            } ?: throw noMatch(bookName)
 
         val newCover = imageDownloader.download(bookMetadata.coverURL)
         // `bookMetadata.authors` and `.series` are deliberately dropped. Matching an entity updates that
