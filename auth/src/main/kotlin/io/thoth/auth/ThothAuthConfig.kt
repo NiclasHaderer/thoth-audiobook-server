@@ -9,7 +9,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.response.respond
@@ -19,6 +18,7 @@ import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.utils.ThothPrincipal
+import io.thoth.auth.utils.userForToken
 import java.security.KeyPair
 import java.security.interfaces.RSAPublicKey
 import java.util.UUID
@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 internal typealias KeyId = String
 
 internal typealias GetPrincipal =
-    ApplicationCall.(jwtCredential: JWTCredential, setError: (error: JwtError) -> Unit) -> ThothPrincipal?
+    ApplicationCall.(user: ThothDatabaseUser, setError: (error: JwtError) -> Unit) -> ThothPrincipal?
 
 internal typealias AuthHeaderProvider = (call: ApplicationCall) -> HttpAuthHeader?
 
@@ -108,19 +108,12 @@ class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
                     }
 
                     validate { jwtCredential ->
-                        val principal =
-                            getPrincipal(jwtCredential) { error -> attributes.put(JWT_VALIDATION_FAILED, error) }
-                                ?: return@validate null
-
-                        if (principal.type != ThothJwtTypes.Access) {
-                            attributes.put(
-                                JWT_VALIDATION_FAILED,
-                                JwtError("JWT is not an access token", HttpStatusCode.Unauthorized),
-                            )
-                            return@validate null
-                        }
-
-                        return@validate principal
+                        val user =
+                            userForToken(jwtCredential.payload, ThothJwtTypes.Access) ?: run {
+                                attributes.put(JWT_VALIDATION_FAILED, JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
+                                return@validate null
+                            }
+                        getPrincipal(user) { error -> attributes.put(JWT_VALIDATION_FAILED, error) }
                     }
 
                     challenge { _, _ ->
@@ -148,8 +141,10 @@ class ThothAuthConfigBuilder<PERMISSIONS, UPDATE_PERMISSIONS> {
     var realm: String? = null
 
     // Token expiry times
-    var accessTokenExpiryTime = TimeUnit.MINUTES.toMillis(5)
-    var refreshTokenExpiryTime = TimeUnit.DAYS.toMillis(60)
+    var accessTokenExpiryTime = TimeUnit.DAYS.toMillis(1)
+
+    // Slides forward on every refresh, so only a client that goes quiet for the whole window has to log in again
+    var refreshTokenExpiryTime = TimeUnit.DAYS.toMillis(30)
 
     // Key pairs
     val keyPairs: MutableMap<KeyId, KeyPair> = mutableMapOf()

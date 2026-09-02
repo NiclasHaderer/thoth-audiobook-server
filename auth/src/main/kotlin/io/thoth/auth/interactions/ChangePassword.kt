@@ -5,6 +5,7 @@ import io.thoth.auth.models.ThothChangePassword
 import io.thoth.auth.thothAuthConfig
 import io.thoth.auth.withUserMutation
 import io.thoth.auth.utils.ThothPrincipal
+import io.thoth.auth.utils.generateJwtPairForUser
 import io.thoth.auth.utils.hashPassword
 import io.thoth.auth.utils.passwordMatches
 import io.thoth.auth.utils.thothPrincipal
@@ -39,5 +40,11 @@ fun RoutingContext.changeUserPassword(
     }
 
     val newPassword = hashPassword(passwordChange.newPassword)
-    withUserMutation { config.updatePassword(user, newPassword) }
+    val updated = withUserMutation { config.updatePassword(user, newPassword) }
+    check(updated.tokenVersion != user.tokenVersion) {
+        "updatePassword must increment the user's tokenVersion, otherwise tokens issued before the change stay valid"
+    }
+
+    // The bump invalidated every token of this user, including the one used for this request
+    if (principal.userId == params.id) call.appendAuthCookies(generateJwtPairForUser(updated, config), config)
 }

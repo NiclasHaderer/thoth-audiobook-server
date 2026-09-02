@@ -1,11 +1,9 @@
 package io.thoth.server.plugins.auth
 
 import io.ktor.http.HttpMethod
-import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.principal
 import io.ktor.server.request.httpMethod
 import io.ktor.server.routing.RoutingContext
-import io.thoth.auth.models.ThothJwtTypes
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.models.LibraryPermissions
 import io.thoth.models.LibraryPermissionLevel
@@ -22,9 +20,8 @@ import java.util.UUID
 
 class ThothPrincipalImpl(
     override val userId: UUID,
-    override val type: ThothJwtTypes,
 ) : ThothPrincipal {
-    val permissions: UserPermissions by lazy { resolveUserPermissions(userId) }
+    val permissions: UserPermissions = resolveUserPermissions(userId)
 }
 
 fun resolveUserPermissions(userId: UUID): UserPermissions =
@@ -53,20 +50,6 @@ fun resolveUserPermissions(userId: UUID): UserPermissions =
             }
         UserPermissions(isAdmin = user.admin, libraries = permissions)
     }
-
-fun jwtToPrincipal(credentials: JWTCredential): ThothPrincipalImpl? {
-    val userIdStr = credentials.payload.getClaim("sub").asString() ?: return null
-    val userId = UUID.fromString(userIdStr)
-    val enumType =
-        try {
-            val type = credentials.payload.getClaim("type").asString() ?: return null
-            ThothJwtTypes.entries.first { it.type == type }
-        } catch (_: Exception) {
-            return null
-        }
-
-    return ThothPrincipalImpl(userId = userId, type = enumType)
-}
 
 fun RoutingContext.thothPrincipal(): ThothPrincipalImpl =
     thothPrincipalOrNull()

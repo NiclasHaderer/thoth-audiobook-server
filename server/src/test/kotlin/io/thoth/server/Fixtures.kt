@@ -140,6 +140,7 @@ fun newUser(
                     username = username,
                     passwordHash = "hash",
                     admin = admin,
+                    tokenVersion = 0,
                 ),
             )
         libraries.forEach { (libraryId, level) ->

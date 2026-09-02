@@ -12,6 +12,7 @@ object UsersTable : UUIDTable("Users") {
     val username = varchar("username", 255).uniqueIndex()
     val passwordHash = varchar("passwordHash", 255)
     val admin = bool("admin").default(false)
+    val tokenVersion = integer("tokenVersion")
 }
 
 data class UserRow(
@@ -19,6 +20,7 @@ data class UserRow(
     val username: String,
     val passwordHash: String,
     val admin: Boolean,
+    val tokenVersion: Int,
 ) {
     fun toModel(): User = User(id = id, username = username, admin = admin)
 
@@ -27,6 +29,7 @@ data class UserRow(
             id = id,
             username = username,
             passwordHash = passwordHash,
+            tokenVersion = tokenVersion,
         )
 }
 
@@ -36,6 +39,7 @@ fun ResultRow.toUserRow(): UserRow =
         username = this[UsersTable.username],
         passwordHash = this[UsersTable.passwordHash],
         admin = this[UsersTable.admin],
+        tokenVersion = this[UsersTable.tokenVersion],
     )
 
 context(_: Transaction)
@@ -45,6 +49,7 @@ fun UsersTable.insert(row: UserRow): UUID {
         it[username] = row.username
         it[passwordHash] = row.passwordHash
         it[admin] = row.admin
+        it[tokenVersion] = row.tokenVersion
     }
     return row.id
 }

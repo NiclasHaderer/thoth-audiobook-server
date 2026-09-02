@@ -7,7 +7,7 @@ import io.thoth.auth.interactions.currentUser
 import io.thoth.auth.interactions.deleteUser
 import io.thoth.auth.interactions.displayUser
 import io.thoth.auth.interactions.getJwks
-import io.thoth.auth.interactions.getRefreshToken
+import io.thoth.auth.interactions.refreshAccessToken
 import io.thoth.auth.interactions.listUsers
 import io.thoth.auth.interactions.loginUser
 import io.thoth.auth.interactions.logoutUser
@@ -64,7 +64,7 @@ fun Routing.authRoutes() {
 
     post<Api.Auth.User.Id.Password, ThothChangePassword, Unit>(RoutingContext::changeUserPassword)
 
-    post<Api.Auth.User.Refresh, Unit, ThothAccessToken>(withTransaction(RoutingContext::getRefreshToken))
+    post<Api.Auth.User.Refresh, Unit, ThothAccessToken>(withTransaction(RoutingContext::refreshAccessToken))
 }
 
 // Serializes concurrent registrations so the "first user becomes admin" check-then-insert can't race

@@ -1,6 +1,5 @@
 package io.thoth.auth.interactions
 
-import io.ktor.http.Cookie
 import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothAccessToken
 import io.thoth.auth.models.ThothLoginUser
@@ -25,19 +24,7 @@ fun RoutingContext.loginUser(
     }
 
     val keyPair = generateJwtPairForUser(user, config)
-
-    call.response.cookies.append(
-        Cookie(
-            name = "refresh",
-            value = keyPair.refreshToken,
-            httpOnly = true,
-            secure = config.ssl,
-            extensions = mapOf("SameSite" to "Strict"),
-            maxAge = (config.refreshTokenExpiryTime / 1000).toInt(),
-        ),
-    )
-
-    call.appendAccessCookie(keyPair.accessToken, config)
+    call.appendAuthCookies(keyPair, config)
 
     return ThothAccessToken(keyPair.accessToken)
 }

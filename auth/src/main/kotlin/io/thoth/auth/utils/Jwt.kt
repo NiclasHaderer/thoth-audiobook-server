@@ -2,7 +2,7 @@ package io.thoth.auth.utils
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.auth0.jwt.interfaces.DecodedJWT
+import com.auth0.jwt.interfaces.Payload
 import io.thoth.auth.ThothAuthConfig
 import io.thoth.auth.models.ThothDatabaseUser
 import io.thoth.auth.models.ThothJwtPair
@@ -11,6 +11,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.Date
+import java.util.UUID
 
 fun generateJwtPairForUser(
     user: ThothDatabaseUser,
@@ -34,6 +35,7 @@ internal fun generateAccessTokenForUser(
         .withKeyId(config.activeKeyId)
         .withClaim("sub", user.id.toString())
         .withClaim("type", ThothJwtTypes.Access.type)
+        .withClaim("ver", user.tokenVersion)
         .withExpiresAt(Date(System.currentTimeMillis() + config.accessTokenExpiryTime))
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 }
@@ -52,6 +54,7 @@ internal fun generateRefreshTokenForUser(
         .withKeyId(config.activeKeyId)
         .withClaim("type", ThothJwtTypes.Refresh.type)
         .withClaim("sub", user.id.toString())
+        .withClaim("ver", user.tokenVersion)
         .withExpiresAt(Date(refreshAge))
         .sign(Algorithm.RSA256(keyPair.public as RSAPublicKey, keyPair.private as RSAPrivateKey))
 }
@@ -60,7 +63,7 @@ fun validateJwt(
     authConfig: ThothAuthConfig<*, *>,
     token: String,
     type: ThothJwtTypes,
-): DecodedJWT {
+): ThothDatabaseUser {
     val decodedJWT = JWT.decode(token)
     if (decodedJWT.algorithm != "RS256") {
         throw ErrorResponse.userError("Unsupported JWT algorithm ${decodedJWT.algorithm}")
@@ -72,10 +75,17 @@ fun validateJwt(
     runCatching { verifier.verify(decodedJWT) }
         .onFailure { throw ErrorResponse.unauthorized("Invalid JWT: ${it.message}") }
 
-    // Make sure that the token is of the correct type
-    if (decodedJWT.getClaim("type").asString() != type.type) {
-        throw ErrorResponse.unauthorized("Invalid JWT type")
-    }
+    return authConfig.userForToken(decodedJWT, type) ?: throw ErrorResponse.unauthorized("JWT is no longer valid")
+}
 
-    return decodedJWT
+// The user named by a signature-verified token, or null if the type is wrong, the user is gone, or the token
+// predates a password change.
+internal fun ThothAuthConfig<*, *>.userForToken(
+    payload: Payload,
+    type: ThothJwtTypes,
+): ThothDatabaseUser? {
+    if (payload.getClaim("type").asString() != type.type) return null
+    val userId = payload.getClaim("sub").asString()?.let { runCatching { UUID.fromString(it) }.getOrNull() } ?: return null
+    val user = getUserById(userId) ?: return null
+    return user.takeIf { payload.getClaim("ver").asInt() == it.tokenVersion }
 }

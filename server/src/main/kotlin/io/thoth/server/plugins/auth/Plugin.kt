@@ -59,28 +59,14 @@ fun Application.configureAuthentication() {
         keyPairs["thoth"] = keyPair
         activeKeyId = "thoth"
 
-        configureGuard(Guards.Normal) { jwtCredential, setError ->
-            jwtToPrincipal(jwtCredential) ?: return@configureGuard run {
-                setError(JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
-                null
-            }
-        }
+        configureGuard(Guards.Normal) { user, _ -> ThothPrincipalImpl(user.id) }
 
-        configureGuard(Guards.Media, authHeader = bearerFromHeaderOrCookie("access")) { jwtCredential, setError ->
-            jwtToPrincipal(jwtCredential) ?: return@configureGuard run {
-                setError(JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
-                null
-            }
-        }
+        configureGuard(Guards.Media, authHeader = bearerFromHeaderOrCookie("access")) { user, _ -> ThothPrincipalImpl(user.id) }
 
-        configureGuard(Guards.Admin) { jwtCredential, setError ->
-            jwtToPrincipal(jwtCredential)?.let { principal ->
-                if (principal.permissions.isAdmin) {
-                    principal
-                } else {
-                    setError(JwtError("User is not an admin", HttpStatusCode.Unauthorized))
-                    null
-                }
+        configureGuard(Guards.Admin) { user, setError ->
+            ThothPrincipalImpl(user.id).takeIf { it.permissions.isAdmin } ?: run {
+                setError(JwtError("User is not an admin", HttpStatusCode.Unauthorized))
+                null
             }
         }
 
@@ -110,6 +96,7 @@ fun Application.configureAuthentication() {
                             username = newUser.username,
                             passwordHash = newUser.passwordHash,
                             admin = newUser.admin,
+                            tokenVersion = 0,
                         )
                     UsersTable.insert(row)
                     row.toExternalUser()
@@ -138,7 +125,10 @@ fun Application.configureAuthentication() {
 
         updatePassword { user, newPassword ->
             transaction {
-                UsersTable.update({ UsersTable.id eq user.id }) { it[passwordHash] = newPassword }
+                UsersTable.update({ UsersTable.id eq user.id }) {
+                    it[passwordHash] = newPassword
+                    it[tokenVersion] = tokenVersion + 1
+                }
                 userRow(user.id)!!.toExternalUser()
             }
         }
