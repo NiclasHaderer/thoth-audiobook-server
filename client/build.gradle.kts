@@ -17,9 +17,14 @@ afterEvaluate {
     }
 }
 
+// The sources in io/thoth/client/gen are written by the server's generateClients task
+tasks.named("compileKotlin") {
+    dependsOn(":server:generateClients")
+}
+
 dependencies {
-    implementation(libs.arrow.core)
-    implementation(libs.ktor.client.core)
+    api(libs.arrow.core)
+    api(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.kotlin.reflect)
 }

@@ -11,6 +11,17 @@ class MapKtGenerator : KtTypeGenerator() {
     override fun generateContent(
         classType: ClassType,
         generateSubType: GenerateType<KtType>,
+    ): String = generateContent(classType, generateSubType, impl = false)
+
+    override fun generateImplContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String = generateContent(classType, generateSubType, impl = true)
+
+    private fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+        impl: Boolean,
     ): String {
         if (classType.genericArguments.size != 2) {
             log.warn { "Record type without generic arguments" }
@@ -24,13 +35,15 @@ class MapKtGenerator : KtTypeGenerator() {
 
         val className = classType.simpleName
 
-        return "$className<${keyType.reference()} ${
+        val key = if (impl) keyType.referenceImpl() else keyType.reference()
+        val value = if (impl) valueType.referenceImpl() else valueType.reference()
+        return "$className<$key ${
             if (keyClassType.isNullable) {
                 "?"
             } else {
                 ""
             }
-        }, ${valueType.reference()}>"
+        }, $value>"
     }
 
     override fun getName(classType: ClassType): String = "Map"

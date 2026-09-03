@@ -11,6 +11,17 @@ class ArrayKtGenerator : KtTypeGenerator() {
     override fun generateContent(
         classType: ClassType,
         generateSubType: GenerateType<KtType>,
+    ): String = generateContent(classType, generateSubType, impl = false)
+
+    override fun generateImplContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String = generateContent(classType, generateSubType, impl = true)
+
+    private fun generateContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+        impl: Boolean,
     ): String {
         if (classType.genericArguments.isEmpty()) {
             log.warn { "Array type without generic arguments" }
@@ -22,7 +33,7 @@ class ArrayKtGenerator : KtTypeGenerator() {
 
         return buildString {
             append("List<")
-            append(subType.reference())
+            append(if (impl) subType.referenceImpl() else subType.reference())
             if (genericArg.isNullable) {
                 append("?")
             }

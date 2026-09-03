@@ -1,72 +1,46 @@
 package io.thoth.server
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.ktor.client.HttpClient
-import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.thoth.models.LibraryPermissionLevel
-import io.thoth.server.database.tables.LibraryUserTable
-import io.thoth.server.database.tables.UsersTable
-import io.thoth.server.database.tables.toUserRow
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import io.thoth.client.gen.models.LibraryPermissionLevel
+import io.thoth.client.gen.models.ThothLoginUserImpl
+import io.thoth.client.gen.models.ThothModifyPermissionsImpl
+import io.thoth.client.gen.models.ThothRegisterUserImpl
+import io.thoth.client.gen.models.UpdateLibraryPermissionsImpl
+import io.thoth.client.gen.models.UpdateUserPermissionsImpl
 import java.util.UUID
 import kotlin.test.assertEquals
 
 const val TEST_PASSWORD = "hunter22"
-
-private val mapper = jacksonObjectMapper()
-
-private fun credentials(username: String) = "{\"username\": \"$username\", \"password\": \"$TEST_PASSWORD\"}"
 
 /**
  * Boots the production plugin and routing stack against the harness database, and registers the first
  * account up front: registration makes the first user an admin, so anyone created inside [block] is a
  * normal user whose access is exactly what the test grants.
  */
-fun thothServer(block: suspend ApplicationTestBuilder.(HttpClient) -> Unit) =
+fun thothServer(block: suspend ApplicationTestBuilder.() -> Unit) =
     testApplication {
         application {
             plugins()
             routing()
         }
-        client.register("admin")
-        block(client)
+        register("admin")
+        block()
     }
 
-suspend fun HttpClient.register(username: String) {
-    val response =
-        post("/api/auth/register") {
-            contentType(ContentType.Application.Json)
-            setBody(credentials(username))
-        }
+suspend fun ApplicationTestBuilder.register(username: String) {
+    val response = api.registerUser(ThothRegisterUserImpl(password = TEST_PASSWORD, username = username))
     assertEquals(HttpStatusCode.Created, response.status, "could not register $username")
 }
 
-suspend fun HttpClient.login(username: String): String {
-    val response =
-        post("/api/auth/login") {
-            contentType(ContentType.Application.Json)
-            setBody(credentials(username))
-        }
+suspend fun ApplicationTestBuilder.login(username: String): String {
+    val response = api.loginUser(ThothLoginUserImpl(password = TEST_PASSWORD, username = username))
     assertEquals(HttpStatusCode.OK, response.status, "could not log in $username")
-    return mapper.readTree(response.bodyAsText()).get("accessToken").asText()
+    return response.body().accessToken
 }
 
-/** Registers a normal user with one library permission and returns their access token. */
-suspend fun HttpClient.registerWithAccess(
+suspend fun ApplicationTestBuilder.registerWithAccess(
     username: String,
     libraryId: UUID,
     level: LibraryPermissionLevel,
@@ -76,42 +50,36 @@ suspend fun HttpClient.registerWithAccess(
     return login(username)
 }
 
-suspend fun HttpClient.statusOf(
-    token: String,
-    path: String,
-) = get(path) { bearerAuth(token) }.status
-
-suspend fun HttpClient.bodyOf(
-    token: String,
-    path: String,
-): String {
-    val response = get(path) { bearerAuth(token) }
-    assertEquals(HttpStatusCode.OK, response.status, "$path answered ${response.status}")
-    return response.bodyAsText()
+// The endpoint replaces the whole permission set, so grant and revoke read the current one first
+suspend fun ApplicationTestBuilder.setLibraries(
+    username: String,
+    libraries: List<UpdateLibraryPermissionsImpl>,
+) {
+    val admin = bearer(login("admin"))
+    val response =
+        api.updatePermissions(
+            userId(username),
+            ThothModifyPermissionsImpl(UpdateUserPermissionsImpl(isAdmin = false, libraries = libraries)),
+            admin,
+        )
+    assertEquals(HttpStatusCode.OK, response.status, "could not set permissions for $username")
 }
 
-fun userId(username: String): UUID =
-    transaction {
-        UsersTable.selectAll().where { UsersTable.username eq username }.single().toUserRow().id
-    }
-
-fun grant(
+suspend fun ApplicationTestBuilder.grant(
     username: String,
     libraryId: UUID,
     level: LibraryPermissionLevel,
-) = transaction {
-    val id = userId(username)
-    LibraryUserTable.insert {
-        it[user] = id
-        it[library] = libraryId
-        it[permissions] = level
-    }
-}
+) = setLibraries(username, currentLibraries(username) + UpdateLibraryPermissionsImpl(libraryId, level))
 
-fun revoke(
+suspend fun ApplicationTestBuilder.revoke(
     username: String,
     libraryId: UUID,
-) = transaction {
-    val id = userId(username)
-    LibraryUserTable.deleteWhere { (user eq id) and (library eq libraryId) }
-}
+) = setLibraries(username, currentLibraries(username).filterNot { it.id == libraryId })
+
+private suspend fun ApplicationTestBuilder.currentLibraries(username: String) =
+    user(username).permissions.libraries.map { UpdateLibraryPermissionsImpl(it.id, it.permissions) }
+
+suspend fun ApplicationTestBuilder.userId(username: String): UUID = user(username).id
+
+private suspend fun ApplicationTestBuilder.user(username: String) =
+    api.listUsers(bearer(login("admin"))).body().single { it.username == username }

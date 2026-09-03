@@ -91,7 +91,8 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                         }
                         append(">")
                     }
-                    if (it.nullable) append("?")
+                    // A nullable field defaults to null so callers only name the ones they mean
+                    if (it.nullable) append("? = null")
                     if (i < ktImplProperties.size - 1) append(",\n")
                 }
 

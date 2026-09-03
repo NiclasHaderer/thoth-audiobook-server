@@ -25,13 +25,21 @@ class KtClientFunction(
         route: OpenApiRoute,
         impl: Boolean,
     ) = buildList {
-        // Path parameters
-        (route.queryParameters + route.pathParameters).forEach { (param) ->
+        fun withIfNotImpl(str: String) = if (impl) "" else str
+
+        fun addParameter(param: OpenApiRoute.Parameter) {
             val (actual, all) = typeProviders.generateTypes(param.type)
             clientImports.addAll(actual.imports())
             typeDefinitions.putAll(all.mappedKtReference())
-            add("${param.name}: ${actual.reference()}${if (param.optional) "?" else ""}, ")
+            val optional = if (param.optional) "?${withIfNotImpl(" = null")}" else ""
+            add("${param.name}: ${actual.reference()}$optional, ")
         }
+
+        val (optionalParams, requiredParams) =
+            (route.queryParameters + route.pathParameters).map { (param) -> param }.partition { it.optional }
+
+        // Everything carrying a default has to come last, so the body sits between required and optional
+        requiredParams.forEach(::addParameter)
 
         // Body
         if (route.requestBodyType.clazz != Unit::class) {
@@ -41,7 +49,7 @@ class KtClientFunction(
             add("body: ${actual.reference()}, ")
         }
 
-        fun withIfNotImpl(str: String) = if (impl) "" else str
+        optionalParams.forEach(::addParameter)
 
         // Headers
         add("headers: Headers${withIfNotImpl("= Headers.Empty")},")
@@ -91,12 +99,18 @@ class KtClientFunction(
             append(" ${functionRunner.first} {\n")
             append("        makeRequest(\n")
             append("            RequestMetadata(\n")
-            append("                path = \"${route.fullPath}\",\n")
+            // Path parameters are spelled {name} in the route, which is also their name in the generated
+            // signature, so turning the braces into Kotlin interpolation fills them in.
+            append("                path = \"${route.fullPath.replace("{", "\${")}\",\n")
             append("                method = HttpMethod(\"${route.method.value}\"),\n")
             append("                headers = headers,\n")
             append("                body = ${if (route.requestBodyType.clazz == Unit::class) "Unit" else "body"},\n")
             append("                shouldLogin = ${route.secured != null},\n")
             append("                securitySchema = \"${route.secured?.name}\",\n")
+            if (route.queryParameters.isNotEmpty()) {
+                val entries = route.queryParameters.joinToString(", ") { (param) -> "\"${param.name}\" to ${param.name}" }
+                append("                queryParameters = mapOf($entries),\n")
+            }
             append("            ),\n")
             append("            typeInfo<${requestBody.referenceImpl()}>(),\n")
             append("            typeInfo<${responseBody.referenceImpl()}>(),\n")

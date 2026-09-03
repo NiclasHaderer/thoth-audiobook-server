@@ -41,9 +41,10 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
         override val content: String,
         name: String?,
         override val imports: List<String>,
+        implContent: String? = null,
     ) : KtType() {
         override val name = name ?: content
-        override val implReference = content
+        override val implReference = implContent ?: content
         override val implName = this.name
         override val reference: String = content
         override val dataType = KtDataType.PRIMITIVE
@@ -74,6 +75,12 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
 
     open fun getImplName(classType: ClassType): String? = null
 
+    /** Container types override this so their element type also resolves to the concrete Impl. */
+    open fun generateImplContent(
+        classType: ClassType,
+        generateSubType: GenerateType<KtType>,
+    ): String = generateContent(classType, generateSubType)
+
     override fun createType(
         classType: ClassType,
         generateSubType: GenerateType<KtType>,
@@ -88,7 +95,12 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
         return when (insertionMode) {
             KtDataType.PRIMITIVE -> {
                 require(reference == null) { "Reference must be null for primitive types" }
-                KtInlineType(content = content, name = name, imports = imports)
+                KtInlineType(
+                    content = content,
+                    name = name,
+                    imports = imports,
+                    implContent = generateImplContent(classType, generateSubType),
+                )
             }
 
             KtDataType.COMPLEX -> {

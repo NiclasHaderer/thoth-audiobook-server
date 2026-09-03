@@ -1,21 +1,17 @@
 package io.thoth.server.api
 
-import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.put
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.thoth.models.LibraryPermissionLevel
+import io.thoth.client.gen.models.LibraryPermissionLevel
+import io.thoth.client.gen.models.ProgressUpdateImpl
 import io.thoth.server.ThothTest
-import io.thoth.server.bodyOf
+import io.thoth.server.api
+import io.thoth.server.bearer
 import io.thoth.server.grant
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
 import io.thoth.server.newTrack
 import io.thoth.server.registerWithAccess
 import io.thoth.server.revoke
-import io.thoth.server.statusOf
 import io.thoth.server.thothServer
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,69 +24,57 @@ import kotlin.test.assertTrue
 class LibraryRevocationTest : ThothTest() {
     @Test
     fun `revoking a library hides its books, progress and history from the same token`() =
-        thothServer { client ->
+        thothServer {
             val libId = newLibrary("lib", folders = listOf("/media/books"))
             val bookId = newBook("Dune", libId)
             val trackId = newTrack("t1", "/media/books/dune/1.mp3", bookId, libId, trackNr = 1)
             repeat(2) { newTrack("t${it + 2}", "/media/books/dune/${it + 2}.mp3", bookId, libId, trackNr = it + 2) }
-            val token = client.registerWithAccess("listener", libId, LibraryPermissionLevel.READONLY)
+            val token = bearer(registerWithAccess("listener", libId, LibraryPermissionLevel.READONLY))
 
             // Build up some state while access is still granted
             assertEquals(
                 HttpStatusCode.NoContent,
-                client.put("/api/libraries/$libId/books/$bookId/progress") {
-                    bearerAuth(token)
-                    contentType(ContentType.Application.Json)
-                    setBody("{\"positionMs\": 42000}")
-                }.status,
+                api.setBookProgress(bookId, libId, ProgressUpdateImpl(positionMs = 42000), token).status,
             )
-            assertTrue(client.bodyOf(token, "/api/libraries/$libId/books").contains("Dune"))
-            assertTrue(client.bodyOf(token, "/api/me/continue-listening").contains("Dune"))
-            assertTrue(client.bodyOf(token, "/api/me/history").contains("Dune"))
+            assertTrue(api.listBooks(libId, headers = token).body().items.any { it.title == "Dune" })
+            assertTrue(api.getContinueListening(headers = token).body().any { it.title == "Dune" })
+            assertTrue(api.getListeningHistory(headers = token).body().items.any { it.book.title == "Dune" })
 
             revoke("listener", libId)
 
             // Same token, no new login
-            assertEquals(HttpStatusCode.Forbidden, client.statusOf(token, "/api/libraries/$libId/books"))
-            assertEquals(HttpStatusCode.Forbidden, client.statusOf(token, "/api/libraries/$libId/books/$bookId"))
-            assertEquals(HttpStatusCode.Forbidden, client.statusOf(token, "/api/libraries/$libId"))
-            assertEquals(HttpStatusCode.Forbidden, client.statusOf(token, "/api/stream/audio/$trackId"))
+            assertEquals(HttpStatusCode.Forbidden, api.listBooks(libId, headers = token).status)
+            assertEquals(HttpStatusCode.Forbidden, api.getBook(bookId, libId, token).status)
+            assertEquals(HttpStatusCode.Forbidden, api.getLibrary(libId, token).status)
+            assertEquals(HttpStatusCode.Forbidden, api.getAudioFile(trackId, token).status)
 
-            assertEquals("[]", client.bodyOf(token, "/api/me/continue-listening"))
-            assertTrue(client.bodyOf(token, "/api/me/history").contains("\"items\":[]"))
-            assertEquals("[]", client.bodyOf(token, "/api/libraries"), "the library itself must not be listed")
+            assertTrue(api.getContinueListening(headers = token).body().isEmpty())
+            assertTrue(api.getListeningHistory(headers = token).body().items.isEmpty())
+            assertTrue(api.listLibraries(token).body().isEmpty(), "the library itself must not be listed")
 
-            val search = client.bodyOf(token, "/api/libraries/search?q=Dune")
-            assertTrue(!search.contains("Dune"), "revoked books must not surface in search: $search")
+            val search = api.searchInAllLibraries(q = "Dune", headers = token).body()
+            assertTrue(search.books.isEmpty(), "revoked books must not surface in search: $search")
 
             assertEquals(
                 HttpStatusCode.Forbidden,
-                client.put("/api/libraries/$libId/books/$bookId/progress") {
-                    bearerAuth(token)
-                    contentType(ContentType.Application.Json)
-                    setBody("{\"positionMs\": 99000}")
-                }.status,
+                api.setBookProgress(bookId, libId, ProgressUpdateImpl(positionMs = 99000), token).status,
             )
         }
 
     @Test
     fun `regranting a library brings the old progress back`() =
-        thothServer { client ->
+        thothServer {
             val libId = newLibrary("lib", folders = listOf("/media/books"))
             val bookId = newBook("Dune", libId)
             repeat(3) { newTrack("t$it", "/media/books/dune/$it.mp3", bookId, libId, trackNr = it + 1) }
-            val token = client.registerWithAccess("listener", libId, LibraryPermissionLevel.READONLY)
+            val token = bearer(registerWithAccess("listener", libId, LibraryPermissionLevel.READONLY))
 
-            client.put("/api/libraries/$libId/books/$bookId/progress") {
-                bearerAuth(token)
-                contentType(ContentType.Application.Json)
-                setBody("{\"positionMs\": 42000}")
-            }
+            api.setBookProgress(bookId, libId, ProgressUpdateImpl(positionMs = 42000), token)
 
             revoke("listener", libId)
-            assertEquals("[]", client.bodyOf(token, "/api/me/continue-listening"))
+            assertTrue(api.getContinueListening(headers = token).body().isEmpty())
 
             grant("listener", libId, LibraryPermissionLevel.READONLY)
-            assertTrue(client.bodyOf(token, "/api/me/continue-listening").contains("42000"))
+            assertEquals(42000, api.getContinueListening(headers = token).body().single().positionMs)
         }
 }

@@ -98,4 +98,14 @@ dependencies {
     // Tests
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.server.test.host)
+    testImplementation(project(":client"))
+}
+
+// The client module compiles the output of this, so it has to run before anything consumes :client.
+tasks.register<JavaExec>("generateClients") {
+    group = "build"
+    description = "Regenerates the Kotlin and TypeScript API clients from the current routes"
+    mainClass.set("io.thoth.server.GenerateClientsKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    workingDir = rootProject.projectDir
 }

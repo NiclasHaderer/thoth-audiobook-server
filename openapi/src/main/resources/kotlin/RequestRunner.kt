@@ -62,7 +62,14 @@ abstract class RequestRunner(
         onBeforeRequest: OnBeforeRequest<T>,
         onAfterRequest: OnAfterRequest<T, R>,
     ): OpenApiHttpResponse<R> {
-        val finalUrl = URLBuilder(baseUrl).appendEncodedPathSegments(metadata.path).build()
+        val finalUrl =
+            URLBuilder(baseUrl)
+                .appendEncodedPathSegments(metadata.path)
+                .apply {
+                    metadata.queryParameters.forEach { (name, value) ->
+                        if (value != null) parameters.append(name, value.toString())
+                    }
+                }.build()
         val response =
             client.request(finalUrl) {
                 this.method = metadata.method

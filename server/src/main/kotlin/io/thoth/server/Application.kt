@@ -143,18 +143,4 @@ fun Application.startBackgroundJobs() {
         pipeline.stop()
     }
 
-    // Generate clients
-    if (developmentMode) {
-        launch {
-            log.info("Generating clients")
-            generateTsClient("gen/client/typescript")
-            generateKotlinClient(
-                apiClientPackageName = "io.thoth.client.gen",
-                savePath = "client/src/main/kotlin/io/thoth/client/gen",
-                apiClientName = "ThothClient",
-                errorHandling = KtErrorHandling.Either,
-            )
-            log.info("Clients generated")
-        }
-    }
 }

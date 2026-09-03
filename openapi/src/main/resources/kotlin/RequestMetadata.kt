@@ -8,4 +8,5 @@ class RequestMetadata<T>(
     val body: T,
     val shouldLogin: Boolean,
     val securitySchema: String?,
+    val queryParameters: Map<String, Any?> = emptyMap(),
 )
