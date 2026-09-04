@@ -4,6 +4,9 @@ import io.thoth.server.common.extensions.lastModifiedInstant
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.common.extensions.canonicalString
 import io.thoth.server.database.access.getOrCreateImage
+import io.thoth.server.schedules.AutoMatchRequest
+import io.thoth.server.schedules.MatchableEntity
+import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.BookFileMetadataTable
@@ -54,6 +57,7 @@ class TrackManager : KoinComponent {
     private val seriesRepository by inject<SeriesRepository>()
     private val authorRepository by inject<AuthorRepository>()
     private val analyzers by inject<AudioFileAnalyzers>()
+    private val autoMatcher by inject<AutoMatcher>()
 
     private val log = logger {}
 
@@ -202,7 +206,9 @@ class TrackManager : KoinComponent {
         val bookId =
             book?.id ?: run {
                 log.info { "Created new book: ${scan.book}" }
-                BooksTable.create(library.id)
+                BooksTable.create(library.id).also {
+                    autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.BOOK, it, library.id))
+                }
             }
         return writeFileLayer(bookId, scan, authorIds, library)
     }

@@ -10,6 +10,9 @@ import io.thoth.models.BookUpdate
 import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
+import io.thoth.server.schedules.AutoMatchRequest
+import io.thoth.server.schedules.MatchableEntity
+import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.common.extensions.naturalOrder
@@ -78,6 +81,7 @@ class BookRepositoryImpl :
     private val libraryRepository by inject<LibraryRepository>()
     private val metadataAgents by inject<MetadataAgents>()
     private val imageDownloader by inject<ImageDownloader>()
+    private val autoMatcher by inject<AutoMatcher>()
 
     override fun total(libraryId: UUID) =
         transaction { BooksTable.selectAll().where { BooksTable.library eq libraryId }.count() }
@@ -264,6 +268,7 @@ class BookRepositoryImpl :
             BookFileMetadataTable.write(BookMetadataRow(book = id, title = bookName))
             replaceBookAuthors(id, MetadataLayer.FILE, authors)
             replaceBookSeries(id, MetadataLayer.FILE, series.associateWith { null })
+            autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.BOOK, id, libraryId))
             raw(id, libraryId)
         }
 

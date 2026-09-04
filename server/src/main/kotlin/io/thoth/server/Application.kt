@@ -43,6 +43,7 @@ import io.thoth.server.plugins.configureRouting
 import io.thoth.server.plugins.configureSecurityHeaders
 import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
+import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.ThothSchedules
 import kotlinx.coroutines.launch
 import org.koin.ktor.ext.get
@@ -134,6 +135,7 @@ fun Application.startBackgroundJobs() {
     scheduler.schedule(thothSchedules.fullScan)
     scheduler.launchNow(thothSchedules.fullScan)
     launch { scheduler.start() }
+    val autoMatcher = get<AutoMatcher>().also { it.start() }
     val pipeline = get<LibraryImportPipeline>().also {
         it.start()
     }
@@ -143,6 +145,7 @@ fun Application.startBackgroundJobs() {
     monitor.subscribe(ApplicationStopping) {
         watcher.stop()
         pipeline.stop()
+        autoMatcher.stop()
     }
 
 }

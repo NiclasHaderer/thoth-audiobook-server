@@ -9,6 +9,9 @@ import io.thoth.models.AuthorDetailed
 import io.thoth.models.AuthorUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
+import io.thoth.server.schedules.AutoMatchRequest
+import io.thoth.server.schedules.MatchableEntity
+import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
@@ -81,6 +84,7 @@ class AuthorServiceImpl :
     val libraryRepository by inject<LibraryRepository>()
     private val bookRepository by inject<BookRepository>()
     private val imageDownloader by inject<ImageDownloader>()
+    private val autoMatcher by inject<AutoMatcher>()
 
     override fun findByTaggedName(
         authorName: String,
@@ -142,6 +146,7 @@ class AuthorServiceImpl :
         transaction {
             val id = AuthorTable.create(libraryRepository.raw(libraryId).id)
             AuthorFileMetadataTable.write(AuthorMetadataRow(author = id, name = authorName))
+            autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.AUTHOR, id, libraryId))
             raw(id, libraryId)
         }
 

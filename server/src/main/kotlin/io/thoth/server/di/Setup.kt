@@ -32,6 +32,7 @@ import io.thoth.server.repositories.ProgressRepository
 import io.thoth.server.repositories.ProgressRepositoryImpl
 import io.thoth.server.repositories.SeriesRepository
 import io.thoth.server.repositories.SeriesRepositoryImpl
+import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.ThothSchedules
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -61,6 +62,7 @@ fun thothModule(config: ThothConfig) =
         single<ProgressRepository> { ProgressRepositoryImpl() }
         single { Scheduler() }
         single { ThothSchedules() }
+        single { AutoMatcher() }
     }
 
 fun setupDependencyInjection(config: ThothConfig) {

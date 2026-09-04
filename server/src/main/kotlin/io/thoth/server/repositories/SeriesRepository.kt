@@ -10,6 +10,9 @@ import io.thoth.models.SeriesDetailed
 import io.thoth.models.SeriesUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
+import io.thoth.server.schedules.AutoMatchRequest
+import io.thoth.server.schedules.MatchableEntity
+import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
@@ -84,6 +87,7 @@ class SeriesRepositoryImpl :
     private val libraryRepository by inject<LibraryRepository>()
     private val metadataAgents by inject<MetadataAgents>()
     private val imageDownloader by inject<ImageDownloader>()
+    private val autoMatcher by inject<AutoMatcher>()
 
     private companion object {
         val log = logger {}
@@ -187,6 +191,7 @@ class SeriesRepositoryImpl :
             log.info { "Created series: $seriesName" }
             val id = SeriesTable.create(libraryRepository.raw(libraryId).id)
             SeriesFileMetadataTable.write(SeriesMetadataRow(series = id, title = seriesName))
+            autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.SERIES, id, libraryId))
             raw(id, libraryId)
         }
 
