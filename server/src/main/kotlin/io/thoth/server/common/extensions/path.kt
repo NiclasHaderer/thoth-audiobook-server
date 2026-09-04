@@ -1,5 +1,6 @@
 package io.thoth.server.common.extensions
 
+import io.thoth.server.common.AUDIO_TYPES
 import java.nio.file.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
@@ -42,9 +43,6 @@ fun Path.grandParentName() = this.parent.parent.name
 
 fun Path.grandGrandParentName() = this.parent.parent.parent.name
 
-private val AUDIO_EXTENSIONS =
-    setOf("mp3", "flac", "ogg", "opus", "aac", "m4a", "m4p", "m4b", "aiff", "wav", "wma", "dsf")
-
-fun Path.hasAudioExtension(): Boolean = this.extension.lowercase() in AUDIO_EXTENSIONS
+fun Path.hasAudioExtension(): Boolean = this.extension.lowercase() in AUDIO_TYPES
 
 fun Path.lastModifiedInstant(): Instant = getLastModifiedTime().toInstant().truncatedTo(ChronoUnit.MILLIS)

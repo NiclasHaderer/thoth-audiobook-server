@@ -2,8 +2,11 @@
 
 package io.thoth.openapi.ktor.responses
 
+import io.ktor.http.ContentType
+import io.ktor.http.defaultForPath
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.response.respondFile
+import io.ktor.server.http.content.LocalFileContent
+import io.ktor.server.response.respond
 import io.ktor.server.routing.RoutingContext
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.nio.file.Path
@@ -13,8 +16,9 @@ import kotlin.io.path.pathString
 
 class FileResponse(
     val path: Path,
+    val contentType: ContentType? = null,
 ) : BaseResponse {
-    constructor(path: String) : this(Path.of(path))
+    constructor(path: String, contentType: ContentType? = null) : this(Path.of(path), contentType)
 
     init {
         if (!path.exists() || !path.isRegularFile()) {
@@ -23,10 +27,16 @@ class FileResponse(
     }
 
     override suspend fun respond(call: ApplicationCall) {
-        call.respondFile(path.toFile())
+        call.respond(LocalFileContent(path.toFile(), contentType ?: ContentType.defaultForPath(path)))
     }
 }
 
-fun RoutingContext.fileResponse(path: Path): FileResponse = FileResponse(path)
+fun RoutingContext.fileResponse(
+    path: Path,
+    contentType: ContentType? = null,
+): FileResponse = FileResponse(path, contentType)
 
-fun RoutingContext.fileResponse(path: String): FileResponse = FileResponse(path)
+fun RoutingContext.fileResponse(
+    path: String,
+    contentType: ContentType? = null,
+): FileResponse = FileResponse(path, contentType)

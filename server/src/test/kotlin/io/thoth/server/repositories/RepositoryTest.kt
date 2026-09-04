@@ -6,6 +6,7 @@ import io.thoth.models.BookUpdate
 import io.thoth.models.SeriesUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
+import io.thoth.server.pngBytes
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookFileMetadataTable
@@ -246,7 +247,7 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `modify treats the book's own cover id as unchanged`() {
         val id = bookRepository.create("Covered", libId, emptyList(), emptyList()).id
-        val cover = transaction { getOrCreateImage(byteArrayOf(1, 2, 3), null)!! }
+        val cover = transaction { getOrCreateImage(pngBytes(1, 2, 3), null)!! }
         transaction { BookFileMetadataTable.write(BookFileMetadataTable.layer(id).copy(coverID = cover)) }
 
         val result = bookRepository.modify(userId, id, libId, bookRenamedTo("Covered").copy(cover = cover.toString()))
@@ -257,7 +258,7 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `modify rejects an image id instead of linking someone else's image`() {
         val id = bookRepository.create("Plain", libId, emptyList(), emptyList()).id
-        val foreignImage = transaction { getOrCreateImage(byteArrayOf(9, 9, 9), null)!! }
+        val foreignImage = transaction { getOrCreateImage(pngBytes(9, 9, 9), null)!! }
 
         assertFails("an image id that is not the book's own must not be linkable") {
             bookRepository.modify(userId, id, libId, bookRenamedTo("Plain").copy(cover = foreignImage.toString()))

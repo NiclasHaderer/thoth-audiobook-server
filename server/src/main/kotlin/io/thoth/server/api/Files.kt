@@ -1,6 +1,7 @@
 package io.thoth.server.api
 
 import io.ktor.http.ContentDisposition
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.server.response.header
 import io.ktor.server.routing.Routing
@@ -10,6 +11,8 @@ import io.thoth.openapi.ktor.responses.BinaryResponse
 import io.thoth.openapi.ktor.responses.FileResponse
 import io.thoth.openapi.ktor.responses.binaryResponse
 import io.thoth.openapi.ktor.responses.fileResponse
+import io.thoth.server.common.audioContentType
+import io.thoth.server.common.imageContentType
 import io.thoth.server.database.tables.AuthorAgentMetadataTable
 import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorTable
@@ -25,6 +28,7 @@ import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.SeriesUserMetadataTable
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.plugins.auth.assertLibraryPermissions
+import io.thoth.server.plugins.sandbox
 import io.thoth.server.plugins.auth.thothPrincipal
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -59,13 +63,15 @@ fun Routing.audioRouting() {
             HttpHeaders.ContentDisposition,
             ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, path.name).toString(),
         )
-        fileResponse(path)
+        call.sandbox()
+        fileResponse(path, audioContentType(path))
     }
 }
 
 fun Routing.imageRouting() {
     get<Api.Files.Images.Id, BinaryResponse> { (id) ->
         val permissions = thothPrincipal().permissions
+        call.sandbox()
         transaction {
             val allowed = permissions.libraries.mapTo(mutableSetOf()) { it.id }
             val covers =
@@ -80,10 +86,19 @@ fun Routing.imageRouting() {
                     .reduce { acc: AbstractQuery<*>, query -> acc.unionAll(query) }
                     .limit(1)
                     .firstOrNull() ?: throw ErrorResponse.notFound("Image", id)
-            binaryResponse(image[ImageTable.blob].bytes)
+            val bytes = image[ImageTable.blob].bytes
+            binaryResponse(
+                bytes,
+                contentType = imageContentType(bytes) ?: ContentType.Application.OctetStream,
+                // A new row is created whenever the bytes change, so an id always maps to the same image
+                cacheControl = "private, max-age=$IMAGE_MAX_AGE_SECONDS, immutable",
+                etag = id.toString(),
+            )
         }
     }
 }
+
+private const val IMAGE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60
 
 private fun cover(
     core: Table,

@@ -36,7 +36,11 @@ class ImageDownloader(
 ) {
     fun download(source: String?): ByteArray? {
         if (source == null) return null
-        return if (source.startsWith("data:")) decodeDataUrl(source) else runBlocking { fetch(source) }
+        val bytes = if (source.startsWith("data:")) decodeDataUrl(source) else runBlocking { fetch(source) }
+        if (imageContentType(bytes) == null) {
+            throw ErrorResponse.userError("Image is not a png, jpeg, gif, webp, avif or bmp")
+        }
+        return bytes
     }
 
     private fun decodeDataUrl(dataUrl: String): ByteArray {

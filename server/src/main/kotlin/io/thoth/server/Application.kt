@@ -40,6 +40,7 @@ import io.thoth.server.plugins.configureMonitoring
 import io.thoth.server.plugins.configureOpenApi
 import io.thoth.server.plugins.configurePartialContent
 import io.thoth.server.plugins.configureRouting
+import io.thoth.server.plugins.configureSecurityHeaders
 import io.thoth.server.plugins.configureSerialization
 import io.thoth.server.plugins.configureSockets
 import io.thoth.server.schedules.ThothSchedules
@@ -80,6 +81,7 @@ fun Application.plugins() {
         status<MetadataProviderUnavailableException>(HttpStatusCode.BadGateway)
     }
     configureRouting()
+    configureSecurityHeaders()
     val mapper = configureSerialization()
     configureOpenApi()
     configurePartialContent()

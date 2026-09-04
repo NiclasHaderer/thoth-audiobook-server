@@ -2,6 +2,7 @@ package io.thoth.server.file
 
 import io.thoth.models.FileScanner
 import io.thoth.server.ThothTest
+import io.thoth.server.pngBytes
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookFileMetadataTable
@@ -160,17 +161,17 @@ class TrackManagerTest : ThothTest() {
 
     @Test
     fun `a rescan does not overwrite a cover that was edited`() {
-        trackManager.insert(scanWithCover(byteArrayOf(1, 2, 3)), libId)
+        trackManager.insert(scanWithCover(pngBytes(1, 2, 3)), libId)
         val bookId = transaction { BooksTable.select(BooksTable.id).single()[BooksTable.id].value }
 
         // Stand-in for a metadata match or a hand edit pointing the book at different art
-        val edited = transaction { getOrCreateImage(byteArrayOf(9, 9, 9), null)!! }
+        val edited = transaction { getOrCreateImage(pngBytes(9, 9, 9), null)!! }
         transaction {
             BookUserMetadataTable.write(BookUserMetadataTable.layer(bookId).copy(coverID = edited))
         }
 
         // The file changed on disk and is re-imported, now carrying different embedded art
-        trackManager.insert(scanWithCover(byteArrayOf(7, 7, 7)), libId)
+        trackManager.insert(scanWithCover(pngBytes(7, 7, 7)), libId)
 
         assertEquals(edited, coverOf(bookId), "the file's embedded art must not replace an edited cover")
         val fileCover = transaction { BookFileMetadataTable.layer(bookId).coverID }
@@ -180,8 +181,8 @@ class TrackManagerTest : ThothTest() {
 
     @Test
     fun `tracks of one book with the same embedded art store one image`() {
-        trackManager.insert(scanWithCover(byteArrayOf(1, 2, 3), "${bookWithSeries.absolutePathString()}.1"), libId)
-        trackManager.insert(scanWithCover(byteArrayOf(1, 2, 3), "${bookWithSeries.absolutePathString()}.2"), libId)
+        trackManager.insert(scanWithCover(pngBytes(1, 2, 3), "${bookWithSeries.absolutePathString()}.1"), libId)
+        trackManager.insert(scanWithCover(pngBytes(1, 2, 3), "${bookWithSeries.absolutePathString()}.2"), libId)
 
         assertEquals(
             1L,
@@ -192,11 +193,11 @@ class TrackManagerTest : ThothTest() {
 
     @Test
     fun `art that changed on disk replaces the cover`() {
-        trackManager.insert(scanWithCover(byteArrayOf(1, 2, 3)), libId)
+        trackManager.insert(scanWithCover(pngBytes(1, 2, 3)), libId)
         val bookId = transaction { BooksTable.select(BooksTable.id).single()[BooksTable.id].value }
         val first = coverOf(bookId)
 
-        trackManager.insert(scanWithCover(byteArrayOf(4, 5, 6)), libId)
+        trackManager.insert(scanWithCover(pngBytes(4, 5, 6)), libId)
 
         assertNotEquals(first, coverOf(bookId), "re-importing a file with new art must update the cover")
     }

@@ -1,6 +1,7 @@
 package io.thoth.server.common
 
 import io.thoth.openapi.ktor.errors.ErrorResponse
+import io.thoth.server.pngBytes
 import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -20,8 +21,17 @@ class ImageDownloaderTest {
 
     @Test
     fun `a base64 data url is decoded`() {
-        val bytes = byteArrayOf(1, 2, 3, 4)
+        val bytes = pngBytes(1, 2, 3, 4)
         assertContentEquals(bytes, downloader.download(dataUrl(bytes)))
+    }
+
+    @Test
+    fun `a data url that is not an image is rejected`() {
+        // An svg would run its scripts against our own origin once somebody opened the image url directly
+        val svg = "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>"
+        assertFailsWith<ErrorResponse> { downloader.download(dataUrl(svg.toByteArray())) }
+        assertFailsWith<ErrorResponse> { downloader.download(dataUrl("<html>hi</html>".toByteArray())) }
+        assertFailsWith<ErrorResponse> { downloader.download(dataUrl(byteArrayOf(1, 2, 3, 4))) }
     }
 
     @Test

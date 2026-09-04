@@ -33,6 +33,10 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
 import java.time.Instant
 
+// Cover art is only stored if it sniffs as a real image, so test art needs a valid header
+fun pngBytes(vararg payload: Byte): ByteArray =
+    byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A) + payload
+
 fun newLibrary(
     name: String,
     folders: List<String> = listOf("/media/$name"),
