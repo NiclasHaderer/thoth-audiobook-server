@@ -1,6 +1,6 @@
 package io.thoth.server.repositories
 
-import io.thoth.metadata.MetadataAgent
+import io.thoth.metadata.MetadataAgentWrapper
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
@@ -40,7 +40,6 @@ import io.thoth.server.database.views.BookAuthorView
 import io.thoth.server.database.views.BookSeriesView
 import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.database.views.SeriesMetadataView
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -181,7 +180,7 @@ class AuthorServiceImpl :
             }
         val result =
             runBlocking {
-                metadataAgent.getAuthorByName(authorName, region, language).firstOrNull()
+                metadataAgent.bestAuthorMatch(authorName, region, language)
             } ?: throw noMatch(authorName)
         val newImage = imageDownloader.download(result.imageURL)
 
@@ -205,7 +204,7 @@ class AuthorServiceImpl :
     }
 
     private data class AutoMatchQuery(
-        val metadataAgent: MetadataAgent,
+        val metadataAgent: MetadataAgentWrapper,
         val authorName: String,
         val region: MetadataRegion,
         val language: MetadataLanguage,

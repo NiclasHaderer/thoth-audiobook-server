@@ -92,7 +92,7 @@ class TrackManager : KoinComponent {
             return null
         }
 
-        return analyzers.forNames(library.fileScanners).analyze(path, attrs, root)
+        return analyzers.forNames(library.fileScanners, library.combineFileScannerFields).analyze(path, attrs, root)
     }
 
     fun insert(

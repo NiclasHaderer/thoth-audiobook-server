@@ -8,15 +8,17 @@ class MetadataAgents(
 ) : List<MetadataAgent> by items {
     private val log = logger {}
 
-    fun forLibrary(library: Library): MetadataAgent {
-        val libraryAgents = library.metadataAgents.map { it.name }
-        val agentsToUse = filter { it.name in libraryAgents }
+    private val byName by lazy { associateBy { it.name } }
+
+    fun forLibrary(library: Library): MetadataAgentWrapper {
+        val libraryAgents = library.metadataAgents.map { it.name }.distinct()
+        val agentsToUse = libraryAgents.mapNotNull { byName[it] }
         if (agentsToUse.isEmpty()) {
             log.warn {
                 "Library does not reference any available metadata agents " +
                     "(available agents: ${map { it.name }}) (library agents: $libraryAgents)"
             }
         }
-        return MetadataAgentWrapper(agentsToUse)
+        return MetadataAgentWrapper(agentsToUse, combineFields = library.combineMetadataAgentFields)
     }
 }

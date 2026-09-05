@@ -47,4 +47,55 @@ class MetadataAgentWrapperTest {
 
             assertEquals(listOf("a", "b"), books.map { it.id.itemID })
         }
+
+    @Test
+    fun `a best match without combining stops at the first agent that answers`() =
+        runBlocking {
+            val match = wrapper().bestBookMatch("a", MetadataRegion.US)
+
+            assertEquals("a", match?.id?.itemID)
+            assertEquals(0, openLibrary.searchCalls.get(), "the lower priority agent must not be asked")
+        }
+
+    @Test
+    fun `a best match falls through to the next agent when the preferred one has nothing`() =
+        runBlocking {
+            val silent = FakeMetadataAgent(name = "silent")
+
+            val match = MetadataAgentWrapper(listOf(silent, openLibrary)).bestBookMatch("b", MetadataRegion.US)
+
+            assertEquals("b", match?.id?.itemID)
+        }
+
+    @Test
+    fun `combining fills the fields the preferred agent left empty`() =
+        runBlocking {
+            val preferred =
+                FakeMetadataAgent(
+                    name = "audible",
+                    hits = listOf(searchHit("a", provider = "audible")),
+                    resolveBook = { testBook(it, "audible").copy(publisher = "Audible Studios") },
+                )
+            val other =
+                FakeMetadataAgent(
+                    name = "openLibrary",
+                    hits = listOf(searchHit("b", provider = "openLibrary")),
+                    resolveBook = {
+                        testBook(it, "openLibrary").copy(
+                            publisher = "Penguin",
+                            isbn = "9780000000000",
+                            narrators = listOf("Ada"),
+                        )
+                    },
+                )
+
+            val match =
+                MetadataAgentWrapper(listOf(preferred, other), combineFields = true)
+                    .bestBookMatch("a", MetadataRegion.US)
+
+            assertEquals(TestId("a", "audible"), match?.id, "the merged record stays attributable to its matcher")
+            assertEquals("Audible Studios", match?.publisher, "a field the preferred agent filled must survive")
+            assertEquals("9780000000000", match?.isbn)
+            assertEquals(listOf("Ada"), match?.narrators)
+        }
 }

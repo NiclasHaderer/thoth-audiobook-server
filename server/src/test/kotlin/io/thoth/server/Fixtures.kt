@@ -42,10 +42,12 @@ fun newLibrary(
     folders: List<String> = listOf("/media/$name"),
     scanIndex: ULong = 0uL,
     fileScanners: List<FileScanner> = listOf(FileScanner("AudioFolderScanner")),
+    combineFileScannerFields: Boolean = true,
     preferEmbeddedMetadata: Boolean = false,
     region: MetadataRegion = MetadataRegion.US,
     language: MetadataLanguage = MetadataLanguage.English,
     metadataAgents: List<NamedMetadataAgent> = listOf(NamedMetadataAgent("audible")),
+    combineMetadataAgentFields: Boolean = true,
 ): UUID =
     transaction {
         LibrariesTable.insert(
@@ -57,7 +59,9 @@ fun newLibrary(
                 folders = folders,
                 preferEmbeddedMetadata = preferEmbeddedMetadata,
                 metadataAgents = metadataAgents,
+                combineMetadataAgentFields = combineMetadataAgentFields,
                 fileScanners = fileScanners,
+                combineFileScannerFields = combineFileScannerFields,
                 language = language,
                 region = region,
             ),

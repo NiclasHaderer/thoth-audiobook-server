@@ -16,6 +16,7 @@ data class LibraryEntityModel(
     val name: String,
     val folders: List<Path>,
     val fileScanners: List<String>,
+    val combineFileScannerFields: Boolean,
 )
 
 class LibraryRoots {
@@ -38,5 +39,6 @@ class LibraryRoots {
             name = this[LibrariesTable.name],
             folders = this[LibrariesTable.folders].map { Path.of(it).canonical() },
             fileScanners = this[LibrariesTable.fileScanners].map { it.name },
+            combineFileScannerFields = this[LibrariesTable.combineFileScannerFields],
         )
 }

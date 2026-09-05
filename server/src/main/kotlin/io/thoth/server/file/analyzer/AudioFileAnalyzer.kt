@@ -22,8 +22,13 @@ class AudioFileAnalyzers(
 ) : List<AudioFileAnalyzer> by items {
     private val log = logger {}
 
-    fun forNames(names: List<String>): AudioFileAnalyzerWrapper {
-        val libAnalyzer = filter { analyzer -> analyzer.name in names }
+    private val byName by lazy { associateBy { it.name } }
+
+    fun forNames(
+        names: List<String>,
+        combineFields: Boolean = false,
+    ): AudioFileAnalyzerWrapper {
+        val libAnalyzer = names.distinct().mapNotNull { byName[it] }
 
         if (libAnalyzer.isEmpty()) {
             log.error {
@@ -33,6 +38,6 @@ class AudioFileAnalyzers(
             }
         }
 
-        return AudioFileAnalyzerWrapper(libAnalyzer)
+        return AudioFileAnalyzerWrapper(libAnalyzer, combineFields)
     }
 }

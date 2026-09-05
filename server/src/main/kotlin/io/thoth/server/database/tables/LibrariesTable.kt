@@ -29,12 +29,14 @@ object LibrariesTable : UUIDTable("Libraries") {
     val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
     // Deliberately unconstrained: a library with no agents just does no online metadata lookups.
     val metadataAgents = json<List<NamedMetadataAgent>>("metadataAgents")
+    val combineMetadataAgentFields = bool("combineMetadataAgentFields").default(true)
     val fileScanners =
         json<List<FileScanner>>("fileScanners") {
             if (it.isEmpty()) {
                 throw ErrorResponse.userError("fileScanners must have at least one element")
             }
         }
+    val combineFileScannerFields = bool("combineFileScannerFields").default(true)
 
     val language = enumerationByName<MetadataLanguage>("language", 255)
     val region = enumerationByName<MetadataRegion>("region", 255)
@@ -48,7 +50,9 @@ data class LibraryRow(
     val folders: List<String>,
     val preferEmbeddedMetadata: Boolean,
     val metadataAgents: List<NamedMetadataAgent>,
+    val combineMetadataAgentFields: Boolean,
     val fileScanners: List<FileScanner>,
+    val combineFileScannerFields: Boolean,
     val language: MetadataLanguage,
     val region: MetadataRegion,
 ) {
@@ -60,7 +64,9 @@ data class LibraryRow(
             preferEmbeddedMetadata = preferEmbeddedMetadata,
             folders = folders,
             metadataAgents = metadataAgents,
+            combineMetadataAgentFields = combineMetadataAgentFields,
             fileScanners = fileScanners,
+            combineFileScannerFields = combineFileScannerFields,
             language = language,
             region = region,
             bookCount = bookCount,
@@ -76,7 +82,9 @@ fun ResultRow.toLibraryRow(): LibraryRow =
         folders = this[LibrariesTable.folders],
         preferEmbeddedMetadata = this[LibrariesTable.preferEmbeddedMetadata],
         metadataAgents = this[LibrariesTable.metadataAgents],
+        combineMetadataAgentFields = this[LibrariesTable.combineMetadataAgentFields],
         fileScanners = this[LibrariesTable.fileScanners],
+        combineFileScannerFields = this[LibrariesTable.combineFileScannerFields],
         language = this[LibrariesTable.language],
         region = this[LibrariesTable.region],
     )
@@ -103,7 +111,9 @@ private fun write(
     stmt[LibrariesTable.folders] = row.folders
     stmt[LibrariesTable.preferEmbeddedMetadata] = row.preferEmbeddedMetadata
     stmt[LibrariesTable.metadataAgents] = row.metadataAgents
+    stmt[LibrariesTable.combineMetadataAgentFields] = row.combineMetadataAgentFields
     stmt[LibrariesTable.fileScanners] = row.fileScanners
+    stmt[LibrariesTable.combineFileScannerFields] = row.combineFileScannerFields
     stmt[LibrariesTable.language] = row.language
     stmt[LibrariesTable.region] = row.region
 }

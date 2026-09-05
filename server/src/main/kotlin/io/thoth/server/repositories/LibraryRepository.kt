@@ -89,9 +89,8 @@ class LibraryRepositoryImpl :
         partial: PartialUpdateLibrary,
     ): Library =
         libraryMutationLock.withLock {
-            val needsScan =
-                partial.folders != null || partial.metadataAgents != null || partial.fileScanners != null
-            val reanalyze = partial.fileScanners != null
+            val reanalyze = partial.fileScanners != null || partial.combineFileScannerFields != null
+            val needsScan = partial.folders != null || partial.metadataAgents != null || reanalyze
             val model =
                 transaction {
                     if (partial.folders != null) {
@@ -106,7 +105,9 @@ class LibraryRepositoryImpl :
                             folders = partial.folders ?: library.folders,
                             preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: library.preferEmbeddedMetadata,
                             metadataAgents = partial.metadataAgents ?: library.metadataAgents,
+                            combineMetadataAgentFields = partial.combineMetadataAgentFields ?: library.combineMetadataAgentFields,
                             fileScanners = partial.fileScanners ?: library.fileScanners,
+                            combineFileScannerFields = partial.combineFileScannerFields ?: library.combineFileScannerFields,
                             language = partial.language ?: library.language,
                             region = partial.region ?: library.region,
                         )
@@ -135,7 +136,9 @@ class LibraryRepositoryImpl :
                             folders = complete.folders,
                             preferEmbeddedMetadata = complete.preferEmbeddedMetadata,
                             metadataAgents = complete.metadataAgents,
+                            combineMetadataAgentFields = complete.combineMetadataAgentFields,
                             fileScanners = complete.fileScanners,
+                            combineFileScannerFields = complete.combineFileScannerFields,
                             language = complete.language,
                             region = complete.region,
                         )

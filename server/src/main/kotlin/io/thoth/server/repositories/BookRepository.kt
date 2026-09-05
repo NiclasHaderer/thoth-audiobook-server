@@ -1,6 +1,6 @@
 package io.thoth.server.repositories
 
-import io.thoth.metadata.MetadataAgent
+import io.thoth.metadata.MetadataAgentWrapper
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
@@ -38,7 +38,6 @@ import io.thoth.server.database.views.toModel
 import io.thoth.server.database.tables.toTrackRow
 import io.thoth.server.database.tables.write
 import io.thoth.server.database.views.BookMetadataView
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -303,14 +302,13 @@ class BookRepositoryImpl :
 
         val bookMetadata =
             runBlocking {
-                metadataWrapper
-                    .getBookByName(
-                        bookName = bookName,
-                        region = region,
-                        authorName = authorName,
-                        narrator = narrator,
-                        language = language,
-                    ).firstOrNull()
+                metadataWrapper.bestBookMatch(
+                    bookName = bookName,
+                    region = region,
+                    authorName = authorName,
+                    narrator = narrator,
+                    language = language,
+                )
             } ?: throw noMatch(bookName)
 
         val newCover = imageDownloader.download(bookMetadata.coverURL)
@@ -340,7 +338,7 @@ class BookRepositoryImpl :
     }
 
     private data class AutoMatchQuery(
-        val metadataWrapper: MetadataAgent,
+        val metadataWrapper: MetadataAgentWrapper,
         val bookName: String,
         val region: MetadataRegion,
         val authorName: String,

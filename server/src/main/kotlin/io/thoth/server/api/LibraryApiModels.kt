@@ -17,7 +17,9 @@ data class UpdateLibrary(
     val folders: List<String>,
     val preferEmbeddedMetadata: Boolean,
     val metadataAgents: List<NamedMetadataAgent>,
+    val combineMetadataAgentFields: Boolean,
     val fileScanners: List<FileScanner>,
+    val combineFileScannerFields: Boolean,
     var language: MetadataLanguage,
     var region: MetadataRegion,
 ) : ValidateObject {
@@ -34,7 +36,9 @@ data class PartialUpdateLibrary(
     val folders: List<String>?,
     val preferEmbeddedMetadata: Boolean?,
     val metadataAgents: List<NamedMetadataAgent>?,
+    val combineMetadataAgentFields: Boolean?,
     val fileScanners: List<FileScanner>?,
+    val combineFileScannerFields: Boolean?,
     val language: MetadataLanguage?,
     val region: MetadataRegion?,
 ) : ValidateObject {
