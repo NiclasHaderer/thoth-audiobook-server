@@ -163,48 +163,6 @@ class BookRepositoryImpl :
             BookDetailed.fromModel(book.toModel(userId), ordered.map { it.toModel(bookRef) })
         }
 
-    override fun position(
-        id: UUID,
-        libraryId: UUID,
-        order: SortOrder,
-        showInvisible: Boolean,
-    ): Long =
-        transaction {
-            val title = raw(id, libraryId).title.lowercase()
-            BookMetadataView
-                .selectAll()
-                .where {
-                    val precedes =
-                        if (order == SortOrder.ASC) {
-                            BookMetadataView.title.lowerCase() less title
-                        } else {
-                            BookMetadataView.title.lowerCase() greater title
-                        }
-                    precedes and
-                        (BookMetadataView.library eq libraryId) and
-                        BookMetadataView.visible.unless(showInvisible)
-                }.count()
-        }
-
-    override fun sorting(
-        libraryId: UUID,
-        order: SortOrder,
-        limit: Int,
-        offset: Long,
-        showInvisible: Boolean,
-    ): List<UUID> =
-        transaction {
-            BookMetadataView
-                .selectAll()
-                .where {
-                    (BookMetadataView.library eq libraryId) and BookMetadataView.visible.unless(showInvisible)
-                }
-                .orderBy(BookMetadataView.title.lowerCase() to order)
-                .offset(offset)
-                .limit(limit)
-                .map { it[BookMetadataView.id] }
-        }
-
     override fun search(
         userId: UUID,
         query: String,

@@ -5,14 +5,12 @@ import io.thoth.models.Book
 import io.thoth.models.BookDetailed
 import io.thoth.models.BookUpdate
 import io.thoth.models.PaginatedResponse
-import io.thoth.models.Position
 import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
 import io.thoth.server.repositories.BookRepository
 import org.koin.ktor.ext.inject
-import java.util.UUID
 import io.thoth.server.plugins.auth.thothPrincipal
 
 fun Routing.bookRouting() {
@@ -33,27 +31,6 @@ fun Routing.bookRouting() {
             limit = route.limit,
             offset = route.offset,
         )
-    }
-
-    get<Api.Libraries.Id.Books.Sorting, List<UUID>> { route ->
-        bookRepository.sorting(
-            libraryId = route.libraryId,
-            order = route.order.toSortOrder(),
-            limit = route.limit,
-            offset = route.offset,
-            showInvisible = route.showInvisible,
-        )
-    }
-
-    get<Api.Libraries.Id.Books.Id.Position, Position> { route ->
-        val sortIndex =
-            bookRepository.position(
-                libraryId = route.libraryId,
-                id = route.id,
-                order = route.order.toSortOrder(),
-                showInvisible = route.showInvisible,
-            )
-        Position(sortIndex = sortIndex, id = route.id, order = route.order)
     }
 
     get<Api.Libraries.Id.Books.Id, BookDetailed> { route ->

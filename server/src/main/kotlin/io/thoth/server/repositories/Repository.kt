@@ -25,7 +25,7 @@ import java.time.Duration
 import java.time.Instant
 
 // How long a book/author/series should be kept around before being properly deleted
-val DEFER_DELETION_GRACE: Duration = Duration.ofHours(1)
+val DEFER_DELETION_GRACE: Duration = Duration.ofHours(24)
 
 // Hidden books do not count: an author or series whose every book is on its way out hides them
 context(_: Transaction)
@@ -113,21 +113,6 @@ interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API> {
         userId: UUID,
         query: String,
     ): List<NORMAL>
-
-    fun sorting(
-        libraryId: UUID,
-        order: SortOrder,
-        limit: Int = 20,
-        offset: Long = 0L,
-        showInvisible: Boolean = false,
-    ): List<UUID>
-
-    fun position(
-        id: UUID,
-        libraryId: UUID,
-        order: SortOrder,
-        showInvisible: Boolean = false,
-    ): Long
 
     fun modify(
         userId: UUID,

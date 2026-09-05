@@ -2,7 +2,6 @@ package io.thoth.server.api
 
 import io.ktor.server.routing.Routing
 import io.thoth.models.PaginatedResponse
-import io.thoth.models.Position
 import io.thoth.models.Series
 import io.thoth.models.SeriesCreate
 import io.thoth.models.SeriesDetailed
@@ -13,7 +12,6 @@ import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
 import io.thoth.server.repositories.SeriesRepository
 import org.koin.ktor.ext.inject
-import java.util.UUID
 import io.thoth.server.plugins.auth.thothPrincipal
 
 fun Routing.seriesRouting() {
@@ -31,24 +29,6 @@ fun Routing.seriesRouting() {
             offset = it.offset,
             limit = it.limit,
             total = seriesRepository.total(libraryId = it.libraryId, showInvisible = it.showInvisible),
-        )
-    }
-
-    get<Api.Libraries.Id.Series.Sorting, List<UUID>> {
-        seriesRepository.sorting(
-            libraryId = it.libraryId,
-            order = it.order.toSortOrder(),
-            limit = it.limit,
-            offset = it.offset,
-            showInvisible = it.showInvisible,
-        )
-    }
-
-    get<Api.Libraries.Id.Series.Id.Position, Position> {
-        Position(
-            sortIndex = seriesRepository.position(it.id, it.libraryId, it.order.toSortOrder(), it.showInvisible),
-            id = it.id,
-            order = it.order,
         )
     }
 

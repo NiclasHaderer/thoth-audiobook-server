@@ -52,14 +52,18 @@ class RepositoryTest : ThothTest() {
         transaction { TracksTable.deleteWhere { TracksTable.book eq book } }
         getKoin().get<LibraryCleanup>().removeOrphans(libId)
 
-        assertEquals(emptyList(), bookRepository.sorting(libId, SortOrder.ASC), "hidden by default")
-        assertEquals(emptyList(), authorRepository.sorting(libId, SortOrder.ASC))
-        assertEquals(emptyList(), seriesRepository.sorting(libId, SortOrder.ASC))
+        assertEquals(emptyList(), bookRepository.getAll(userId, libId, SortOrder.ASC), "hidden by default")
+        assertEquals(emptyList(), authorRepository.getAll(userId, libId, SortOrder.ASC))
+        assertEquals(emptyList(), seriesRepository.getAll(userId, libId, SortOrder.ASC))
         assertEquals(listOf(0L, 0L, 0L), listOf(bookRepository, authorRepository, seriesRepository).map { it.total(libId) })
 
-        assertEquals(listOf(book), bookRepository.sorting(libId, SortOrder.ASC, showInvisible = true), "listed on request")
-        assertEquals(listOf(author), authorRepository.sorting(libId, SortOrder.ASC, showInvisible = true))
-        assertEquals(listOf(series), seriesRepository.sorting(libId, SortOrder.ASC, showInvisible = true))
+        assertEquals(
+            listOf(book),
+            bookRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id },
+            "listed on request",
+        )
+        assertEquals(listOf(author), authorRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id })
+        assertEquals(listOf(series), seriesRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id })
         assertEquals(
             listOf(1L, 1L, 1L),
             listOf(bookRepository, authorRepository, seriesRepository).map { it.total(libId, showInvisible = true) },
@@ -71,13 +75,17 @@ class RepositoryTest : ThothTest() {
     fun `a manually created series is hidden until a book joins it`() {
         val series = seriesRepository.createManual("Discworld", libId).id
 
-        assertEquals(emptyList(), seriesRepository.sorting(libId, SortOrder.ASC), "no book hangs off it yet")
-        assertEquals(listOf(series), seriesRepository.sorting(libId, SortOrder.ASC, showInvisible = true))
+        assertEquals(emptyList(), seriesRepository.getAll(userId, libId, SortOrder.ASC), "no book hangs off it yet")
+        assertEquals(listOf(series), seriesRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id })
 
         val book = newBook("Mort", libId)
         bookRepository.modify(userId, book, libId, bookAssignedTo(series = listOf(series)))
 
-        assertEquals(listOf(series), seriesRepository.sorting(libId, SortOrder.ASC), "the book edit un-hides it")
+        assertEquals(
+            listOf(series),
+            seriesRepository.getAll(userId, libId, SortOrder.ASC).map { it.id },
+            "the book edit un-hides it",
+        )
     }
 
     @Test
@@ -85,11 +93,15 @@ class RepositoryTest : ThothTest() {
         val author = authorRepository.createManual("Terry Pratchett", libId).id
         val book = newBook("Mort", libId)
         bookRepository.modify(userId, book, libId, bookAssignedTo(authors = listOf(author)))
-        assertEquals(listOf(author), authorRepository.sorting(libId, SortOrder.ASC), "sanity: visible with a book")
+        assertEquals(
+            listOf(author),
+            authorRepository.getAll(userId, libId, SortOrder.ASC).map { it.id },
+            "sanity: visible with a book",
+        )
 
         bookRepository.modify(userId, book, libId, bookAssignedTo(authors = emptyList()))
 
-        assertEquals(emptyList(), authorRepository.sorting(libId, SortOrder.ASC))
+        assertEquals(emptyList(), authorRepository.getAll(userId, libId, SortOrder.ASC))
     }
 
     private val libraryRepository by lazy { getKoin().get<LibraryRepository>() as LibraryRepositoryImpl }
@@ -263,23 +275,6 @@ class RepositoryTest : ThothTest() {
         )
 
     @Test
-    fun `author position reports the index in the requested order`() {
-        newAuthor("Bbb")
-        val first = newAuthor("Aaa")
-        newAuthor("Ccc")
-        assertEquals(0L, authorRepository.position(first, libId, SortOrder.ASC))
-        assertEquals(2L, authorRepository.position(first, libId, SortOrder.DESC))
-    }
-
-    @Test
-    fun `author position rejects an author that is not in the library`() {
-        newAuthor("Aaa")
-        // Swapping id and libraryId (as the route used to) has to fail loudly instead of yielding -1.
-        val error = assertFailsWith<ErrorResponse> { authorRepository.position(libId, libId, SortOrder.ASC) }
-        assertEquals(HttpStatusCode.NotFound, error.status)
-    }
-
-    @Test
     fun `book findByTaggedName finds a book that has no authors`() {
         val created = bookRepository.create("Orphan Book", libId, emptyList(), emptyList()).id
         val found = bookRepository.findByTaggedName("Orphan Book", emptyList(), libId)
@@ -326,17 +321,6 @@ class RepositoryTest : ThothTest() {
             bookRepository.modify(userId, id, libId, bookRenamedTo("Plain").copy(cover = foreignImage.toString()))
         }
         assertEquals(null, bookRepository.raw(id, libId).coverID)
-    }
-
-    @Test
-    fun `book position reports the index in the requested order`() {
-        val first = bookRepository.create("Aaa", libId, emptyList(), emptyList()).id
-        val last = bookRepository.create("Ccc", libId, emptyList(), emptyList()).id
-        bookRepository.create("Bbb", libId, emptyList(), emptyList())
-        assertEquals(0L, bookRepository.position(first, libId, SortOrder.ASC))
-        assertEquals(2L, bookRepository.position(first, libId, SortOrder.DESC))
-        assertEquals(2L, bookRepository.position(last, libId, SortOrder.ASC))
-        assertEquals(0L, bookRepository.position(last, libId, SortOrder.DESC))
     }
 
     @Test
@@ -417,13 +401,6 @@ class RepositoryTest : ThothTest() {
             seriesRepository.get(userId, series.id, libId).authors.map { it.name },
             "two books by one author must credit them once",
         )
-    }
-
-    @Test
-    fun `series position rejects a series that is not in the library`() {
-        seriesRepository.create("Mistborn", libId)
-        val error = assertFailsWith<ErrorResponse> { seriesRepository.position(libId, libId, SortOrder.ASC) }
-        assertEquals(HttpStatusCode.NotFound, error.status)
     }
 
     @Test

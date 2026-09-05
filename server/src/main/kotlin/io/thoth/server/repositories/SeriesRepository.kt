@@ -212,48 +212,6 @@ class SeriesRepositoryImpl :
             raw(id, libraryId)
         }
 
-    override fun sorting(
-        libraryId: UUID,
-        order: SortOrder,
-        limit: Int,
-        offset: Long,
-        showInvisible: Boolean,
-    ): List<UUID> =
-        transaction {
-            SeriesMetadataView
-                .selectAll()
-                .where {
-                    (SeriesMetadataView.library eq libraryId) and SeriesMetadataView.visible.unless(showInvisible)
-                }
-                .orderBy(SeriesMetadataView.title.lowerCase() to order)
-                .offset(offset)
-                .limit(limit)
-                .map { it[SeriesMetadataView.id] }
-        }
-
-    override fun position(
-        id: UUID,
-        libraryId: UUID,
-        order: SortOrder,
-        showInvisible: Boolean,
-    ): Long =
-        transaction {
-            val title = raw(id, libraryId).title.lowercase()
-            SeriesMetadataView
-                .selectAll()
-                .where {
-                    val precedes =
-                        if (order == SortOrder.ASC) {
-                            SeriesMetadataView.title.lowerCase() less title
-                        } else {
-                            SeriesMetadataView.title.lowerCase() greater title
-                        }
-                    precedes and
-                        (SeriesMetadataView.library eq libraryId) and
-                        SeriesMetadataView.visible.unless(showInvisible)
-                }.count()
-        }
-
     override fun modify(
         userId: UUID,
         id: UUID,

@@ -265,47 +265,6 @@ class AuthorServiceImpl :
             )
         }
 
-    override fun sorting(
-        libraryId: UUID,
-        order: SortOrder,
-        limit: Int,
-        offset: Long,
-        showInvisible: Boolean,
-    ): List<UUID> =
-        transaction {
-            AuthorMetadataView
-                .selectAll()
-                .where {
-                    (AuthorMetadataView.library eq libraryId) and AuthorMetadataView.visible.unless(showInvisible)
-                }.orderBy(AuthorMetadataView.name.lowerCase() to order)
-                .offset(offset)
-                .limit(limit)
-                .map { it[AuthorMetadataView.id] }
-        }
-
-    override fun position(
-        id: UUID,
-        libraryId: UUID,
-        order: SortOrder,
-        showInvisible: Boolean,
-    ): Long =
-        transaction {
-            val name = raw(id, libraryId).name.lowercase()
-            AuthorMetadataView
-                .selectAll()
-                .where {
-                    val precedes =
-                        if (order == SortOrder.ASC) {
-                            AuthorMetadataView.name.lowerCase() less name
-                        } else {
-                            AuthorMetadataView.name.lowerCase() greater name
-                        }
-                    precedes and
-                        (AuthorMetadataView.library eq libraryId) and
-                        AuthorMetadataView.visible.unless(showInvisible)
-                }.count()
-        }
-
     override fun modify(
         userId: UUID,
         id: UUID,

@@ -16,7 +16,7 @@ import io.thoth.auth.interactions.ThothRegisterParams
 import io.thoth.auth.interactions.ThothRenameUserParams
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchCount
-import io.thoth.models.Position.Order
+import io.thoth.models.Order
 import io.thoth.openapi.ktor.BeforeBodyParsing
 import io.thoth.openapi.ktor.NotSecured
 import io.thoth.openapi.ktor.Secured
@@ -254,19 +254,6 @@ class Api {
                         get() = parent.libraryId
                 }
 
-                @Summary("List book sorting", method = "GET")
-                @Resource("sorting")
-                data class Sorting(
-                    val limit: Int = 20,
-                    val offset: Long = 0,
-                    val order: Order = Order.ASC,
-                    val showInvisible: Boolean = false,
-                    private val parent: Books,
-                ) {
-                    val libraryId
-                        get() = parent.libraryId
-                }
-
                 @Summary("Get book autocomplete", method = "GET")
                 @Resource("autocomplete")
                 data class Autocomplete(
@@ -286,20 +273,6 @@ class Api {
                 ) {
                     val libraryId
                         get() = parent.libraryId
-
-                    @Summary("Get book position", method = "GET")
-                    @Resource("position")
-                    data class Position(
-                        val order: Order = Order.ASC,
-                        val showInvisible: Boolean = false,
-                        private val parent: Id,
-                    ) {
-                        val libraryId
-                            get() = parent.libraryId
-
-                        val id
-                            get() = parent.id
-                    }
 
                     @Summary("Auto match book", method = "POST")
                     @Resource("automatch")
@@ -373,19 +346,6 @@ class Api {
                         get() = parent.libraryId
                 }
 
-                @Summary("List author sorting", method = "GET")
-                @Resource("sorting")
-                data class Sorting(
-                    val limit: Int = 20,
-                    val offset: Long = 0,
-                    val order: Order = Order.ASC,
-                    val showInvisible: Boolean = false,
-                    private val parent: Authors,
-                ) {
-                    val libraryId
-                        get() = parent.libraryId
-                }
-
                 @Summary("Get author autocomplete", method = "GET")
                 @Resource("autocomplete")
                 data class Autocomplete(
@@ -405,20 +365,6 @@ class Api {
                 ) {
                     val libraryId
                         get() = parent.libraryId
-
-                    @Summary("Get author position", method = "GET")
-                    @Resource("position")
-                    data class Position(
-                        val order: Order = Order.ASC,
-                        val showInvisible: Boolean = false,
-                        private val parent: Id,
-                    ) {
-                        val libraryId
-                            get() = parent.libraryId
-
-                        val id
-                            get() = parent.id
-                    }
 
                     @Summary("Auto match author", method = "POST")
                     @Resource("automatch")
@@ -518,19 +464,6 @@ class Api {
                         get() = parent.libraryId
                 }
 
-                @Summary("List series sorting", method = "GET")
-                @Resource("sorting")
-                data class Sorting(
-                    val limit: Int = 20,
-                    val offset: Long = 0,
-                    val order: Order = Order.ASC,
-                    val showInvisible: Boolean = false,
-                    private val parent: Series,
-                ) {
-                    val libraryId
-                        get() = parent.libraryId
-                }
-
                 @Summary("Get series autocomplete", method = "GET")
                 @Resource("autocomplete")
                 data class Autocomplete(
@@ -550,20 +483,6 @@ class Api {
                 ) {
                     val libraryId
                         get() = parent.libraryId
-
-                    @Summary("Get series position", method = "GET")
-                    @Resource("position")
-                    data class Position(
-                        val order: Order = Order.ASC,
-                        val showInvisible: Boolean = false,
-                        private val parent: Id,
-                    ) {
-                        val libraryId
-                            get() = parent.libraryId
-
-                        val id
-                            get() = parent.id
-                    }
 
                     @Summary("Auto match series", method = "POST")
                     @Resource("automatch")
