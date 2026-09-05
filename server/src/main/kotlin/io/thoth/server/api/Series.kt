@@ -26,10 +26,11 @@ fun Routing.seriesRouting() {
                 order = it.order.toSortOrder(),
                 limit = it.limit,
                 offset = it.offset,
+                showInvisible = it.showInvisible,
             ),
             offset = it.offset,
             limit = it.limit,
-            total = seriesRepository.total(libraryId = it.libraryId),
+            total = seriesRepository.total(libraryId = it.libraryId, showInvisible = it.showInvisible),
         )
     }
 
@@ -39,12 +40,13 @@ fun Routing.seriesRouting() {
             order = it.order.toSortOrder(),
             limit = it.limit,
             offset = it.offset,
+            showInvisible = it.showInvisible,
         )
     }
 
     get<Api.Libraries.Id.Series.Id.Position, Position> {
         Position(
-            sortIndex = seriesRepository.position(it.id, it.libraryId, it.order.toSortOrder()),
+            sortIndex = seriesRepository.position(it.id, it.libraryId, it.order.toSortOrder(), it.showInvisible),
             id = it.id,
             order = it.order,
         )

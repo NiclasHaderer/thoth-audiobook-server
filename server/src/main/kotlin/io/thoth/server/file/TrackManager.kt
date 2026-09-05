@@ -10,10 +10,12 @@ import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.BookFileMetadataTable
+import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.SeriesFileMetadataTable
+import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.database.tables.create
@@ -242,6 +244,10 @@ class TrackManager : KoinComponent {
         // way they already do for the title or the narrator.
         replaceBookAuthors(bookId, MetadataLayer.FILE, authorIds)
         replaceBookSeries(bookId, MetadataLayer.FILE, listOfNotNull(seriesId).associateWith { scan.seriesIndex })
+        // Unset deletion marker, since the book has a track again
+        BooksTable.update({ BooksTable.id eq bookId }) { it[deferDeletionUntil] = null }
+        AuthorTable.update({ AuthorTable.id inList authorIds }) { it[deferDeletionUntil] = null }
+        SeriesTable.update({ SeriesTable.id inList listOfNotNull(seriesId) }) { it[deferDeletionUntil] = null }
         return bookId
     }
 

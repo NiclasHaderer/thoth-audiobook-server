@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.select
 import java.util.UUID
@@ -85,7 +86,7 @@ fun seriesBookCovers(seriesIds: List<UUID>): Map<UUID, List<UUID>> =
     BookSeriesView
         .join(BookMetadataView, JoinType.INNER, BookSeriesView.book, BookMetadataView.id)
         .select(BookSeriesView.series, BookSeriesView.index, BookMetadataView.cover)
-        .where { BookSeriesView.series inList seriesIds }
+        .where { (BookSeriesView.series inList seriesIds) and BookMetadataView.visible }
         .orderBy(BookSeriesView.index to SortOrder.ASC_NULLS_LAST)
         .groupBy({ it[BookSeriesView.series] }) { it[BookMetadataView.cover] }
         .mapValues { (_, covers) -> covers.filterNotNull() }
@@ -96,6 +97,6 @@ fun seriesGenres(seriesIds: List<UUID>): Map<UUID, List<String>> =
     BookSeriesView
         .join(BookMetadataView, JoinType.INNER, BookSeriesView.book, BookMetadataView.id)
         .select(BookSeriesView.series, BookMetadataView.genres)
-        .where { BookSeriesView.series inList seriesIds }
+        .where { (BookSeriesView.series inList seriesIds) and BookMetadataView.visible }
         .groupBy({ it[BookSeriesView.series] }) { it[BookMetadataView.genres].orEmpty() }
         .mapValues { (_, perBook) -> perBook.flatten().distinctBy { it.lowercase() } }

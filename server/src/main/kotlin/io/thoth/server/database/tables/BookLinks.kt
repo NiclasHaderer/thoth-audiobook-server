@@ -28,6 +28,22 @@ fun bookIdsLinkedToAuthor(authorId: UUID): List<UUID> =
         .toList()
 
 context(_: Transaction)
+fun seriesIdsLinkedToBook(bookId: UUID): List<UUID> =
+    SeriesBookTable
+        .select(SeriesBookTable.series)
+        .where { SeriesBookTable.book eq bookId }
+        .mapTo(mutableSetOf()) { it[SeriesBookTable.series].value }
+        .toList()
+
+context(_: Transaction)
+fun authorIdsLinkedToBook(bookId: UUID): List<UUID> =
+    AuthorBookTable
+        .select(AuthorBookTable.authors)
+        .where { AuthorBookTable.book eq bookId }
+        .mapTo(mutableSetOf()) { it[AuthorBookTable.authors].value }
+        .toList()
+
+context(_: Transaction)
 fun replaceBookAuthors(
     bookId: UUID,
     source: MetadataLayer,

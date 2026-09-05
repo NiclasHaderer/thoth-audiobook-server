@@ -2,6 +2,7 @@ package io.thoth.server.database.views
 
 import io.thoth.server.common.exposed.View
 import io.thoth.server.common.exposed.layered
+import io.thoth.server.database.extensions.timestampMillis
 import io.thoth.server.database.tables.AuthorAgentMetadataTable
 import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorMetadata
@@ -10,6 +11,7 @@ import io.thoth.server.database.tables.AuthorUserMetadataTable
 import io.thoth.server.database.tables.LibrariesTable
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.date
 import org.jetbrains.exposed.v1.jdbc.select
@@ -26,6 +28,9 @@ object AuthorMetadataView : View("AuthorMetadata") {
     val provider = varchar("provider", 255).nullable()
     val providerID = varchar("providerID", 255).nullable()
     val imageId = javaUUID("imageId").nullable()
+    val deferDeletionUntil = timestampMillis("deferDeletionUntil").nullable()
+
+    val visible get() = deferDeletionUntil.isNull()
 
     override fun body() =
         AuthorTable
@@ -45,6 +50,7 @@ object AuthorMetadataView : View("AuthorMetadata") {
                 resolve { provider },
                 resolve { providerID },
                 resolve { imageID },
+                AuthorTable.deferDeletionUntil,
             )
 
     private fun <T> resolve(pick: AuthorMetadata.() -> Column<T>) =

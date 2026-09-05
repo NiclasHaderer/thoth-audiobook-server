@@ -39,7 +39,7 @@ fun Column<List<String>?>.bookGroups(
     return BookMetadataView
         .crossJoin(eachName)
         .select(groupName, bookCount)
-        .where { BookMetadataView.library eq libraryId }
+        .where { (BookMetadataView.library eq libraryId) and BookMetadataView.visible }
         .groupBy(eachName.value.lowerCase())
         .orderBy(groupName.lowerCase() to order)
         .offset(offset)
@@ -54,7 +54,7 @@ fun Column<List<String>?>.bookGroupCount(libraryId: UUID): Long {
     return BookMetadataView
         .crossJoin(eachName)
         .select(groups)
-        .where { BookMetadataView.library eq libraryId }
+        .where { (BookMetadataView.library eq libraryId) and BookMetadataView.visible }
         .first()[groups]
 }
 
@@ -73,7 +73,7 @@ fun Column<List<String>?>.booksInGroup(
     val books =
         BookMetadataView
             .selectAll()
-            .where { (BookMetadataView.library eq libraryId) and nameMatches }
+            .where { (BookMetadataView.library eq libraryId) and nameMatches and BookMetadataView.visible }
             .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
             .toList()
     if (books.isEmpty()) return null

@@ -8,6 +8,7 @@ import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.newLibrary
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.mp.KoinPlatform.getKoin
@@ -59,14 +60,17 @@ class LibraryScannerIgnoreTest : ThothTest() {
 
     private fun scan() = pipeline.scanLibrary(libId)
 
-    private fun titles() = transaction { BookMetadataView.selectAll().map { it[BookMetadataView.title] }.sorted() }
+    private fun titles() =
+        transaction {
+            BookMetadataView.selectAll().where { BookMetadataView.visible }.map { it[BookMetadataView.title] }.sorted()
+        }
 
     private fun counts() =
         transaction {
             Triple(
                 TracksTable.selectAll().count(),
-                BooksTable.selectAll().count(),
-                AuthorTable.selectAll().count(),
+                BooksTable.selectAll().where { BooksTable.deferDeletionUntil.isNull() }.count(),
+                AuthorTable.selectAll().where { AuthorTable.deferDeletionUntil.isNull() }.count(),
             )
         }
 
@@ -91,7 +95,7 @@ class LibraryScannerIgnoreTest : ThothTest() {
         assertEquals(
             Triple(1L, 1L, 1L),
             counts(),
-            "its track and its now bookless author must be reaped too",
+            "its track goes at once, and its book and now bookless author are hidden",
         )
     }
 

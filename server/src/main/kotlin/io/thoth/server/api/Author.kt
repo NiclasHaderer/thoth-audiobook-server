@@ -21,19 +21,33 @@ fun Routing.authorRouting() {
 
     get<Api.Libraries.Id.Authors.All, PaginatedResponse<Author>> {
         PaginatedResponse(
-            items = authorService.getAll(thothPrincipal().userId, it.libraryId, it.order.toSortOrder(), it.limit, it.offset),
+            items =
+                authorService.getAll(
+                    thothPrincipal().userId,
+                    it.libraryId,
+                    it.order.toSortOrder(),
+                    it.limit,
+                    it.offset,
+                    it.showInvisible,
+                ),
             limit = it.limit,
             offset = it.offset,
-            total = authorService.total(it.libraryId),
+            total = authorService.total(it.libraryId, it.showInvisible),
         )
     }
     get<Api.Libraries.Id.Authors.Sorting, List<UUID>> {
-        authorService.sorting(it.libraryId, it.order.toSortOrder(), it.limit, it.offset)
+        authorService.sorting(it.libraryId, it.order.toSortOrder(), it.limit, it.offset, it.showInvisible)
     }
 
     get<Api.Libraries.Id.Authors.Id.Position, Position> {
         Position(
-            sortIndex = authorService.position(id = it.id, libraryId = it.libraryId, order = it.order.toSortOrder()),
+            sortIndex =
+                authorService.position(
+                    id = it.id,
+                    libraryId = it.libraryId,
+                    order = it.order.toSortOrder(),
+                    showInvisible = it.showInvisible,
+                ),
             id = it.id,
             order = it.order,
         )

@@ -9,6 +9,7 @@ import io.thoth.models.AuthorDetailed
 import io.thoth.models.AuthorUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
+import io.thoth.server.common.exposed.unless
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.MatchableEntity
 import io.thoth.server.schedules.AutoMatcher
@@ -48,11 +49,10 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.UUID
 import java.time.Instant
+import java.util.UUID
 
 interface AuthorRepository : Repository<AuthorRow, Author, AuthorDetailed, AuthorUpdate> {
     fun findByTaggedName(
@@ -114,7 +114,7 @@ class AuthorServiceImpl :
         transaction {
             AuthorMetadataView
                 .selectAll()
-                .where { matchesName(query) and (AuthorMetadataView.library eq libraryId) }
+                .where { matchesName(query) and (AuthorMetadataView.library eq libraryId) and AuthorMetadataView.visible }
                 .orderBy(AuthorMetadataView.name.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toAuthorRow().toModel() }
@@ -127,7 +127,7 @@ class AuthorServiceImpl :
         transaction {
             AuthorMetadataView
                 .selectAll()
-                .where { matchesName(query) }
+                .where { matchesName(query) and AuthorMetadataView.visible }
                 .orderBy(AuthorMetadataView.name.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toAuthorRow().toModel() }
@@ -154,6 +154,7 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): AuthorRow =
         transaction {
+            // Born an orphan: hidden and on the clock until the caller attaches books
             val id =
                 AuthorTable.create(
                     libraryRepository.raw(libraryId).id,
@@ -216,12 +217,14 @@ class AuthorServiceImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
+        showInvisible: Boolean,
     ): List<Author> =
         transaction {
             AuthorMetadataView
                 .selectAll()
-                .where { AuthorMetadataView.library eq libraryId }
-                .orderBy(AuthorMetadataView.name.lowerCase() to order)
+                .where {
+                    (AuthorMetadataView.library eq libraryId) and AuthorMetadataView.visible.unless(showInvisible)
+                }.orderBy(AuthorMetadataView.name.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.toAuthorRow().toModel() }
@@ -239,7 +242,7 @@ class AuthorServiceImpl :
                 BookMetadataView
                     .join(BookAuthorView, JoinType.INNER, BookMetadataView.id, BookAuthorView.book)
                     .selectAll()
-                    .where { BookAuthorView.author eq id }
+                    .where { (BookAuthorView.author eq id) and BookMetadataView.visible }
                     .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
                     .map { it.toBookRow() }
             val seriesIds =
@@ -251,7 +254,7 @@ class AuthorServiceImpl :
             val series =
                 SeriesMetadataView
                     .selectAll()
-                    .where { SeriesMetadataView.id inList seriesIds }
+                    .where { (SeriesMetadataView.id inList seriesIds) and SeriesMetadataView.visible }
                     .orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
                     .map { it.toSeriesRow() }
 
@@ -267,12 +270,14 @@ class AuthorServiceImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
+        showInvisible: Boolean,
     ): List<UUID> =
         transaction {
             AuthorMetadataView
                 .selectAll()
-                .where { AuthorMetadataView.library eq libraryId }
-                .orderBy(AuthorMetadataView.name.lowerCase() to order)
+                .where {
+                    (AuthorMetadataView.library eq libraryId) and AuthorMetadataView.visible.unless(showInvisible)
+                }.orderBy(AuthorMetadataView.name.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it[AuthorMetadataView.id] }
@@ -282,6 +287,7 @@ class AuthorServiceImpl :
         id: UUID,
         libraryId: UUID,
         order: SortOrder,
+        showInvisible: Boolean,
     ): Long =
         transaction {
             val name = raw(id, libraryId).name.lowercase()
@@ -294,7 +300,9 @@ class AuthorServiceImpl :
                         } else {
                             AuthorMetadataView.name.lowerCase() greater name
                         }
-                    precedes and (AuthorMetadataView.library eq libraryId)
+                    precedes and
+                        (AuthorMetadataView.library eq libraryId) and
+                        AuthorMetadataView.visible.unless(showInvisible)
                 }.count()
         }
 
@@ -326,9 +334,7 @@ class AuthorServiceImpl :
                 setBooks(id, partial.books.map { bookRepository.raw(it, libraryId).id }.toSet())
             }
 
-            AuthorTable.update({ AuthorTable.id eq id }) {
-                it[deferDeletionUntil] = Instant.now().plus(DEFER_DELETION_GRACE)
-            }
+            refreshAuthorDeferral(listOf(id))
             raw(id, libraryId).toModel()
         }
     }
@@ -350,8 +356,17 @@ class AuthorServiceImpl :
         }
     }
 
-    override fun total(libraryId: UUID): Long =
-        transaction { AuthorTable.selectAll().where { AuthorTable.library eq libraryId }.count() }
+    override fun total(
+        libraryId: UUID,
+        showInvisible: Boolean,
+    ): Long =
+        transaction {
+            AuthorTable
+                .selectAll()
+                .where {
+                    (AuthorTable.library eq libraryId) and AuthorTable.deferDeletionUntil.isNull().unless(showInvisible)
+                }.count()
+        }
 }
 
 context(_: Transaction)

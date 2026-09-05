@@ -25,10 +25,11 @@ fun Routing.bookRouting() {
                 order = route.order.toSortOrder(),
                 limit = route.limit,
                 offset = route.offset,
+                showInvisible = route.showInvisible,
             )
         PaginatedResponse(
             items = books,
-            total = bookRepository.total(libraryId = route.libraryId),
+            total = bookRepository.total(libraryId = route.libraryId, showInvisible = route.showInvisible),
             limit = route.limit,
             offset = route.offset,
         )
@@ -40,12 +41,18 @@ fun Routing.bookRouting() {
             order = route.order.toSortOrder(),
             limit = route.limit,
             offset = route.offset,
+            showInvisible = route.showInvisible,
         )
     }
 
     get<Api.Libraries.Id.Books.Id.Position, Position> { route ->
         val sortIndex =
-            bookRepository.position(libraryId = route.libraryId, id = route.id, order = route.order.toSortOrder())
+            bookRepository.position(
+                libraryId = route.libraryId,
+                id = route.id,
+                order = route.order.toSortOrder(),
+                showInvisible = route.showInvisible,
+            )
         Position(sortIndex = sortIndex, id = route.id, order = route.order)
     }
 

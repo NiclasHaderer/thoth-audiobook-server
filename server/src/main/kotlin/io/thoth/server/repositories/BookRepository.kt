@@ -10,6 +10,7 @@ import io.thoth.models.BookUpdate
 import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
+import io.thoth.server.common.exposed.unless
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.MatchableEntity
 import io.thoth.server.schedules.AutoMatcher
@@ -29,10 +30,12 @@ import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.database.views.bookAuthors
 import io.thoth.server.database.views.booksToModels
+import io.thoth.server.database.tables.authorIdsLinkedToBook
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
+import io.thoth.server.database.tables.seriesIdsLinkedToBook
 import io.thoth.server.database.views.toBookRow
 import io.thoth.server.database.views.toModel
 import io.thoth.server.database.tables.toTrackRow
@@ -82,8 +85,16 @@ class BookRepositoryImpl :
     private val imageDownloader by inject<ImageDownloader>()
     private val autoMatcher by inject<AutoMatcher>()
 
-    override fun total(libraryId: UUID) =
-        transaction { BooksTable.selectAll().where { BooksTable.library eq libraryId }.count() }
+    override fun total(
+        libraryId: UUID,
+        showInvisible: Boolean,
+    ) = transaction {
+        BooksTable
+            .selectAll()
+            .where {
+                (BooksTable.library eq libraryId) and BooksTable.deferDeletionUntil.isNull().unless(showInvisible)
+            }.count()
+    }
 
     override fun getAll(
         userId: UUID,
@@ -91,12 +102,15 @@ class BookRepositoryImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
+        showInvisible: Boolean,
     ): List<Book> =
         transaction {
             val rows =
                 BookMetadataView
                     .selectAll()
-                    .where { BookMetadataView.library eq libraryId }
+                    .where {
+                        (BookMetadataView.library eq libraryId) and BookMetadataView.visible.unless(showInvisible)
+                    }
                     .orderBy(BookMetadataView.title.lowerCase() to order)
                     .offset(offset)
                     .limit(limit)
@@ -153,6 +167,7 @@ class BookRepositoryImpl :
         id: UUID,
         libraryId: UUID,
         order: SortOrder,
+        showInvisible: Boolean,
     ): Long =
         transaction {
             val title = raw(id, libraryId).title.lowercase()
@@ -165,7 +180,9 @@ class BookRepositoryImpl :
                         } else {
                             BookMetadataView.title.lowerCase() greater title
                         }
-                    precedes and (BookMetadataView.library eq libraryId)
+                    precedes and
+                        (BookMetadataView.library eq libraryId) and
+                        BookMetadataView.visible.unless(showInvisible)
                 }.count()
         }
 
@@ -174,11 +191,14 @@ class BookRepositoryImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
+        showInvisible: Boolean,
     ): List<UUID> =
         transaction {
             BookMetadataView
                 .selectAll()
-                .where { BookMetadataView.library eq libraryId }
+                .where {
+                    (BookMetadataView.library eq libraryId) and BookMetadataView.visible.unless(showInvisible)
+                }
                 .orderBy(BookMetadataView.title.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
@@ -194,7 +214,7 @@ class BookRepositoryImpl :
             val rows =
                 BookMetadataView
                     .selectAll()
-                    .where { matchesTitle(query) and (BookMetadataView.library eq libraryId) }
+                    .where { matchesTitle(query) and (BookMetadataView.library eq libraryId) and BookMetadataView.visible }
                     .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toBookRow() }
@@ -209,7 +229,7 @@ class BookRepositoryImpl :
             val rows =
                 BookMetadataView
                     .selectAll()
-                    .where { matchesTitle(query) }
+                    .where { matchesTitle(query) and BookMetadataView.visible }
                     .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toBookRow() }
@@ -244,13 +264,18 @@ class BookRepositoryImpl :
                     seriesSet = user.seriesSet || partial.series != null,
                 ),
             )
+            // Both ends of the change: whoever lost the book can be an orphan now, whoever gained it is not
             if (partial.authors != null) {
                 val authorIds = partial.authors.map { authorRepository.raw(it, libraryId).id }
+                val touched = authorIdsLinkedToBook(id) + authorIds
                 replaceBookAuthors(id, MetadataLayer.USER, authorIds)
+                refreshAuthorDeferral(touched)
             }
             if (partial.series != null) {
                 val seriesIds = partial.series.map { seriesRepository.raw(it, libraryId).id }
+                val touched = seriesIdsLinkedToBook(id) + seriesIds
                 replaceBookSeries(id, MetadataLayer.USER, seriesIds.associateWith { null })
+                refreshSeriesDeferral(touched)
             }
             raw(id, libraryId).toModel(userId)
         }

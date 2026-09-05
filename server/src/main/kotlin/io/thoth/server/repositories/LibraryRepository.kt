@@ -62,7 +62,11 @@ class LibraryRepositoryImpl :
 
     override fun raw(id: UUID): Library = transaction { rawRow(id).toModel(bookCount(id)) }
 
-    private fun bookCount(id: UUID): Long = BooksTable.selectAll().where { BooksTable.library eq id }.count()
+    private fun bookCount(id: UUID): Long =
+        BooksTable
+            .selectAll()
+            .where { (BooksTable.library eq id) and BooksTable.deferDeletionUntil.isNull() }
+            .count()
 
     private fun rawRow(id: UUID): LibraryRow =
         transaction {

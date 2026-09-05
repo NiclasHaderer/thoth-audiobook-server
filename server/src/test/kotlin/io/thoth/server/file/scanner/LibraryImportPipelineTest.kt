@@ -89,7 +89,10 @@ class LibraryImportPipelineTest : ThothTest() {
 
     private fun scan(id: UUID) = pipeline.scanLibrary(id)
 
-    private fun titles() = transaction { BookMetadataView.selectAll().map { it[BookMetadataView.title] }.sorted() }
+    private fun titles() =
+        transaction {
+            BookMetadataView.selectAll().where { BookMetadataView.visible }.map { it[BookMetadataView.title] }.sorted()
+        }
 
     private fun tracks() = transaction { TracksTable.selectAll().count() }
 

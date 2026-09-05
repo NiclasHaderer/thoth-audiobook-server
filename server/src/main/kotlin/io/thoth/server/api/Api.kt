@@ -247,6 +247,7 @@ class Api {
                     val limit: Int = 20,
                     val offset: Long = 0,
                     val order: Order = Order.ASC,
+                    val showInvisible: Boolean = false,
                     private val parent: Books,
                 ) {
                     val libraryId
@@ -259,6 +260,7 @@ class Api {
                     val limit: Int = 20,
                     val offset: Long = 0,
                     val order: Order = Order.ASC,
+                    val showInvisible: Boolean = false,
                     private val parent: Books,
                 ) {
                     val libraryId
@@ -289,6 +291,7 @@ class Api {
                     @Resource("position")
                     data class Position(
                         val order: Order = Order.ASC,
+                        val showInvisible: Boolean = false,
                         private val parent: Id,
                     ) {
                         val libraryId
@@ -363,6 +366,7 @@ class Api {
                     val limit: Int = 20,
                     val offset: Long = 0,
                     val order: Order = Order.ASC,
+                    val showInvisible: Boolean = false,
                     private val parent: Authors,
                 ) {
                     val libraryId
@@ -375,6 +379,7 @@ class Api {
                     val limit: Int = 20,
                     val offset: Long = 0,
                     val order: Order = Order.ASC,
+                    val showInvisible: Boolean = false,
                     private val parent: Authors,
                 ) {
                     val libraryId
@@ -405,6 +410,7 @@ class Api {
                     @Resource("position")
                     data class Position(
                         val order: Order = Order.ASC,
+                        val showInvisible: Boolean = false,
                         private val parent: Id,
                     ) {
                         val libraryId
@@ -505,6 +511,7 @@ class Api {
                     val limit: Int = 20,
                     val offset: Long = 0,
                     val order: Order = Order.ASC,
+                    val showInvisible: Boolean = false,
                     private val parent: Series,
                 ) {
                     val libraryId
@@ -517,6 +524,7 @@ class Api {
                     val limit: Int = 20,
                     val offset: Long = 0,
                     val order: Order = Order.ASC,
+                    val showInvisible: Boolean = false,
                     private val parent: Series,
                 ) {
                     val libraryId
@@ -547,6 +555,7 @@ class Api {
                     @Resource("position")
                     data class Position(
                         val order: Order = Order.ASC,
+                        val showInvisible: Boolean = false,
                         private val parent: Id,
                     ) {
                         val libraryId

@@ -4,6 +4,7 @@ import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.server.common.exposed.View
 import io.thoth.server.common.exposed.layered
 import io.thoth.server.database.extensions.json
+import io.thoth.server.database.extensions.timestampMillis
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookFileMetadataTable
@@ -21,6 +22,7 @@ import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.exists
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.javatime.date
@@ -44,6 +46,9 @@ object BookMetadataView : View("BookMetadata") {
 
     val authorsFrom = enumerationByName<MetadataLayer>("authorsFrom", 8)
     val seriesFrom = enumerationByName<MetadataLayer>("seriesFrom", 8)
+    val deferDeletionUntil = timestampMillis("deferDeletionUntil").nullable()
+
+    val visible get() = deferDeletionUntil.isNull()
 
     override fun body() =
         BooksTable
@@ -68,6 +73,7 @@ object BookMetadataView : View("BookMetadata") {
                 resolve { narrators },
                 layerOf({ authorsSet }, fileNames(AuthorBookTable.book, AuthorBookTable.addedBy), "authorsFrom"),
                 layerOf({ seriesSet }, fileNames(SeriesBookTable.book, SeriesBookTable.addedBy), "seriesFrom"),
+                BooksTable.deferDeletionUntil,
             )
 
     private fun <T> resolve(pick: BookMetadata.() -> Column<T>) =

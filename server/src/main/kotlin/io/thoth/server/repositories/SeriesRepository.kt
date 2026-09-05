@@ -10,6 +10,7 @@ import io.thoth.models.SeriesDetailed
 import io.thoth.models.SeriesUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
+import io.thoth.server.common.exposed.unless
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.MatchableEntity
 import io.thoth.server.schedules.AutoMatcher
@@ -50,11 +51,10 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.UUID
 import java.time.Instant
+import java.util.UUID
 
 interface SeriesRepository : Repository<SeriesRow, Series, SeriesDetailed, SeriesUpdate> {
     fun findByTaggedName(
@@ -133,12 +133,15 @@ class SeriesRepositoryImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
+          showInvisible: Boolean,
     ): List<Series> =
         transaction {
             val rows =
                 SeriesMetadataView
                     .selectAll()
-                    .where { SeriesMetadataView.library eq libraryId }
+                    .where {
+                        (SeriesMetadataView.library eq libraryId) and SeriesMetadataView.visible.unless(showInvisible)
+                    }
                     .orderBy(SeriesMetadataView.title.lowerCase() to order)
                     .offset(offset)
                     .limit(limit)
@@ -155,7 +158,7 @@ class SeriesRepositoryImpl :
             val rows =
                 SeriesMetadataView
                     .selectAll()
-                    .where { matchesTitle(query) and (SeriesMetadataView.library eq libraryId) }
+                    .where { matchesTitle(query) and (SeriesMetadataView.library eq libraryId) and SeriesMetadataView.visible }
                     .orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toSeriesRow() }
@@ -170,7 +173,7 @@ class SeriesRepositoryImpl :
             val rows =
                 SeriesMetadataView
                     .selectAll()
-                    .where { matchesTitle(query) }
+                    .where { matchesTitle(query) and SeriesMetadataView.visible }
                     .orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toSeriesRow() }
@@ -199,6 +202,7 @@ class SeriesRepositoryImpl :
         libraryId: UUID,
     ): SeriesRow =
         transaction {
+            // Born an orphan: hidden and on the clock until the caller attaches books
             val id =
                 SeriesTable.create(
                     libraryRepository.raw(libraryId).id,
@@ -213,11 +217,14 @@ class SeriesRepositoryImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
+        showInvisible: Boolean,
     ): List<UUID> =
         transaction {
             SeriesMetadataView
                 .selectAll()
-                .where { SeriesMetadataView.library eq libraryId }
+                .where {
+                    (SeriesMetadataView.library eq libraryId) and SeriesMetadataView.visible.unless(showInvisible)
+                }
                 .orderBy(SeriesMetadataView.title.lowerCase() to order)
                 .offset(offset)
                 .limit(limit)
@@ -228,6 +235,7 @@ class SeriesRepositoryImpl :
         id: UUID,
         libraryId: UUID,
         order: SortOrder,
+        showInvisible: Boolean,
     ): Long =
         transaction {
             val title = raw(id, libraryId).title.lowercase()
@@ -240,7 +248,9 @@ class SeriesRepositoryImpl :
                         } else {
                             SeriesMetadataView.title.lowerCase() greater title
                         }
-                    precedes and (SeriesMetadataView.library eq libraryId)
+                    precedes and
+                        (SeriesMetadataView.library eq libraryId) and
+                        SeriesMetadataView.visible.unless(showInvisible)
                 }.count()
         }
 
@@ -270,9 +280,7 @@ class SeriesRepositoryImpl :
                 setBooks(id, partial.books.map { bookRepository.raw(it, libraryId).id }.toSet())
             }
 
-            SeriesTable.update({ SeriesTable.id eq id }) {
-                it[deferDeletionUntil] = Instant.now().plus(DEFER_DELETION_GRACE)
-            }
+            refreshSeriesDeferral(listOf(id))
             raw(id, libraryId).toModel()
         }
     }
@@ -301,7 +309,7 @@ class SeriesRepositoryImpl :
         BookMetadataView
             .join(BookSeriesView, JoinType.INNER, BookMetadataView.id, BookSeriesView.book)
             .selectAll()
-            .where { BookSeriesView.series eq seriesId }
+            .where { (BookSeriesView.series eq seriesId) and BookMetadataView.visible }
             .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
             .map { it.toBookRow() }
 
@@ -363,9 +371,16 @@ class SeriesRepositoryImpl :
         val language: MetadataLanguage,
     )
 
-    override fun total(libraryId: UUID): Long =
+    override fun total(
+        libraryId: UUID,
+        showInvisible: Boolean,
+    ): Long =
         transaction {
-            SeriesTable.selectAll().where { SeriesTable.library eq libraryId }.count()
+            SeriesTable
+                .selectAll()
+                .where {
+                    (SeriesTable.library eq libraryId) and SeriesTable.deferDeletionUntil.isNull().unless(showInvisible)
+                }.count()
         }
 }
 

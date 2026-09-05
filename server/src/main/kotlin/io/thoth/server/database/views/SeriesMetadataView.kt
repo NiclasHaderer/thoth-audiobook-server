@@ -2,6 +2,7 @@ package io.thoth.server.database.views
 
 import io.thoth.server.common.exposed.View
 import io.thoth.server.common.exposed.layered
+import io.thoth.server.database.extensions.timestampMillis
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.SeriesAgentMetadataTable
 import io.thoth.server.database.tables.SeriesFileMetadataTable
@@ -10,6 +11,7 @@ import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.SeriesUserMetadataTable
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.jdbc.select
 
@@ -23,6 +25,9 @@ object SeriesMetadataView : View("SeriesMetadata") {
     val provider = varchar("provider", 255).nullable()
     val providerID = varchar("providerID", 255).nullable()
     val cover = javaUUID("cover").nullable()
+    val deferDeletionUntil = timestampMillis("deferDeletionUntil").nullable()
+
+    val visible get() = deferDeletionUntil.isNull()
 
     override fun body() =
         SeriesTable
@@ -40,6 +45,7 @@ object SeriesMetadataView : View("SeriesMetadata") {
                 resolve { provider },
                 resolve { providerID },
                 resolve { coverID },
+                SeriesTable.deferDeletionUntil,
             )
 
     private fun <T> resolve(pick: SeriesMetadata.() -> Column<T>) =

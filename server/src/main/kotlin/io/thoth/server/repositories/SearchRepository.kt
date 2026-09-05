@@ -35,17 +35,17 @@ object SearchRepository {
             val books =
                 BookMetadataView
                     .selectAll()
-                    .where { BookMetadataView.library inList libsToSearch }
+                    .where { (BookMetadataView.library inList libsToSearch) and BookMetadataView.visible }
                     .map { it.toBookRow() }
             val authors =
                 AuthorMetadataView
                     .selectAll()
-                    .where { AuthorMetadataView.library inList libsToSearch }
+                    .where { (AuthorMetadataView.library inList libsToSearch) and AuthorMetadataView.visible }
                     .map { it.toAuthorRow() }
             val series =
                 SeriesMetadataView
                     .selectAll()
-                    .where { SeriesMetadataView.library inList libsToSearch }
+                    .where { (SeriesMetadataView.library inList libsToSearch) and SeriesMetadataView.visible }
                     .map { it.toSeriesRow() }
 
             val authorsById = authors.associateBy { it.id }

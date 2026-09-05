@@ -29,14 +29,17 @@ import io.thoth.server.newLibrary
 import io.thoth.server.newUser
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
+import io.thoth.server.repositories.DEFER_DELETION_GRACE
 import io.thoth.server.repositories.SeriesRepository
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
 import java.util.UUID
 import kotlin.test.BeforeTest
@@ -255,7 +258,15 @@ class LayeredMetadataTest : ThothTest() {
         bookRepository.modify(userId, original, libId, bookUpdate(description = "Mine"))
 
         trackManager.insert(scan(authors = listOf("Other Author")), libId)
-        getKoin().get<LibraryCleanup>().removeOrphans(libId)
+        val cleanup = getKoin().get<LibraryCleanup>()
+        cleanup.removeOrphans(libId)
+        // The first cleanup only gives the orphan a deadline; the second one deletes it once it passed
+        transaction {
+            BooksTable.update({ BooksTable.deferDeletionUntil.isNotNull() }) {
+                it[deferDeletionUntil] = Instant.now().minus(DEFER_DELETION_GRACE).minusSeconds(60)
+            }
+        }
+        cleanup.removeOrphans(libId)
 
         assertEquals(1L, bookCount(), "nothing on disk backs the old book any more")
         assertFailsWith<ErrorResponse>("its user layer goes with it") { bookRepository.raw(original, libId) }

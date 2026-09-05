@@ -12,8 +12,10 @@ import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.SeriesTable
+import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.write
+import io.thoth.server.file.scanner.LibraryCleanup
 import io.thoth.server.newAuthor
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
@@ -22,6 +24,7 @@ import io.thoth.server.newUser
 import io.thoth.server.newTrack
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.mp.KoinPlatform.getKoin
@@ -37,6 +40,58 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class RepositoryTest : ThothTest() {
+    @Test
+    fun `a hidden book, author and series are listed only with showInvisible`() {
+        val author = newAuthor("Hidden Author")
+        val series = newSeries("Hidden Series", libId)
+        val book = newBook("Hidden Book", libId, authors = listOf(author), series = listOf(series))
+        newTrack("Track", "/media/books/track.mp3", book, libId)
+        getKoin().get<LibraryCleanup>().removeOrphans(libId)
+        assertEquals(1, bookRepository.getAll(userId, libId, SortOrder.ASC).size, "sanity: visible while it has a track")
+
+        transaction { TracksTable.deleteWhere { TracksTable.book eq book } }
+        getKoin().get<LibraryCleanup>().removeOrphans(libId)
+
+        assertEquals(emptyList(), bookRepository.sorting(libId, SortOrder.ASC), "hidden by default")
+        assertEquals(emptyList(), authorRepository.sorting(libId, SortOrder.ASC))
+        assertEquals(emptyList(), seriesRepository.sorting(libId, SortOrder.ASC))
+        assertEquals(listOf(0L, 0L, 0L), listOf(bookRepository, authorRepository, seriesRepository).map { it.total(libId) })
+
+        assertEquals(listOf(book), bookRepository.sorting(libId, SortOrder.ASC, showInvisible = true), "listed on request")
+        assertEquals(listOf(author), authorRepository.sorting(libId, SortOrder.ASC, showInvisible = true))
+        assertEquals(listOf(series), seriesRepository.sorting(libId, SortOrder.ASC, showInvisible = true))
+        assertEquals(
+            listOf(1L, 1L, 1L),
+            listOf(bookRepository, authorRepository, seriesRepository).map { it.total(libId, showInvisible = true) },
+        )
+        assertEquals(1, bookRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).size)
+    }
+
+    @Test
+    fun `a manually created series is hidden until a book joins it`() {
+        val series = seriesRepository.createManual("Discworld", libId).id
+
+        assertEquals(emptyList(), seriesRepository.sorting(libId, SortOrder.ASC), "no book hangs off it yet")
+        assertEquals(listOf(series), seriesRepository.sorting(libId, SortOrder.ASC, showInvisible = true))
+
+        val book = newBook("Mort", libId)
+        bookRepository.modify(userId, book, libId, bookAssignedTo(series = listOf(series)))
+
+        assertEquals(listOf(series), seriesRepository.sorting(libId, SortOrder.ASC), "the book edit un-hides it")
+    }
+
+    @Test
+    fun `an author the last book was taken away from is hidden again`() {
+        val author = authorRepository.createManual("Terry Pratchett", libId).id
+        val book = newBook("Mort", libId)
+        bookRepository.modify(userId, book, libId, bookAssignedTo(authors = listOf(author)))
+        assertEquals(listOf(author), authorRepository.sorting(libId, SortOrder.ASC), "sanity: visible with a book")
+
+        bookRepository.modify(userId, book, libId, bookAssignedTo(authors = emptyList()))
+
+        assertEquals(emptyList(), authorRepository.sorting(libId, SortOrder.ASC))
+    }
+
     private val libraryRepository by lazy { getKoin().get<LibraryRepository>() as LibraryRepositoryImpl }
     private val authorRepository by lazy { getKoin().get<AuthorRepository>() }
     private val bookRepository by lazy { getKoin().get<BookRepository>() }
@@ -115,6 +170,8 @@ class RepositoryTest : ThothTest() {
     @Test
     fun `search only matches the name the user is shown`() {
         val id = newAuthor("Unknown Author")
+        // Search only turns up visible authors, so this one needs a book
+        newBook("Discworld", libId, authors = listOf(id))
         authorRepository.modify(userId, id, libId, authorRenamedTo("Terry Pratchett"))
 
         assertEquals(listOf("Terry Pratchett"), authorRepository.search(userId, "Pratchett", libId).map { it.name })
@@ -167,6 +224,11 @@ class RepositoryTest : ThothTest() {
             cover = null,
             description = null,
         )
+
+    private fun bookAssignedTo(
+        authors: List<UUID>? = null,
+        series: List<UUID>? = null,
+    ) = bookRenamedTo("Mort").copy(authors = authors, series = series)
 
     private fun bookRenamedTo(newTitle: String) =
         BookUpdate(

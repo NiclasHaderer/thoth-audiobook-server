@@ -17,17 +17,19 @@ import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.SeriesUserMetadataTable
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.repositories.stampDeferral
+import io.thoth.server.repositories.visiblyLinked
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.isNotNull
-import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.notInSubQuery
-import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -52,32 +54,51 @@ class LibraryCleanup {
 
     fun removeOrphans(libraryId: UUID): Unit =
         transaction {
+            val now = Instant.now()
             // Books first: deleting them cascades the link rows away, which is what leaves the authors
             // and series below without books.
-            BooksTable.deleteWhere {
-                (BooksTable.library eq libraryId) and
-                    (BooksTable.id notInSubQuery TracksTable.select(TracksTable.book))
-            }
-            // Manually created or freshly edited entities carry a deferDeletionUntil timestamp and get a
-            // grace period before they count as orphans, so they survive until books are attached.
-            val now = Instant.now()
-            AuthorTable.deleteWhere {
-                (AuthorTable.library eq libraryId) and
-                    (
-                        AuthorTable.id notInSubQuery AuthorBookTable.select(AuthorBookTable.authors)
-                    ) and
-                    (AuthorTable.deferDeletionUntil.isNull() or (AuthorTable.deferDeletionUntil lessEq now))
-            }
-            SeriesTable.deleteWhere {
-                (SeriesTable.library eq libraryId) and
-                    (
-                        SeriesTable.id notInSubQuery SeriesBookTable.select(SeriesBookTable.series)
-                    ) and
-                    (SeriesTable.deferDeletionUntil.isNull() or (SeriesTable.deferDeletionUntil lessEq now))
-            }
+            reap(
+                table = BooksTable,
+                library = BooksTable.library,
+                deferUntil = BooksTable.deferDeletionUntil,
+                libraryId = libraryId,
+                orphaned = BooksTable.id notInSubQuery TracksTable.select(TracksTable.book),
+                now = now,
+            )
+            reap(
+                table = AuthorTable,
+                library = AuthorTable.library,
+                deferUntil = AuthorTable.deferDeletionUntil,
+                libraryId = libraryId,
+                orphaned = AuthorTable.id notInSubQuery visiblyLinked(AuthorBookTable, AuthorBookTable.authors),
+                now = now,
+            )
+            reap(
+                table = SeriesTable,
+                library = SeriesTable.library,
+                deferUntil = SeriesTable.deferDeletionUntil,
+                libraryId = libraryId,
+                orphaned = SeriesTable.id notInSubQuery visiblyLinked(SeriesBookTable, SeriesBookTable.series),
+                now = now,
+            )
 
             removeOrphanedImages()
         }
+
+    // One cleanup stamps the orphan with a deadline, the first cleanup past that deadline deletes it
+    context(_: Transaction)
+    private fun reap(
+        table: Table,
+        library: Column<EntityID<UUID>>,
+        deferUntil: Column<Instant?>,
+        libraryId: UUID,
+        orphaned: Op<Boolean>,
+        now: Instant,
+    ) {
+        val inLibrary = library eq libraryId
+        table.deleteWhere { inLibrary and orphaned and (deferUntil lessEq now) }
+        stampDeferral(table, deferUntil, inLibrary, orphaned, now)
+    }
 
     fun removeOrphanedImages(): Unit =
         transaction {

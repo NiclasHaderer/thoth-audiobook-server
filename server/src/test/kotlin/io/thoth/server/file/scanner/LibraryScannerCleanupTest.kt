@@ -12,7 +12,10 @@ import io.thoth.server.newBook
 import io.thoth.server.newLibrary
 import io.thoth.server.newSeries
 import io.thoth.server.newTrack
+import io.thoth.server.repositories.DEFER_DELETION_GRACE
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
@@ -51,6 +54,15 @@ class LibraryScannerCleanupTest : ThothTest() {
         cleanup.removeOrphans(libraryId)
     }
 
+    // The window only elapses in wall clock time, so backdate the deadline the previous cleanup wrote
+    private fun expireDeadlines() =
+        transaction {
+            val past = Instant.now().minus(DEFER_DELETION_GRACE).minusSeconds(60)
+            BooksTable.update({ BooksTable.deferDeletionUntil.isNotNull() }) { it[deferDeletionUntil] = past }
+            AuthorTable.update({ AuthorTable.deferDeletionUntil.isNotNull() }) { it[deferDeletionUntil] = past }
+            SeriesTable.update({ SeriesTable.deferDeletionUntil.isNotNull() }) { it[deferDeletionUntil] = past }
+        }
+
     private fun counts(libraryId: UUID) =
         transaction {
             listOf(
@@ -58,6 +70,24 @@ class LibraryScannerCleanupTest : ThothTest() {
                 BooksTable.selectAll().where { BooksTable.library eq libraryId }.count(),
                 AuthorTable.selectAll().where { AuthorTable.library eq libraryId }.count(),
                 SeriesTable.selectAll().where { SeriesTable.library eq libraryId }.count(),
+            )
+        }
+
+    private fun deferred(libraryId: UUID) =
+        transaction {
+            listOf(
+                BooksTable
+                    .selectAll()
+                    .where { (BooksTable.library eq libraryId) and BooksTable.deferDeletionUntil.isNotNull() }
+                    .count(),
+                AuthorTable
+                    .selectAll()
+                    .where { (AuthorTable.library eq libraryId) and AuthorTable.deferDeletionUntil.isNotNull() }
+                    .count(),
+                SeriesTable
+                    .selectAll()
+                    .where { (SeriesTable.library eq libraryId) and SeriesTable.deferDeletionUntil.isNotNull() }
+                    .count(),
             )
         }
 
@@ -76,6 +106,43 @@ class LibraryScannerCleanupTest : ThothTest() {
             counts(other),
             "rescanning one library must not delete another library's track, book, author or series",
         )
+        assertEquals(listOf(0L, 0L, 0L), deferred(other), "another library's rows must not be scheduled either")
+    }
+
+    @Test
+    fun `the first cleanup only schedules the book that is no longer on disk`() {
+        val scanned = newLibrary("scanned")
+        newBookWithTrack(scanned, "scanned", trackScanIndex = 1uL)
+        setScanIndex(scanned, 2uL)
+
+        cleanup(scanned)
+
+        assertEquals(
+            listOf(0L, 1L, 1L, 1L),
+            counts(scanned),
+            "the track is gone, but the book it orphaned is only hidden",
+        )
+        assertEquals(
+            listOf(1L, 1L, 1L),
+            deferred(scanned),
+            "and its author and series, left with nothing visible, are hidden in the same pass",
+        )
+    }
+
+    @Test
+    fun `a second cleanup within the grace period deletes nothing`() {
+        val scanned = newLibrary("scanned")
+        newBookWithTrack(scanned, "scanned", trackScanIndex = 1uL)
+        setScanIndex(scanned, 2uL)
+
+        cleanup(scanned)
+        cleanup.removeOrphans(scanned)
+
+        assertEquals(
+            listOf(0L, 1L, 1L, 1L),
+            counts(scanned),
+            "two purges minutes apart must not collapse the staging window",
+        )
     }
 
     @Test
@@ -85,12 +152,30 @@ class LibraryScannerCleanupTest : ThothTest() {
         setScanIndex(scanned, 2uL)
 
         cleanup(scanned)
+        expireDeadlines()
+        cleanup.removeOrphans(scanned)
 
         assertEquals(
             listOf(0L, 0L, 0L, 0L),
             counts(scanned),
             "a track that was not touched by the scan must be removed together with its orphaned relations",
         )
+    }
+
+    @Test
+    fun `a book that gets its track back before the second cleanup is un-scheduled`() {
+        val scanned = newLibrary("scanned")
+        newBookWithTrack(scanned, "scanned", trackScanIndex = 1uL)
+        setScanIndex(scanned, 2uL)
+        cleanup(scanned)
+
+        val bookId = transaction { BooksTable.selectAll().single()[BooksTable.id].value }
+        newTrack("scanned Track", "/media/scanned/track.mp3", bookId, scanned, scanIndex = 2uL)
+        expireDeadlines()
+        cleanup.removeOrphans(scanned)
+
+        assertEquals(listOf(1L, 1L, 1L, 1L), counts(scanned), "the restored book must survive")
+        assertEquals(listOf(0L, 0L, 0L), deferred(scanned), "and must no longer be staged for deletion")
     }
 
     @Test
@@ -102,29 +187,30 @@ class LibraryScannerCleanupTest : ThothTest() {
         cleanup(scanned)
 
         assertEquals(listOf(1L, 1L, 1L, 1L), counts(scanned), "a touched track and its relations must survive")
+        assertEquals(listOf(0L, 0L, 0L), deferred(scanned), "and nothing must be staged for deletion")
     }
 
     @Test
-    fun `orphans within their deferDeletionUntil grace period survive cleanup`() {
+    fun `a hand made author or series is deferred like any other orphan`() {
         val scanned = newLibrary("scanned")
-        val now = Instant.now()
-        val (keptAuthor, keptSeries) =
-            transaction {
-                AuthorTable.create(scanned, deferDeletionUntil = now.minusMillis(1)) // expired
-                SeriesTable.create(scanned, deferDeletionUntil = now.minusMillis(1))
-                AuthorTable.create(scanned, deferDeletionUntil = now.plusSeconds(60)) to
-                    SeriesTable.create(scanned, deferDeletionUntil = now.plusSeconds(60))
-            }
+        val (author, series) = transaction { AuthorTable.create(scanned) to SeriesTable.create(scanned) }
 
         cleanup.removeOrphans(scanned)
 
-        val (authors, series) =
+        assertEquals(
+            listOf(author) to listOf(series),
             transaction {
                 AuthorTable.selectAll().map { it[AuthorTable.id].value } to
                     SeriesTable.selectAll().map { it[SeriesTable.id].value }
-            }
-        assertEquals(listOf(keptAuthor), authors, "only the author inside the grace period must survive")
-        assertEquals(listOf(keptSeries), series, "only the series inside the grace period must survive")
+            },
+            "the first cleanup only hides them",
+        )
+        assertEquals(listOf(0L, 1L, 1L), deferred(scanned))
+
+        expireDeadlines()
+        cleanup.removeOrphans(scanned)
+
+        assertEquals(listOf(0L, 0L, 0L, 0L), counts(scanned), "the second one removes them")
     }
 
     @Test
