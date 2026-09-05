@@ -10,9 +10,9 @@ import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
+import io.thoth.server.plugins.auth.thothPrincipal
 import io.thoth.server.repositories.SeriesRepository
 import org.koin.ktor.ext.inject
-import io.thoth.server.plugins.auth.thothPrincipal
 
 fun Routing.seriesRouting() {
     val seriesRepository by inject<SeriesRepository>()
@@ -32,7 +32,9 @@ fun Routing.seriesRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Series.Id, SeriesDetailed> { seriesRepository.get(userId = thothPrincipal().userId, id = it.id, libraryId = it.libraryId) }
+    get<Api.Libraries.Id.Series.Id, SeriesDetailed> {
+        seriesRepository.get(userId = thothPrincipal().userId, id = it.id, libraryId = it.libraryId)
+    }
 
     get<Api.Libraries.Id.Series.Autocomplete, List<TitledId>> {
         seriesRepository
@@ -41,7 +43,12 @@ fun Routing.seriesRouting() {
     }
 
     patch<Api.Libraries.Id.Series.Id, SeriesUpdate, Series> { id, patchSeries ->
-        seriesRepository.modify(userId = thothPrincipal().userId, id = id.id, libraryId = id.libraryId, partial = patchSeries)
+        seriesRepository.modify(
+            userId = thothPrincipal().userId,
+            id = id.id,
+            libraryId = id.libraryId,
+            partial = patchSeries,
+        )
     }
 
     post<Api.Libraries.Id.Series, SeriesCreate, SeriesDetailed> { route, postSeries ->

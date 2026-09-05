@@ -40,12 +40,19 @@ val cmakeConfigureNativeHost =
         outputs.dir(nativeBuildDir)
         executable = cmakeExecutable.get()
         args(
-            "-S", nativeSourceDir.asFile.absolutePath,
-            "-B", nativeBuildDir.get().asFile.absolutePath,
+            "-S",
+            nativeSourceDir.asFile.absolutePath,
+            "-B",
+            nativeBuildDir.get().asFile.absolutePath,
             "-DCMAKE_BUILD_TYPE=Release",
         )
         doFirst {
-            if (!nativeSourceDir.dir("taglib").file("CMakeLists.txt").asFile.exists()) {
+            if (!nativeSourceDir
+                    .dir("taglib")
+                    .file("CMakeLists.txt")
+                    .asFile
+                    .exists()
+            ) {
                 throw GradleException(
                     "TagLib submodule is missing. Run: git submodule update --init --recursive",
                 )
@@ -82,9 +89,14 @@ tasks.register<Exec>("jextract") {
     val generatedDir = layout.projectDirectory.dir("src/main/java")
     executable = providers.gradleProperty("jextract").orElse("jextract").get()
     args(
-        "--output", generatedDir.asFile.absolutePath,
+        "--output",
+        generatedDir.asFile.absolutePath,
         "@${nativeSourceDir.file("jextract.args").asFile.absolutePath}",
-        nativeSourceDir.dir("taglib").dir("bindings/c").file("tag_c.h").asFile.absolutePath,
+        nativeSourceDir
+            .dir("taglib")
+            .dir("bindings/c")
+            .file("tag_c.h")
+            .asFile.absolutePath,
     )
     doFirst { delete(generatedDir) }
     // The bindings are committed once and shipped to every platform, but jextract hardcodes the

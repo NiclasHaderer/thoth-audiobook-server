@@ -4,10 +4,10 @@ import io.thoth.models.Narrator
 import io.thoth.models.NarratorDetailed
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.booksToModels
 import io.thoth.server.database.views.bookGroupCount
 import io.thoth.server.database.views.bookGroups
 import io.thoth.server.database.views.booksInGroup
+import io.thoth.server.database.views.booksToModels
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
@@ -54,6 +54,5 @@ class NarratorRepositoryImpl : NarratorRepository {
             NarratorDetailed(name = match.name, books = booksToModels(match.books, userId))
         }
 
-    override fun total(libraryId: UUID): Long =
-        transaction { BookMetadataView.narrators.bookGroupCount(libraryId) }
+    override fun total(libraryId: UUID): Long = transaction { BookMetadataView.narrators.bookGroupCount(libraryId) }
 }

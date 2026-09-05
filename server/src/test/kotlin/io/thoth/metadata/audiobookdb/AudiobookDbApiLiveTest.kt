@@ -44,7 +44,10 @@ class AudiobookDbApiLiveTest {
             assertEquals("9781603935470", book.isbn)
             assertTrue(book.providerRating!! > 0f, "rating was ${book.providerRating}")
             assertTrue(book.coverURL!!.contains("/source."), "cover was '${book.coverURL}'")
-            assertTrue(book.description!!.startsWith("Ryland Grace"), "description was '${book.description?.take(60)}...'")
+            assertTrue(
+                book.description!!.startsWith("Ryland Grace"),
+                "description was '${book.description?.take(60)}...'",
+            )
         }
 
     @Test
@@ -52,7 +55,8 @@ class AudiobookDbApiLiveTest {
         runBlocking {
             val hits = agent.getBookByName("Project Hail Mary", MetadataRegion.US).take(10).toList()
 
-            val book = assertNotNull(hits.find { it.id.itemID == projectHailMary }, "hits were ${hits.map { it.title }}")
+            val book =
+                assertNotNull(hits.find { it.id.itemID == projectHailMary }, "hits were ${hits.map { it.title }}")
             assertEquals("Project Hail Mary", book.title)
             assertEquals(listOf("Ray Porter"), book.narrators)
             assertEquals(MetadataLanguage.English, book.language)
@@ -64,8 +68,10 @@ class AudiobookDbApiLiveTest {
         runBlocking {
             val hits = agent.getBookByName(orderOfThePhoenix, MetadataRegion.US).take(10).toList()
 
-            val fried = assertNotNull(hits.find { it.id.itemID == friedRelease }, "hits were ${hits.map { it.id.itemID }}")
-            val dale = assertNotNull(hits.find { it.id.itemID == daleRelease }, "hits were ${hits.map { it.id.itemID }}")
+            val fried =
+                assertNotNull(hits.find { it.id.itemID == friedRelease }, "hits were ${hits.map { it.id.itemID }}")
+            val dale =
+                assertNotNull(hits.find { it.id.itemID == daleRelease }, "hits were ${hits.map { it.id.itemID }}")
             assertEquals(listOf("Stephen Fry"), fried.narrators)
             assertEquals(listOf("Jim Dale"), dale.narrators)
             assertNotEquals(fried.coverURL, dale.coverURL)
@@ -74,7 +80,13 @@ class AudiobookDbApiLiveTest {
     @Test
     fun `narrows a search down to one narrator`() =
         runBlocking {
-            val hits = agent.getBookByName(orderOfThePhoenix, MetadataRegion.US, narrator = "Stephen Fry").take(1).toList()
+            val hits = agent
+                .getBookByName(
+                    orderOfThePhoenix,
+                    MetadataRegion.US,
+                    narrator = "Stephen Fry",
+                ).take(1)
+                .toList()
 
             assertEquals(listOf(friedRelease), hits.map { it.id.itemID })
         }
@@ -134,7 +146,8 @@ class AudiobookDbApiLiveTest {
         runBlocking {
             val series = agent.getSeriesByName("Forward Collection", MetadataRegion.US).take(3).toList()
 
-            val forward = assertNotNull(series.find { it.id.itemID == forwardCollection }, "found ${series.map { it.title }}")
+            val forward =
+                assertNotNull(series.find { it.id.itemID == forwardCollection }, "found ${series.map { it.title }}")
             assertEquals("Forward Collection", forward.title)
             assertTrue(forward.books!!.size >= 6, "series only resolved ${forward.books?.size} books")
         }
@@ -142,7 +155,13 @@ class AudiobookDbApiLiveTest {
     @Test
     fun `finds a book by name`() =
         runBlocking {
-            val books = agent.getBookByName("Project Hail Mary", MetadataRegion.US, authorName = "Andy Weir").take(3).toList()
+            val books = agent
+                .getBookByName(
+                    "Project Hail Mary",
+                    MetadataRegion.US,
+                    authorName = "Andy Weir",
+                ).take(3)
+                .toList()
 
             val book = assertNotNull(books.find { it.id.itemID == projectHailMary }, "found ${books.map { it.title }}")
             assertEquals(listOf("Ray Porter"), book.narrators)

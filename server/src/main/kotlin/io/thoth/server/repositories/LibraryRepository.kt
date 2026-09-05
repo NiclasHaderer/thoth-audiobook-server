@@ -14,8 +14,8 @@ import io.thoth.server.database.tables.toLibraryRow
 import io.thoth.server.database.tables.update
 import io.thoth.server.file.scanner.LibraryCleanup
 import io.thoth.server.file.scanner.LibraryRoots
-import io.thoth.server.file.scanner.ScanRequest
 import io.thoth.server.file.scanner.LibraryWatcher
+import io.thoth.server.file.scanner.ScanRequest
 import io.thoth.server.schedules.ThothSchedules
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -109,9 +109,11 @@ class LibraryRepositoryImpl :
                             folders = partial.folders ?: library.folders,
                             preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: library.preferEmbeddedMetadata,
                             metadataAgents = partial.metadataAgents ?: library.metadataAgents,
-                            combineMetadataAgentFields = partial.combineMetadataAgentFields ?: library.combineMetadataAgentFields,
+                            combineMetadataAgentFields =
+                                partial.combineMetadataAgentFields ?: library.combineMetadataAgentFields,
                             fileScanners = partial.fileScanners ?: library.fileScanners,
-                            combineFileScannerFields = partial.combineFileScannerFields ?: library.combineFileScannerFields,
+                            combineFileScannerFields =
+                                partial.combineFileScannerFields ?: library.combineFileScannerFields,
                             language = partial.language ?: library.language,
                             region = partial.region ?: library.region,
                         )

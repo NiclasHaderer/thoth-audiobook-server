@@ -7,11 +7,11 @@ import io.thoth.auth.interactions.currentUser
 import io.thoth.auth.interactions.deleteUser
 import io.thoth.auth.interactions.displayUser
 import io.thoth.auth.interactions.getJwks
-import io.thoth.auth.interactions.refreshAccessToken
 import io.thoth.auth.interactions.listUsers
 import io.thoth.auth.interactions.loginUser
 import io.thoth.auth.interactions.logoutUser
 import io.thoth.auth.interactions.modifyUserPermissions
+import io.thoth.auth.interactions.refreshAccessToken
 import io.thoth.auth.interactions.registerUser
 import io.thoth.auth.interactions.renameUser
 import io.thoth.auth.models.ThothAccessToken

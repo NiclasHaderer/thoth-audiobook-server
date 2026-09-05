@@ -55,8 +55,7 @@ fun Routing.metadataRouting() {
                 narrator = it.narrator,
                 // An explicit language narrows the search further than the library default does
                 language = it.language ?: language,
-            )
-            .take(it.pageSize?.toResultCount(MAX_SEARCH_RESULTS) ?: DEFAULT_SEARCH_RESULTS)
+            ).take(it.pageSize?.toResultCount(MAX_SEARCH_RESULTS) ?: DEFAULT_SEARCH_RESULTS)
             .toList()
     }
 

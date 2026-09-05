@@ -50,7 +50,14 @@ class ResponseCacheTest {
         runBlocking {
             val released = CompletableDeferred<Unit>()
 
-            val callers = (1..5).map { async { load("book-1") { released.await(); it } } }
+            val callers = (1..5).map {
+                async {
+                    load("book-1") {
+                        released.await()
+                        it
+                    }
+                }
+            }
             while (loads.isEmpty()) delay(1)
             released.complete(Unit)
 
@@ -63,8 +70,18 @@ class ResponseCacheTest {
         runBlocking {
             val released = CompletableDeferred<Unit>()
 
-            val stays = async { load("book-1") { released.await(); it } }
-            val givesUp = launch { load("book-1") { released.await(); it } }
+            val stays = async {
+                load("book-1") {
+                    released.await()
+                    it
+                }
+            }
+            val givesUp = launch {
+                load("book-1") {
+                    released.await()
+                    it
+                }
+            }
             // Both callers have to arrive at the shared entry before one of them walks away
             while (loads.isEmpty()) delay(1)
             givesUp.cancelAndJoin()

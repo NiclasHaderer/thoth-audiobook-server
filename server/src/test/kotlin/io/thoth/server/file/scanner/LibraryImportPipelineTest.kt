@@ -7,10 +7,10 @@ import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.sqliteUrl
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.newLibrary
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -24,6 +24,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFilePermission
 import java.sql.DriverManager
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.absolutePathString
@@ -43,7 +44,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import java.time.Instant
 
 class LibraryImportPipelineTest : ThothTest() {
     private val pipeline by lazy { getKoin().get<LibraryImportPipeline>() }
@@ -91,7 +91,11 @@ class LibraryImportPipelineTest : ThothTest() {
 
     private fun titles() =
         transaction {
-            BookMetadataView.selectAll().where { BookMetadataView.visible }.map { it[BookMetadataView.title] }.sorted()
+            BookMetadataView
+                .selectAll()
+                .where { BookMetadataView.visible }
+                .map { it[BookMetadataView.title] }
+                .sorted()
         }
 
     private fun tracks() = transaction { TracksTable.selectAll().count() }

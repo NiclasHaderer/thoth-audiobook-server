@@ -22,12 +22,12 @@ import io.thoth.metadata.responses.MetadataSearchCount
 import io.thoth.metadata.responses.MetadataSeries
 import io.thoth.metadata.responses.MetadataSeriesImpl
 import io.thoth.metadata.toResultCount
-import java.time.Duration
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import java.time.Duration
 
 class AudiobookDbMetadataAgent(
     apiKey: String? = null,

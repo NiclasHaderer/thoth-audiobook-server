@@ -64,7 +64,10 @@ internal class WebUiServer(
     private fun isStaticRequest(call: ApplicationCall): Boolean {
         val webUiVersion = config.webUiVersion
         return when (val fileName = getStaticFileName(call)) {
-            in notFound -> false
+            in notFound -> {
+                false
+            }
+
             "index.html" -> {
                 content[fileName] = WebUiResource.index(config.schemaPath)
                 return true

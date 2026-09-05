@@ -6,7 +6,6 @@ import io.thoth.models.BookUpdate
 import io.thoth.models.SeriesUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
-import io.thoth.server.pngBytes
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookFileMetadataTable
@@ -20,8 +19,9 @@ import io.thoth.server.newAuthor
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
 import io.thoth.server.newSeries
-import io.thoth.server.newUser
 import io.thoth.server.newTrack
+import io.thoth.server.newUser
+import io.thoth.server.pngBytes
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -47,7 +47,11 @@ class RepositoryTest : ThothTest() {
         val book = newBook("Hidden Book", libId, authors = listOf(author), series = listOf(series))
         newTrack("Track", "/media/books/track.mp3", book, libId)
         getKoin().get<LibraryCleanup>().removeOrphans(libId)
-        assertEquals(1, bookRepository.getAll(userId, libId, SortOrder.ASC).size, "sanity: visible while it has a track")
+        assertEquals(
+            1,
+            bookRepository.getAll(userId, libId, SortOrder.ASC).size,
+            "sanity: visible while it has a track",
+        )
 
         transaction { TracksTable.deleteWhere { TracksTable.book eq book } }
         getKoin().get<LibraryCleanup>().removeOrphans(libId)
@@ -55,15 +59,24 @@ class RepositoryTest : ThothTest() {
         assertEquals(emptyList(), bookRepository.getAll(userId, libId, SortOrder.ASC), "hidden by default")
         assertEquals(emptyList(), authorRepository.getAll(userId, libId, SortOrder.ASC))
         assertEquals(emptyList(), seriesRepository.getAll(userId, libId, SortOrder.ASC))
-        assertEquals(listOf(0L, 0L, 0L), listOf(bookRepository, authorRepository, seriesRepository).map { it.total(libId) })
+        assertEquals(
+            listOf(0L, 0L, 0L),
+            listOf(bookRepository, authorRepository, seriesRepository).map { it.total(libId) },
+        )
 
         assertEquals(
             listOf(book),
             bookRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id },
             "listed on request",
         )
-        assertEquals(listOf(author), authorRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id })
-        assertEquals(listOf(series), seriesRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id })
+        assertEquals(
+            listOf(author),
+            authorRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id },
+        )
+        assertEquals(
+            listOf(series),
+            seriesRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id },
+        )
         assertEquals(
             listOf(1L, 1L, 1L),
             listOf(bookRepository, authorRepository, seriesRepository).map { it.total(libId, showInvisible = true) },
@@ -76,7 +89,10 @@ class RepositoryTest : ThothTest() {
         val series = seriesRepository.createManual("Discworld", libId).id
 
         assertEquals(emptyList(), seriesRepository.getAll(userId, libId, SortOrder.ASC), "no book hangs off it yet")
-        assertEquals(listOf(series), seriesRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id })
+        assertEquals(
+            listOf(series),
+            seriesRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id },
+        )
 
         val book = newBook("Mort", libId)
         bookRepository.modify(userId, book, libId, bookAssignedTo(series = listOf(series)))
@@ -122,8 +138,7 @@ class RepositoryTest : ThothTest() {
 
     private fun newAuthor(authorName: String) = newAuthor(authorName, libId)
 
-    private fun authorCount() =
-        transaction { AuthorTable.selectAll().where { AuthorTable.library eq libId }.count() }
+    private fun authorCount() = transaction { AuthorTable.selectAll().where { AuthorTable.library eq libId }.count() }
 
     @Test
     fun `author findByTaggedName matches ignoring case`() {

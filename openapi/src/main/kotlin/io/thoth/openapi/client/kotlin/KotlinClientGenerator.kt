@@ -1,5 +1,6 @@
 package io.thoth.openapi.client.kotlin
 
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.ktor.server.application.Application
 import io.thoth.openapi.client.common.ClientGenerator
 import io.thoth.openapi.client.common.ClientPart
@@ -7,7 +8,6 @@ import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.common.getResourceContent
 import io.thoth.openapi.ktor.OpenApiRoute
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import java.io.File
 import java.nio.file.Path
 

@@ -1,7 +1,7 @@
 package io.thoth.server.database.migrations
 
-import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import io.thoth.server.database.extensions.timestampMillis
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 
 object SchemaTrackerTable : IntIdTable("SchemaTracker") {
     val version = integer("version").uniqueIndex()

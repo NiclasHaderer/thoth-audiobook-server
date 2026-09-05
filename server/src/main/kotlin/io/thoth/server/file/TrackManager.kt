@@ -1,19 +1,15 @@
 package io.thoth.server.file
 
-import io.thoth.server.common.extensions.lastModifiedInstant
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.common.extensions.canonicalString
+import io.thoth.server.common.extensions.lastModifiedInstant
 import io.thoth.server.database.access.getOrCreateImage
-import io.thoth.server.schedules.AutoMatchRequest
-import io.thoth.server.schedules.MatchableEntity
-import io.thoth.server.schedules.AutoMatcher
-import io.thoth.server.database.tables.MetadataLayer
-import io.thoth.server.database.tables.replaceBookAuthors
-import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryRow
+import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackRow
@@ -21,6 +17,7 @@ import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.layer
+import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.toLibraryRow
 import io.thoth.server.database.tables.toTrackRow
@@ -32,13 +29,16 @@ import io.thoth.server.file.scanner.LibraryEntityModel
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
+import io.thoth.server.schedules.AutoMatchRequest
+import io.thoth.server.schedules.AutoMatcher
+import io.thoth.server.schedules.MatchableEntity
 import org.jetbrains.exposed.v1.core.LikePattern
+import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -103,7 +103,11 @@ class TrackManager : KoinComponent {
     ) = transaction {
         val library = libraryRow(libraryId)
         val bookId = getOrCreateBook(scan, library)
-        val track = TracksTable.selectAll().where { TracksTable.path eq scan.path }.firstOrNull()?.toTrackRow()
+        val track = TracksTable
+            .selectAll()
+            .where { TracksTable.path eq scan.path }
+            .firstOrNull()
+            ?.toTrackRow()
         if (track != null) {
             TracksTable.update(
                 track.copy(

@@ -10,7 +10,6 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.dataconversion.DataConversion
 import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
-import io.ktor.client.request.get as httpGet
 import io.ktor.server.testing.testApplication
 import io.swagger.v3.oas.models.OpenAPI
 import io.thoth.openapi.ktor.Description
@@ -31,6 +30,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import io.ktor.client.request.get as httpGet
 
 enum class SortDirection(
     val direction: String,
@@ -158,7 +158,11 @@ class SchemaGenerationTest {
     @Test
     fun `allOf is only emitted when there is a super class`() {
         assertNull(api.components.schemas["SpecPage_SpecItem"]!!.allOf)
-        assertEquals(1, api.components.schemas["SpecItem"]!!.allOf.size)
+        assertEquals(
+            1,
+            api.components.schemas["SpecItem"]!!
+                .allOf.size,
+        )
     }
 
     @Test
@@ -167,7 +171,12 @@ class SchemaGenerationTest {
         assertEquals("integer", item.properties["total"]!!.type)
         assertEquals("int64", item.properties["total"]!!.format)
         assertEquals("number", item.properties["ratio"]!!.type)
-        assertEquals("integer", listItems.parameters.first { it.name == "page" }.schema.type)
+        assertEquals(
+            "integer",
+            listItems.parameters
+                .first { it.name == "page" }
+                .schema.type,
+        )
     }
 
     @Test
@@ -196,7 +205,9 @@ class SchemaGenerationTest {
         assertEquals("deleteSpecItemsById", deleteItem.operationId)
         assertEquals("postSpecPingCheck", ping.operationId)
 
-        val ids = api.paths.values.flatMap { it.readOperations() }.map { it.operationId }
+        val ids = api.paths.values
+            .flatMap { it.readOperations() }
+            .map { it.operationId }
         assertFalse(ids.any { it.isNullOrBlank() })
         assertEquals(ids.size, ids.toSet().size, "operation ids are not unique")
     }

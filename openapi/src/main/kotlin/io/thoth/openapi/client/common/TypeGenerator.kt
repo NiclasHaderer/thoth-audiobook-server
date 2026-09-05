@@ -31,9 +31,13 @@ abstract class TypeGenerator<TYPE, DATA_TYPE> {
             run {
                 paths
                     .flatMap { path ->
-                        ClassGraph().acceptPackages(path).enableClassInfo().scan().use { scan ->
-                            scan.getSubclasses(clazz.java).loadClasses(clazz.java)
-                        }.map { it.kotlin.createInstance() }
+                        ClassGraph()
+                            .acceptPackages(path)
+                            .enableClassInfo()
+                            .scan()
+                            .use { scan ->
+                                scan.getSubclasses(clazz.java).loadClasses(clazz.java)
+                            }.map { it.kotlin.createInstance() }
                     }
             }
 

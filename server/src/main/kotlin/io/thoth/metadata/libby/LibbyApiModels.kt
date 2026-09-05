@@ -171,4 +171,7 @@ internal fun libbyAuthorLink(
     creatorId: String,
 ) = "https://libbyapp.com/search/$libraryKey/search/creator-$creatorId/page-1"
 
-private fun parseDate(date: String?): LocalDate? = parseDateOrNull("Libby", date) { OffsetDateTime.parse(it).toLocalDate() }
+private fun parseDate(date: String?): LocalDate? =
+    parseDateOrNull("Libby", date) {
+        OffsetDateTime.parse(it).toLocalDate()
+    }

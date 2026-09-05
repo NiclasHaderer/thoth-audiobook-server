@@ -72,7 +72,8 @@ class LibbyApiLiveTest {
         runBlocking {
             val hits = provider.search(MetadataRegion.US, keywords = "harry potter stephen fry")
 
-            val book = assertNotNull(hits.find { it.id.itemID == philosophersStone }, "hits were ${hits.map { it.title }}")
+            val book =
+                assertNotNull(hits.find { it.id.itemID == philosophersStone }, "hits were ${hits.map { it.title }}")
             assertEquals("Harry Potter and the Philosopher's Stone", book.title)
             assertEquals(listOf("Stephen Fry"), book.narrators)
         }

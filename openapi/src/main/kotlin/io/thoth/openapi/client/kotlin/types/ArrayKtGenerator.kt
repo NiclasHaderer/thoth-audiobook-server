@@ -1,9 +1,9 @@
 package io.thoth.openapi.client.kotlin.types
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
-import io.github.oshai.kotlinlogging.KotlinLogging
 
 class ArrayKtGenerator : KtTypeGenerator() {
     private val log = KotlinLogging.logger {}

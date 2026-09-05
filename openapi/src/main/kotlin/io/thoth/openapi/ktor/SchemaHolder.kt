@@ -115,8 +115,10 @@ class SchemaHolder {
     ) {
         if (route.secured != null) {
             operation.responses
-                .addApiResponse(HttpStatusCode.Unauthorized.value.toString(), errorResponse(HttpStatusCode.Unauthorized))
-                .addApiResponse(HttpStatusCode.Forbidden.value.toString(), errorResponse(HttpStatusCode.Forbidden))
+                .addApiResponse(
+                    HttpStatusCode.Unauthorized.value.toString(),
+                    errorResponse(HttpStatusCode.Unauthorized),
+                ).addApiResponse(HttpStatusCode.Forbidden.value.toString(), errorResponse(HttpStatusCode.Forbidden))
         }
         operation.responses.setDefault(errorResponse(null))
     }

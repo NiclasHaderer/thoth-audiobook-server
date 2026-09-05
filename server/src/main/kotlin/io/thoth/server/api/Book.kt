@@ -9,9 +9,9 @@ import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.post
+import io.thoth.server.plugins.auth.thothPrincipal
 import io.thoth.server.repositories.BookRepository
 import org.koin.ktor.ext.inject
-import io.thoth.server.plugins.auth.thothPrincipal
 
 fun Routing.bookRouting() {
     val bookRepository by inject<BookRepository>()

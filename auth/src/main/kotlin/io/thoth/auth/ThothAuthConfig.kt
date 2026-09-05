@@ -40,7 +40,8 @@ fun bearerFromHeaderOrCookie(cookieName: String): AuthHeaderProvider =
 
 internal val PLUGIN_CONFIG_KEY = AttributeKey<ThothAuthConfig<*, *>>("ThothAuthPlugin")
 
-internal fun <PERMISSIONS, UPDATE_PERMISSIONS> RoutingContext.thothAuthConfig(): ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS> {
+internal fun <PERMISSIONS, UPDATE_PERMISSIONS> RoutingContext.thothAuthConfig():
+    ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS> {
     if (!call.attributes.contains(PLUGIN_CONFIG_KEY)) {
         throw IllegalStateException("ThothAuthPlugin not installed")
     }
@@ -110,7 +111,10 @@ class ThothAuthConfig<PERMISSIONS, UPDATE_PERMISSIONS>(
                     validate { jwtCredential ->
                         val user =
                             userForToken(jwtCredential.payload, ThothJwtTypes.Access) ?: run {
-                                attributes.put(JWT_VALIDATION_FAILED, JwtError("JWT is not valid", HttpStatusCode.Unauthorized))
+                                attributes.put(
+                                    JWT_VALIDATION_FAILED,
+                                    JwtError("JWT is not valid", HttpStatusCode.Unauthorized),
+                                )
                                 return@validate null
                             }
                         getPrincipal(user) { error -> attributes.put(JWT_VALIDATION_FAILED, error) }

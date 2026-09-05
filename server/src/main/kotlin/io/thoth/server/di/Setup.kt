@@ -9,10 +9,10 @@ import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.di.serialization.JacksonSerialization
 import io.thoth.server.di.serialization.Serialization
+import io.thoth.server.file.TrackManager
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.analyzer.impl.AudioFolderScanner
 import io.thoth.server.file.analyzer.impl.AudioTagScanner
-import io.thoth.server.file.TrackManager
 import io.thoth.server.file.scanner.LibraryCleanup
 import io.thoth.server.file.scanner.LibraryImportPipeline
 import io.thoth.server.file.scanner.LibraryRoots
@@ -22,10 +22,10 @@ import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.AuthorServiceImpl
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.BookRepositoryImpl
-import io.thoth.server.repositories.LibraryRepository
-import io.thoth.server.repositories.LibraryRepositoryImpl
 import io.thoth.server.repositories.GenreRepository
 import io.thoth.server.repositories.GenreRepositoryImpl
+import io.thoth.server.repositories.LibraryRepository
+import io.thoth.server.repositories.LibraryRepositoryImpl
 import io.thoth.server.repositories.NarratorRepository
 import io.thoth.server.repositories.NarratorRepositoryImpl
 import io.thoth.server.repositories.ProgressRepository

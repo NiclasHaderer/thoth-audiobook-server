@@ -25,7 +25,8 @@ class LibbyMetadataAgent(
     private val libraryKey: String = "brooklyn",
     private val imageSize: Int = 500,
 ) : SearchBasedMetadataAgent() {
-    private val http = MetadataHttpClient("Libby", throttle = ThrottleConfig(requests = 10, window = Duration.ofSeconds(1)))
+    private val http =
+        MetadataHttpClient("Libby", throttle = ThrottleConfig(requests = 10, window = Duration.ofSeconds(1)))
 
     override val name = LIBBY_PROVIDER_NAME
 
@@ -89,22 +90,29 @@ class LibbyMetadataAgent(
         providerId: String,
         bookId: String,
         region: MetadataRegion,
-    ): MetadataBookImpl? = http.getJson<LibbyApiMedia>(apiUrl(listOf("media", bookId)))?.toMetadataBook(libraryKey, imageSize)
+    ): MetadataBookImpl? =
+        http.getJson<LibbyApiMedia>(apiUrl(listOf("media", bookId)))?.toMetadataBook(libraryKey, imageSize)
 
     override suspend fun getSeriesByID(
         providerId: String,
         seriesId: String,
         region: MetadataRegion,
     ): MetadataSeriesImpl? {
-        val series = http.getJson<LibbyApiSeriesResponse>(apiUrl(listOf("libraries", libraryKey, "series", seriesId))) ?: return null
+        val series =
+            http.getJson<LibbyApiSeriesResponse>(apiUrl(listOf("libraries", libraryKey, "series", seriesId)))
+                ?: return null
 
         val orderedItems = series.items.orderedByReadingOrder()
         val mediaById = getMediaBulk(orderedItems.mapNotNull { it.id }).associateBy { it.id }
         // A series lists every edition and language of its books, so keep the most popular audiobook per reading order
         val books =
             orderedItems
-                .mapNotNull { item -> mediaById[item.id]?.takeIf { it.type?.id == LIBBY_AUDIOBOOK_TYPE }?.let { item to it } }
-                .distinctBy { (item, _) -> item.readingOrder ?: item.id }
+                .mapNotNull { item ->
+                    mediaById[item.id]?.takeIf { it.type?.id == LIBBY_AUDIOBOOK_TYPE }?.let {
+                        item to
+                            it
+                    }
+                }.distinctBy { (item, _) -> item.readingOrder ?: item.id }
                 .map { (_, media) -> media.toMetadataSearchBook(libraryKey, imageSize) }
 
         return MetadataSeriesImpl(

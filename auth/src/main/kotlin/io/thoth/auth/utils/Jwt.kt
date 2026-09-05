@@ -85,7 +85,8 @@ internal fun ThothAuthConfig<*, *>.userForToken(
     type: ThothJwtTypes,
 ): ThothDatabaseUser? {
     if (payload.getClaim("type").asString() != type.type) return null
-    val userId = payload.getClaim("sub").asString()?.let { runCatching { UUID.fromString(it) }.getOrNull() } ?: return null
+    val userId =
+        payload.getClaim("sub").asString()?.let { runCatching { UUID.fromString(it) }.getOrNull() } ?: return null
     val user = getUserById(userId) ?: return null
     return user.takeIf { payload.getClaim("ver").asInt() == it.tokenVersion }
 }

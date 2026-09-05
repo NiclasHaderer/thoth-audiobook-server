@@ -27,5 +27,4 @@ fun imageContentType(bytes: ByteArray): ContentType? {
 private fun ByteArray.startsWith(
     magic: String,
     offset: Int = 0,
-): Boolean =
-    size >= offset + magic.length && magic.indices.all { this[offset + it] == magic[it].code.toByte() }
+): Boolean = size >= offset + magic.length && magic.indices.all { this[offset + it] == magic[it].code.toByte() }

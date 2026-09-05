@@ -12,17 +12,17 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.not
 import org.jetbrains.exposed.v1.core.notInSubQuery
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.update
-import java.util.UUID
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 
 // How long a book/author/series should be kept around before being properly deleted
 val DEFER_DELETION_GRACE: Duration = Duration.ofHours(24)

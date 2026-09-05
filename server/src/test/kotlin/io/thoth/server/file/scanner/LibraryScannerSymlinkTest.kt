@@ -3,8 +3,8 @@ package io.thoth.server.file.scanner
 import io.thoth.models.FileScanner
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.newLibrary
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction

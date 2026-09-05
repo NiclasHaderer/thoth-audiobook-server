@@ -9,7 +9,9 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
-abstract class View(name: String) : Table(name) {
+abstract class View(
+    name: String,
+) : Table(name) {
     protected abstract fun body(): AbstractQuery<*>
 
     internal fun dependencies(): List<View> = body().targets.filterIsInstance<View>()
@@ -28,7 +30,9 @@ abstract class View(name: String) : Table(name) {
             val selected =
                 when (field) {
                     is Column<*> -> field.name
+
                     is IExpressionAlias<*> -> field.alias
+
                     else -> error(
                         "View $tableName selects an unnamed expression for column '${column.name}'. " +
                             "Add .alias(\"${column.name}\") to it",

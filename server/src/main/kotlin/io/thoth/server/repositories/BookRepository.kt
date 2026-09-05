@@ -11,9 +11,6 @@ import io.thoth.models.TitledId
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.exposed.unless
-import io.thoth.server.schedules.AutoMatchRequest
-import io.thoth.server.schedules.MatchableEntity
-import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.common.extensions.naturalOrder
@@ -23,29 +20,32 @@ import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookMetadata
 import io.thoth.server.database.tables.BookMetadataRow
-import io.thoth.server.database.views.BookRow
 import io.thoth.server.database.tables.BookUserMetadataTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.TracksTable
-import io.thoth.server.database.views.bookAuthors
-import io.thoth.server.database.views.booksToModels
 import io.thoth.server.database.tables.authorIdsLinkedToBook
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.seriesIdsLinkedToBook
-import io.thoth.server.database.views.toBookRow
-import io.thoth.server.database.views.toModel
 import io.thoth.server.database.tables.toTrackRow
 import io.thoth.server.database.tables.write
 import io.thoth.server.database.views.BookMetadataView
+import io.thoth.server.database.views.BookRow
+import io.thoth.server.database.views.bookAuthors
+import io.thoth.server.database.views.booksToModels
+import io.thoth.server.database.views.toBookRow
+import io.thoth.server.database.views.toModel
+import io.thoth.server.schedules.AutoMatchRequest
+import io.thoth.server.schedules.AutoMatcher
+import io.thoth.server.schedules.MatchableEntity
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
-import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -110,8 +110,7 @@ class BookRepositoryImpl :
                     .selectAll()
                     .where {
                         (BookMetadataView.library eq libraryId) and BookMetadataView.visible.unless(showInvisible)
-                    }
-                    .orderBy(BookMetadataView.title.lowerCase() to order)
+                    }.orderBy(BookMetadataView.title.lowerCase() to order)
                     .offset(offset)
                     .limit(limit)
                     .map { it.toBookRow() }
@@ -172,8 +171,10 @@ class BookRepositoryImpl :
             val rows =
                 BookMetadataView
                     .selectAll()
-                    .where { matchesTitle(query) and (BookMetadataView.library eq libraryId) and BookMetadataView.visible }
-                    .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
+                    .where {
+                        matchesTitle(query) and (BookMetadataView.library eq libraryId) and
+                            BookMetadataView.visible
+                    }.orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toBookRow() }
             booksToModels(rows, userId)
@@ -369,5 +370,4 @@ private fun idInLayer(
         ?.get(BooksTable.id)
         ?.value
 
-private fun matchesTitle(query: String): Op<Boolean> =
-    BookMetadataView.title ilike "%${escape(query)}%"
+private fun matchesTitle(query: String): Op<Boolean> = BookMetadataView.title ilike "%${escape(query)}%"

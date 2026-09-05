@@ -1,9 +1,9 @@
 package io.thoth.openapi.client.typescript.types
 
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
 
 class RecordTsGenerator : TsTypeGenerator() {
     private val log = logger {}

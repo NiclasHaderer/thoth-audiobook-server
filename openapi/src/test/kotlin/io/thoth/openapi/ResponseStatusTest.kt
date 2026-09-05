@@ -97,7 +97,9 @@ class ResponseStatusTest {
                 config.routeCollector.forEach { config.schemaHolder.addRouteToApi(it) }
                 codes =
                     config.schemaHolder.api.paths.mapValues { (_, item) ->
-                        item.post.responses.keys.filterNot { it == "default" }.toSet()
+                        item.post.responses.keys
+                            .filterNot { it == "default" }
+                            .toSet()
                     }
             }
             client.post("/no-content")

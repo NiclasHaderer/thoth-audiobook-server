@@ -30,7 +30,8 @@ import java.time.Duration
 class AudibleMetadataAgent(
     private val imageSize: Int = 500,
 ) : SearchBasedMetadataAgent() {
-    private val http = MetadataHttpClient("Audible", throttle = ThrottleConfig(requests = 1, window = Duration.ofSeconds(3)))
+    private val http =
+        MetadataHttpClient("Audible", throttle = ThrottleConfig(requests = 1, window = Duration.ofSeconds(3)))
 
     override val name = AUDIBLE_PROVIDER_NAME
 
@@ -57,7 +58,18 @@ class AudibleMetadataAgent(
                 appendOptional("author", author)
                 appendOptional("narrator", narrator)
                 // num_results is applied before the language filter below, so a filtered search has to over-fetch
-                appendOptional("num_results", (if (languageName == null) resultCount else AUDIBLE_API_MAX_RESULTS)?.toString())
+                appendOptional(
+                    "num_results",
+                    (
+                        if (languageName ==
+                            null
+                        ) {
+                            resultCount
+                        } else {
+                            AUDIBLE_API_MAX_RESULTS
+                        }
+                    )?.toString(),
+                )
             }
         val url = apiUrl(audibleRegion, listOf("catalog", "products"), parameters)
         val products = http.getJson<AudibleApiProductsResponse>(url)?.products ?: return emptyList()
@@ -250,7 +262,10 @@ class AudibleMetadataAgent(
 
         private val browserHeaders =
             Headers.build {
-                append(HttpHeaders.UserAgent, "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0")
+                append(
+                    HttpHeaders.UserAgent,
+                    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0",
+                )
                 append(
                     HttpHeaders.Accept,
                     "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",

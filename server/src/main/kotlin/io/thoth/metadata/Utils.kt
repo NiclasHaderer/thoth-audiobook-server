@@ -35,7 +35,10 @@ internal fun MetadataSearchCount.toResultCount(maxResults: Int): Int =
         MetadataSearchCount.ExtraLarge -> maxResults
     }
 
-internal fun fullTextQuery(vararg terms: String?): String? = terms.filterNotNull().joinToString(" ").trim().ifEmpty { null }
+internal fun fullTextQuery(vararg terms: String?): String? =
+    terms.filterNotNull().joinToString(" ").trim().ifEmpty {
+        null
+    }
 
 internal fun parseDateOrNull(
     providerName: String,
@@ -57,7 +60,11 @@ internal suspend fun <T> fetchChunked(
     fetch: suspend (chunk: List<String>) -> List<T>,
 ): List<T> =
     coroutineScope {
-        ids.chunked(chunkSize).map { chunk -> async { fetch(chunk) } }.awaitAll().flatten()
+        ids
+            .chunked(chunkSize)
+            .map { chunk -> async { fetch(chunk) } }
+            .awaitAll()
+            .flatten()
     }
 
 internal fun httpsApiUrl(

@@ -30,7 +30,12 @@ class DocsUiTest {
             assertEquals(HttpStatusCode.OK, index.status)
             assertTrue(index.bodyAsText().contains("swagger-ui.css"))
 
-            for (asset in listOf("swagger-ui.css", "swagger-ui-bundle.js", "swagger-ui-standalone-preset.js", "index.css")) {
+            for (asset in listOf(
+                "swagger-ui.css",
+                "swagger-ui-bundle.js",
+                "swagger-ui-standalone-preset.js",
+                "index.css",
+            )) {
                 assertEquals(HttpStatusCode.OK, client.get("/docs/$asset").status, "asset $asset")
             }
         }

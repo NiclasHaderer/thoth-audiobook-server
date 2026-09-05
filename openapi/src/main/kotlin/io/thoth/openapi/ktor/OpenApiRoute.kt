@@ -218,7 +218,8 @@ class OpenApiRoute(
             val varMember =
                 params.properties.find { it.name == varName }
                     ?: throw IllegalStateException(
-                        "Class ${params.clazz.qualifiedName} has a path parameter $varName which is not declared as a member. " +
+                        "Class ${params.clazz.qualifiedName} has a path parameter $varName " +
+                            "which is not declared as a member. " +
                             "You have to create a property with the name $varName",
                     )
             pathParams.add(
@@ -242,7 +243,8 @@ class OpenApiRoute(
             if (param.name in takenParams) {
                 throw IllegalStateException(
                     "Class ${params.clazz.qualifiedName} has a query parameter " +
-                        "called ${param.name} which is also used in ${takenParams[param.name]!!.origin.clazz.qualifiedName}. " +
+                        "called ${param.name} which is also used in " +
+                        "${takenParams[param.name]!!.origin.clazz.qualifiedName}. " +
                         "Do not used duplicate parameters",
                 )
             }

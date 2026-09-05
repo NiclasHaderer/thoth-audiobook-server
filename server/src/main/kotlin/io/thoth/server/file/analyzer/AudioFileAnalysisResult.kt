@@ -1,8 +1,8 @@
 package io.thoth.server.file.analyzer
 
 import io.thoth.metadata.responses.MetadataLanguage
-import java.time.LocalDate
 import java.time.Instant
+import java.time.LocalDate
 
 class AudioFileAnalysisResultImpl(
     override val title: String,

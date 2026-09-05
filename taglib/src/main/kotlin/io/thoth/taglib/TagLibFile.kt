@@ -14,7 +14,9 @@ import java.nio.file.Path
  *
  * Not thread safe. Instances hold a native file handle and must be closed.
  */
-class TagLibFile(path: Path) : AutoCloseable {
+class TagLibFile(
+    path: Path,
+) : AutoCloseable {
     private val arena = Arena.ofConfined()
     private val file: MemorySegment
     private var closed = false
@@ -44,20 +46,22 @@ class TagLibFile(path: Path) : AutoCloseable {
         val keys = TagLibC.taglib_property_keys(file)
         if (keys.isNull()) return emptyMap()
         try {
-            return keys.pointers().associate { key ->
-                val values = TagLibC.taglib_property_get(file, key)
-                val strings =
-                    if (values.isNull()) {
-                        emptyList()
-                    } else {
-                        try {
-                            values.pointers().map { it.string() }
-                        } finally {
-                            TagLibC.taglib_property_free(values)
+            return keys
+                .pointers()
+                .associate { key ->
+                    val values = TagLibC.taglib_property_get(file, key)
+                    val strings =
+                        if (values.isNull()) {
+                            emptyList()
+                        } else {
+                            try {
+                                values.pointers().map { it.string() }
+                            } finally {
+                                TagLibC.taglib_property_free(values)
+                            }
                         }
-                    }
-                key.string() to strings
-            }.filterValues { it.isNotEmpty() }
+                    key.string() to strings
+                }.filterValues { it.isNotEmpty() }
         } finally {
             TagLibC.taglib_property_free(keys)
         }
@@ -148,8 +152,7 @@ class TagLibFile(path: Path) : AutoCloseable {
                     startMs = startMs,
                     endMs = null,
                 )
-            }
-            .sortedBy { it.first }
+            }.sortedBy { it.first }
             .map { it.second }
     }
 
@@ -197,11 +200,12 @@ class TagLibFile(path: Path) : AutoCloseable {
             }
         }
 
-        fun MemorySegment.string(): String =
-            reinterpret(Long.MAX_VALUE).getString(0, StandardCharsets.UTF_8)
+        fun MemorySegment.string(): String = reinterpret(Long.MAX_VALUE).getString(0, StandardCharsets.UTF_8)
 
         fun MemorySegment.stringOrNull(): String? = if (isNull()) null else string().ifEmpty { null }
     }
 }
 
-class TagLibException(message: String) : RuntimeException(message)
+class TagLibException(
+    message: String,
+) : RuntimeException(message)

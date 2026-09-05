@@ -5,9 +5,9 @@ import io.thoth.models.ListeningHistoryEntry
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.database.tables.ProgressLogRow
 import io.thoth.server.database.tables.ProgressLogTable
+import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.database.tables.UserBookProgressRow
 import io.thoth.server.database.tables.UserBookProgressTable
 import io.thoth.server.database.tables.insert
@@ -22,11 +22,11 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.sum
-import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -289,6 +289,5 @@ class ProgressRepositoryImpl :
         return row[total] ?: 0
     }
 
-    private fun readableLibraries(userId: UUID): List<UUID> =
-        resolveUserPermissions(userId).libraries.map { it.id }
+    private fun readableLibraries(userId: UUID): List<UUID> = resolveUserPermissions(userId).libraries.map { it.id }
 }

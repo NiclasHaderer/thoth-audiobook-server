@@ -3,29 +3,29 @@ package io.thoth.server.database
 import io.thoth.models.BookUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
-import io.thoth.server.database.tables.MetadataLayer
-import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.AuthorBookTable
+import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookMetadata
 import io.thoth.server.database.tables.BookMetadataRow
 import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.layer
-import io.thoth.server.database.tables.replaceBookAuthors
-import io.thoth.server.database.tables.write
 import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.layer
+import io.thoth.server.database.tables.replaceBookAuthors
+import io.thoth.server.database.tables.write
 import io.thoth.server.database.views.AuthorMetadataView
 import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.file.TrackManager
-import io.thoth.server.file.scanner.LibraryCleanup
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
+import io.thoth.server.file.scanner.LibraryCleanup
 import io.thoth.server.newAuthor
 import io.thoth.server.newBook
-import io.thoth.server.newSeries
 import io.thoth.server.newLibrary
+import io.thoth.server.newSeries
 import io.thoth.server.newUser
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
@@ -41,13 +41,13 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
+import java.time.Instant
 import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import java.time.Instant
 
 class LayeredMetadataTest : ThothTest() {
     private val bookRepository by lazy { getKoin().get<BookRepository>() }
@@ -282,7 +282,11 @@ class LayeredMetadataTest : ThothTest() {
             listOf("First Author", "Second Author"),
             getKoin().get<SeriesRepository>().let { repo ->
                 val id = transaction { repo.findByTaggedName("Shared", libId)!!.id }
-                repo.get(userId, id, libId).authors.map { it.name }.sorted()
+                repo
+                    .get(userId, id, libId)
+                    .authors
+                    .map { it.name }
+                    .sorted()
             },
             "and it is credited to both of them",
         )

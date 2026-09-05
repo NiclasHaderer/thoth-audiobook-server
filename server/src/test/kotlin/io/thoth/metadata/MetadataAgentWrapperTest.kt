@@ -13,8 +13,7 @@ class MetadataAgentWrapperTest {
     private val openLibrary =
         FakeMetadataAgent(name = "openLibrary", hits = listOf(searchHit("b", provider = "openLibrary")))
 
-    private fun wrapper() =
-        MetadataAgentWrapper(listOf(audible, openLibrary))
+    private fun wrapper() = MetadataAgentWrapper(listOf(audible, openLibrary))
 
     @Test
     fun `an ID lookup only goes to the agent it belongs to`() =

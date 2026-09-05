@@ -21,14 +21,14 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-import java.time.Duration
-import java.time.Instant
 
 class ProgressRepositoryTest : ThothTest() {
     private val progressRepository by lazy { getKoin().get<ProgressRepository>() }

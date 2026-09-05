@@ -36,9 +36,21 @@ class LibraryRevocationTest : ThothTest() {
                 HttpStatusCode.NoContent,
                 api.setBookProgress(bookId, libId, ProgressUpdateImpl(positionMs = 42000), token).status,
             )
-            assertTrue(api.listBooks(libId, headers = token).body().items.any { it.title == "Dune" })
+            assertTrue(
+                api
+                    .listBooks(libId, headers = token)
+                    .body()
+                    .items
+                    .any { it.title == "Dune" },
+            )
             assertTrue(api.getContinueListening(headers = token).body().any { it.title == "Dune" })
-            assertTrue(api.getListeningHistory(headers = token).body().items.any { it.book.title == "Dune" })
+            assertTrue(
+                api
+                    .getListeningHistory(headers = token)
+                    .body()
+                    .items
+                    .any { it.book.title == "Dune" },
+            )
 
             revoke("listener", libId)
 
@@ -49,7 +61,13 @@ class LibraryRevocationTest : ThothTest() {
             assertEquals(HttpStatusCode.Forbidden, api.getAudioFile(trackId, token).status)
 
             assertTrue(api.getContinueListening(headers = token).body().isEmpty())
-            assertTrue(api.getListeningHistory(headers = token).body().items.isEmpty())
+            assertTrue(
+                api
+                    .getListeningHistory(headers = token)
+                    .body()
+                    .items
+                    .isEmpty(),
+            )
             assertTrue(api.listLibraries(token).body().isEmpty(), "the library itself must not be listed")
 
             val search = api.searchInAllLibraries(q = "Dune", headers = token).body()
@@ -75,6 +93,13 @@ class LibraryRevocationTest : ThothTest() {
             assertTrue(api.getContinueListening(headers = token).body().isEmpty())
 
             grant("listener", libId, LibraryPermissionLevel.READONLY)
-            assertEquals(42000, api.getContinueListening(headers = token).body().single().positionMs)
+            assertEquals(
+                42000,
+                api
+                    .getContinueListening(headers = token)
+                    .body()
+                    .single()
+                    .positionMs,
+            )
         }
 }

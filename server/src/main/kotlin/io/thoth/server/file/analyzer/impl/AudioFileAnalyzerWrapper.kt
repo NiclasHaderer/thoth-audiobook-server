@@ -1,10 +1,10 @@
 package io.thoth.server.file.analyzer.impl
 
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.analyzer.AudioFileAnalyzer
 import io.thoth.server.file.tagger.ReadonlyFileTagger
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.io.path.absolute

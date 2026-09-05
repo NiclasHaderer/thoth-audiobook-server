@@ -50,4 +50,10 @@ fun cookie(
     value: String,
 ): Headers = Headers.build { append(HttpHeaders.Cookie, "$name=$value") }
 
-fun HttpResponse.authCookie(name: String) = assertNotNull(setCookie().firstOrNull { it.name == name }, "no $name cookie")
+fun HttpResponse.authCookie(name: String) =
+    assertNotNull(
+        setCookie().firstOrNull {
+            it.name == name
+        },
+        "no $name cookie",
+    )

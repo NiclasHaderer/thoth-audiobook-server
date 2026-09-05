@@ -31,9 +31,13 @@ class NumberSchemaGenerator : SchemaGenerator() {
             -> IntegerSchema().format("int64")
 
             BigInteger::class -> IntegerSchema().format("int64")
+
             BigDecimal::class -> NumberSchema().format("decimal")
+
             Float::class -> NumberSchema().format("float")
+
             Double::class -> NumberSchema().format("double")
+
             else -> NumberSchema()
         }
 

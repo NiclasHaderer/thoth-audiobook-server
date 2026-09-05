@@ -46,7 +46,11 @@ class MigratedSchemaTest : ThothTest(migrate = false) {
             buildString {
                 appendLine("${table.tableName} present=${table in present}")
                 columns[table].orEmpty().sortedBy { it.name }.forEach { appendLine("  column $it") }
-                indices[table].orEmpty().map { "  index $it" }.sorted().forEach { appendLine(it) }
+                indices[table]
+                    .orEmpty()
+                    .map { "  index $it" }
+                    .sorted()
+                    .forEach { appendLine(it) }
                 appendLine("  primaryKey ${primaryKeys[table]}")
             }
         }

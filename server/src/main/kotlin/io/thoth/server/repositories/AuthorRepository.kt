@@ -10,9 +10,6 @@ import io.thoth.models.AuthorUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.exposed.unless
-import io.thoth.server.schedules.AutoMatchRequest
-import io.thoth.server.schedules.MatchableEntity
-import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
@@ -20,32 +17,35 @@ import io.thoth.server.database.tables.AuthorAgentMetadataTable
 import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorMetadata
 import io.thoth.server.database.tables.AuthorMetadataRow
-import io.thoth.server.database.views.AuthorRow
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.AuthorUserMetadataTable
 import io.thoth.server.database.tables.BookUserMetadataTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.bookIdsLinkedToAuthor
-import io.thoth.server.database.tables.replaceBookAuthors
-import io.thoth.server.database.views.bookAuthors
-import io.thoth.server.database.views.booksToModels
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
+import io.thoth.server.database.tables.replaceBookAuthors
+import io.thoth.server.database.tables.write
+import io.thoth.server.database.views.AuthorMetadataView
+import io.thoth.server.database.views.AuthorRow
+import io.thoth.server.database.views.BookAuthorView
+import io.thoth.server.database.views.BookMetadataView
+import io.thoth.server.database.views.BookSeriesView
+import io.thoth.server.database.views.SeriesMetadataView
+import io.thoth.server.database.views.bookAuthors
+import io.thoth.server.database.views.booksToModels
 import io.thoth.server.database.views.seriesToModels
 import io.thoth.server.database.views.toAuthorRow
 import io.thoth.server.database.views.toBookRow
 import io.thoth.server.database.views.toSeriesRow
-import io.thoth.server.database.tables.write
-import io.thoth.server.database.views.AuthorMetadataView
-import io.thoth.server.database.views.BookAuthorView
-import io.thoth.server.database.views.BookSeriesView
-import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.SeriesMetadataView
+import io.thoth.server.schedules.AutoMatchRequest
+import io.thoth.server.schedules.AutoMatcher
+import io.thoth.server.schedules.MatchableEntity
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
-import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -114,8 +114,11 @@ class AuthorServiceImpl :
         transaction {
             AuthorMetadataView
                 .selectAll()
-                .where { matchesName(query) and (AuthorMetadataView.library eq libraryId) and AuthorMetadataView.visible }
-                .orderBy(AuthorMetadataView.name.lowerCase() to SortOrder.ASC)
+                .where {
+                    matchesName(
+                        query,
+                    ) and (AuthorMetadataView.library eq libraryId) and AuthorMetadataView.visible
+                }.orderBy(AuthorMetadataView.name.lowerCase() to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toAuthorRow().toModel() }
         }
@@ -350,5 +353,4 @@ private fun idInLayer(
         ?.get(AuthorTable.id)
         ?.value
 
-private fun matchesName(query: String): Op<Boolean> =
-    AuthorMetadataView.name ilike "%${escape(query)}%"
+private fun matchesName(query: String): Op<Boolean> = AuthorMetadataView.name ilike "%${escape(query)}%"

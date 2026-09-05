@@ -5,8 +5,8 @@ import io.ktor.server.auth.principal
 import io.ktor.server.request.httpMethod
 import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.utils.ThothPrincipal
-import io.thoth.models.LibraryPermissions
 import io.thoth.models.LibraryPermissionLevel
+import io.thoth.models.LibraryPermissions
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.RouteParamsKey
 import io.thoth.openapi.ktor.errors.ErrorResponse

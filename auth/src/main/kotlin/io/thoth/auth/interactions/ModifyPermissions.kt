@@ -4,10 +4,10 @@ import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothModifyPermissions
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.thothAuthConfig
- import io.thoth.auth.withUserMutation
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.thothPrincipal
 import io.thoth.auth.utils.wrap
+import io.thoth.auth.withUserMutation
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.util.UUID
 

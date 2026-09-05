@@ -5,9 +5,9 @@ import io.thoth.auth.models.ThothRegisterUser
 import io.thoth.auth.models.ThothRegisteredUser
 import io.thoth.auth.models.ThothUser
 import io.thoth.auth.thothAuthConfig
-import io.thoth.auth.withUserMutation
 import io.thoth.auth.utils.hashPassword
 import io.thoth.auth.utils.wrap
+import io.thoth.auth.withUserMutation
 import io.thoth.openapi.ktor.errors.ErrorResponse
 
 interface ThothRegisterParams

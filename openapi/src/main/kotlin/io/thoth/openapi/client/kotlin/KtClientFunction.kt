@@ -1,9 +1,9 @@
 package io.thoth.openapi.client.kotlin
 
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.client.common.mappedKtReference
 import io.thoth.openapi.ktor.OpenApiRoute
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
 
 class KtClientFunction(
     private val getRouteName: (OpenApiRoute) -> String?,
@@ -84,12 +84,17 @@ class KtClientFunction(
             getParameters(route, impl).forEach { append("        $it\n") }
             val functionRunner =
                 when (errorHandling) {
-                    KtErrorHandling.Result ->
+                    KtErrorHandling.Result -> {
                         "= runCatching" to "Result<OpenApiHttpResponse<${responseBody.reference()}>>"
+                    }
 
-                    KtErrorHandling.Exception -> "= run" to "OpenApiHttpResponse<${responseBody.reference()}>"
-                    KtErrorHandling.Either ->
+                    KtErrorHandling.Exception -> {
+                        "= run" to "OpenApiHttpResponse<${responseBody.reference()}>"
+                    }
+
+                    KtErrorHandling.Either -> {
                         "= wrapInEither" to "Either<OpenApiHttpResponse<${responseBody.reference()}>, ApiError>"
+                    }
                 }
             append("    ): ${functionRunner.second}")
             if (!impl) {
@@ -108,7 +113,9 @@ class KtClientFunction(
             append("                shouldLogin = ${route.secured != null},\n")
             append("                securitySchema = \"${route.secured?.name}\",\n")
             if (route.queryParameters.isNotEmpty()) {
-                val entries = route.queryParameters.joinToString(", ") { (param) -> "\"${param.name}\" to ${param.name}" }
+                val entries = route.queryParameters.joinToString(
+                    ", ",
+                ) { (param) -> "\"${param.name}\" to ${param.name}" }
                 append("                queryParameters = mapOf($entries),\n")
             }
             append("            ),\n")

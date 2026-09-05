@@ -3,12 +3,12 @@ package io.thoth.auth.interactions
 import io.ktor.server.routing.RoutingContext
 import io.thoth.auth.models.ThothChangePassword
 import io.thoth.auth.thothAuthConfig
-import io.thoth.auth.withUserMutation
 import io.thoth.auth.utils.ThothPrincipal
 import io.thoth.auth.utils.generateJwtPairForUser
 import io.thoth.auth.utils.hashPassword
 import io.thoth.auth.utils.passwordMatches
 import io.thoth.auth.utils.thothPrincipal
+import io.thoth.auth.withUserMutation
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import java.util.UUID
 

@@ -6,8 +6,8 @@ import io.thoth.models.NamedId
 import io.thoth.models.PlayStatus
 import io.thoth.models.TitledId
 import io.thoth.server.database.tables.TracksTable
-import io.thoth.server.database.tables.UserBookProgressTable
 import io.thoth.server.database.tables.UserBookProgressRow
+import io.thoth.server.database.tables.UserBookProgressTable
 import io.thoth.server.database.tables.toUserBookProgressRow
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow

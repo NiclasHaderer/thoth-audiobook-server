@@ -100,7 +100,11 @@ internal class MetadataHttpClient(
         }
         if (!response.status.isSuccess()) {
             val errorBody = runCatching { response.bodyAsText() }.getOrNull()
-            log.debug { "$providerName request to $url returned ${response.status}: ${errorBody?.take(MAX_LOGGED_BODY)}" }
+            log.debug {
+                "$providerName request to $url returned ${response.status}: ${errorBody?.take(
+                    MAX_LOGGED_BODY,
+                )}"
+            }
             throw MetadataProviderUnavailableException("$providerName request to $url returned ${response.status}")
         }
 
@@ -121,7 +125,7 @@ internal class MetadataHttpClient(
         } catch (e: SerializationException) {
             throw MetadataProviderUnavailableException(
                 "Could not deserialize the $providerName API response of $url",
-                e
+                e,
             )
         }
     }

@@ -5,9 +5,9 @@ import io.thoth.models.Narrator
 import io.thoth.models.NarratorDetailed
 import io.thoth.models.PaginatedResponse
 import io.thoth.openapi.ktor.get
+import io.thoth.server.plugins.auth.thothPrincipal
 import io.thoth.server.repositories.NarratorRepository
 import org.koin.ktor.ext.inject
-import io.thoth.server.plugins.auth.thothPrincipal
 
 fun Routing.narratorRouting() {
     val narratorRepository by inject<NarratorRepository>()
@@ -21,5 +21,7 @@ fun Routing.narratorRouting() {
         )
     }
 
-    get<Api.Libraries.Id.Narrators.Name, NarratorDetailed> { narratorRepository.get(thothPrincipal().userId, it.name, it.libraryId) }
+    get<Api.Libraries.Id.Narrators.Name, NarratorDetailed> {
+        narratorRepository.get(thothPrincipal().userId, it.name, it.libraryId)
+    }
 }

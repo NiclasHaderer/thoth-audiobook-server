@@ -7,11 +7,11 @@ import io.thoth.models.Library
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.extensions.json
-import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
-import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
@@ -27,6 +27,7 @@ object LibrariesTable : UUIDTable("Libraries") {
             }
         }
     val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
+
     // Deliberately unconstrained: a library with no agents just does no online metadata lookups.
     val metadataAgents = json<List<NamedMetadataAgent>>("metadataAgents")
     val combineMetadataAgentFields = bool("combineMetadataAgentFields").default(true)

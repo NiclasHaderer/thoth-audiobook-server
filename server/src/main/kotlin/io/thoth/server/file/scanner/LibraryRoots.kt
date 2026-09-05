@@ -31,7 +31,12 @@ class LibraryRoots {
                 ?.toRoot()
         }
 
-    fun owning(path: Path): LibraryEntityModel? = all().firstOrNull { library -> library.folders.any { path.startsWith(it) } }
+    fun owning(path: Path): LibraryEntityModel? =
+        all().firstOrNull { library ->
+            library.folders.any {
+                path.startsWith(it)
+            }
+        }
 
     private fun ResultRow.toRoot() =
         LibraryEntityModel(

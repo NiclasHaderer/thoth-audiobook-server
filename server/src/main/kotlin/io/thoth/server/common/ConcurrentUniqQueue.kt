@@ -5,7 +5,7 @@ import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.milliseconds
 
 class ConcurrentUniqQueue<T>(
-    private val covers: (wider: T, narrower: T) -> Boolean = { _, _ -> false }
+    private val covers: (wider: T, narrower: T) -> Boolean = { _, _ -> false },
 ) {
     private val lock = ReentrantLock()
     private val notEmpty = lock.newCondition()
@@ -34,11 +34,12 @@ class ConcurrentUniqQueue<T>(
 
     fun pop(): T? = lock.withLock { entries.removeFirstOrNull() }
 
-    fun poll(): T? = lock.withLock {
-        var remaining = 10.milliseconds.inWholeNanoseconds
-        while (entries.isEmpty() && remaining > 0) remaining = notEmpty.awaitNanos(remaining)
-        entries.removeFirstOrNull()
-    }
+    fun poll(): T? =
+        lock.withLock {
+            var remaining = 10.milliseconds.inWholeNanoseconds
+            while (entries.isEmpty() && remaining > 0) remaining = notEmpty.awaitNanos(remaining)
+            entries.removeFirstOrNull()
+        }
 
     fun removeAll(predicate: (T) -> Boolean) = lock.withLock { entries.removeAll(predicate) }
 

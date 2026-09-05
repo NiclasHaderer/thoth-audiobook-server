@@ -2,26 +2,26 @@ package io.thoth.server.file
 
 import io.thoth.models.FileScanner
 import io.thoth.server.ThothTest
-import io.thoth.server.pngBytes
+import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookUserMetadataTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageTable
+import io.thoth.server.database.tables.SeriesBookTable
+import io.thoth.server.database.tables.SeriesTable
+import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.write
 import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.database.views.SeriesMetadataView
 import io.thoth.server.database.views.bookSeries
 import io.thoth.server.database.views.seriesGenres
-import io.thoth.server.database.access.getOrCreateImage
-import io.thoth.server.database.tables.SeriesBookTable
-import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.scanner.LibraryRoots
 import io.thoth.server.newLibrary
+import io.thoth.server.pngBytes
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
@@ -30,6 +30,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
+import java.time.Instant
 import java.util.UUID
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.isDirectory
@@ -38,7 +39,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
-import java.time.Instant
 
 class TrackManagerTest : ThothTest() {
     private val trackManager by lazy { getKoin().get<TrackManager>() }

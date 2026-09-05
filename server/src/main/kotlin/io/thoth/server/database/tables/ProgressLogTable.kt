@@ -1,11 +1,11 @@
 package io.thoth.server.database.tables
 
+import io.thoth.server.database.extensions.timestampMillis
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.jdbc.insert
-import io.thoth.server.database.extensions.timestampMillis
 import java.time.Instant
 import java.util.UUID
 

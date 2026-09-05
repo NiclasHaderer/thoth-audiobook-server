@@ -4,6 +4,7 @@ import com.cronutils.model.Cron
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
+
 fun String.replaceAll(
     values: List<Regex>,
     newValue: String,

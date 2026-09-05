@@ -1,14 +1,14 @@
 package io.thoth.server.file.tagger
 
-import io.thoth.server.common.extensions.lastModifiedInstant
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.server.common.extensions.canonicalString
+import io.thoth.server.common.extensions.lastModifiedInstant
 import io.thoth.taglib.TagLibFile
 import java.nio.file.Path
+import java.time.Instant
 import java.time.LocalDate
 import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.nameWithoutExtension
-import java.time.Instant
 
 class ReadonlyFileTagger(
     filePath: Path,

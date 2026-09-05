@@ -7,8 +7,8 @@ import io.thoth.server.common.extensions.canonical
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.newLibrary
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,7 +88,11 @@ class LibraryWatcherTest : ThothTest() {
 
     private fun titles() =
         transaction {
-            BookMetadataView.selectAll().where { BookMetadataView.visible }.map { it[BookMetadataView.title] }.sorted()
+            BookMetadataView
+                .selectAll()
+                .where { BookMetadataView.visible }
+                .map { it[BookMetadataView.title] }
+                .sorted()
         }
 
     private fun tracks() = transaction { TracksTable.selectAll().count() }

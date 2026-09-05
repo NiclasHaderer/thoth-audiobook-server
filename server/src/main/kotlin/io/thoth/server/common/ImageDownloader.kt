@@ -8,8 +8,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.takeFrom
-import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.ktor.utils.io.readAvailable
+import io.thoth.openapi.ktor.errors.ErrorResponse
 import kotlinx.coroutines.runBlocking
 import java.net.InetAddress
 import java.util.Base64
@@ -76,11 +76,13 @@ class ImageDownloader(
         return client.prepareGet(url).execute { response ->
             val location = response.headers[HttpHeaders.Location]
             when {
-                response.status.isRedirect() && location != null ->
+                response.status.isRedirect() && location != null -> {
                     Outcome.Redirect(URLBuilder(url).takeFrom(location).buildString())
+                }
 
-                response.status != HttpStatusCode.OK ->
+                response.status != HttpStatusCode.OK -> {
                     throw ErrorResponse.userError("Image URL returned ${response.status.value}")
+                }
 
                 else -> {
                     val declared = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
@@ -117,8 +119,7 @@ private suspend fun io.ktor.utils.io.ByteReadChannel.readCapped(): ByteArray {
     return out.toByteArray()
 }
 
-private fun imageTooLarge() =
-    ErrorResponse.userError("Image is larger than ${MAX_IMAGE_BYTES / (1024 * 1024)} MiB")
+private fun imageTooLarge() = ErrorResponse.userError("Image is larger than ${MAX_IMAGE_BYTES / (1024 * 1024)} MiB")
 
 // Rejects everything that is not an ordinary public http(s) endpoint
 private fun publicHttpUrl(target: String): String {
@@ -155,8 +156,10 @@ private fun InetAddress.isPrivate(): Boolean {
     return when (bytes.size) {
         // 100.64.0.0/10 carrier grade NAT, and 0.0.0.0/8 "this network"
         4 -> (bytes[0].toInt() and 0xFF == 100 && (bytes[1].toInt() and 0xC0) == 64) || bytes[0].toInt() == 0
+
         // fc00::/7 unique local addresses, which isSiteLocalAddress does not cover
         16 -> (bytes[0].toInt() and 0xFE) == 0xFC
+
         else -> false
     }
 }

@@ -13,13 +13,13 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.UUID
-import java.io.IOException
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -69,8 +69,7 @@ data class ScanRequest(
 )
 
 @OptIn(ExperimentalAtomicApi::class)
-class LibraryImportPipeline :
-    KoinComponent {
+class LibraryImportPipeline : KoinComponent {
     private val log = logger {}
     private val config by inject<ThothConfig>()
     private val trackManager by inject<TrackManager>()
@@ -103,7 +102,7 @@ class LibraryImportPipeline :
         var noNewFilesWillBeAdded = false
     }
 
-    /* Not thread safe*/
+    // Not thread safe
     fun start() {
         if (!running.compareAndSet(expectedValue = false, newValue = true)) return
         dbWriter = startWriter()
@@ -111,7 +110,7 @@ class LibraryImportPipeline :
         log.info { "Import pipeline started with ${watchWorkers.size} worker(s)" }
     }
 
-    /* Not thread safe*/
+    // Not thread safe
     fun stop() {
         if (!running.compareAndSet(expectedValue = true, newValue = false)) return
         watchWorkers.forEach {

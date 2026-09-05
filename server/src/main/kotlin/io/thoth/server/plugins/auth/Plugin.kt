@@ -61,7 +61,10 @@ fun Application.configureAuthentication() {
 
         configureGuard(Guards.Normal) { user, _ -> ThothPrincipalImpl(user.id) }
 
-        configureGuard(Guards.Media, authHeader = bearerFromHeaderOrCookie("access")) { user, _ -> ThothPrincipalImpl(user.id) }
+        configureGuard(
+            Guards.Media,
+            authHeader = bearerFromHeaderOrCookie("access"),
+        ) { user, _ -> ThothPrincipalImpl(user.id) }
 
         configureGuard(Guards.Admin) { user, setError ->
             ThothPrincipalImpl(user.id).takeIf { it.permissions.isAdmin } ?: run {

@@ -1,5 +1,7 @@
 package io.thoth.openapi.ktor.errors
 
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
@@ -15,8 +17,6 @@ import io.ktor.server.plugins.statuspages.StatusPagesConfig
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
-import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging
 
 @PublishedApi
 internal fun logCommitted(
@@ -53,7 +53,7 @@ class ErrorStatuses
         @PublishedApi internal val config: StatusPagesConfig,
         @PublishedApi internal val logger: KLogger,
     ) {
-    inline fun <reified T : Throwable> status(statusCode: HttpStatusCode) {
+        inline fun <reified T : Throwable> status(statusCode: HttpStatusCode) {
             config.exception<T>(formatException(logger, statusCode) { logger.warn(it) { it.message } })
         }
     }

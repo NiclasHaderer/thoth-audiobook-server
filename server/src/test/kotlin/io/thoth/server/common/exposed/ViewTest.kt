@@ -73,8 +73,7 @@ private object SwappedCompatibleView : View("SwappedCompatible") {
     val website = text("website")
     val name = text("name")
 
-    override fun body() =
-        AuthorFileMetadataTable.select(AuthorFileMetadataTable.name, AuthorFileMetadataTable.website)
+    override fun body() = AuthorFileMetadataTable.select(AuthorFileMetadataTable.name, AuthorFileMetadataTable.website)
 }
 
 private object UnaliasedView : View("Unaliased") {

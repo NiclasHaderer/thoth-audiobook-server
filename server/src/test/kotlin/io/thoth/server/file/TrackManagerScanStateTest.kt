@@ -13,13 +13,13 @@ import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.FileTime
+import java.time.Instant
 import java.util.UUID
 import kotlin.io.path.createFile
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import java.time.Instant
 
 class TrackManagerScanStateTest : ThothTest() {
     private val trackManager by lazy { getKoin().get<TrackManager>() }

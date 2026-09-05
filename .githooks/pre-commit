@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACM -- '*.kt' '*.kts')
+[ -z "$staged" ] && exit 0
+
+out=$(./gradlew ktlintFormat --quiet 2>&1) || {
+    echo "$out" >&2
+    exit 1
+}
+
+echo "$staged" | tr '\n' '\0' | xargs -0 git add --

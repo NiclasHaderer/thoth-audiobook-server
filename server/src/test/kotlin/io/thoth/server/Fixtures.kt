@@ -5,7 +5,6 @@ import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.FileScanner
 import io.thoth.models.LibraryPermissionLevel
 import io.thoth.models.NamedMetadataAgent
-import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorMetadataRow
 import io.thoth.server.database.tables.AuthorTable
@@ -16,22 +15,23 @@ import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.LibraryUserTable
-import io.thoth.server.database.tables.UserRow
-import io.thoth.server.database.tables.UsersTable
-import io.thoth.server.database.tables.replaceBookAuthors
+import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesMetadataRow
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.UserRow
+import io.thoth.server.database.tables.UsersTable
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.insert
+import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.write
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.util.UUID
 import java.time.Instant
+import java.util.UUID
 
 // Cover art is only stored if it sniffs as a real image, so test art needs a valid header
 fun pngBytes(vararg payload: Byte): ByteArray =

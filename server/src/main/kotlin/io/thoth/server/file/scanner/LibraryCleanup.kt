@@ -34,8 +34,8 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.union
-import java.util.UUID
 import java.time.Instant
+import java.util.UUID
 
 class LibraryCleanup {
     // Only ever correct straight after a completed scan: anything the walk did not stamp is treated as gone,

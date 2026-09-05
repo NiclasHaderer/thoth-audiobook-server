@@ -11,43 +11,43 @@ import io.thoth.models.SeriesUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.exposed.unless
-import io.thoth.server.schedules.AutoMatchRequest
-import io.thoth.server.schedules.MatchableEntity
-import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.SeriesAgentMetadataTable
 import io.thoth.server.database.tables.MetadataLayer
+import io.thoth.server.database.tables.SeriesAgentMetadataTable
 import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesMetadata
 import io.thoth.server.database.tables.SeriesMetadataRow
-import io.thoth.server.database.views.SeriesRow
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.SeriesUserMetadataTable
 import io.thoth.server.database.tables.bookIdsLinkedToSeries
-import io.thoth.server.database.views.bookSeries
-import io.thoth.server.database.views.booksToModels
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookSeries
+import io.thoth.server.database.tables.write
+import io.thoth.server.database.views.AuthorMetadataView
+import io.thoth.server.database.views.BookAuthorView
+import io.thoth.server.database.views.BookMetadataView
+import io.thoth.server.database.views.BookRow
+import io.thoth.server.database.views.BookSeriesView
+import io.thoth.server.database.views.SeriesMetadataView
+import io.thoth.server.database.views.SeriesRow
+import io.thoth.server.database.views.bookSeries
+import io.thoth.server.database.views.booksToModels
 import io.thoth.server.database.views.seriesToModels
 import io.thoth.server.database.views.toBookRow
 import io.thoth.server.database.views.toModel
 import io.thoth.server.database.views.toSeriesRow
-import io.thoth.server.database.tables.write
-import io.thoth.server.database.views.AuthorMetadataView
-import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.BookAuthorView
-import io.thoth.server.database.views.BookSeriesView
-import io.thoth.server.database.views.BookRow
-import io.thoth.server.database.views.SeriesMetadataView
+import io.thoth.server.schedules.AutoMatchRequest
+import io.thoth.server.schedules.AutoMatcher
+import io.thoth.server.schedules.MatchableEntity
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.lowerCase
-import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -133,7 +133,7 @@ class SeriesRepositoryImpl :
         order: SortOrder,
         limit: Int,
         offset: Long,
-          showInvisible: Boolean,
+        showInvisible: Boolean,
     ): List<Series> =
         transaction {
             val rows =
@@ -141,8 +141,7 @@ class SeriesRepositoryImpl :
                     .selectAll()
                     .where {
                         (SeriesMetadataView.library eq libraryId) and SeriesMetadataView.visible.unless(showInvisible)
-                    }
-                    .orderBy(SeriesMetadataView.title.lowerCase() to order)
+                    }.orderBy(SeriesMetadataView.title.lowerCase() to order)
                     .offset(offset)
                     .limit(limit)
                     .map { it.toSeriesRow() }
@@ -158,8 +157,10 @@ class SeriesRepositoryImpl :
             val rows =
                 SeriesMetadataView
                     .selectAll()
-                    .where { matchesTitle(query) and (SeriesMetadataView.library eq libraryId) and SeriesMetadataView.visible }
-                    .orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
+                    .where {
+                        matchesTitle(query) and (SeriesMetadataView.library eq libraryId) and
+                            SeriesMetadataView.visible
+                    }.orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toSeriesRow() }
             seriesToModels(rows)
@@ -364,5 +365,4 @@ private fun idInLayer(
         ?.get(SeriesTable.id)
         ?.value
 
-private fun matchesTitle(query: String): Op<Boolean> =
-    SeriesMetadataView.title ilike "%${escape(query)}%"
+private fun matchesTitle(query: String): Op<Boolean> = SeriesMetadataView.title ilike "%${escape(query)}%"

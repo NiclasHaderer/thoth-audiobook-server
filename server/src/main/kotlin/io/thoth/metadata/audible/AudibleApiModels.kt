@@ -90,7 +90,8 @@ internal data class AudibleApiProduct(
 
     private fun cleanTitle(region: AudibleRegions): String? = title?.replaceAll(region.titleReplacers, "")?.trim()
 
-    private fun coverURL(imageSize: Int): String? = productImages[imageSize.toString()] ?: productImages.values.firstOrNull()
+    private fun coverURL(imageSize: Int): String? =
+        productImages[imageSize.toString()] ?: productImages.values.firstOrNull()
 }
 
 @Serializable

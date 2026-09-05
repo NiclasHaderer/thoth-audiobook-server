@@ -2,9 +2,9 @@ package io.thoth.server.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.migrations.DatabaseMigrator
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect

@@ -44,10 +44,13 @@ class DatabaseMigrator {
 
     private val databaseVersions: List<DatabaseVersion> by lazy {
         val versions =
-            ClassGraph().acceptPackages(packageName).enableClassInfo().scan().use { scan ->
-                scan.getSubclasses(Migration::class.java).loadClasses(Migration::class.java)
-            }
-                .map {
+            ClassGraph()
+                .acceptPackages(packageName)
+                .enableClassInfo()
+                .scan()
+                .use { scan ->
+                    scan.getSubclasses(Migration::class.java).loadClasses(Migration::class.java)
+                }.map {
                     val versionMatch =
                         classNameMatcher.matchEntire(it.simpleName)
                             ?: error("Migration class ${it.name} does not match the '<version>_<name>' pattern")
@@ -83,7 +86,9 @@ class DatabaseMigrator {
     private fun migrateTo(latestDbVersion: Int) {
         val latestMigrationVersion = databaseVersions.last().version
         if (latestDbVersion > latestMigrationVersion) {
-            log.error { "Database version $latestDbVersion is newer than the latest known migration $latestMigrationVersion" }
+            log.error {
+                "Database version $latestDbVersion is newer than the latest known migration $latestMigrationVersion"
+            }
             throw IllegalStateException(
                 "The database is at version $latestDbVersion, but this Thoth build only knows migrations up to " +
                     "$latestMigrationVersion. It was probably used by a newer Thoth version. " +

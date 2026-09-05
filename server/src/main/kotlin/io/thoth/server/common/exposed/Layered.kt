@@ -6,7 +6,6 @@ import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.alias
 
-
 class Layered<T>(
     private val user: Column<T>,
     private val agent: Column<T>,
@@ -32,6 +31,7 @@ class Layered<T>(
         }
     }
 }
+
 /**
  * Resolves one metadata field across the three source layers: a user value always wins, and
  * [preferFile] decides whether the file tags or the metadata agent gets the next say.

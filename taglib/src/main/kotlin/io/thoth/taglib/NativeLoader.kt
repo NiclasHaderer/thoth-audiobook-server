@@ -97,11 +97,18 @@ internal object NativeLoader {
         val home = System.getProperty("user.home") ?: throw IOException("user.home is not set")
         val base =
             when (osName) {
-                "macos" -> Path.of(home, "Library", "Caches")
-                "windows" -> System.getenv("LOCALAPPDATA")?.let(Path::of) ?: Path.of(home, "AppData", "Local")
-                else ->
+                "macos" -> {
+                    Path.of(home, "Library", "Caches")
+                }
+
+                "windows" -> {
+                    System.getenv("LOCALAPPDATA")?.let(Path::of) ?: Path.of(home, "AppData", "Local")
+                }
+
+                else -> {
                     System.getenv("XDG_CACHE_HOME")?.takeIf { it.isNotBlank() }?.let(Path::of)
                         ?: Path.of(home, ".cache")
+                }
             }
         return base.resolve("thoth-taglib")
     }
