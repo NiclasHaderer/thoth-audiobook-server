@@ -30,7 +30,6 @@ import io.thoth.server.newAuthor
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
 import io.thoth.server.newSeries
-import io.thoth.server.newTrack
 import io.thoth.server.registerWithAccess
 import io.thoth.server.repositories.refreshSeriesDeferral
 import io.thoth.server.thothServer

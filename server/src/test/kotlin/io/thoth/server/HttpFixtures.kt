@@ -14,11 +14,6 @@ import kotlin.test.assertEquals
 
 const val TEST_PASSWORD = "hunter22"
 
-/**
- * Boots the production plugin and routing stack against the harness database, and registers the first
- * account up front: registration makes the first user an admin, so anyone created inside [block] is a
- * normal user whose access is exactly what the test grants.
- */
 fun thothServer(block: suspend ApplicationTestBuilder.() -> Unit) =
     testApplication {
         application {
