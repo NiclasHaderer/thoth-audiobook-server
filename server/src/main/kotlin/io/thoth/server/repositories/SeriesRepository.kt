@@ -14,9 +14,21 @@ import io.thoth.server.common.exposed.unless
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
+import io.thoth.server.database.rows.BookRow
+import io.thoth.server.database.rows.SeriesRow
+import io.thoth.server.database.rows.bookSeries
+import io.thoth.server.database.rows.booksToModels
+import io.thoth.server.database.rows.seriesToModels
+import io.thoth.server.database.rows.toBookRow
+import io.thoth.server.database.rows.toModel
+import io.thoth.server.database.rows.toSeriesRow
+import io.thoth.server.database.tables.AuthorBookTable
+import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookUserMetadataTable
+import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesAgentMetadataTable
+import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesMetadata
 import io.thoth.server.database.tables.SeriesMetadataRow
@@ -26,20 +38,8 @@ import io.thoth.server.database.tables.bookIdsLinkedToSeries
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookSeries
+import io.thoth.server.database.tables.resolvedSeriesLinks
 import io.thoth.server.database.tables.write
-import io.thoth.server.database.views.AuthorMetadataView
-import io.thoth.server.database.views.BookAuthorView
-import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.BookRow
-import io.thoth.server.database.views.BookSeriesView
-import io.thoth.server.database.views.SeriesMetadataView
-import io.thoth.server.database.views.SeriesRow
-import io.thoth.server.database.views.bookSeries
-import io.thoth.server.database.views.booksToModels
-import io.thoth.server.database.views.seriesToModels
-import io.thoth.server.database.views.toBookRow
-import io.thoth.server.database.views.toModel
-import io.thoth.server.database.views.toSeriesRow
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.MatchableEntity
@@ -47,7 +47,6 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -105,9 +104,9 @@ class SeriesRepositoryImpl :
         libraryId: UUID,
     ): SeriesRow =
         transaction {
-            SeriesMetadataView
+            SeriesTable
                 .selectAll()
-                .where { SeriesMetadataView.id eq id and (SeriesMetadataView.library eq libraryId) }
+                .where { SeriesTable.id eq id and (SeriesTable.library eq libraryId) }
                 .firstOrNull()
                 ?.toSeriesRow()
                 ?: throw ErrorResponse.notFound("Series", id)
@@ -137,11 +136,11 @@ class SeriesRepositoryImpl :
     ): List<Series> =
         transaction {
             val rows =
-                SeriesMetadataView
+                SeriesTable
                     .selectAll()
                     .where {
-                        (SeriesMetadataView.library eq libraryId) and SeriesMetadataView.visible.unless(showInvisible)
-                    }.orderBy(SeriesMetadataView.title.lowerCase() to order)
+                        (SeriesTable.library eq libraryId) and SeriesTable.visible.unless(showInvisible)
+                    }.orderBy(SeriesTable.title to order)
                     .offset(offset)
                     .limit(limit)
                     .map { it.toSeriesRow() }
@@ -155,27 +154,12 @@ class SeriesRepositoryImpl :
     ): List<Series> =
         transaction {
             val rows =
-                SeriesMetadataView
+                SeriesTable
                     .selectAll()
                     .where {
-                        matchesTitle(query) and (SeriesMetadataView.library eq libraryId) and
-                            SeriesMetadataView.visible
-                    }.orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
-                    .limit(searchLimit)
-                    .map { it.toSeriesRow() }
-            seriesToModels(rows)
-        }
-
-    override fun search(
-        userId: UUID,
-        query: String,
-    ): List<Series> =
-        transaction {
-            val rows =
-                SeriesMetadataView
-                    .selectAll()
-                    .where { matchesTitle(query) and SeriesMetadataView.visible }
-                    .orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
+                        matchesTitle(query) and (SeriesTable.library eq libraryId) and
+                            SeriesTable.visible
+                    }.orderBy(SeriesTable.title to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toSeriesRow() }
             seriesToModels(rows)
@@ -192,7 +176,7 @@ class SeriesRepositoryImpl :
     ): SeriesRow =
         transaction {
             log.info { "Created series: $seriesName" }
-            val id = SeriesTable.create(libraryRepository.raw(libraryId).id)
+            val id = SeriesTable.create(libraryRepository.raw(libraryId).id, seriesName)
             SeriesFileMetadataTable.write(SeriesMetadataRow(series = id, title = seriesName))
             autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.SERIES, id, libraryId))
             raw(id, libraryId)
@@ -207,6 +191,7 @@ class SeriesRepositoryImpl :
             val id =
                 SeriesTable.create(
                     libraryRepository.raw(libraryId).id,
+                    seriesName,
                     deferDeletionUntil = Instant.now().plus(DEFER_DELETION_GRACE),
                 )
             SeriesUserMetadataTable.write(SeriesMetadataRow(series = id, title = seriesName))
@@ -265,11 +250,10 @@ class SeriesRepositoryImpl :
 
     context(_: Transaction)
     private fun resolvedBooks(seriesId: UUID): List<BookRow> =
-        BookMetadataView
-            .join(BookSeriesView, JoinType.INNER, BookMetadataView.id, BookSeriesView.book)
+        resolvedSeriesLinks
             .selectAll()
-            .where { (BookSeriesView.series eq seriesId) and BookMetadataView.visible }
-            .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
+            .where { (SeriesBookTable.series eq seriesId) and BooksTable.visible }
+            .orderBy(BooksTable.title to SortOrder.ASC)
             .map { it.toBookRow() }
 
     override fun autoMatch(
@@ -314,12 +298,13 @@ class SeriesRepositoryImpl :
     }
 
     private fun seriesAuthorNames(seriesId: UUID): List<String> =
-        BookSeriesView
-            .join(BookAuthorView, JoinType.INNER, BookSeriesView.book, BookAuthorView.book)
-            .join(AuthorMetadataView, JoinType.INNER, BookAuthorView.author, AuthorMetadataView.id)
-            .select(AuthorMetadataView.name)
-            .where { BookSeriesView.series eq seriesId }
-            .map { it[AuthorMetadataView.name] }
+        resolvedSeriesLinks
+            .join(AuthorBookTable, JoinType.INNER, SeriesBookTable.book, AuthorBookTable.book) {
+                AuthorBookTable.addedBy eq BooksTable.authorsFrom
+            }.join(AuthorTable, JoinType.INNER, AuthorBookTable.authors, AuthorTable.id)
+            .select(AuthorTable.name)
+            .where { SeriesBookTable.series eq seriesId }
+            .map { it[AuthorTable.name] }
             .distinct()
 
     private data class AutoMatchQuery(
@@ -365,4 +350,4 @@ private fun idInLayer(
         ?.get(SeriesTable.id)
         ?.value
 
-private fun matchesTitle(query: String): Op<Boolean> = SeriesMetadataView.title ilike "%${escape(query)}%"
+private fun matchesTitle(query: String): Op<Boolean> = SeriesTable.title ilike "%${escape(query)}%"

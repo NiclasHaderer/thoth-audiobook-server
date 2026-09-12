@@ -17,6 +17,8 @@ import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.SeriesUserMetadataTable
 import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.resolvedAuthorLinks
+import io.thoth.server.database.tables.resolvedSeriesLinks
 import io.thoth.server.repositories.stampDeferral
 import io.thoth.server.repositories.visiblyLinked
 import org.jetbrains.exposed.v1.core.Column
@@ -57,12 +59,14 @@ class LibraryCleanup {
             val now = Instant.now()
             // Books first: deleting them cascades the link rows away, which is what leaves the authors
             // and series below without books.
+            val bookHasNoTrack = BooksTable.id notInSubQuery TracksTable.select(TracksTable.book)
             reap(
                 table = BooksTable,
                 library = BooksTable.library,
                 deferUntil = BooksTable.deferDeletionUntil,
                 libraryId = libraryId,
-                orphaned = BooksTable.id notInSubQuery TracksTable.select(TracksTable.book),
+                hidden = bookHasNoTrack,
+                deletable = bookHasNoTrack,
                 now = now,
             )
             reap(
@@ -70,7 +74,8 @@ class LibraryCleanup {
                 library = AuthorTable.library,
                 deferUntil = AuthorTable.deferDeletionUntil,
                 libraryId = libraryId,
-                orphaned = AuthorTable.id notInSubQuery visiblyLinked(AuthorBookTable, AuthorBookTable.authors),
+                hidden = AuthorTable.id notInSubQuery visiblyLinked(resolvedAuthorLinks, AuthorBookTable.authors),
+                deletable = AuthorTable.id notInSubQuery AuthorBookTable.select(AuthorBookTable.authors),
                 now = now,
             )
             reap(
@@ -78,26 +83,30 @@ class LibraryCleanup {
                 library = SeriesTable.library,
                 deferUntil = SeriesTable.deferDeletionUntil,
                 libraryId = libraryId,
-                orphaned = SeriesTable.id notInSubQuery visiblyLinked(SeriesBookTable, SeriesBookTable.series),
+                hidden = SeriesTable.id notInSubQuery visiblyLinked(resolvedSeriesLinks, SeriesBookTable.series),
+                deletable = SeriesTable.id notInSubQuery SeriesBookTable.select(SeriesBookTable.series),
                 now = now,
             )
 
             removeOrphanedImages()
         }
 
-    // One cleanup stamps the orphan with a deadline, the first cleanup past that deadline deletes it
+    // One cleanup stamps the orphan with a deadline, the first cleanup past that deadline deletes it.
+    // `hidden` and `deletable` differ for authors and series: a link from a layer that no longer owns the
+    // relation hides what it points at but still keeps the row, so that layer can claim it back.
     context(_: Transaction)
     private fun reap(
         table: Table,
         library: Column<EntityID<UUID>>,
         deferUntil: Column<Instant?>,
         libraryId: UUID,
-        orphaned: Op<Boolean>,
+        hidden: Op<Boolean>,
+        deletable: Op<Boolean>,
         now: Instant,
     ) {
         val inLibrary = library eq libraryId
-        table.deleteWhere { inLibrary and orphaned and (deferUntil lessEq now) }
-        stampDeferral(table, deferUntil, inLibrary, orphaned, now)
+        table.deleteWhere { inLibrary and deletable and (deferUntil lessEq now) }
+        stampDeferral(table, deferUntil, inLibrary, hidden, now)
     }
 
     fun removeOrphanedImages(): Unit =

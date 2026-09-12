@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -63,6 +64,7 @@ fun replaceBookAuthors(
             it[AuthorBookTable.addedBy] = source
         }
     }
+    reconcileBook(bookId)
 }
 
 context(_: Transaction)
@@ -84,4 +86,23 @@ fun replaceBookSeries(
             }
         }
     }
+    reconcileBook(bookId)
 }
+
+val resolvedAuthorLinks
+    get() =
+        AuthorBookTable.join(
+            BooksTable,
+            JoinType.INNER,
+            AuthorBookTable.book,
+            BooksTable.id,
+        ) { AuthorBookTable.addedBy eq BooksTable.authorsFrom }
+
+val resolvedSeriesLinks
+    get() =
+        SeriesBookTable.join(
+            BooksTable,
+            JoinType.INNER,
+            SeriesBookTable.book,
+            BooksTable.id,
+        ) { SeriesBookTable.addedBy eq BooksTable.seriesFrom }

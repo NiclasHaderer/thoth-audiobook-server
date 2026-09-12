@@ -5,19 +5,19 @@ import io.thoth.models.Book
 import io.thoth.models.LibrarySearchResult
 import io.thoth.models.Series
 import io.thoth.server.common.extensions.fuzzy
-import io.thoth.server.database.views.AuthorMetadataView
-import io.thoth.server.database.views.AuthorRow
-import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.BookRow
-import io.thoth.server.database.views.SeriesMetadataView
-import io.thoth.server.database.views.SeriesRow
-import io.thoth.server.database.views.bookAuthors
-import io.thoth.server.database.views.bookSeries
-import io.thoth.server.database.views.booksToModels
-import io.thoth.server.database.views.seriesToModels
-import io.thoth.server.database.views.toAuthorRow
-import io.thoth.server.database.views.toBookRow
-import io.thoth.server.database.views.toSeriesRow
+import io.thoth.server.database.rows.AuthorRow
+import io.thoth.server.database.rows.BookRow
+import io.thoth.server.database.rows.SeriesRow
+import io.thoth.server.database.rows.bookAuthors
+import io.thoth.server.database.rows.bookSeries
+import io.thoth.server.database.rows.booksToModels
+import io.thoth.server.database.rows.seriesToModels
+import io.thoth.server.database.rows.toAuthorRow
+import io.thoth.server.database.rows.toBookRow
+import io.thoth.server.database.rows.toSeriesRow
+import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.SeriesTable
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -33,19 +33,19 @@ object SearchRepository {
     ): LibrarySearchResult =
         transaction {
             val books =
-                BookMetadataView
+                BooksTable
                     .selectAll()
-                    .where { (BookMetadataView.library inList libsToSearch) and BookMetadataView.visible }
+                    .where { (BooksTable.library inList libsToSearch) and BooksTable.visible }
                     .map { it.toBookRow() }
             val authors =
-                AuthorMetadataView
+                AuthorTable
                     .selectAll()
-                    .where { (AuthorMetadataView.library inList libsToSearch) and AuthorMetadataView.visible }
+                    .where { (AuthorTable.library inList libsToSearch) and AuthorTable.visible }
                     .map { it.toAuthorRow() }
             val series =
-                SeriesMetadataView
+                SeriesTable
                     .selectAll()
-                    .where { (SeriesMetadataView.library inList libsToSearch) and SeriesMetadataView.visible }
+                    .where { (SeriesTable.library inList libsToSearch) and SeriesTable.visible }
                     .map { it.toSeriesRow() }
 
             val authorsById = authors.associateBy { it.id }

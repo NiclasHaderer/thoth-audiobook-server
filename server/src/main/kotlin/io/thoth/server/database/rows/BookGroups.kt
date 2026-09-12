@@ -1,6 +1,7 @@
-package io.thoth.server.database.views
+package io.thoth.server.database.rows
 
 import io.thoth.server.common.extensions.jsonEach
+import io.thoth.server.database.tables.BooksTable
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Count
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -35,11 +36,11 @@ fun Column<List<String>?>.bookGroups(
 ): List<BookGroup> {
     val eachName = jsonEach()
     val groupName = eachName.value.min()
-    val bookCount = BookMetadataView.id.countDistinct()
-    return BookMetadataView
+    val bookCount = BooksTable.id.countDistinct()
+    return BooksTable
         .crossJoin(eachName)
         .select(groupName, bookCount)
-        .where { (BookMetadataView.library eq libraryId) and BookMetadataView.visible }
+        .where { (BooksTable.library eq libraryId) and BooksTable.visible }
         .groupBy(eachName.value.lowerCase())
         .orderBy(groupName.lowerCase() to order)
         .offset(offset)
@@ -51,10 +52,10 @@ context(_: Transaction)
 fun Column<List<String>?>.bookGroupCount(libraryId: UUID): Long {
     val eachName = jsonEach()
     val groups = Count(eachName.value.lowerCase(), distinct = true)
-    return BookMetadataView
+    return BooksTable
         .crossJoin(eachName)
         .select(groups)
-        .where { (BookMetadataView.library eq libraryId) and BookMetadataView.visible }
+        .where { (BooksTable.library eq libraryId) and BooksTable.visible }
         .first()[groups]
 }
 
@@ -71,10 +72,10 @@ fun Column<List<String>?>.booksInGroup(
                 .where { eachName.value.lowerCase() eq stringParam(name).lowerCase() },
         )
     val books =
-        BookMetadataView
+        BooksTable
             .selectAll()
-            .where { (BookMetadataView.library eq libraryId) and nameMatches and BookMetadataView.visible }
-            .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
+            .where { (BooksTable.library eq libraryId) and nameMatches and BooksTable.visible }
+            .orderBy(BooksTable.title to SortOrder.ASC)
             .toList()
     if (books.isEmpty()) return null
     val groupName = books.flatMap { it[this].orEmpty() }.filter { it.equals(name, ignoreCase = true) }.min()

@@ -3,11 +3,11 @@ package io.thoth.server.repositories
 import io.thoth.models.Narrator
 import io.thoth.models.NarratorDetailed
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.bookGroupCount
-import io.thoth.server.database.views.bookGroups
-import io.thoth.server.database.views.booksInGroup
-import io.thoth.server.database.views.booksToModels
+import io.thoth.server.database.rows.bookGroupCount
+import io.thoth.server.database.rows.bookGroups
+import io.thoth.server.database.rows.booksInGroup
+import io.thoth.server.database.rows.booksToModels
+import io.thoth.server.database.tables.BooksTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
@@ -37,7 +37,7 @@ class NarratorRepositoryImpl : NarratorRepository {
         offset: Long,
     ): List<Narrator> =
         transaction {
-            BookMetadataView.narrators
+            BooksTable.narrators
                 .bookGroups(libraryId, order, limit, offset)
                 .map { Narrator(name = it.name, bookCount = it.bookCount) }
         }
@@ -49,10 +49,10 @@ class NarratorRepositoryImpl : NarratorRepository {
     ): NarratorDetailed =
         transaction {
             val match =
-                BookMetadataView.narrators.booksInGroup(name, libraryId)
+                BooksTable.narrators.booksInGroup(name, libraryId)
                     ?: throw ErrorResponse.notFound("Narrator", name)
             NarratorDetailed(name = match.name, books = booksToModels(match.books, userId))
         }
 
-    override fun total(libraryId: UUID): Long = transaction { BookMetadataView.narrators.bookGroupCount(libraryId) }
+    override fun total(libraryId: UUID): Long = transaction { BooksTable.narrators.bookGroupCount(libraryId) }
 }

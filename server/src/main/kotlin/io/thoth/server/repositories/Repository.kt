@@ -6,7 +6,10 @@ import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
+import io.thoth.server.database.tables.resolvedAuthorLinks
+import io.thoth.server.database.tables.resolvedSeriesLinks
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnSet
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
@@ -27,13 +30,14 @@ import java.util.UUID
 // How long a book/author/series should be kept around before being properly deleted
 val DEFER_DELETION_GRACE: Duration = Duration.ofHours(24)
 
-// Hidden books do not count: an author or series whose every book is on its way out hides them
+// What the user can actually see hanging off an author or series: books that are not on their way out,
+// linked by the layer that owns the relation. A link from a layer that lost the relation does not count,
+// so moving a book elsewhere hides what it left behind, but the link itself stays and can bring it back.
 context(_: Transaction)
 fun visiblyLinked(
-    link: Table,
+    resolvedLinks: ColumnSet,
     owner: Column<EntityID<UUID>>,
-) = link
-    .innerJoin(BooksTable)
+) = resolvedLinks
     .select(owner)
     .where { BooksTable.deferDeletionUntil.isNull() }
 
@@ -62,7 +66,7 @@ fun refreshAuthorDeferral(authorIds: Collection<UUID>) =
         table = AuthorTable,
         deferUntil = AuthorTable.deferDeletionUntil,
         scope = AuthorTable.id inList authorIds,
-        orphaned = AuthorTable.id notInSubQuery visiblyLinked(AuthorBookTable, AuthorBookTable.authors),
+        orphaned = AuthorTable.id notInSubQuery visiblyLinked(resolvedAuthorLinks, AuthorBookTable.authors),
         now = Instant.now(),
     )
 
@@ -72,7 +76,7 @@ fun refreshSeriesDeferral(seriesIds: Collection<UUID>) =
         table = SeriesTable,
         deferUntil = SeriesTable.deferDeletionUntil,
         scope = SeriesTable.id inList seriesIds,
-        orphaned = SeriesTable.id notInSubQuery visiblyLinked(SeriesBookTable, SeriesBookTable.series),
+        orphaned = SeriesTable.id notInSubQuery visiblyLinked(resolvedSeriesLinks, SeriesBookTable.series),
         now = Instant.now(),
     )
 
@@ -107,11 +111,6 @@ interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API> {
         userId: UUID,
         query: String,
         libraryId: UUID,
-    ): List<NORMAL>
-
-    fun search(
-        userId: UUID,
-        query: String,
     ): List<NORMAL>
 
     fun modify(

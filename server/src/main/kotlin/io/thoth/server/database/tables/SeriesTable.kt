@@ -1,24 +1,13 @@
 package io.thoth.server.database.tables
 
-import io.thoth.server.database.extensions.timestampMillis
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import java.time.Instant
-import java.util.UUID
 
-object SeriesTable : UUIDTable("Series") {
-    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
-    val deferDeletionUntil = timestampMillis("deferDeletionUntil").nullable()
+object SeriesTable : LibraryEntityTable("Series", "title") {
+    val title get() = name
+    val totalBooks = integer("totalBooks").nullable()
+    val primaryWorks = integer("primaryWorks").nullable()
+    val description = text("description").nullable()
+    val provider = varchar("provider", 255).nullable()
+    val providerID = varchar("providerID", 255).nullable()
+    val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
 }
-
-context(_: Transaction)
-fun SeriesTable.create(
-    libraryId: UUID,
-    deferDeletionUntil: Instant? = null,
-): UUID =
-    insertAndGetId {
-        it[library] = libraryId
-        it[this.deferDeletionUntil] = deferDeletionUntil
-    }.value

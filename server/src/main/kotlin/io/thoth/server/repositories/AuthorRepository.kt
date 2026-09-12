@@ -13,31 +13,31 @@ import io.thoth.server.common.exposed.unless
 import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
+import io.thoth.server.database.rows.AuthorRow
+import io.thoth.server.database.rows.bookAuthors
+import io.thoth.server.database.rows.booksToModels
+import io.thoth.server.database.rows.seriesToModels
+import io.thoth.server.database.rows.toAuthorRow
+import io.thoth.server.database.rows.toBookRow
+import io.thoth.server.database.rows.toSeriesRow
 import io.thoth.server.database.tables.AuthorAgentMetadataTable
+import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorMetadata
 import io.thoth.server.database.tables.AuthorMetadataRow
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.AuthorUserMetadataTable
 import io.thoth.server.database.tables.BookUserMetadataTable
+import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.MetadataLayer
+import io.thoth.server.database.tables.SeriesBookTable
+import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.bookIdsLinkedToAuthor
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookAuthors
+import io.thoth.server.database.tables.resolvedAuthorLinks
 import io.thoth.server.database.tables.write
-import io.thoth.server.database.views.AuthorMetadataView
-import io.thoth.server.database.views.AuthorRow
-import io.thoth.server.database.views.BookAuthorView
-import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.BookSeriesView
-import io.thoth.server.database.views.SeriesMetadataView
-import io.thoth.server.database.views.bookAuthors
-import io.thoth.server.database.views.booksToModels
-import io.thoth.server.database.views.seriesToModels
-import io.thoth.server.database.views.toAuthorRow
-import io.thoth.server.database.views.toBookRow
-import io.thoth.server.database.views.toSeriesRow
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.MatchableEntity
@@ -45,7 +45,6 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -98,9 +97,9 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): AuthorRow =
         transaction {
-            AuthorMetadataView
+            AuthorTable
                 .selectAll()
-                .where { AuthorMetadataView.id eq id and (AuthorMetadataView.library eq libraryId) }
+                .where { AuthorTable.id eq id and (AuthorTable.library eq libraryId) }
                 .firstOrNull()
                 ?.toAuthorRow()
                 ?: throw ErrorResponse.notFound("Author", id)
@@ -112,26 +111,13 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): List<Author> =
         transaction {
-            AuthorMetadataView
+            AuthorTable
                 .selectAll()
                 .where {
                     matchesName(
                         query,
-                    ) and (AuthorMetadataView.library eq libraryId) and AuthorMetadataView.visible
-                }.orderBy(AuthorMetadataView.name.lowerCase() to SortOrder.ASC)
-                .limit(searchLimit)
-                .map { it.toAuthorRow().toModel() }
-        }
-
-    override fun search(
-        userId: UUID,
-        query: String,
-    ): List<Author> =
-        transaction {
-            AuthorMetadataView
-                .selectAll()
-                .where { matchesName(query) and AuthorMetadataView.visible }
-                .orderBy(AuthorMetadataView.name.lowerCase() to SortOrder.ASC)
+                    ) and (AuthorTable.library eq libraryId) and AuthorTable.visible
+                }.orderBy(AuthorTable.name to SortOrder.ASC)
                 .limit(searchLimit)
                 .map { it.toAuthorRow().toModel() }
         }
@@ -146,7 +132,7 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): AuthorRow =
         transaction {
-            val id = AuthorTable.create(libraryRepository.raw(libraryId).id)
+            val id = AuthorTable.create(libraryRepository.raw(libraryId).id, authorName)
             AuthorFileMetadataTable.write(AuthorMetadataRow(author = id, name = authorName))
             autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.AUTHOR, id, libraryId))
             raw(id, libraryId)
@@ -161,6 +147,7 @@ class AuthorServiceImpl :
             val id =
                 AuthorTable.create(
                     libraryRepository.raw(libraryId).id,
+                    authorName,
                     deferDeletionUntil = Instant.now().plus(DEFER_DELETION_GRACE),
                 )
             AuthorUserMetadataTable.write(AuthorMetadataRow(author = id, name = authorName))
@@ -223,11 +210,11 @@ class AuthorServiceImpl :
         showInvisible: Boolean,
     ): List<Author> =
         transaction {
-            AuthorMetadataView
+            AuthorTable
                 .selectAll()
                 .where {
-                    (AuthorMetadataView.library eq libraryId) and AuthorMetadataView.visible.unless(showInvisible)
-                }.orderBy(AuthorMetadataView.name.lowerCase() to order)
+                    (AuthorTable.library eq libraryId) and AuthorTable.visible.unless(showInvisible)
+                }.orderBy(AuthorTable.name to order)
                 .offset(offset)
                 .limit(limit)
                 .map { it.toAuthorRow().toModel() }
@@ -242,23 +229,23 @@ class AuthorServiceImpl :
             val author = raw(id, libraryId)
 
             val books =
-                BookMetadataView
-                    .join(BookAuthorView, JoinType.INNER, BookMetadataView.id, BookAuthorView.book)
+                resolvedAuthorLinks
                     .selectAll()
-                    .where { (BookAuthorView.author eq id) and BookMetadataView.visible }
-                    .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
+                    .where { (AuthorBookTable.authors eq id) and BooksTable.visible }
+                    .orderBy(BooksTable.title to SortOrder.ASC)
                     .map { it.toBookRow() }
             val seriesIds =
-                BookAuthorView
-                    .join(BookSeriesView, JoinType.INNER, BookAuthorView.book, BookSeriesView.book)
-                    .select(BookSeriesView.series)
-                    .where { BookAuthorView.author eq id }
-                    .mapTo(mutableSetOf()) { it[BookSeriesView.series] }
+                resolvedAuthorLinks
+                    .join(SeriesBookTable, JoinType.INNER, AuthorBookTable.book, SeriesBookTable.book) {
+                        SeriesBookTable.addedBy eq BooksTable.seriesFrom
+                    }.select(SeriesBookTable.series)
+                    .where { AuthorBookTable.authors eq id }
+                    .mapTo(mutableSetOf()) { it[SeriesBookTable.series].value }
             val series =
-                SeriesMetadataView
+                SeriesTable
                     .selectAll()
-                    .where { (SeriesMetadataView.id inList seriesIds) and SeriesMetadataView.visible }
-                    .orderBy(SeriesMetadataView.title.lowerCase() to SortOrder.ASC)
+                    .where { (SeriesTable.id inList seriesIds) and SeriesTable.visible }
+                    .orderBy(SeriesTable.title to SortOrder.ASC)
                     .map { it.toSeriesRow() }
 
             AuthorDetailed.fromModel(
@@ -353,4 +340,4 @@ private fun idInLayer(
         ?.get(AuthorTable.id)
         ?.value
 
-private fun matchesName(query: String): Op<Boolean> = AuthorMetadataView.name ilike "%${escape(query)}%"
+private fun matchesName(query: String): Op<Boolean> = AuthorTable.name ilike "%${escape(query)}%"

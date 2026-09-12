@@ -93,10 +93,12 @@ private fun ResultRow.toBookMetadataRow(table: BookMetadata): BookMetadataRow =
         seriesSet = this[table.seriesSet],
     )
 
+// Nothing outside of this file may write a book layer.
 context(_: Transaction)
 fun BookMetadata.write(row: BookMetadataRow) {
     val updated = update({ id eq row.book }) { write(it, row) }
     if (updated == 0) insert { write(it, row) }
+    reconcileBook(row.book)
 }
 
 private fun BookMetadata.write(

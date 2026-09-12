@@ -4,6 +4,8 @@ import io.thoth.models.Book
 import io.thoth.models.ListeningHistoryEntry
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.config.ThothConfig
+import io.thoth.server.database.rows.booksToModels
+import io.thoth.server.database.rows.toBookRow
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ProgressLogRow
 import io.thoth.server.database.tables.ProgressLogTable
@@ -14,9 +16,6 @@ import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.toProgressLogRow
 import io.thoth.server.database.tables.toUserBookProgressRow
 import io.thoth.server.database.tables.update
-import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.booksToModels
-import io.thoth.server.database.views.toBookRow
 import io.thoth.server.plugins.auth.resolveUserPermissions
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Transaction
@@ -255,9 +254,9 @@ class ProgressRepositoryImpl :
         val ids = bookIds.distinct()
         if (ids.isEmpty()) return emptyMap()
         val rows =
-            BookMetadataView
+            BooksTable
                 .selectAll()
-                .where { (BookMetadataView.id inList ids) and (BookMetadataView.library inList readable) }
+                .where { (BooksTable.id inList ids) and (BooksTable.library inList readable) }
                 .map { it.toBookRow() }
         return booksToModels(rows, userId).associateBy { it.id }
     }

@@ -10,7 +10,6 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.UUID
 
 class ThothSchedules : KoinComponent {
     private val config by inject<ThothConfig>()

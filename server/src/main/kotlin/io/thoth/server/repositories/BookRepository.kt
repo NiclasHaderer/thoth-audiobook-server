@@ -15,6 +15,11 @@ import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.common.extensions.naturalOrder
 import io.thoth.server.database.access.getOrCreateImage
+import io.thoth.server.database.rows.BookRow
+import io.thoth.server.database.rows.bookAuthors
+import io.thoth.server.database.rows.booksToModels
+import io.thoth.server.database.rows.toBookRow
+import io.thoth.server.database.rows.toModel
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookFileMetadataTable
@@ -32,12 +37,6 @@ import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.seriesIdsLinkedToBook
 import io.thoth.server.database.tables.toTrackRow
 import io.thoth.server.database.tables.write
-import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.BookRow
-import io.thoth.server.database.views.bookAuthors
-import io.thoth.server.database.views.booksToModels
-import io.thoth.server.database.views.toBookRow
-import io.thoth.server.database.views.toModel
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.MatchableEntity
@@ -45,7 +44,6 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -106,11 +104,11 @@ class BookRepositoryImpl :
     ): List<Book> =
         transaction {
             val rows =
-                BookMetadataView
+                BooksTable
                     .selectAll()
                     .where {
-                        (BookMetadataView.library eq libraryId) and BookMetadataView.visible.unless(showInvisible)
-                    }.orderBy(BookMetadataView.title.lowerCase() to order)
+                        (BooksTable.library eq libraryId) and BooksTable.visible.unless(showInvisible)
+                    }.orderBy(BooksTable.title to order)
                     .offset(offset)
                     .limit(limit)
                     .map { it.toBookRow() }
@@ -122,9 +120,9 @@ class BookRepositoryImpl :
         libraryId: UUID,
     ): BookRow =
         transaction {
-            BookMetadataView
+            BooksTable
                 .selectAll()
-                .where { BookMetadataView.id eq id and (BookMetadataView.library eq libraryId) }
+                .where { BooksTable.id eq id and (BooksTable.library eq libraryId) }
                 .firstOrNull()
                 ?.toBookRow()
                 ?: throw ErrorResponse.notFound("Book", id)
@@ -169,27 +167,12 @@ class BookRepositoryImpl :
     ): List<Book> =
         transaction {
             val rows =
-                BookMetadataView
+                BooksTable
                     .selectAll()
                     .where {
-                        matchesTitle(query) and (BookMetadataView.library eq libraryId) and
-                            BookMetadataView.visible
-                    }.orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
-                    .limit(searchLimit)
-                    .map { it.toBookRow() }
-            booksToModels(rows, userId)
-        }
-
-    override fun search(
-        userId: UUID,
-        query: String,
-    ): List<Book> =
-        transaction {
-            val rows =
-                BookMetadataView
-                    .selectAll()
-                    .where { matchesTitle(query) and BookMetadataView.visible }
-                    .orderBy(BookMetadataView.title.lowerCase() to SortOrder.ASC)
+                        matchesTitle(query) and (BooksTable.library eq libraryId) and
+                            BooksTable.visible
+                    }.orderBy(BooksTable.title to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toBookRow() }
             booksToModels(rows, userId)
@@ -247,7 +230,7 @@ class BookRepositoryImpl :
         series: List<UUID>,
     ): BookRow =
         transaction {
-            val id = BooksTable.create(libraryRepository.raw(libraryId).id)
+            val id = BooksTable.create(libraryRepository.raw(libraryId).id, bookName)
             BookFileMetadataTable.write(BookMetadataRow(book = id, title = bookName))
             replaceBookAuthors(id, MetadataLayer.FILE, authors)
             replaceBookSeries(id, MetadataLayer.FILE, series.associateWith { null })
@@ -370,4 +353,4 @@ private fun idInLayer(
         ?.get(BooksTable.id)
         ?.value
 
-private fun matchesTitle(query: String): Op<Boolean> = BookMetadataView.title ilike "%${escape(query)}%"
+private fun matchesTitle(query: String): Op<Boolean> = BooksTable.title ilike "%${escape(query)}%"

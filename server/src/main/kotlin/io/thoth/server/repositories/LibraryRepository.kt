@@ -10,6 +10,7 @@ import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.insert
+import io.thoth.server.database.tables.reconcileLibrary
 import io.thoth.server.database.tables.toLibraryRow
 import io.thoth.server.database.tables.update
 import io.thoth.server.file.scanner.LibraryCleanup
@@ -118,6 +119,11 @@ class LibraryRepositoryImpl :
                             region = partial.region ?: library.region,
                         )
                     LibrariesTable.update(updated)
+                    // Which layer wins is baked into every row of the library, so flipping it has to
+                    // re-resolve them.
+                    if (updated.preferEmbeddedMetadata != library.preferEmbeddedMetadata) {
+                        reconcileLibrary(id)
+                    }
                     updated.toModel(bookCount(id))
                 }
 

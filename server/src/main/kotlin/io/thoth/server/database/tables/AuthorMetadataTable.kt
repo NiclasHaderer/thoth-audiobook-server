@@ -71,10 +71,12 @@ private fun ResultRow.toAuthorMetadataRow(table: AuthorMetadata): AuthorMetadata
         imageID = this[table.imageID]?.value,
     )
 
+// Nothing outside of this file may write an author layer.
 context(_: Transaction)
 fun AuthorMetadata.write(row: AuthorMetadataRow) {
     val updated = update({ id eq row.author }) { write(it, row) }
     if (updated == 0) insert { write(it, row) }
+    reconcileAuthor(row.author)
 }
 
 private fun AuthorMetadata.write(

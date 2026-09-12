@@ -10,7 +10,6 @@ import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.MetadataLayer
-import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TracksTable
@@ -51,7 +50,6 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.UUID
 import kotlin.io.path.absolute
-import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.readAttributes
 
 class TrackManager : KoinComponent {
@@ -212,7 +210,7 @@ class TrackManager : KoinComponent {
         val bookId =
             book?.id ?: run {
                 log.info { "Created new book: ${scan.book}" }
-                BooksTable.create(library.id).also {
+                BooksTable.create(library.id, scan.book).also {
                     autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.BOOK, it, library.id))
                 }
             }

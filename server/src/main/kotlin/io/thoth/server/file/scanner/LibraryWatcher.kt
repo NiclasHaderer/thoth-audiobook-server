@@ -11,7 +11,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.io.path.absolute
 import kotlin.io.path.name
 
 // All three block. Registering means querying the libraries and walking their trees to build the watcher's

@@ -7,7 +7,6 @@ import io.thoth.taglib.TagLibFile
 import java.nio.file.Path
 import java.time.Instant
 import java.time.LocalDate
-import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.nameWithoutExtension
 
 class ReadonlyFileTagger(

@@ -108,6 +108,7 @@ private fun cover(
     imageId: UUID,
     allowed: Set<UUID>,
 ): Query =
-    (core innerJoin layer innerJoin ImageTable)
+    (core innerJoin layer)
+        .join(ImageTable, JoinType.INNER, image, ImageTable.id)
         .select(ImageTable.blob)
         .where { (image eq imageId) and (library inList allowed) }

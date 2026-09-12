@@ -63,10 +63,12 @@ private fun ResultRow.toSeriesMetadataRow(table: SeriesMetadata): SeriesMetadata
         coverID = this[table.coverID]?.value,
     )
 
+// Nothing outside of this file may write a series layer.
 context(_: Transaction)
 fun SeriesMetadata.write(row: SeriesMetadataRow) {
     val updated = update({ id eq row.series }) { write(it, row) }
     if (updated == 0) insert { write(it, row) }
+    reconcileSeries(row.series)
 }
 
 private fun SeriesMetadata.write(

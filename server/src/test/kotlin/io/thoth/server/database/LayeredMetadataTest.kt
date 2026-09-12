@@ -4,6 +4,7 @@ import io.thoth.models.BookUpdate
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorBookTable
+import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookMetadata
@@ -17,8 +18,6 @@ import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.write
-import io.thoth.server.database.views.AuthorMetadataView
-import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.scanner.LibraryCleanup
@@ -226,10 +225,10 @@ class LayeredMetadataTest : ThothTest() {
     private fun fileLayerAuthorNames(bookId: UUID): List<String> =
         transaction {
             AuthorBookTable
-                .join(AuthorMetadataView, JoinType.INNER, AuthorBookTable.authors, AuthorMetadataView.id)
-                .select(AuthorMetadataView.name)
+                .join(AuthorTable, JoinType.INNER, AuthorBookTable.authors, AuthorTable.id)
+                .select(AuthorTable.name)
                 .where { (AuthorBookTable.book eq bookId) and (AuthorBookTable.addedBy eq MetadataLayer.FILE) }
-                .map { it[AuthorMetadataView.name] }
+                .map { it[AuthorTable.name] }
         }
 
     private fun fileLayerSeriesCount(bookId: UUID): Long =
@@ -323,16 +322,16 @@ class LayeredMetadataTest : ThothTest() {
     }
 
     @Test
-    fun `every layer column is nullable and projected by the view`() {
+    fun `every layer column is nullable and has a resolved column to land in`() {
         val flags = setOf("authorsSet", "seriesSet")
-        val projected = BookMetadataView.columns.map { it.name }.toSet()
+        val projected = BooksTable.columns.map { it.name }.toSet()
 
         listOf(BookFileMetadataTable, BookAgentMetadataTable, BookUserMetadataTable).forEach { layer: BookMetadata ->
             layer.columns.filterNot { it.name == "book" || it.name in flags }.forEach { column ->
                 assertTrue(column.columnType.nullable, "${layer.tableName}.${column.name} must be nullable")
                 assertTrue(
                     column.name in projected,
-                    "${layer.tableName}.${column.name} has no column in the BookMetadata view",
+                    "${layer.tableName}.${column.name} has nowhere to resolve to on Books",
                 )
             }
         }

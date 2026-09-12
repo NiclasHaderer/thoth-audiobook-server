@@ -1,16 +1,24 @@
 package io.thoth.server.database.tables
 
-import io.thoth.server.database.extensions.timestampMillis
+import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.server.database.extensions.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import java.util.UUID
+import org.jetbrains.exposed.v1.javatime.date
 
-object BooksTable : UUIDTable("Books") {
-    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
-    val deferDeletionUntil = timestampMillis("deferDeletionUntil").nullable()
+object BooksTable : LibraryEntityTable("Books", "title") {
+    val title get() = name
+    val releaseDate = date("releaseDate").nullable()
+    val publisher = varchar("publisher", 255).nullable()
+    val language = enumerationByName<MetadataLanguage>("language", 255).nullable()
+    val description = text("description").nullable()
+    val isbn = varchar("isbn", 255).nullable()
+    val provider = varchar("provider", 255).nullable()
+    val providerID = varchar("providerID", 255).nullable()
+    val providerRating = float("rating").nullable()
+    val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
+    val genres = json<List<String>>("genres").nullable()
+    val narrators = json<List<String>>("narrators").nullable()
+
+    val authorsFrom = enumerationByName<MetadataLayer>("authorsFrom", 8).default(MetadataLayer.FILE)
+    val seriesFrom = enumerationByName<MetadataLayer>("seriesFrom", 8).default(MetadataLayer.FILE)
 }
-
-context(_: Transaction)
-fun BooksTable.create(libraryId: UUID): UUID = insertAndGetId { it[library] = libraryId }.value

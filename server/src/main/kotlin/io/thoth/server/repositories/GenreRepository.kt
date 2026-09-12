@@ -3,11 +3,11 @@ package io.thoth.server.repositories
 import io.thoth.models.Genre
 import io.thoth.models.GenreDetailed
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.database.views.BookMetadataView
-import io.thoth.server.database.views.bookGroupCount
-import io.thoth.server.database.views.bookGroups
-import io.thoth.server.database.views.booksInGroup
-import io.thoth.server.database.views.booksToModels
+import io.thoth.server.database.rows.bookGroupCount
+import io.thoth.server.database.rows.bookGroups
+import io.thoth.server.database.rows.booksInGroup
+import io.thoth.server.database.rows.booksToModels
+import io.thoth.server.database.tables.BooksTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
@@ -37,7 +37,7 @@ class GenreRepositoryImpl : GenreRepository {
         offset: Long,
     ): List<Genre> =
         transaction {
-            BookMetadataView.genres
+            BooksTable.genres
                 .bookGroups(libraryId, order, limit, offset)
                 .map { Genre(name = it.name, bookCount = it.bookCount) }
         }
@@ -49,10 +49,10 @@ class GenreRepositoryImpl : GenreRepository {
     ): GenreDetailed =
         transaction {
             val match =
-                BookMetadataView.genres.booksInGroup(name, libraryId)
+                BooksTable.genres.booksInGroup(name, libraryId)
                     ?: throw ErrorResponse.notFound("Genre", name)
             GenreDetailed(name = match.name, books = booksToModels(match.books, userId))
         }
 
-    override fun total(libraryId: UUID): Long = transaction { BookMetadataView.genres.bookGroupCount(libraryId) }
+    override fun total(libraryId: UUID): Long = transaction { BooksTable.genres.bookGroupCount(libraryId) }
 }

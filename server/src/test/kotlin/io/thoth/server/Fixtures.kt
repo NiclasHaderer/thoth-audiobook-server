@@ -74,7 +74,7 @@ fun newAuthor(
     renamedTo: String? = null,
 ): UUID =
     transaction {
-        val id = AuthorTable.create(libraryId)
+        val id = AuthorTable.create(libraryId, name)
         AuthorFileMetadataTable.write(AuthorMetadataRow(author = id, name = name))
         if (renamedTo != null) {
             AuthorUserMetadataTable.write(AuthorMetadataRow(author = id, name = renamedTo))
@@ -87,7 +87,7 @@ fun newSeries(
     libraryId: UUID,
 ): UUID =
     transaction {
-        val id = SeriesTable.create(libraryId)
+        val id = SeriesTable.create(libraryId, title)
         SeriesFileMetadataTable.write(SeriesMetadataRow(series = id, title = title))
         id
     }
@@ -101,7 +101,7 @@ fun newBook(
     genres: List<String>? = null,
 ): UUID =
     transaction {
-        val id = BooksTable.create(libraryId)
+        val id = BooksTable.create(libraryId, title)
         BookFileMetadataTable.write(
             BookMetadataRow(book = id, title = title, narrators = narrators, genres = genres),
         )
