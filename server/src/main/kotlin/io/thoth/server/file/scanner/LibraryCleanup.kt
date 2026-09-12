@@ -91,9 +91,7 @@ class LibraryCleanup {
             removeOrphanedImages()
         }
 
-    // One cleanup stamps the orphan with a deadline, the first cleanup past that deadline deletes it.
-    // `hidden` and `deletable` differ for authors and series: a link from a layer that no longer owns the
-    // relation hides what it points at but still keeps the row, so that layer can claim it back.
+    // One cleanup stamps the orphan with a deadline, the first cleanup past that deadline deletes it
     context(_: Transaction)
     private fun reap(
         table: Table,

@@ -45,7 +45,7 @@ fun Routing.authorRouting() {
 
     post<Api.Libraries.Id.Authors, AuthorCreate, AuthorDetailed> { route, postAuthor ->
         val author = authorService.createManual(postAuthor.name, route.libraryId)
-        authorService.get(thothPrincipal().userId, author.id, route.libraryId)
+        authorService.get(thothPrincipal().userId, author.id, route.libraryId, showInvisible = true)
     }
 
     post<Api.Libraries.Id.Authors.Id.AutoMatch, Unit, Author> { id, _ ->

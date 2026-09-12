@@ -4,6 +4,7 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.LibraryEntityTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.resolvedAuthorLinks
@@ -16,6 +17,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.core.isNull
@@ -30,9 +32,7 @@ import java.util.UUID
 // How long a book/author/series should be kept around before being properly deleted
 val DEFER_DELETION_GRACE: Duration = Duration.ofHours(24)
 
-// What the user can actually see hanging off an author or series: books that are not on their way out,
-// linked by the layer that owns the relation. A link from a layer that lost the relation does not count,
-// so moving a book elsewhere hides what it left behind, but the link itself stays and can bring it back.
+// Hidden books do not count: an author or series whose every book is on its way out hides them
 context(_: Transaction)
 fun visiblyLinked(
     resolvedLinks: ColumnSet,
@@ -40,6 +40,20 @@ fun visiblyLinked(
 ) = resolvedLinks
     .select(owner)
     .where { BooksTable.deferDeletionUntil.isNull() }
+
+context(_: Transaction)
+fun requireVisible(
+    owner: LibraryEntityTable,
+    thing: String,
+    id: UUID,
+) {
+    val hidden =
+        owner
+            .select(owner.id)
+            .where { owner.visible and (owner.id eq id) }
+            .empty()
+    if (hidden) throw ErrorResponse.notFound(thing, id)
+}
 
 // An orphan gets a deadline, which also hides it, anything with a book again is un-hidden. An existing
 // deadline is never pushed back: touching an orphan does not buy it another grace period.
@@ -96,6 +110,7 @@ interface Repository<RAW, NORMAL, DETAILED, PARTIAL_API> {
         userId: UUID,
         id: UUID,
         libraryId: UUID,
+        showInvisible: Boolean = false,
     ): DETAILED
 
     fun getAll(

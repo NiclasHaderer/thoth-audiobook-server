@@ -10,7 +10,6 @@ import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TracksTable
-import io.thoth.server.database.views.BookMetadataView
 import io.thoth.server.newLibrary
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -91,10 +90,10 @@ class LibraryImportPipelineTest : ThothTest() {
 
     private fun titles() =
         transaction {
-            BookMetadataView
+            BooksTable
                 .selectAll()
-                .where { BookMetadataView.visible }
-                .map { it[BookMetadataView.title] }
+                .where { BooksTable.visible }
+                .mapNotNull { it[BooksTable.title] }
                 .sorted()
         }
 

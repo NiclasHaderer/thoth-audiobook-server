@@ -116,9 +116,11 @@ class SeriesRepositoryImpl :
         userId: UUID,
         id: UUID,
         libraryId: UUID,
+        showInvisible: Boolean,
     ): SeriesDetailed =
         transaction {
             val series = raw(id = id, libraryId = libraryId)
+            if (!showInvisible) requireVisible(SeriesTable, "Series", id)
 
             SeriesDetailed.fromModel(
                 series = series.toModel(),

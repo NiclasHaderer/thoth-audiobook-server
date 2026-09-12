@@ -53,7 +53,7 @@ fun Routing.seriesRouting() {
 
     post<Api.Libraries.Id.Series, SeriesCreate, SeriesDetailed> { route, postSeries ->
         val series = seriesRepository.createManual(postSeries.title, route.libraryId)
-        seriesRepository.get(thothPrincipal().userId, series.id, route.libraryId)
+        seriesRepository.get(thothPrincipal().userId, series.id, route.libraryId, showInvisible = true)
     }
 
     post<Api.Libraries.Id.Series.Id.AutoMatch, Unit, Series> { id, _ ->

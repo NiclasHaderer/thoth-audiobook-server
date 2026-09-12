@@ -224,9 +224,11 @@ class AuthorServiceImpl :
         userId: UUID,
         id: UUID,
         libraryId: UUID,
+        showInvisible: Boolean,
     ): AuthorDetailed =
         transaction {
             val author = raw(id, libraryId)
+            if (!showInvisible) requireVisible(AuthorTable, "Author", id)
 
             val books =
                 resolvedAuthorLinks

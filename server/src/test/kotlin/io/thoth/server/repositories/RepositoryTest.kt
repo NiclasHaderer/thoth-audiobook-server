@@ -120,6 +120,53 @@ class RepositoryTest : ThothTest() {
         assertEquals(emptyList(), authorRepository.getAll(userId, libId, SortOrder.ASC))
     }
 
+    @Test
+    fun `an author the book was moved away from is hidden, not left empty`() {
+        val tagged = newAuthor("Tagged Author", libId)
+        val chosen = newAuthor("Chosen Author", libId)
+        val book = newBook("Mort", libId, authors = listOf(tagged))
+
+        bookRepository.modify(userId, book, libId, bookAssignedTo(authors = listOf(chosen)))
+
+        assertEquals(
+            listOf(chosen),
+            authorRepository.getAll(userId, libId, SortOrder.ASC).map { it.id },
+            "the author the file layer still names is hidden, since nothing resolves to them any more",
+        )
+        assertEquals(
+            listOf(chosen, tagged).sorted(),
+            authorRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id }.sorted(),
+            "they are only hidden: the row is still there for the file layer to claim back",
+        )
+    }
+
+    @Test
+    fun `a series the book was moved out of is hidden, not left empty`() {
+        val tagged = newSeries("Tagged Series", libId)
+        val chosen = newSeries("Chosen Series", libId)
+        val book = newBook("Mort", libId, authors = listOf(newAuthor("Pratchett")), series = listOf(tagged))
+
+        // Moving the book claims the relation for the user layer; the file layer keeps naming the series
+        // the tags did, so that a rescan can still see it
+        bookRepository.modify(userId, book, libId, bookAssignedTo(series = listOf(chosen)))
+
+        assertEquals(
+            listOf("Mort"),
+            seriesRepository.get(userId, chosen, libId).books.map { it.title },
+            "the series the user chose has the book",
+        )
+        assertEquals(
+            listOf(chosen),
+            seriesRepository.getAll(userId, libId, SortOrder.ASC).map { it.id },
+            "the series the file layer still names is hidden, since nothing resolves to it any more",
+        )
+        assertEquals(
+            listOf(chosen, tagged).sorted(),
+            seriesRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id }.sorted(),
+            "it is only hidden: the row is still there for the file layer to claim back",
+        )
+    }
+
     private val libraryRepository by lazy { getKoin().get<LibraryRepository>() as LibraryRepositoryImpl }
     private val authorRepository by lazy { getKoin().get<AuthorRepository>() }
     private val bookRepository by lazy { getKoin().get<BookRepository>() }
@@ -169,7 +216,7 @@ class RepositoryTest : ThothTest() {
         newAuthor("Brandon Sanderson")
         val otherLib = newLibrary("other", folders = listOf("/media/other"))
         assertEquals(emptyList(), authorRepository.search(userId, "sanderson", otherLib).map { it.name })
-        assertEquals(listOf("Brandon Sanderson"), authorRepository.search(userId, "sanderson").map { it.name })
+        assertEquals(listOf("Brandon Sanderson"), authorRepository.search(userId, "sanderson", libId).map { it.name })
     }
 
     @Test

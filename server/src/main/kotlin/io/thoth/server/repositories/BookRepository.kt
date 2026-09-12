@@ -141,9 +141,11 @@ class BookRepositoryImpl :
         userId: UUID,
         id: UUID,
         libraryId: UUID,
+        showInvisible: Boolean,
     ): BookDetailed =
         transaction {
             val book = raw(id, libraryId)
+            if (!showInvisible) requireVisible(BooksTable, "Book", id)
             val tracks =
                 TracksTable
                     .selectAll()

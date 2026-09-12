@@ -4,9 +4,12 @@ import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TracksTable
 import io.thoth.server.database.tables.create
+import io.thoth.server.database.tables.replaceBookAuthors
+import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.newAuthor
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
@@ -90,6 +93,54 @@ class LibraryScannerCleanupTest : ThothTest() {
                     .count(),
             )
         }
+
+    @Test
+    fun `an author the user moved a book away from is hidden but kept`() {
+        val scanned = newLibrary("scanned")
+        val tagged = newAuthor("Tagged Author", scanned)
+        val chosen = newAuthor("Chosen Author", scanned)
+        val book = newBook("Mort", scanned, authors = listOf(tagged))
+        newTrack(title = "Mort Track", path = "/media/scanned/mort.mp3", bookId = book, libraryId = scanned)
+        transaction { replaceBookAuthors(book, MetadataLayer.USER, listOf(chosen)) }
+
+        cleanup(scanned)
+
+        assertEquals(listOf(1L, 1L, 2L, 0L), counts(scanned), "both authors survive the pass")
+        assertEquals(listOf(0L, 1L, 0L), deferred(scanned), "the author nothing resolves to any more is hidden")
+
+        expireDeadlines()
+        cleanup(scanned)
+
+        assertEquals(
+            listOf(1L, 1L, 2L, 0L),
+            counts(scanned),
+            "but they are never deleted: the file layer still links the book to them",
+        )
+    }
+
+    @Test
+    fun `a series the user moved a book out of is hidden but kept`() {
+        val scanned = newLibrary("scanned")
+        val tagged = newSeries("Tagged Series", scanned)
+        val chosen = newSeries("Chosen Series", scanned)
+        val book = newBook("Mort", scanned, series = listOf(tagged))
+        newTrack(title = "Mort Track", path = "/media/scanned/mort.mp3", bookId = book, libraryId = scanned)
+        transaction { replaceBookSeries(book, MetadataLayer.USER, mapOf(chosen to null)) }
+
+        cleanup(scanned)
+
+        assertEquals(listOf(1L, 1L, 0L, 2L), counts(scanned), "both series survive the pass")
+        assertEquals(listOf(0L, 0L, 1L), deferred(scanned), "the series nothing resolves to any more is hidden")
+
+        expireDeadlines()
+        cleanup(scanned)
+
+        assertEquals(
+            listOf(1L, 1L, 0L, 2L),
+            counts(scanned),
+            "but it is never deleted: the file layer still links the book to it, so a rescan can bring it back",
+        )
+    }
 
     @Test
     fun `cleanup leaves other libraries untouched`() {
@@ -193,7 +244,10 @@ class LibraryScannerCleanupTest : ThothTest() {
     @Test
     fun `a hand made author or series is deferred like any other orphan`() {
         val scanned = newLibrary("scanned")
-        val (author, series) = transaction { AuthorTable.create(scanned) to SeriesTable.create(scanned) }
+        val (author, series) =
+            transaction {
+                AuthorTable.create(scanned, "Orphan") to SeriesTable.create(scanned, "Orphan")
+            }
 
         cleanup.removeOrphans(scanned)
 
