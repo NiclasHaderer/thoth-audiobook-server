@@ -94,7 +94,7 @@ class ResponseStatusTest {
             application {
                 statusRoutes()
                 val config = attributes[OpenAPIConfigurationKey]
-                config.routeCollector.forEach { config.schemaHolder.addRouteToApi(it) }
+                config.addRoutesToSpec()
                 codes =
                     config.schemaHolder.api.paths.mapValues { (_, item) ->
                         item.post.responses.keys

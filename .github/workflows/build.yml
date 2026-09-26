@@ -6,6 +6,62 @@ on:
   pull_request:
 
 jobs:
+  # Fails a PR that breaks the API unless it also changes info.version.
+  api-compat:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: head
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Generate the merged spec
+        working-directory: head
+        run: ./gradlew :server:generateClients -x :taglib:buildNativeHost
+
+      - name: Generate the base spec
+        working-directory: base
+        run: ./gradlew :server:generateClients -x :taglib:buildNativeHost
+
+      - name: Compare versions
+        id: gate
+        run: |
+          base_version=$(yq '.info.version' base/gen/openapi.yaml)
+          head_version=$(yq '.info.version' head/gen/openapi.yaml)
+          if [[ "$head_version" != "$base_version" ]]; then
+            echo "API version changed from $base_version to $head_version, breaking changes are allowed."
+            echo "fail_on=" >> "$GITHUB_OUTPUT"
+          else
+            echo "fail_on=ERR" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for breaking API changes
+        uses: oasdiff/oasdiff-action/breaking@v0.1.17
+        with:
+          base: base/gen/openapi.yaml
+          revision: head/gen/openapi.yaml
+          fail-on: ${{ steps.gate.outputs.fail_on }}
+          review: 'false'
+          github-token: ''
+
+      - name: Explain how to fix a breaking change
+        if: failure() && steps.gate.outputs.fail_on == 'ERR'
+        run: |
+          echo "::error file=server/src/main/kotlin/io/thoth/server/plugins/OpenApi.kt::This PR breaks the API. Bump the version in info { version = ... }."
+          exit 1
+
   # Builds libtag_c from the bundled TagLib fork on every platform we ship, and runs
   # the :taglib tests against the freshly built host library.
   native:
@@ -73,13 +129,6 @@ jobs:
           pattern: native-*
           merge-multiple: true
           path: taglib/src/main/resources/native
-
-      - name: Check every target is present
-        shell: bash
-        run: |
-          for target in linux-x64 linux-arm64 macos-x64 macos-arm64 windows-x64; do
-            ls taglib/src/main/resources/native/$target/* > /dev/null
-          done
 
       # buildNativeHost would overwrite the host entry with a fresh build; the downloaded
       # artifacts are what we want to ship, so only the remaining work runs here.

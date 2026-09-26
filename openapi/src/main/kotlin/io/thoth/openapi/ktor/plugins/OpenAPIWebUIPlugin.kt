@@ -44,7 +44,7 @@ val OpenAPIWebUI =
             val pluginConfig = application.attributes[OpenAPIConfigurationKey]
 
             try {
-                pluginConfig.routeCollector.forEach { pluginConfig.schemaHolder.addRouteToApi(it) }
+                pluginConfig.addRoutesToSpec()
             } catch (e: Exception) {
                 app.log.error("Error while adding routes to API. OpenApi document is not complete!", e)
             }
