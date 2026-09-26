@@ -1,5 +1,6 @@
 package io.thoth.openapi.ktor.plugins
 
+import io.ktor.server.application.Application
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.plugin
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
@@ -9,6 +10,9 @@ import io.ktor.util.AttributeKey
 import io.thoth.openapi.ktor.OpenApiRouteCollector
 import io.thoth.openapi.ktor.SchemaHolder
 import io.thoth.openapi.ktor.models.OpenAPIContext
+import java.nio.file.Path
+import kotlin.io.path.createParentDirectories
+import kotlin.io.path.writeText
 
 class OpenAPIConfiguration(
     val schemaHolder: SchemaHolder,
@@ -19,9 +23,17 @@ class OpenAPIConfiguration(
             requireNotNull(schemaHolder.api.info?.version) {
                 "The API version is missing. Set it via install(OpenAPIRouting) { info { version = \"...\" } }."
             }
+
+    fun addRoutesToSpec() = routeCollector.forEach { schemaHolder.addRouteToApi(it) }
 }
 
 val OpenAPIConfigurationKey = AttributeKey<OpenAPIConfiguration>(name = "OpenAPIConfiguration")
+
+fun Application.generateOpenApiSpec(savePath: Path) {
+    val config = attributes[OpenAPIConfigurationKey]
+    config.addRoutesToSpec()
+    savePath.createParentDirectories().writeText(config.schemaHolder.yaml())
+}
 
 val OpenAPIRouting =
     createApplicationPlugin(

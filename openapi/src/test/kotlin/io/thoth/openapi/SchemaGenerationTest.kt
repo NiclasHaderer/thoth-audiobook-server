@@ -20,10 +20,14 @@ import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
 import io.thoth.openapi.ktor.plugins.OpenAPIRouting
+import io.thoth.openapi.ktor.plugins.generateOpenApiSpec
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import java.util.UUID
+import kotlin.io.path.createTempDirectory
+import kotlin.io.path.readText
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -116,7 +120,7 @@ private fun generateApi(): OpenAPI {
         application {
             specRoutes()
             val config = attributes[OpenAPIConfigurationKey]
-            config.routeCollector.forEach { config.schemaHolder.addRouteToApi(it) }
+            config.addRoutesToSpec()
             api = config.schemaHolder.api
         }
         client.httpGet("/")

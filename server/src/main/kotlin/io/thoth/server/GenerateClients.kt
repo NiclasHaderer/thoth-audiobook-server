@@ -5,9 +5,11 @@ import io.ktor.server.netty.Netty
 import io.thoth.openapi.client.kotlin.KtErrorHandling
 import io.thoth.openapi.client.kotlin.generateKotlinClient
 import io.thoth.openapi.client.typescript.generateTsClient
+import io.thoth.openapi.ktor.plugins.generateOpenApiSpec
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.di.setupDependencyInjection
 import org.koin.core.context.stopKoin
+import java.nio.file.Path
 import kotlin.io.path.createTempDirectory
 
 fun main() {
@@ -24,6 +26,7 @@ fun main() {
                 apiClientName = "ThothClient",
                 errorHandling = KtErrorHandling.Exception,
             )
+            generateOpenApiSpec(Path.of("gen/openapi.yaml"))
         }.apply {
             start(wait = false)
             stop()
