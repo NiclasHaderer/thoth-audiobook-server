@@ -2,6 +2,7 @@ package io.thoth.metadata.audible
 
 import io.thoth.metadata.responses.MetadataRegion
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -9,6 +10,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /** Scrapes the live Audible pages, so it needs network access and breaks when Audible changes its markup. */
+@Tag("live")
 class AudibleSeriesScrapeTest {
     private val provider = AudibleMetadataAgent()
     private val dungeonCrawlerCarl = "B0937FGLYC"

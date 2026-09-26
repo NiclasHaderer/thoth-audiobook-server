@@ -2,10 +2,6 @@ plugins {
     kotlin("jvm")
 }
 
-dependencies {
-    testImplementation(libs.kotlin.test.junit)
-}
-
 // CI drops all five targets into src/main/resources/native/<target>/; locally only the host is built.
 val hostTarget =
     run {

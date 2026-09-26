@@ -5,6 +5,7 @@ import io.ktor.client.request.head
 import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -13,6 +14,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** Scrapes the live Audible pages, so it needs network access and breaks when Audible changes its markup. */
+@Tag("live")
 class AudibleAuthorScrapeTest {
     private val provider = AudibleMetadataAgent(imageSize = IMAGE_SIZE)
     private val rowling = "B000AP9A6K"

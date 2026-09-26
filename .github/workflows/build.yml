@@ -159,7 +159,7 @@ jobs:
 
       # buildNativeHost would overwrite the host entry with a fresh build; the downloaded
       # artifacts are what we want to ship, so only the remaining work runs here.
-      - run: ./gradlew build -x :taglib:buildNativeHost
+      - run: ./gradlew build -x :taglib:buildNativeHost -PskipLiveTests
 
       - uses: actions/upload-artifact@v4
         with:

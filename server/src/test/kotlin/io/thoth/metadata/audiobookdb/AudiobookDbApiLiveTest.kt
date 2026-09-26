@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Tag
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -15,6 +16,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** Queries the live AudiobookDB API, so it needs network access and breaks when the API changes. */
+@Tag("live")
 class AudiobookDbApiLiveTest {
     private val agent = AudiobookDbMetadataAgent()
     private val projectHailMaryBook = "hPjDhje6pNjQ"

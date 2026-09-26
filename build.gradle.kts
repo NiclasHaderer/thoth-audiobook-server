@@ -41,11 +41,20 @@ subprojects {
             sourceCompatibility = JavaVersion.VERSION_25
             targetCompatibility = JavaVersion.VERSION_25
         }
+        dependencies {
+            "testImplementation"(libs.kotlin.test.junit5)
+            "testImplementation"(platform(libs.junit.bom))
+            "testRuntimeOnly"(libs.junit.platform.launcher)
+        }
     }
     // Koin, Exposed's TransactionManager and the pipeline threads are all JVM-global, so classes may only
     // run side by side in separate JVMs
     tasks.withType<Test>().configureEach {
         maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+        // Tests tagged "live" call third-party services, which rate limit or block CI runners
+        useJUnitPlatform {
+            if (providers.gradleProperty("skipLiveTests").isPresent) excludeTags("live")
+        }
     }
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {

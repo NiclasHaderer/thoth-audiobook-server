@@ -26,7 +26,6 @@ dependencies {
     implementation(libs.ktor.serialization.jackson)
 
     // Tests
-    testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.server.test.host)
 }
 
