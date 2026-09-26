@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  # Fails a PR that breaks the API unless it also changes info.version.
+  # Fails a PR whose API is not bwc and fwc
   api-compat:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -47,7 +47,7 @@ jobs:
             echo "fail_on=ERR" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check for breaking API changes
+      - name: Check old clients work with new servers
         uses: oasdiff/oasdiff-action/breaking@v0.1.17
         with:
           base: base/gen/openapi.yaml
@@ -56,10 +56,22 @@ jobs:
           review: 'false'
           github-token: ''
 
+      - name: Check new clients work with old servers
+        if: ${{ !cancelled() && steps.gate.outcome == 'success' }}
+        uses: oasdiff/oasdiff-action/breaking@v0.1.17
+        env:
+          OASDIFF_CONFIG: head/.github/oasdiff/config.yaml
+        with:
+          base: head/gen/openapi.yaml
+          revision: base/gen/openapi.yaml
+          fail-on: ${{ steps.gate.outputs.fail_on }}
+          review: 'false'
+          github-token: ''
+
       - name: Explain how to fix a breaking change
         if: failure() && steps.gate.outputs.fail_on == 'ERR'
         run: |
-          echo "::error file=server/src/main/kotlin/io/thoth/server/plugins/OpenApi.kt::This PR breaks the API. Bump the version in info { version = ... }."
+          echo "::error file=server/src/main/kotlin/io/thoth/server/plugins/OpenApi.kt::This PR's API is not compatible with the base branch in at least one direction. Bump the version in info { version = ... }."
           exit 1
 
   # Builds libtag_c from the bundled TagLib fork on every platform we ship, and runs
