@@ -78,7 +78,7 @@ class TsGenerationTest {
             // @ts-nocheck
             import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from "./client";
             import type {GenericRoute, GenericRoute2, GenericRoute3, ListRoute, MapRoute, SetRoute, Something, UUID} from "./models";
-            
+
             export const createTestApi = (
               defaultHeaders: HeadersInit = {},
               defaultInterceptors: ApiInterceptor[] = [],
@@ -86,6 +86,7 @@ class TsGenerationTest {
             ) => {
               const defaultHeadersImpl = new Headers(defaultHeaders)
               return {
+                apiVersion: "1.2.3",
                 v1: ({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<ListRoute>> => {
                   return _request(_createUrl(`/${path}/V1`, {name, someParam}), "GET", "json", _mergeHeaders(defaultHeadersImpl, headers), undefined, [...defaultInterceptors, ...interceptors], executor, false);
                 },

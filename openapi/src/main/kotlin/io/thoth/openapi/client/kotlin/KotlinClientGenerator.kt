@@ -22,6 +22,7 @@ class KotlinClientGenerator(
     override val routes: List<OpenApiRoute>,
     private val packageName: String,
     private val apiClientName: String,
+    private val apiVersion: String,
     private val abstract: Boolean,
     private val errorHandling: KtErrorHandling,
     dist: Path,
@@ -97,6 +98,8 @@ class KotlinClientGenerator(
                             append(base)
                             // Class
                             append("interface $apiClientName {\n")
+                            append("    val apiVersion: String\n")
+                            append("        get() = \"$apiVersion\"\n\n")
                             append("${clientFunctions.map { it.content }.joinToString("\n\n")}\n")
                             append("}")
                         },
@@ -190,11 +193,13 @@ fun Application.generateKotlinClient(
     cleanDistPackage: Boolean = true,
     errorHandling: KtErrorHandling = KtErrorHandling.Either,
 ) {
+    val config = this.attributes[OpenAPIConfigurationKey]
     KotlinClientGenerator(
-        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+        routes = routes ?: config.routeCollector.values(),
         packageName = apiClientPackageName,
         dist = savePath,
         apiClientName = apiClientName,
+        apiVersion = config.apiVersion,
         fileWriter = fileWriter,
         directoryToScanForTypes = directoryToScanForTypes,
         abstract = abstract,

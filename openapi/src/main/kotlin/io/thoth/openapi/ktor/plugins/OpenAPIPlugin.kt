@@ -13,7 +13,13 @@ import io.thoth.openapi.ktor.models.OpenAPIContext
 class OpenAPIConfiguration(
     val schemaHolder: SchemaHolder,
     val routeCollector: OpenApiRouteCollector,
-) : OpenAPIContext(schemaHolder.api)
+) : OpenAPIContext(schemaHolder.api) {
+    val apiVersion: String
+        get() =
+            requireNotNull(schemaHolder.api.info?.version) {
+                "The API version is missing. Set it via install(OpenAPIRouting) { info { version = \"...\" } }."
+            }
+}
 
 val OpenAPIConfigurationKey = AttributeKey<OpenAPIConfiguration>(name = "OpenAPIConfiguration")
 

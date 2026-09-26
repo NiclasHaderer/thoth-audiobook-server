@@ -16,6 +16,7 @@ import java.nio.file.Path
 class TsClientGenerator(
     override val routes: List<OpenApiRoute>,
     val apiFactoryName: String,
+    private val apiVersion: String,
     dist: Path,
     fileWriter: ((File, String) -> Unit)?,
     typePackages: List<String>,
@@ -135,6 +136,7 @@ class TsClientGenerator(
             append(") => {\n")
             append("  const defaultHeadersImpl = new Headers(defaultHeaders)\n")
             append("  return {\n")
+            append("    apiVersion: \"$apiVersion\",\n")
             append(clientFunctions.joinToString(",\n") { it })
             append("\n")
             append("  } as const;\n")
@@ -169,8 +171,10 @@ fun Application.generateTsClient(
     typePackages: List<String> = emptyList(),
     cleanDistPackage: Boolean = true,
 ) {
+    val config = this.attributes[OpenAPIConfigurationKey]
     TsClientGenerator(
-        routes = routes ?: this.attributes[OpenAPIConfigurationKey].routeCollector.values(),
+        routes = routes ?: config.routeCollector.values(),
+        apiVersion = config.apiVersion,
         dist = dist,
         fileWriter = fileWriter,
         apiFactoryName = apiFactoryName,

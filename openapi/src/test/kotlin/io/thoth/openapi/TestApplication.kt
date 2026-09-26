@@ -93,7 +93,9 @@ fun Application.testRoutes() {
     install(Resources)
     install(DataConversion)
     install(ContentNegotiation)
-    install(OpenAPIRouting)
+    install(OpenAPIRouting) {
+        info { version = "1.2.3" }
+    }
 
     routing {
         get<Routes.V1, ListRoute> { TODO() }
