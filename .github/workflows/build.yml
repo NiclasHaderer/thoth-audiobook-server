@@ -7,35 +7,9 @@ on:
     types: [opened, synchronize, reopened, labeled]
 
 jobs:
-  targets:
-    name: Pick the platforms to build
-    if: github.event.action != 'labeled' || github.event.label.name == 'ci-all-platforms'
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.targets.outputs.matrix }}
-    steps:
-      - name: Build linux-arm64 only, unless on main or labeled ci-all-platforms
-        id: targets
-        env:
-          ALL_PLATFORMS: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci-all-platforms') }}
-        run: |
-          all='[
-            {"target": "linux-x64", "runner": "ubuntu-latest"},
-            {"target": "linux-arm64", "runner": "ubuntu-24.04-arm"},
-            {"target": "macos-x64", "runner": "macos-15-intel"},
-            {"target": "macos-arm64", "runner": "macos-14"},
-            {"target": "windows-x64", "runner": "windows-latest"}
-          ]'
-          filter='map(select(.target == "linux-arm64"))'
-          if [[ "$ALL_PLATFORMS" == true ]]; then
-            filter='.'
-          fi
-          echo "matrix=$(jq -c "{include: $filter}" <<< "$all")" >> "$GITHUB_OUTPUT"
-
   # Fails a PR whose API is not bwc and fwc
   api-compat:
     name: API compatibility
-    needs: targets
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -106,15 +80,13 @@ jobs:
           echo "::error file=server/src/main/kotlin/io/thoth/server/plugins/OpenApi.kt::This PR's API is not compatible with the base branch in at least one direction. Bump the version in info { version = ... }."
           exit 1
 
-  # Builds libtag_c from the bundled TagLib fork on every platform we ship, and runs
-  # the :taglib tests against the host library.
-  native:
-    name: TagLib ${{ matrix.target }}
-    needs: targets
-    runs-on: ${{ matrix.runner }}
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ fromJSON('{"linux-x64":"ubuntu-latest","linux-arm64":"ubuntu-24.04-arm","macos-x64":"macos-15-intel","macos-arm64":"macos-14","windows-x64":"windows-latest"}')[matrix.target] }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
+      matrix:
+        target: ${{ fromJSON((github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci-all-platforms')) && '["linux-x64","linux-arm64","macos-x64","macos-arm64","windows-x64"]' || '["linux-arm64"]') }}
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -152,43 +124,9 @@ jobs:
         run: ./gradlew :taglib:buildNativeHost
 
       - name: Test the TagLib bindings
+        if: matrix.target != 'linux-arm64'
         run: ./gradlew :taglib:test -x :taglib:buildNativeHost
 
-      - name: Stage the library for packaging
-        shell: bash
-        run: |
-          mkdir -p staging/${{ matrix.target }}
-          cp taglib/build/nativeResources/native/${{ matrix.target }}/* staging/${{ matrix.target }}/
-
-      - name: Upload the library
-        uses: actions/upload-artifact@v4
-        with:
-          name: native-${{ matrix.target }}
-          path: staging
-          if-no-files-found: error
-
-  test:
-    name: Test the server
-    needs: native
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - name: Check out
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 25
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Download the TagLib library
-        uses: actions/download-artifact@v4
-        with:
-          name: native-linux-arm64
-          path: taglib/src/main/resources/native
-
-      - name: Test
+      - name: Test everything
+        if: matrix.target == 'linux-arm64'
         run: ./gradlew check -x :taglib:buildNativeHost -PskipLiveTests
