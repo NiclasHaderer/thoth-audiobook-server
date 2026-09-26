@@ -8,12 +8,14 @@ on:
 
 jobs:
   targets:
+    name: Pick the platforms to build
     if: github.event.action != 'labeled' || github.event.label.name == 'ci-all-platforms'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.targets.outputs.matrix }}
     steps:
-      - id: targets
+      - name: Build linux-arm64 only, unless on main or labeled ci-all-platforms
+        id: targets
         env:
           ALL_PLATFORMS: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci-all-platforms') }}
         run: |
@@ -24,7 +26,7 @@ jobs:
             {"target": "macos-arm64", "runner": "macos-14"},
             {"target": "windows-x64", "runner": "windows-latest"}
           ]'
-          filter='map(select(.target | startswith("linux-")))'
+          filter='map(select(.target == "linux-arm64"))'
           if [[ "$ALL_PLATFORMS" == true ]]; then
             filter='.'
           fi
@@ -32,25 +34,30 @@ jobs:
 
   # Fails a PR whose API is not bwc and fwc
   api-compat:
+    name: API compatibility
     needs: targets
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out the PR merged into its base
+        uses: actions/checkout@v4
         with:
           path: head
 
-      - uses: actions/checkout@v4
+      - name: Check out the base branch
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.base_ref }}
           path: base
 
-      - uses: actions/setup-java@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 25
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Generate the merged spec
         working-directory: head
@@ -60,7 +67,7 @@ jobs:
         working-directory: base
         run: ./gradlew :server:generateClients -x :taglib:buildNativeHost
 
-      - name: Compare versions
+      - name: Compare API versions
         id: gate
         run: |
           base_version=$(yq '.info.version' base/gen/openapi.yaml)
@@ -100,69 +107,88 @@ jobs:
           exit 1
 
   # Builds libtag_c from the bundled TagLib fork on every platform we ship, and runs
-  # the :taglib tests against the freshly built host library.
+  # the :taglib tests against the host library.
   native:
+    name: TagLib ${{ matrix.target }}
     needs: targets
-    name: native ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - name: Check out
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      # The library only changes with the TagLib fork or its CMake setup. Keying on the submodule
+      # commit instead of its files lets a cache hit skip the submodule checkout as well as the
+      # CMake build, which takes up to 18 minutes on macOS.
+      - name: Compute the TagLib cache key
+        id: native-key
+        shell: bash
+        run: echo "key=libtag_c-${{ matrix.target }}-$(git rev-parse HEAD:taglib/native/taglib)-${{ hashFiles('taglib/native/CMakeLists.txt') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the built TagLib
+        id: native-cache
+        uses: actions/cache@v6
+        with:
+          path: taglib/build/nativeResources/native/${{ matrix.target }}
+          key: ${{ steps.native-key.outputs.key }}
+
+      - name: Check out the TagLib sources
+        if: steps.native-cache.outputs.cache-hit != 'true'
+        run: git submodule update --init --recursive
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 25
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      # Compiles the native library (via CMake) and exercises it through the FFM bindings.
-      - run: ./gradlew :taglib:test
+      - name: Build TagLib
+        if: steps.native-cache.outputs.cache-hit != 'true'
+        run: ./gradlew :taglib:buildNativeHost
 
-      - name: Stage the built library
+      - name: Test the TagLib bindings
+        run: ./gradlew :taglib:test -x :taglib:buildNativeHost
+
+      - name: Stage the library for packaging
         shell: bash
         run: |
           mkdir -p staging/${{ matrix.target }}
           cp taglib/build/nativeResources/native/${{ matrix.target }}/* staging/${{ matrix.target }}/
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload the library
+        uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.target }}
           path: staging
           if-no-files-found: error
 
-  # Bundles every platform's library into the jar and runs the whole test suite.
-  package:
+  test:
+    name: Test the server
     needs: native
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - name: Check out
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 25
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      - uses: actions/download-artifact@v4
+      - name: Download the TagLib library
+        uses: actions/download-artifact@v4
         with:
-          pattern: native-*
-          merge-multiple: true
+          name: native-linux-arm64
           path: taglib/src/main/resources/native
 
-      # buildNativeHost would overwrite the host entry with a fresh build; the downloaded
-      # artifacts are what we want to ship, so only the remaining work runs here.
-      - run: ./gradlew build -x :taglib:buildNativeHost -PskipLiveTests
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: server-jar
-          path: server/build/libs/*.jar
-          if-no-files-found: error
+      - name: Test
+        run: ./gradlew check -x :taglib:buildNativeHost -PskipLiveTests
