@@ -4,10 +4,35 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
+  targets:
+    if: github.event.action != 'labeled' || github.event.label.name == 'ci-all-platforms'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - id: targets
+        env:
+          ALL_PLATFORMS: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci-all-platforms') }}
+        run: |
+          all='[
+            {"target": "linux-x64", "runner": "ubuntu-latest"},
+            {"target": "linux-arm64", "runner": "ubuntu-24.04-arm"},
+            {"target": "macos-x64", "runner": "macos-15-intel"},
+            {"target": "macos-arm64", "runner": "macos-14"},
+            {"target": "windows-x64", "runner": "windows-latest"}
+          ]'
+          filter='map(select(.target | startswith("linux-")))'
+          if [[ "$ALL_PLATFORMS" == true ]]; then
+            filter='.'
+          fi
+          echo "matrix=$(jq -c "{include: $filter}" <<< "$all")" >> "$GITHUB_OUTPUT"
+
   # Fails a PR whose API is not bwc and fwc
   api-compat:
+    needs: targets
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -77,22 +102,12 @@ jobs:
   # Builds libtag_c from the bundled TagLib fork on every platform we ship, and runs
   # the :taglib tests against the freshly built host library.
   native:
+    needs: targets
     name: native ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - target: linux-x64
-            runner: ubuntu-latest
-          - target: linux-arm64
-            runner: ubuntu-24.04-arm
-          - target: macos-x64
-            runner: macos-15-intel
-          - target: macos-arm64
-            runner: macos-14
-          - target: windows-x64
-            runner: windows-latest
+      matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
