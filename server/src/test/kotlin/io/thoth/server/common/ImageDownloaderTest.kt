@@ -2,6 +2,7 @@ package io.thoth.server.common
 
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.pngBytes
+import org.junit.jupiter.api.Tag
 import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -77,6 +78,7 @@ class ImageDownloaderTest {
         assertFailsWith<ErrorResponse> { downloader.download("http://nothing.invalid/cover.png") }
     }
 
+    @Tag("live")
     @Test
     fun `cover urls of the metadata agents are downloadable`() {
         listOf(

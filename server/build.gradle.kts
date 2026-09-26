@@ -96,7 +96,6 @@ dependencies {
     // Openapi
     implementation(libs.swagger.models)
     // Tests
-    testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(project(":client"))
 }

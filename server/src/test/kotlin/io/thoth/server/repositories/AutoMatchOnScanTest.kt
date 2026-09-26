@@ -1,5 +1,8 @@
 package io.thoth.server.repositories
 
+import io.thoth.metadata.FakeMetadataAgent
+import io.thoth.metadata.MetadataAgents
+import io.thoth.metadata.searchHit
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.BookAgentMetadataTable
@@ -11,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.koin.dsl.module
 import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
@@ -33,6 +37,14 @@ class AutoMatchOnScanTest : ThothTest() {
 
     @BeforeTest
     fun startMatcher() {
+        val agent =
+            FakeMetadataAgent(
+                hits =
+                    listOf("Angels and Demons", "Da Vinci Code").map {
+                        searchHit(it, authors = listOf("Dan Brown"), series = listOf("Robert Langdon"))
+                    },
+            )
+        getKoin().loadModules(listOf(module { single { MetadataAgents(listOf(agent)) } }), allowOverride = true)
         autoMatcher.start()
     }
 
@@ -45,9 +57,9 @@ class AutoMatchOnScanTest : ThothTest() {
     fun `a new library matches its books against its metadata agent`() {
         val libId =
             newLibrary(
-                "audiobookdb",
+                "fake",
                 folders = listOf(testResources.resolve("Dan Brown").absolutePathString()),
-                metadataAgents = listOf(NamedMetadataAgent("audiobookdb")),
+                metadataAgents = listOf(NamedMetadataAgent("fake")),
             )
 
         pipeline.scanLibrary(libId)

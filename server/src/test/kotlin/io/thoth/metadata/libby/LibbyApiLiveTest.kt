@@ -3,6 +3,7 @@ package io.thoth.metadata.libby
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Tag
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,6 +13,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** Queries the live Libby API, so it needs network access and breaks when the API changes. */
+@Tag("live")
 class LibbyApiLiveTest {
     private val provider = LibbyMetadataAgent(libraryKey = "brooklyn", imageSize = 500)
     private val philosophersStone = "11046339"

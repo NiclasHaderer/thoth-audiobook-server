@@ -1,8 +1,8 @@
 package io.thoth.openapi
 
 import io.thoth.openapi.common.ClassType
-import org.junit.Test
 import java.math.BigInteger
+import kotlin.test.Test
 import kotlin.test.expect
 
 class InnerType
