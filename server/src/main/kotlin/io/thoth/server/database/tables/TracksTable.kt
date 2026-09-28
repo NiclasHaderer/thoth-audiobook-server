@@ -36,7 +36,10 @@ data class TrackRow(
     val scanIndex: ULong,
     val trackNr: Int?,
 ) {
-    fun toModel(book: TitledId): Track =
+    fun toModel(
+        book: TitledId,
+        trackNr: Int,
+    ): Track =
         Track(
             id = id,
             title = title,
