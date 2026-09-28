@@ -39,7 +39,11 @@ class TsGenerationTest {
             }
             
             export interface MapRoute {
+              hint: string | null;
+              label?: string;
+              lookup?: Record<string, UUID> | null;
               name: boolean;
+              note?: string | null;
               someParam: Record<string, UUID>;
             }
             

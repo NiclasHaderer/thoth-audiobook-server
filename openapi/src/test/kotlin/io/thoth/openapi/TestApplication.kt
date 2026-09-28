@@ -14,6 +14,7 @@ import io.thoth.openapi.ktor.post
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.Optional
 import java.util.UUID
 
 @Resource("{path}")
@@ -65,6 +66,10 @@ class ListRoute(
 class MapRoute(
     val name: Boolean,
     val someParam: Map<String, UUID>,
+    val note: Optional<String>?,
+    val label: Optional<String>,
+    val lookup: Optional<HashMap<String, UUID>>?,
+    val hint: String?,
 )
 
 class SetRoute(

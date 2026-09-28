@@ -18,11 +18,13 @@ import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.Tagged
 import io.thoth.openapi.ktor.delete
 import io.thoth.openapi.ktor.get
+import io.thoth.openapi.ktor.patch
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
 import io.thoth.openapi.ktor.plugins.OpenAPIRouting
 import io.thoth.openapi.ktor.plugins.generateOpenApiSpec
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.serializion.kotlin.UUID_S
+import java.util.Optional
 import java.util.UUID
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.readText
@@ -65,6 +67,13 @@ data class SpecPage<T>(
     val total: Long,
 )
 
+data class SpecPatch(
+    val note: Optional<String>? = null,
+    val kind: Optional<SpecItemKind>? = null,
+    val label: Optional<String> = Optional.empty(),
+    val comment: String?,
+)
+
 @Resource("spec")
 @Tagged("Spec")
 class SpecApi {
@@ -78,6 +87,7 @@ class SpecApi {
 
     @Secured("bearer")
     @Summary("Delete an item", method = "DELETE")
+    @Summary("Patch an item", method = "PATCH")
     @Resource("items/{id}")
     class Item(
         val id: UUID_S,
@@ -110,6 +120,7 @@ private fun Application.specRoutes() {
     routing {
         get<SpecApi.Items, SpecPage<SpecItem>> { TODO() }
         delete<SpecApi.Item, Unit, Unit> { _, _ -> TODO() }
+        patch<SpecApi.Item, SpecPatch, Unit> { _, _ -> TODO() }
         post<SpecApi.Ping, Unit, Unit> { _, _ -> TODO() }
     }
 }
@@ -243,6 +254,26 @@ class SchemaGenerationTest {
         assertNotNull(deleteItem.responses["401"])
         assertNotNull(deleteItem.responses["403"])
         assertNull(listItems.responses["401"])
+    }
+
+    @Test
+    fun `optional properties may be left out and are only nullable when marked so`() {
+        val patch = api.components.schemas["SpecPatch"]!!
+        assertContentEquals(listOf("comment"), patch.required, "only an Optional may be left out")
+        assertEquals(true, patch.properties["comment"]!!.nullable)
+
+        val note = patch.properties["note"]!!
+        assertEquals("string", note.type)
+        assertEquals(true, note.nullable)
+
+        val kind = patch.properties["kind"]!!
+        assertNull(kind.`$ref`, "nullable next to a \$ref is ignored in OpenAPI 3.0")
+        assertEquals("#/components/schemas/SpecItemKind", kind.allOf.single().`$ref`)
+        assertEquals(true, kind.nullable)
+
+        val label = patch.properties["label"]!!
+        assertEquals("string", label.type)
+        assertNull(label.nullable)
     }
 
     @Test

@@ -5,6 +5,8 @@ import io.swagger.v3.oas.models.media.ObjectSchema
 import io.swagger.v3.oas.models.media.Schema
 import io.thoth.openapi.common.ClassType
 import io.thoth.openapi.common.nullable
+import java.util.Optional
+import kotlin.reflect.KProperty1
 import kotlin.reflect.KVisibility
 
 class ObjectSchemaGenerator : SchemaGenerator() {
@@ -22,19 +24,29 @@ class ObjectSchemaGenerator : SchemaGenerator() {
             schema.required =
                 classType.properties
                     .filter { it.visibility == KVisibility.PUBLIC }
-                    .filter { !it.nullable }
+                    .filter { !it.isOptional }
                     .map { it.name }
             schema.properties =
                 classType.properties
                     .filter { it.visibility == KVisibility.PUBLIC }
                     .associate {
                         val subSchema = generateSubType(classType.forMember(it))
-                        it.name to subSchema.reference()
+                        it.name to if (it.nullable) nullable(subSchema) else subSchema.reference()
                     }
             if (superClasses.isNotEmpty()) {
                 schema.allOf = superClasses.map { it.reference() }
             }
         }
+    }
+
+    // Only an Optional may be left out, every other key is always sent. A `?` means the value may be null.
+    private val KProperty1<*, *>.isOptional get() = returnType.classifier == Optional::class
+
+    // OpenAPI 3.0 ignores every sibling of a $ref, so a named schema has to be wrapped to carry the nullable
+    private fun nullable(schema: WrappedSchema): Schema<*> {
+        val reference = schema.reference()
+        val wrapped = if (reference.`$ref` != null) Schema<Any>().allOf(listOf(reference)) else reference
+        return wrapped.nullable(true)
     }
 
     override fun generateName(
