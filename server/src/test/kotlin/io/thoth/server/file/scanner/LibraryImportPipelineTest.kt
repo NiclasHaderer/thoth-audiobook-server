@@ -6,10 +6,10 @@ import io.thoth.server.common.extensions.canonical
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.sqliteUrl
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.BookTable
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.newLibrary
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -19,6 +19,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
+import java.lang.management.ManagementFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFilePermission
@@ -90,16 +91,16 @@ class LibraryImportPipelineTest : ThothTest() {
 
     private fun titles() =
         transaction {
-            BooksTable
+            BookTable
                 .selectAll()
-                .where { BooksTable.visible }
-                .mapNotNull { it[BooksTable.title] }
+                .where { BookTable.visible }
+                .mapNotNull { it[BookTable.title] }
                 .sorted()
         }
 
-    private fun tracks() = transaction { TracksTable.selectAll().count() }
+    private fun tracks() = transaction { TrackTable.selectAll().count() }
 
-    private fun trackTitles() = transaction { TracksTable.selectAll().map { it[TracksTable.title] }.sorted() }
+    private fun trackTitles() = transaction { TrackTable.selectAll().map { it[TrackTable.title] }.sorted() }
 
     private fun eventually(
         timeout: Duration = 15.seconds,
@@ -136,7 +137,7 @@ class LibraryImportPipelineTest : ThothTest() {
         val imported = trackTitles()
 
         // Stands for an analysis that is stale for a reason the file cannot show: the scanners changed
-        transaction { TracksTable.update({ TracksTable.library eq id }) { it[title] = "Stale" } }
+        transaction { TrackTable.update({ TrackTable.library eq id }) { it[title] = "Stale" } }
 
         scan(id)
         assertEquals(listOf("Stale"), trackTitles(), "an unchanged file must not be read again")
@@ -158,8 +159,8 @@ class LibraryImportPipelineTest : ThothTest() {
         transaction {
             assertEquals(1L, AuthorTable.selectAll().count(), "the author must not be duplicated")
             assertEquals(1L, SeriesTable.selectAll().count(), "the series must not be duplicated")
-            assertEquals(3L, BooksTable.selectAll().count())
-            assertEquals(5L, TracksTable.selectAll().count())
+            assertEquals(3L, BookTable.selectAll().count())
+            assertEquals(5L, TrackTable.selectAll().count())
         }
     }
 
@@ -250,9 +251,9 @@ class LibraryImportPipelineTest : ThothTest() {
         assertEquals(
             2L,
             transaction {
-                TracksTable
+                TrackTable
                     .selectAll()
-                    .count { it[TracksTable.title].contains("Book") && !it[TracksTable.path].contains("Bad Author") }
+                    .count { it[TrackTable.title].contains("Book") && !it[TrackTable.path].contains("Bad Author") }
             }.toLong(),
             "both good tracks must be imported",
         )
@@ -270,10 +271,10 @@ class LibraryImportPipelineTest : ThothTest() {
 
         val scannedId =
             transaction {
-                LibrariesTable
-                    .select(LibrariesTable.id)
-                    .where { LibrariesTable.name eq "lib-scanned" }
-                    .first()[LibrariesTable.id]
+                LibraryTable
+                    .select(LibraryTable.id)
+                    .where { LibraryTable.name eq "lib-scanned" }
+                    .first()[LibraryTable.id]
                     .value
             }
         val scanning = Thread { scan(scannedId) }.also { it.start() }
@@ -376,7 +377,7 @@ class LibraryImportPipelineTest : ThothTest() {
         assertEquals(2L, tracks(), "sanity: both books import first")
 
         // Every file now looks changed, so the scan has to re-analyze and write
-        transaction { TracksTable.update { it[fileModifiedAt] = Instant.EPOCH } }
+        transaction { TrackTable.update { it[fileModifiedAt] = Instant.EPOCH } }
         val snapshot = getKoin().get<LibraryRoots>().of(libId)!!
 
         // A competing connection holding the write lock for the whole scan, which is the real shape of the
@@ -405,11 +406,11 @@ class LibraryImportPipelineTest : ThothTest() {
         // scan's own writes. An unchanged rescan is all batched touches, which is where coalescing happens.
         transaction {
             val current =
-                LibrariesTable
-                    .select(LibrariesTable.scanIndex)
-                    .where { LibrariesTable.id eq libId }
-                    .single()[LibrariesTable.scanIndex]
-            LibrariesTable.update({ LibrariesTable.id eq libId }) { it[scanIndex] = current + 1uL }
+                LibraryTable
+                    .select(LibraryTable.scanIndex)
+                    .where { LibraryTable.id eq libId }
+                    .single()[LibraryTable.scanIndex]
+            LibraryTable.update({ LibraryTable.id eq libId }) { it[scanIndex] = current + 1uL }
         }
         val snapshot = getKoin().get<LibraryRoots>().of(libId)!!
 
@@ -442,7 +443,7 @@ class LibraryImportPipelineTest : ThothTest() {
         val track = folder.resolve("A Book 0.mp3")
         restorePermissions = track
         Files.setPosixFilePermissions(track, emptySet())
-        transaction { TracksTable.update { it[fileModifiedAt] = Instant.EPOCH } }
+        transaction { TrackTable.update { it[fileModifiedAt] = Instant.EPOCH } }
         scan(libId)
 
         assertEquals(2L, tracks(), "a file that could not be read must not be mistaken for a deleted one")
@@ -458,11 +459,11 @@ class LibraryImportPipelineTest : ThothTest() {
 
         // A misconfigured library analyzes nothing at all, which must read as "cannot tell", not "all gone"
         transaction {
-            LibrariesTable.update({ LibrariesTable.id eq libId }) {
+            LibraryTable.update({ LibraryTable.id eq libId }) {
                 it[fileScanners] = listOf(FileScanner("NoSuchScanner"))
             }
         }
-        transaction { TracksTable.update { it[fileModifiedAt] = Instant.EPOCH } }
+        transaction { TrackTable.update { it[fileModifiedAt] = Instant.EPOCH } }
         scan(libId)
 
         assertEquals(1L, tracks(), "a library that analyzed nothing must not have everything reaped")

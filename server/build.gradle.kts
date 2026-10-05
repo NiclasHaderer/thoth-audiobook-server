@@ -57,6 +57,7 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.serialization.jackson)
+    implementation(libs.jackson.datatype.jdk8)
 
     // Dependency Injection
     implementation(libs.bundles.koin)

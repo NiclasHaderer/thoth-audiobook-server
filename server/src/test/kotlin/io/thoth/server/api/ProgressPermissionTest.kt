@@ -14,6 +14,7 @@ import io.thoth.server.newLibrary
 import io.thoth.server.newTrack
 import io.thoth.server.registerWithAccess
 import io.thoth.server.thothServer
+import java.util.Optional
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,7 +35,7 @@ class ProgressPermissionTest : ThothTest() {
             )
             assertEquals(
                 HttpStatusCode.Forbidden,
-                api.updateBook(bookId, libId, BookUpdateImpl(title = "Renamed"), token).status,
+                api.updateBook(bookId, libId, BookUpdateImpl(title = Optional.of("Renamed")), token).status,
                 "library content is still off limits",
             )
         }
@@ -48,7 +49,7 @@ class ProgressPermissionTest : ThothTest() {
             )
             assertEquals(
                 HttpStatusCode.OK,
-                api.updateBook(bookId, libId, BookUpdateImpl(title = "Renamed"), token).status,
+                api.updateBook(bookId, libId, BookUpdateImpl(title = Optional.of("Renamed")), token).status,
             )
         }
 

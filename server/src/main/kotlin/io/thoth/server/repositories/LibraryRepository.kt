@@ -6,9 +6,9 @@ import io.thoth.server.api.PartialUpdateLibrary
 import io.thoth.server.api.UpdateLibrary
 import io.thoth.server.common.extensions.canonical
 import io.thoth.server.common.scheduling.Scheduler
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryRow
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.reconcileLibrary
 import io.thoth.server.database.tables.toLibraryRow
@@ -64,16 +64,16 @@ class LibraryRepositoryImpl :
     override fun raw(id: UUID): Library = transaction { rawRow(id).toModel(bookCount(id)) }
 
     private fun bookCount(id: UUID): Long =
-        BooksTable
+        BookTable
             .selectAll()
-            .where { (BooksTable.library eq id) and BooksTable.deferDeletionUntil.isNull() }
+            .where { (BookTable.library eq id) and BookTable.deferDeletionUntil.isNull() }
             .count()
 
     private fun rawRow(id: UUID): LibraryRow =
         transaction {
-            LibrariesTable
+            LibraryTable
                 .selectAll()
-                .where { LibrariesTable.id eq id }
+                .where { LibraryTable.id eq id }
                 .firstOrNull()
                 ?.toLibraryRow()
                 ?: throw ErrorResponse.notFound("Library", id)
@@ -87,38 +87,38 @@ class LibraryRepositoryImpl :
     override fun get(id: UUID): Library = raw(id)
 
     override fun getAll(): List<Library> =
-        transaction { LibrariesTable.selectAll().map { it.toLibraryRow() }.map { it.toModel(bookCount(it.id)) } }
+        transaction { LibraryTable.selectAll().map { it.toLibraryRow() }.map { it.toModel(bookCount(it.id)) } }
 
     override fun modify(
         id: UUID,
         partial: PartialUpdateLibrary,
     ): Library =
         libraryMutationLock.withLock {
-            val reanalyze = partial.fileScanners != null || partial.combineFileScannerFields != null
-            val needsScan = partial.folders != null || partial.metadataAgents != null || reanalyze
+            val reanalyze = partial.fileScanners.isPresent || partial.combineFileScannerFields.isPresent
+            val needsScan = partial.folders.isPresent || partial.metadataAgents.isPresent || reanalyze
             val model =
                 transaction {
-                    if (partial.folders != null) {
-                        raiseForOverlaps(id, partial.folders)
-                    }
+                    partial.folders.ifPresent { raiseForOverlaps(id, it) }
 
                     val library = rawRow(id)
                     val updated =
                         library.copy(
-                            name = partial.name ?: library.name,
-                            icon = partial.icon ?: library.icon,
-                            folders = partial.folders ?: library.folders,
-                            preferEmbeddedMetadata = partial.preferEmbeddedMetadata ?: library.preferEmbeddedMetadata,
-                            metadataAgents = partial.metadataAgents ?: library.metadataAgents,
+                            name = partial.name.orElse(library.name),
+                            icon = partial.icon?.orElse(library.icon),
+                            folders = partial.folders.orElse(library.folders),
+                            preferEmbeddedMetadata = partial.preferEmbeddedMetadata.orElse(
+                                library.preferEmbeddedMetadata,
+                            ),
+                            metadataAgents = partial.metadataAgents.orElse(library.metadataAgents),
                             combineMetadataAgentFields =
-                                partial.combineMetadataAgentFields ?: library.combineMetadataAgentFields,
-                            fileScanners = partial.fileScanners ?: library.fileScanners,
+                                partial.combineMetadataAgentFields.orElse(library.combineMetadataAgentFields),
+                            fileScanners = partial.fileScanners.orElse(library.fileScanners),
                             combineFileScannerFields =
-                                partial.combineFileScannerFields ?: library.combineFileScannerFields,
-                            language = partial.language ?: library.language,
-                            region = partial.region ?: library.region,
+                                partial.combineFileScannerFields.orElse(library.combineFileScannerFields),
+                            language = partial.language.orElse(library.language),
+                            region = partial.region.orElse(library.region),
                         )
-                    LibrariesTable.update(updated)
+                    LibraryTable.update(updated)
                     // Which layer wins is baked into every row of the library, so flipping it has to
                     // re-resolve them.
                     if (updated.preferEmbeddedMetadata != library.preferEmbeddedMetadata) {
@@ -154,7 +154,7 @@ class LibraryRepositoryImpl :
                             language = complete.language,
                             region = complete.region,
                         )
-                    LibrariesTable.insert(row)
+                    LibraryTable.insert(row)
                     row.toModel(0)
                 }
 
@@ -166,7 +166,7 @@ class LibraryRepositoryImpl :
     override fun delete(id: UUID) {
         libraryMutationLock.withLock {
             transaction {
-                val deleted = LibrariesTable.deleteWhere { LibrariesTable.id eq id }
+                val deleted = LibraryTable.deleteWhere { LibraryTable.id eq id }
                 if (deleted == 0) throw ErrorResponse.notFound("Library", id)
                 cleanup.removeOrphanedImages()
             }

@@ -22,13 +22,14 @@ import io.thoth.server.database.rows.toBookRow
 import io.thoth.server.database.rows.toModel
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.BookAgentMetadataTable
+import io.thoth.server.database.tables.BookField
 import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookMetadata
 import io.thoth.server.database.tables.BookMetadataRow
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.MetadataLayer
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.authorIdsLinkedToBook
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
@@ -87,10 +88,10 @@ class BookRepositoryImpl :
         libraryId: UUID,
         showInvisible: Boolean,
     ) = transaction {
-        BooksTable
+        BookTable
             .selectAll()
             .where {
-                (BooksTable.library eq libraryId) and BooksTable.deferDeletionUntil.isNull().unless(showInvisible)
+                (BookTable.library eq libraryId) and BookTable.deferDeletionUntil.isNull().unless(showInvisible)
             }.count()
     }
 
@@ -104,11 +105,11 @@ class BookRepositoryImpl :
     ): List<Book> =
         transaction {
             val rows =
-                BooksTable
+                BookTable
                     .selectAll()
                     .where {
-                        (BooksTable.library eq libraryId) and BooksTable.visible.unless(showInvisible)
-                    }.orderBy(BooksTable.title to order)
+                        (BookTable.library eq libraryId) and BookTable.visible.unless(showInvisible)
+                    }.orderBy(BookTable.title to order)
                     .offset(offset)
                     .limit(limit)
                     .map { it.toBookRow() }
@@ -120,9 +121,9 @@ class BookRepositoryImpl :
         libraryId: UUID,
     ): BookRow =
         transaction {
-            BooksTable
+            BookTable
                 .selectAll()
-                .where { BooksTable.id eq id and (BooksTable.library eq libraryId) }
+                .where { BookTable.id eq id and (BookTable.library eq libraryId) }
                 .firstOrNull()
                 ?.toBookRow()
                 ?: throw ErrorResponse.notFound("Book", id)
@@ -145,11 +146,11 @@ class BookRepositoryImpl :
     ): BookDetailed =
         transaction {
             val book = raw(id, libraryId)
-            if (!showInvisible) requireVisible(BooksTable, "Book", id)
+            if (!showInvisible) requireVisible(BookTable, "Book", id)
             val tracks =
-                TracksTable
+                TrackTable
                     .selectAll()
-                    .where { TracksTable.book eq id }
+                    .where { TrackTable.book eq id }
                     .map { it.toTrackRow() }
             // Incomplete numbering cannot be trusted, so those books fall back to the file names
             val ordered =
@@ -169,12 +170,12 @@ class BookRepositoryImpl :
     ): List<Book> =
         transaction {
             val rows =
-                BooksTable
+                BookTable
                     .selectAll()
                     .where {
-                        matchesTitle(query) and (BooksTable.library eq libraryId) and
-                            BooksTable.visible
-                    }.orderBy(BooksTable.title to SortOrder.ASC)
+                        matchesTitle(query) and (BookTable.library eq libraryId) and
+                            BookTable.visible
+                    }.orderBy(BookTable.title to SortOrder.ASC)
                     .limit(searchLimit)
                     .map { it.toBookRow() }
             booksToModels(rows, userId)
@@ -187,36 +188,44 @@ class BookRepositoryImpl :
         partial: BookUpdate,
     ): Book {
         val currentCover = raw(id, libraryId).coverID
-        val newCover = imageDownloader.download(partial.cover?.takeUnless { it == currentCover?.toString() })
+        val newCover =
+            imageDownloader.download(partial.cover?.orElse(null)?.takeUnless { it == currentCover?.toString() })
         return transaction {
             val user = BookUserMetadataTable.layer(id)
+            val edit = LayerEdit(user.claimed)
+            val authors = edit.links(BookField.AUTHORS, partial.authors)
+            val series = edit.links(BookField.SERIES, partial.series)
             BookUserMetadataTable.write(
                 user.copy(
-                    title = partial.title ?: user.title,
-                    provider = partial.provider ?: user.provider,
-                    providerID = partial.providerID ?: user.providerID,
-                    providerRating = partial.providerRating ?: user.providerRating,
-                    releaseDate = partial.releaseDate ?: user.releaseDate,
-                    publisher = partial.publisher ?: user.publisher,
-                    language = partial.language ?: user.language,
-                    description = partial.description ?: user.description,
-                    narrators = partial.narrators ?: user.narrators,
-                    genres = partial.genres ?: user.genres,
-                    isbn = partial.isbn ?: user.isbn,
-                    coverID = getOrCreateImage(newCover, currentImageID = user.coverID),
-                    authorsSet = user.authorsSet || partial.authors != null,
-                    seriesSet = user.seriesSet || partial.series != null,
+                    title = edit.value(BookField.TITLE, partial.title, user.title),
+                    provider = edit.value(BookField.PROVIDER, partial.provider, user.provider),
+                    providerID = edit.value(BookField.PROVIDER_ID, partial.providerID, user.providerID),
+                    providerRating = edit.value(BookField.PROVIDER_RATING, partial.providerRating, user.providerRating),
+                    releaseDate = edit.value(BookField.RELEASE_DATE, partial.releaseDate, user.releaseDate),
+                    publisher = edit.value(BookField.PUBLISHER, partial.publisher, user.publisher),
+                    language = edit.value(BookField.LANGUAGE, partial.language, user.language),
+                    description = edit.value(BookField.DESCRIPTION, partial.description, user.description),
+                    narrators = edit.value(BookField.NARRATORS, partial.narrators, user.narrators),
+                    genres = edit.value(BookField.GENRES, partial.genres, user.genres),
+                    isbn = edit.value(BookField.ISBN, partial.isbn, user.isbn),
+                    coverID =
+                        edit.value(
+                            BookField.COVER_ID,
+                            partial.cover?.map { getOrCreateImage(newCover, currentImageID = currentCover) },
+                            user.coverID,
+                        ),
+                    claimed = edit.claimed,
                 ),
             )
             // Both ends of the change: whoever lost the book can be an orphan now, whoever gained it is not
-            if (partial.authors != null) {
-                val authorIds = partial.authors.map { authorRepository.raw(it, libraryId).id }
+            if (authors != null) {
+                val authorIds = authors.map { authorRepository.raw(it, libraryId).id }
                 val touched = authorIdsLinkedToBook(id) + authorIds
                 replaceBookAuthors(id, MetadataLayer.USER, authorIds)
                 refreshAuthorDeferral(touched)
             }
-            if (partial.series != null) {
-                val seriesIds = partial.series.map { seriesRepository.raw(it, libraryId).id }
+            if (series != null) {
+                val seriesIds = series.map { seriesRepository.raw(it, libraryId).id }
                 val touched = seriesIdsLinkedToBook(id) + seriesIds
                 replaceBookSeries(id, MetadataLayer.USER, seriesIds.associateWith { null })
                 refreshSeriesDeferral(touched)
@@ -232,7 +241,7 @@ class BookRepositoryImpl :
         series: List<UUID>,
     ): BookRow =
         transaction {
-            val id = BooksTable.create(libraryRepository.raw(libraryId).id, bookName)
+            val id = BookTable.create(libraryRepository.raw(libraryId).id, bookName)
             BookFileMetadataTable.write(BookMetadataRow(book = id, title = bookName))
             replaceBookAuthors(id, MetadataLayer.FILE, authors)
             replaceBookSeries(id, MetadataLayer.FILE, series.associateWith { null })
@@ -333,10 +342,10 @@ private fun idInLayer(
     authorIds: List<UUID>,
     libraryId: UUID,
 ): UUID? =
-    (BooksTable innerJoin table)
-        .select(BooksTable.id)
+    (BookTable innerJoin table)
+        .select(BookTable.id)
         .where {
-            val sameTitle = (table.title ilike pattern) and (BooksTable.library eq libraryId)
+            val sameTitle = (table.title ilike pattern) and (BookTable.library eq libraryId)
             // An empty author list would make `inList` match nothing, so books without authors are
             // identified by title alone instead of never being found.
             if (authorIds.isEmpty()) {
@@ -346,13 +355,13 @@ private fun idInLayer(
                     AuthorBookTable
                         .select(AuthorBookTable.book)
                         .where {
-                            (AuthorBookTable.authors inList authorIds) and
+                            (AuthorBookTable.author inList authorIds) and
                                 (AuthorBookTable.addedBy eq MetadataLayer.FILE)
                         }
-                sameTitle and (BooksTable.id inSubQuery booksOfAuthors)
+                sameTitle and (BookTable.id inSubQuery booksOfAuthors)
             }
         }.firstOrNull()
-        ?.get(BooksTable.id)
+        ?.get(BookTable.id)
         ?.value
 
-private fun matchesTitle(query: String): Op<Boolean> = BooksTable.title ilike "%${escape(query)}%"
+private fun matchesTitle(query: String): Op<Boolean> = BookTable.title ilike "%${escape(query)}%"

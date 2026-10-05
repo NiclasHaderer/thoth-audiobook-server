@@ -3,6 +3,7 @@ package io.thoth.server.database.migrations
 import io.thoth.server.ThothTest
 import io.thoth.server.database.THOTH_TABLES
 import io.thoth.server.database.sqliteDataSource
+import org.jetbrains.exposed.v1.core.EnumerationColumnType
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils

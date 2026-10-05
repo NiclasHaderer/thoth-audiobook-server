@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.deser.Deserializers
 import com.fasterxml.jackson.databind.deser.std.ReferenceTypeDeserializer
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember
+import com.fasterxml.jackson.databind.introspect.AnnotatedParameter
+import com.fasterxml.jackson.databind.introspect.NopAnnotationIntrospector
 import com.fasterxml.jackson.databind.jsontype.TypeDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.type.ReferenceType
@@ -34,6 +37,14 @@ class OptionalModule : SimpleModule() {
                     } else {
                         null
                     }
+            },
+        )
+        // Every other key has to be sent, even for a nullable property: jackson-module-kotlin would otherwise quietly
+        // fill a missing one with null, and only an Optional can tell "not sent" apart.
+        context.insertAnnotationIntrospector(
+            object : NopAnnotationIntrospector() {
+                override fun hasRequiredMarker(member: AnnotatedMember): Boolean? =
+                    if (member is AnnotatedParameter && member.rawType != Optional::class.java) true else null
             },
         )
         context.configOverride(Optional::class.java).include =

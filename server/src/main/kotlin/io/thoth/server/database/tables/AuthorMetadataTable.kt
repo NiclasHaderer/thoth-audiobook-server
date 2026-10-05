@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import io.thoth.server.database.extensions.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Transaction
@@ -13,28 +14,41 @@ import org.jetbrains.exposed.v1.jdbc.update
 import java.time.LocalDate
 import java.util.UUID
 
+enum class AuthorField : LayerField {
+    NAME,
+    PROVIDER,
+    PROVIDER_ID,
+    BIOGRAPHY,
+    IMAGE_ID,
+    WEBSITE,
+    BORN_IN,
+    BIRTH_DATE,
+    DEATH_DATE,
+}
+
 sealed class AuthorMetadata(
     name: String,
 ) : IdTable<UUID>(name) {
-    final override val id = reference("author", AuthorTable, onDelete = ReferenceOption.CASCADE)
+    final override val id = reference("author_id", AuthorTable, onDelete = ReferenceOption.CASCADE)
     final override val primaryKey = PrimaryKey(id)
 
-    val name = text("name").nullable()
-    val biography = text("biography").nullable()
-    val website = varchar("website", 255).nullable()
-    val birthDate = date("birthDate").nullable()
-    val bornIn = varchar("bornIn", 255).nullable()
-    val deathDate = date("deathDate").nullable()
-    val provider = varchar("provider", 255).nullable()
-    val providerID = varchar("providerID", 255).nullable()
-    val imageID = reference("imageId", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
+    val name = text(AuthorField.NAME.column).nullable()
+    val biography = text(AuthorField.BIOGRAPHY.column).nullable()
+    val website = varchar(AuthorField.WEBSITE.column, 255).nullable()
+    val birthDate = date(AuthorField.BIRTH_DATE.column).nullable()
+    val bornIn = varchar(AuthorField.BORN_IN.column, 255).nullable()
+    val deathDate = date(AuthorField.DEATH_DATE.column).nullable()
+    val provider = varchar(AuthorField.PROVIDER.column, 255).nullable()
+    val providerId = varchar(AuthorField.PROVIDER_ID.column, 255).nullable()
+    val imageId = reference(AuthorField.IMAGE_ID.column, ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
+    val claimed = json<Set<AuthorField>>("claimed").default(emptySet())
 }
 
-object AuthorFileMetadataTable : AuthorMetadata("AuthorFileMetadata")
+object AuthorFileMetadataTable : AuthorMetadata("author_file_metadata")
 
-object AuthorAgentMetadataTable : AuthorMetadata("AuthorAgentMetadata")
+object AuthorAgentMetadataTable : AuthorMetadata("author_agent_metadata")
 
-object AuthorUserMetadataTable : AuthorMetadata("AuthorUserMetadata")
+object AuthorUserMetadataTable : AuthorMetadata("author_user_metadata")
 
 data class AuthorMetadataRow(
     val author: UUID,
@@ -47,7 +61,8 @@ data class AuthorMetadataRow(
     val provider: String? = null,
     val providerID: String? = null,
     val imageID: UUID? = null,
-)
+    override val claimed: Set<AuthorField> = emptySet(),
+) : LayerRow<AuthorField>
 
 context(_: Transaction)
 fun AuthorMetadata.layer(authorId: UUID): AuthorMetadataRow =
@@ -67,8 +82,9 @@ private fun ResultRow.toAuthorMetadataRow(table: AuthorMetadata): AuthorMetadata
         bornIn = this[table.bornIn],
         deathDate = this[table.deathDate],
         provider = this[table.provider],
-        providerID = this[table.providerID],
-        imageID = this[table.imageID]?.value,
+        providerID = this[table.providerId],
+        imageID = this[table.imageId]?.value,
+        claimed = this[table.claimed],
     )
 
 // Nothing outside of this file may write an author layer.
@@ -91,6 +107,7 @@ private fun AuthorMetadata.write(
     stmt[bornIn] = row.bornIn
     stmt[deathDate] = row.deathDate
     stmt[provider] = row.provider
-    stmt[providerID] = row.providerID
-    stmt[imageID] = row.imageID
+    stmt[providerId] = row.providerID
+    stmt[imageId] = row.imageID
+    stmt[claimed] = row.claimed
 }
