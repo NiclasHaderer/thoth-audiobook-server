@@ -3,7 +3,7 @@ package io.thoth.openapi.client.typescript.types
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
-import java.util.Optional
+import io.thoth.openapi.common.isPatch
 import kotlin.reflect.KClass
 
 class InterfaceTsGenerator : TsTypeGenerator() {
@@ -32,8 +32,7 @@ class InterfaceTsGenerator : TsTypeGenerator() {
                 .forEach { property ->
                     append("  ")
                     if (property.overwrites) append("override ")
-                    // Only an Optional may be left out, every other key is always sent. A `?` means the value may be null.
-                    val optional = property.underlyingProperty.returnType.classifier == Optional::class
+                    val optional = property.underlyingProperty.isPatch
                     val arguments = property.type.typeArguments
                     val type =
                         when {

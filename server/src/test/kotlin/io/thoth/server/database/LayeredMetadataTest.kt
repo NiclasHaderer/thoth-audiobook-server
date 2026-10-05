@@ -1,6 +1,8 @@
 package io.thoth.server.database
 
 import io.thoth.models.BookUpdate
+import io.thoth.openapi.common.Patch
+import io.thoth.openapi.common.orAbsent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorBookTable
@@ -42,7 +44,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
 import java.time.Instant
-import java.util.Optional
 import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -329,7 +330,7 @@ class LayeredMetadataTest : ThothTest() {
         trackManager.insert(scan(description = "From the tags"), libId)
         val id = bookId()
 
-        bookRepository.modify(userId, id, libId, BookUpdate(description = null))
+        bookRepository.modify(userId, id, libId, BookUpdate(description = Patch.Set(null)))
         trackManager.insert(scan(description = "Retagged"), libId)
         assertNull(bookRepository.raw(id, libId).description, "a rescan must not fill a blanked field")
 
@@ -346,7 +347,7 @@ class LayeredMetadataTest : ThothTest() {
         val id = bookId()
         assertEquals(1, bookRepository.get(userId, id, libId).series.size, "sanity: the tags name a series")
 
-        bookRepository.modify(userId, id, libId, BookUpdate(series = null))
+        bookRepository.modify(userId, id, libId, BookUpdate(series = Patch.Set(null)))
         trackManager.insert(scan(series = "Tagged Series"), libId)
 
         assertEquals(emptyList(), bookRepository.get(userId, id, libId).series.map { it.title })
@@ -375,9 +376,9 @@ class LayeredMetadataTest : ThothTest() {
         authors: List<UUID>? = null,
         series: List<UUID>? = null,
     ) = BookUpdate(
-        title = Optional.ofNullable(title),
-        authors = Optional.ofNullable(authors),
-        series = Optional.ofNullable(series),
-        description = Optional.ofNullable(description),
+        title = title.orAbsent(),
+        authors = authors.orAbsent(),
+        series = series.orAbsent(),
+        description = description.orAbsent(),
     )
 }

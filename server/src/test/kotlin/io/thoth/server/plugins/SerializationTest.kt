@@ -1,20 +1,24 @@
 package io.thoth.server.plugins
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.thoth.openapi.common.Patch
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorField
 import io.thoth.server.di.serialization.JacksonSerialization
 import io.thoth.server.thothServer
 import org.koin.mp.KoinPlatform.getKoin
-import java.util.Optional
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
 data class Wire(
-    val required: Optional<String> = Optional.empty(),
-    val nullable: Optional<String>? = Optional.empty(),
+    val required: Patch<String> = Patch.Absent,
+    val nullable: Patch<String?> = Patch.Absent,
     val plain: String?,
+)
+
+data class Tagged(
+    val tags: Patch<List<String>> = Patch.Absent,
 )
 
 data class Scalars(
@@ -33,7 +37,7 @@ class SerializationTest : ThothTest() {
     private fun ObjectMapper.readScalars(json: String) = readValue(json, Scalars::class.java)
 
     @Test
-    fun `a missing key reads as an empty optional`() =
+    fun `a missing key reads as absent`() =
         withMapper { mapper ->
             assertEquals(Wire(plain = null), mapper.read("""{"plain": null}"""))
         }
@@ -41,7 +45,10 @@ class SerializationTest : ThothTest() {
     @Test
     fun `a null reads as null where the field may be null`() =
         withMapper { mapper ->
-            assertEquals(Wire(nullable = null, plain = null), mapper.read("""{"nullable": null, "plain": null}"""))
+            assertEquals(
+                Wire(nullable = Patch.Set(null), plain = null),
+                mapper.read("""{"nullable": null, "plain": null}"""),
+            )
         }
 
     @Test
@@ -51,18 +58,18 @@ class SerializationTest : ThothTest() {
         }
 
     @Test
-    fun `a value reads as a present optional`() =
+    fun `a value reads as set`() =
         withMapper { mapper ->
             assertEquals(
-                Wire(required = Optional.of("a"), nullable = Optional.of("b"), plain = "c"),
+                Wire(required = Patch.Set("a"), nullable = Patch.Set("b"), plain = "c"),
                 mapper.read("""{"required": "a", "nullable": "b", "plain": "c"}"""),
             )
         }
 
     @Test
-    fun `only an optional may be left out`() =
+    fun `only a patch may be left out`() =
         withMapper { mapper ->
-            assertFails("a nullable key that is not an Optional must still be sent") { mapper.read("{}") }
+            assertFails("a nullable key that is not a Patch must still be sent") { mapper.read("{}") }
         }
 
     @Test
@@ -82,16 +89,16 @@ class SerializationTest : ThothTest() {
         }
 
     @Test
-    fun `an empty optional is left out and every null is written`() =
+    fun `an absent patch is left out and every null is written`() =
         withMapper { mapper ->
             assertEquals("""{"plain":null}""", mapper.writeValueAsString(Wire(plain = null)))
             assertEquals(
                 """{"nullable":null,"plain":null}""",
-                mapper.writeValueAsString(Wire(nullable = null, plain = null)),
+                mapper.writeValueAsString(Wire(nullable = Patch.Set(null), plain = null)),
             )
             assertEquals(
                 """{"required":"a","nullable":"b","plain":"c"}""",
-                mapper.writeValueAsString(Wire(Optional.of("a"), Optional.of("b"), "c")),
+                mapper.writeValueAsString(Wire(Patch.Set("a"), Patch.Set("b"), "c")),
             )
         }
 
@@ -101,13 +108,19 @@ class SerializationTest : ThothTest() {
             val states =
                 listOf(
                     Wire(plain = null),
-                    Wire(nullable = null, plain = null),
-                    Wire(Optional.of("a"), Optional.of("b"), "c"),
-                    Wire(required = Optional.of("a"), nullable = null, plain = "c"),
+                    Wire(nullable = Patch.Set(null), plain = null),
+                    Wire(Patch.Set("a"), Patch.Set("b"), "c"),
+                    Wire(required = Patch.Set("a"), nullable = Patch.Set(null), plain = "c"),
                 )
             for (state in states) {
                 assertEquals(state, mapper.read(mapper.writeValueAsString(state)))
             }
+        }
+
+    @Test
+    fun `a patch reads its value with the type argument`() =
+        withMapper { mapper ->
+            assertEquals(Tagged(Patch.Set(listOf("x"))), mapper.readValue("""{"tags": ["x"]}""", Tagged::class.java))
         }
 
     @Test

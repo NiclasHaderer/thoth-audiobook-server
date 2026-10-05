@@ -8,6 +8,8 @@ import io.thoth.models.Book
 import io.thoth.models.BookDetailed
 import io.thoth.models.BookUpdate
 import io.thoth.models.TitledId
+import io.thoth.openapi.common.map
+import io.thoth.openapi.common.orElse
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.exposed.unless
@@ -189,7 +191,7 @@ class BookRepositoryImpl :
     ): Book {
         val currentCover = raw(id, libraryId).coverID
         val newCover =
-            imageDownloader.download(partial.cover?.orElse(null)?.takeUnless { it == currentCover?.toString() })
+            imageDownloader.download(partial.cover.orElse(null)?.takeUnless { it == currentCover?.toString() })
         return transaction {
             val user = BookUserMetadataTable.layer(id)
             val edit = LayerEdit(user.claimed)
@@ -211,7 +213,7 @@ class BookRepositoryImpl :
                     coverID =
                         edit.value(
                             BookField.COVER_ID,
-                            partial.cover?.map { getOrCreateImage(newCover, currentImageID = currentCover) },
+                            partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } },
                             user.coverID,
                         ),
                     claimed = edit.claimed,

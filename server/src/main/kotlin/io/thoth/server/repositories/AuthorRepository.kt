@@ -7,6 +7,9 @@ import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.Author
 import io.thoth.models.AuthorDetailed
 import io.thoth.models.AuthorUpdate
+import io.thoth.openapi.common.ifSet
+import io.thoth.openapi.common.map
+import io.thoth.openapi.common.orElse
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.exposed.unless
@@ -267,7 +270,7 @@ class AuthorServiceImpl :
     ): Author {
         val currentImage = raw(id, libraryId).imageID
         val newImage =
-            imageDownloader.download(partial.image?.orElse(null)?.takeUnless { it == currentImage?.toString() })
+            imageDownloader.download(partial.image.orElse(null)?.takeUnless { it == currentImage?.toString() })
         return transaction {
             val user = AuthorUserMetadataTable.layer(id)
             val edit = LayerEdit(user.claimed)
@@ -284,14 +287,14 @@ class AuthorServiceImpl :
                     imageID =
                         edit.value(
                             AuthorField.IMAGE_ID,
-                            partial.image?.map { getOrCreateImage(newImage, currentImageID = currentImage) },
+                            partial.image.map { it?.let { getOrCreateImage(newImage, currentImageID = currentImage) } },
                             user.imageID,
                         ),
                     claimed = edit.claimed,
                 ),
             )
 
-            partial.books.ifPresent { books ->
+            partial.books.ifSet { books ->
                 setBooks(id, books.map { bookRepository.raw(it, libraryId).id }.toSet())
             }
 

@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+    api(project(":openapi-models"))
     implementation(libs.kotlin.logging)
 
     // Get type generators

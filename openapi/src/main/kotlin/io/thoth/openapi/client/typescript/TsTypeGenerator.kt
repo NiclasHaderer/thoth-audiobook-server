@@ -5,6 +5,7 @@ import io.thoth.openapi.client.common.Property
 import io.thoth.openapi.client.common.PropertyType
 import io.thoth.openapi.client.common.TypeGenerator
 import io.thoth.openapi.common.ClassType
+import io.thoth.openapi.common.acceptsNull
 import kotlin.reflect.KTypeParameter
 
 abstract class TsTypeGenerator : TypeGenerator<TsTypeGenerator.TsType, TsTypeGenerator.TsDataType>() {
@@ -126,7 +127,7 @@ abstract class TsTypeGenerator : TypeGenerator<TsTypeGenerator.TsType, TsTypeGen
                     }
                 }
 
-            val nullable = property.returnType.isMarkedNullable
+            val nullable = property.acceptsNull
             Property(
                 name = propertyName,
                 nullable = nullable,

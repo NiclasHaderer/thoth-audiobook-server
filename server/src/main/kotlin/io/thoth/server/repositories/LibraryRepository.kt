@@ -1,6 +1,9 @@
 package io.thoth.server.repositories
 
 import io.thoth.models.Library
+import io.thoth.openapi.common.ifSet
+import io.thoth.openapi.common.isSet
+import io.thoth.openapi.common.orElse
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.api.PartialUpdateLibrary
 import io.thoth.server.api.UpdateLibrary
@@ -94,17 +97,17 @@ class LibraryRepositoryImpl :
         partial: PartialUpdateLibrary,
     ): Library =
         libraryMutationLock.withLock {
-            val reanalyze = partial.fileScanners.isPresent || partial.combineFileScannerFields.isPresent
-            val needsScan = partial.folders.isPresent || partial.metadataAgents.isPresent || reanalyze
+            val reanalyze = partial.fileScanners.isSet || partial.combineFileScannerFields.isSet
+            val needsScan = partial.folders.isSet || partial.metadataAgents.isSet || reanalyze
             val model =
                 transaction {
-                    partial.folders.ifPresent { raiseForOverlaps(id, it) }
+                    partial.folders.ifSet { raiseForOverlaps(id, it) }
 
                     val library = rawRow(id)
                     val updated =
                         library.copy(
                             name = partial.name.orElse(library.name),
-                            icon = partial.icon?.orElse(library.icon),
+                            icon = partial.icon.orElse(library.icon),
                             folders = partial.folders.orElse(library.folders),
                             preferEmbeddedMetadata = partial.preferEmbeddedMetadata.orElse(
                                 library.preferEmbeddedMetadata,

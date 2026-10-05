@@ -8,6 +8,9 @@ import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.Series
 import io.thoth.models.SeriesDetailed
 import io.thoth.models.SeriesUpdate
+import io.thoth.openapi.common.ifSet
+import io.thoth.openapi.common.map
+import io.thoth.openapi.common.orElse
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.exposed.unless
@@ -210,7 +213,7 @@ class SeriesRepositoryImpl :
     ): Series {
         val currentCover = raw(id, libraryId).coverID
         val newCover =
-            imageDownloader.download(partial.cover?.orElse(null)?.takeUnless { it == currentCover?.toString() })
+            imageDownloader.download(partial.cover.orElse(null)?.takeUnless { it == currentCover?.toString() })
         return transaction {
             val user = SeriesUserMetadataTable.layer(id)
             val edit = LayerEdit(user.claimed)
@@ -224,7 +227,7 @@ class SeriesRepositoryImpl :
                     coverID =
                         edit.value(
                             SeriesField.COVER_ID,
-                            partial.cover?.map { getOrCreateImage(newCover, currentImageID = currentCover) },
+                            partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } },
                             user.coverID,
                         ),
                     description = edit.value(SeriesField.DESCRIPTION, partial.description, user.description),
@@ -232,7 +235,7 @@ class SeriesRepositoryImpl :
                 ),
             )
 
-            partial.books.ifPresent { books ->
+            partial.books.ifSet { books ->
                 setBooks(id, books.map { bookRepository.raw(it, libraryId).id }.toSet())
             }
 

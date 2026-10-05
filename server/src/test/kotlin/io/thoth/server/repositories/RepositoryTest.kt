@@ -4,6 +4,8 @@ import io.ktor.http.HttpStatusCode
 import io.thoth.models.AuthorUpdate
 import io.thoth.models.BookUpdate
 import io.thoth.models.SeriesUpdate
+import io.thoth.openapi.common.Patch
+import io.thoth.openapi.common.orAbsent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
 import io.thoth.server.database.access.getOrCreateImage
@@ -28,7 +30,6 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.mp.KoinPlatform.getKoin
-import java.util.Optional
 import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -288,16 +289,16 @@ class RepositoryTest : ThothTest() {
         assertEquals(id, bookRepository.findByTaggedName("Guards! Guards!", emptyList(), libId)?.id)
     }
 
-    private fun seriesRenamedTo(newTitle: String) = SeriesUpdate(title = Optional.of(newTitle))
+    private fun seriesRenamedTo(newTitle: String) = SeriesUpdate(title = Patch.Set(newTitle))
 
     private fun bookAssignedTo(
         authors: List<UUID>? = null,
         series: List<UUID>? = null,
-    ) = bookRenamedTo("Mort").copy(authors = Optional.ofNullable(authors), series = Optional.ofNullable(series))
+    ) = bookRenamedTo("Mort").copy(authors = authors.orAbsent(), series = series.orAbsent())
 
-    private fun bookRenamedTo(newTitle: String) = BookUpdate(title = Optional.of(newTitle))
+    private fun bookRenamedTo(newTitle: String) = BookUpdate(title = Patch.Set(newTitle))
 
-    private fun authorRenamedTo(newName: String) = AuthorUpdate(name = Optional.of(newName))
+    private fun authorRenamedTo(newName: String) = AuthorUpdate(name = Patch.Set(newName))
 
     @Test
     fun `book findByTaggedName finds a book that has no authors`() {
@@ -337,7 +338,7 @@ class RepositoryTest : ThothTest() {
                 userId,
                 id,
                 libId,
-                bookRenamedTo("Covered").copy(cover = Optional.of(cover.toString())),
+                bookRenamedTo("Covered").copy(cover = Patch.Set(cover.toString())),
             )
 
         assertEquals(cover, result.coverID, "echoing the current cover id back must not touch the image")
@@ -353,7 +354,7 @@ class RepositoryTest : ThothTest() {
                 userId,
                 id,
                 libId,
-                bookRenamedTo("Plain").copy(cover = Optional.of(foreignImage.toString())),
+                bookRenamedTo("Plain").copy(cover = Patch.Set(foreignImage.toString())),
             )
         }
         assertEquals(null, bookRepository.raw(id, libId).coverID)

@@ -12,6 +12,7 @@ import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import io.swagger.v3.oas.models.OpenAPI
+import io.thoth.openapi.common.Patch
 import io.thoth.openapi.ktor.Description
 import io.thoth.openapi.ktor.Secured
 import io.thoth.openapi.ktor.Summary
@@ -24,7 +25,6 @@ import io.thoth.openapi.ktor.plugins.OpenAPIRouting
 import io.thoth.openapi.ktor.plugins.generateOpenApiSpec
 import io.thoth.openapi.ktor.post
 import io.thoth.openapi.serializion.kotlin.UUID_S
-import java.util.Optional
 import java.util.UUID
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.readText
@@ -68,9 +68,9 @@ data class SpecPage<T>(
 )
 
 data class SpecPatch(
-    val note: Optional<String>? = null,
-    val kind: Optional<SpecItemKind>? = null,
-    val label: Optional<String> = Optional.empty(),
+    val note: Patch<String?> = Patch.Absent,
+    val kind: Patch<SpecItemKind?> = Patch.Absent,
+    val label: Patch<String> = Patch.Absent,
     val comment: String?,
 )
 
@@ -257,9 +257,9 @@ class SchemaGenerationTest {
     }
 
     @Test
-    fun `optional properties may be left out and are only nullable when marked so`() {
+    fun `patch properties may be left out and are only nullable when their type argument is`() {
         val patch = api.components.schemas["SpecPatch"]!!
-        assertContentEquals(listOf("comment"), patch.required, "only an Optional may be left out")
+        assertContentEquals(listOf("comment"), patch.required, "only a Patch may be left out")
         assertEquals(true, patch.properties["comment"]!!.nullable)
 
         val note = patch.properties["note"]!!

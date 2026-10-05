@@ -1,9 +1,7 @@
 package io.thoth.server.repositories
 
-import java.util.Optional
+import io.thoth.openapi.common.Patch
 
-// An empty Optional is a key the client did not send. Only fields that may be blanked are nullable, and for those a
-// null is the client sending null.
 class LayerEdit<F : Enum<F>>(
     claimed: Set<F>,
 ) {
@@ -12,21 +10,33 @@ class LayerEdit<F : Enum<F>>(
 
     fun <T> value(
         field: F,
-        change: Optional<out T>?,
-        current: T?,
-    ): T? {
-        if (change != null && change.isEmpty) return current
-        claimed += field
-        return change?.get()
-    }
+        change: Patch<T>,
+        current: T,
+    ): T =
+        when (change) {
+            is Patch.Absent -> {
+                current
+            }
+
+            is Patch.Set -> {
+                claimed += field
+                change.value
+            }
+        }
 
     // The links the layer should hold afterwards, or null when they stay as they are
     fun <T> links(
         field: F,
-        change: Optional<out List<T>>?,
-    ): List<T>? {
-        if (change != null && change.isEmpty) return null
-        claimed += field
-        return change?.get() ?: emptyList()
-    }
+        change: Patch<List<T>?>,
+    ): List<T>? =
+        when (change) {
+            is Patch.Absent -> {
+                null
+            }
+
+            is Patch.Set -> {
+                claimed += field
+                change.value ?: emptyList()
+            }
+        }
 }

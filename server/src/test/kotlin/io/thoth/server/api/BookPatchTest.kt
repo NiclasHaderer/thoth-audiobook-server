@@ -6,6 +6,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.thoth.client.gen.models.BookUpdateImpl
+import io.thoth.openapi.common.Patch
 import io.thoth.server.ThothTest
 import io.thoth.server.api
 import io.thoth.server.bearer
@@ -17,7 +18,6 @@ import io.thoth.server.newBook
 import io.thoth.server.newLibrary
 import io.thoth.server.thothServer
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.util.Optional
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -35,7 +35,7 @@ class BookPatchTest : ThothTest() {
             }
             val token = bearer(login("admin"))
 
-            val response = api.updateBook(bookId, libId, BookUpdateImpl(description = null), token)
+            val response = api.updateBook(bookId, libId, BookUpdateImpl(description = Patch.Set(null)), token)
 
             assertEquals(HttpStatusCode.OK, response.status)
             val book = response.body()
@@ -51,7 +51,7 @@ class BookPatchTest : ThothTest() {
             val bookId = newBook("Dune", libId)
             val token = bearer(login("admin"))
 
-            val response = api.updateBook(bookId, libId, BookUpdateImpl(title = Optional.of("  ")), token)
+            val response = api.updateBook(bookId, libId, BookUpdateImpl(title = Patch.Set("  ")), token)
 
             assertEquals(HttpStatusCode.BadRequest, response.status)
         }

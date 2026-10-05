@@ -6,11 +6,13 @@ import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
+import io.thoth.openapi.common.Patch
+import io.thoth.openapi.common.ifSet
+import io.thoth.openapi.common.orElse
 import io.thoth.openapi.ktor.ValidateObject
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import org.koin.ktor.ext.get
-import java.util.Optional
 
 data class UpdateLibrary(
     val name: String,
@@ -32,20 +34,20 @@ data class UpdateLibrary(
 }
 
 data class PartialUpdateLibrary(
-    val name: Optional<String> = Optional.empty(),
-    val icon: Optional<String>? = Optional.empty(),
-    val folders: Optional<List<String>> = Optional.empty(),
-    val preferEmbeddedMetadata: Optional<Boolean> = Optional.empty(),
-    val metadataAgents: Optional<List<NamedMetadataAgent>> = Optional.empty(),
-    val combineMetadataAgentFields: Optional<Boolean> = Optional.empty(),
-    val fileScanners: Optional<List<FileScanner>> = Optional.empty(),
-    val combineFileScannerFields: Optional<Boolean> = Optional.empty(),
-    val language: Optional<MetadataLanguage> = Optional.empty(),
-    val region: Optional<MetadataRegion> = Optional.empty(),
+    val name: Patch<String> = Patch.Absent,
+    val icon: Patch<String?> = Patch.Absent,
+    val folders: Patch<List<String>> = Patch.Absent,
+    val preferEmbeddedMetadata: Patch<Boolean> = Patch.Absent,
+    val metadataAgents: Patch<List<NamedMetadataAgent>> = Patch.Absent,
+    val combineMetadataAgentFields: Patch<Boolean> = Patch.Absent,
+    val fileScanners: Patch<List<FileScanner>> = Patch.Absent,
+    val combineFileScannerFields: Patch<Boolean> = Patch.Absent,
+    val language: Patch<MetadataLanguage> = Patch.Absent,
+    val region: Patch<MetadataRegion> = Patch.Absent,
 ) : ValidateObject {
     override suspend fun RoutingContext.validateBody() {
-        folders.ifPresent { requireNotEmpty(it, "folder") }
-        fileScanners.ifPresent { requireNotEmpty(it, "file scanner") }
+        folders.ifSet { requireNotEmpty(it, "folder") }
+        fileScanners.ifSet { requireNotEmpty(it, "file scanner") }
         requireRegistered(metadataAgents.orElse(emptyList()), fileScanners.orElse(emptyList()))
     }
 }

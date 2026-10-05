@@ -7,6 +7,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.dataconversion.DataConversion
 import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
+import io.thoth.openapi.common.Patch
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.plugins.OpenAPIRouting
@@ -14,7 +15,6 @@ import io.thoth.openapi.ktor.post
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Optional
 import java.util.UUID
 
 @Resource("{path}")
@@ -66,9 +66,9 @@ class ListRoute(
 class MapRoute(
     val name: Boolean,
     val someParam: Map<String, UUID>,
-    val note: Optional<String>?,
-    val label: Optional<String>,
-    val lookup: Optional<HashMap<String, UUID>>?,
+    val note: Patch<String?>,
+    val label: Patch<String>,
+    val lookup: Patch<HashMap<String, UUID>?>,
     val hint: String?,
 )
 

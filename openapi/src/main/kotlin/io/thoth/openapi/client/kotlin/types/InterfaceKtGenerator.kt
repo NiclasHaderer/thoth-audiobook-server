@@ -3,7 +3,7 @@ package io.thoth.openapi.client.kotlin.types
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
-import java.util.Optional
+import io.thoth.openapi.common.isPatch
 import kotlin.reflect.KClass
 import kotlin.reflect.KTypeParameter
 
@@ -41,16 +41,8 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                         append("    ")
                         if (it.overwrites) append("override ")
                         append("val ${it.name}: ${it.type.name}")
-                        // Java's Optional is invariant, the Impl classes can only override it with a projection
-                        val variance = if (it.underlyingProperty.returnType.classifier ==
-                            Optional::class
-                        ) {
-                            "out "
-                        } else {
-                            ""
-                        }
                         if (it.type.typeArguments.isNotEmpty()) {
-                            append("<${it.type.typeArguments.joinToString(", ") { arg -> variance + arg }}>")
+                            append("<${it.type.typeArguments.joinToString(", ")}>")
                         }
                         if (it.nullable) append("?")
                         append("\n")
@@ -99,13 +91,13 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                                     it.type.toString()
                                 }
                             append(typeName)
+                            if (it.type!!.isMarkedNullable) append("?")
                         }
                         append(">")
                     }
-                    // Fields that may be left out get a default, so callers only name the ones they mean. An empty
-                    // Optional is a key that is not sent, null is reserved for sending null.
-                    if (it.underlyingProperty.returnType.classifier == Optional::class) {
-                        append(if (it.nullable) "? = Optional.empty()" else " = Optional.empty()")
+                    // Fields that may be left out get a default, so callers only name the ones they mean
+                    if (it.underlyingProperty.isPatch) {
+                        append(" = Patch.Absent")
                     } else if (it.nullable) {
                         append("? = null")
                     }
