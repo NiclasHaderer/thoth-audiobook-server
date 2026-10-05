@@ -1,7 +1,7 @@
 package io.thoth.server.database.rows
 
 import io.thoth.server.common.extensions.jsonEach
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Count
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -36,11 +36,11 @@ fun Column<List<String>?>.bookGroups(
 ): List<BookGroup> {
     val eachName = jsonEach()
     val groupName = eachName.value.min()
-    val bookCount = BooksTable.id.countDistinct()
-    return BooksTable
+    val bookCount = BookTable.id.countDistinct()
+    return BookTable
         .crossJoin(eachName)
         .select(groupName, bookCount)
-        .where { (BooksTable.library eq libraryId) and BooksTable.visible }
+        .where { (BookTable.library eq libraryId) and BookTable.visible }
         .groupBy(eachName.value.lowerCase())
         .orderBy(groupName.lowerCase() to order)
         .offset(offset)
@@ -52,10 +52,10 @@ context(_: Transaction)
 fun Column<List<String>?>.bookGroupCount(libraryId: UUID): Long {
     val eachName = jsonEach()
     val groups = Count(eachName.value.lowerCase(), distinct = true)
-    return BooksTable
+    return BookTable
         .crossJoin(eachName)
         .select(groups)
-        .where { (BooksTable.library eq libraryId) and BooksTable.visible }
+        .where { (BookTable.library eq libraryId) and BookTable.visible }
         .first()[groups]
 }
 
@@ -72,10 +72,10 @@ fun Column<List<String>?>.booksInGroup(
                 .where { eachName.value.lowerCase() eq stringParam(name).lowerCase() },
         )
     val books =
-        BooksTable
+        BookTable
             .selectAll()
-            .where { (BooksTable.library eq libraryId) and nameMatches and BooksTable.visible }
-            .orderBy(BooksTable.title to SortOrder.ASC)
+            .where { (BookTable.library eq libraryId) and nameMatches and BookTable.visible }
+            .orderBy(BookTable.title to SortOrder.ASC)
             .toList()
     if (books.isEmpty()) return null
     val groupName = books.flatMap { it[this].orEmpty() }.filter { it.equals(name, ignoreCase = true) }.min()

@@ -7,16 +7,16 @@ import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.AuthorUserMetadataTable
 import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookFileMetadataTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageTable
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.SeriesAgentMetadataTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.SeriesUserMetadataTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.resolvedAuthorLinks
 import io.thoth.server.database.tables.resolvedSeriesLinks
 import io.thoth.server.repositories.stampDeferral
@@ -45,12 +45,12 @@ class LibraryCleanup {
     fun removeStaleTracks(libraryId: UUID): Unit =
         transaction {
             val scanIndex =
-                LibrariesTable
-                    .select(LibrariesTable.scanIndex)
-                    .where { LibrariesTable.id eq libraryId }
-                    .single()[LibrariesTable.scanIndex]
-            TracksTable.deleteWhere {
-                (TracksTable.library eq libraryId) and (TracksTable.scanIndex less scanIndex)
+                LibraryTable
+                    .select(LibraryTable.scanIndex)
+                    .where { LibraryTable.id eq libraryId }
+                    .single()[LibraryTable.scanIndex]
+            TrackTable.deleteWhere {
+                (TrackTable.library eq libraryId) and (TrackTable.scanIndex less scanIndex)
             }
         }
 
@@ -59,11 +59,11 @@ class LibraryCleanup {
             val now = Instant.now()
             // Books first: deleting them cascades the link rows away, which is what leaves the authors
             // and series below without books.
-            val bookHasNoTrack = BooksTable.id notInSubQuery TracksTable.select(TracksTable.book)
+            val bookHasNoTrack = BookTable.id notInSubQuery TrackTable.select(TrackTable.book)
             reap(
-                table = BooksTable,
-                library = BooksTable.library,
-                deferUntil = BooksTable.deferDeletionUntil,
+                table = BookTable,
+                library = BookTable.library,
+                deferUntil = BookTable.deferDeletionUntil,
                 libraryId = libraryId,
                 hidden = bookHasNoTrack,
                 deletable = bookHasNoTrack,
@@ -74,8 +74,8 @@ class LibraryCleanup {
                 library = AuthorTable.library,
                 deferUntil = AuthorTable.deferDeletionUntil,
                 libraryId = libraryId,
-                hidden = AuthorTable.id notInSubQuery visiblyLinked(resolvedAuthorLinks, AuthorBookTable.authors),
-                deletable = AuthorTable.id notInSubQuery AuthorBookTable.select(AuthorBookTable.authors),
+                hidden = AuthorTable.id notInSubQuery visiblyLinked(resolvedAuthorLinks, AuthorBookTable.author),
+                deletable = AuthorTable.id notInSubQuery AuthorBookTable.select(AuthorBookTable.author),
                 now = now,
             )
             reap(
@@ -112,15 +112,15 @@ class LibraryCleanup {
             ImageTable.deleteWhere {
                 ImageTable.id notInSubQuery
                     BookFileMetadataTable
-                        .referenced(BookFileMetadataTable.coverID)
-                        .union(BookAgentMetadataTable.referenced(BookAgentMetadataTable.coverID))
-                        .union(BookUserMetadataTable.referenced(BookUserMetadataTable.coverID))
-                        .union(SeriesFileMetadataTable.referenced(SeriesFileMetadataTable.coverID))
-                        .union(SeriesAgentMetadataTable.referenced(SeriesAgentMetadataTable.coverID))
-                        .union(SeriesUserMetadataTable.referenced(SeriesUserMetadataTable.coverID))
-                        .union(AuthorFileMetadataTable.referenced(AuthorFileMetadataTable.imageID))
-                        .union(AuthorAgentMetadataTable.referenced(AuthorAgentMetadataTable.imageID))
-                        .union(AuthorUserMetadataTable.referenced(AuthorUserMetadataTable.imageID))
+                        .referenced(BookFileMetadataTable.coverId)
+                        .union(BookAgentMetadataTable.referenced(BookAgentMetadataTable.coverId))
+                        .union(BookUserMetadataTable.referenced(BookUserMetadataTable.coverId))
+                        .union(SeriesFileMetadataTable.referenced(SeriesFileMetadataTable.coverId))
+                        .union(SeriesAgentMetadataTable.referenced(SeriesAgentMetadataTable.coverId))
+                        .union(SeriesUserMetadataTable.referenced(SeriesUserMetadataTable.coverId))
+                        .union(AuthorFileMetadataTable.referenced(AuthorFileMetadataTable.imageId))
+                        .union(AuthorAgentMetadataTable.referenced(AuthorAgentMetadataTable.imageId))
+                        .union(AuthorUserMetadataTable.referenced(AuthorUserMetadataTable.imageId))
             }
         }
 

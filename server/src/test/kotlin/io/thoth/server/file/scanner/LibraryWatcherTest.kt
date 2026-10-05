@@ -6,8 +6,8 @@ import io.thoth.server.ThothTest
 import io.thoth.server.common.extensions.canonical
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.BookTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.newLibrary
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -87,14 +87,14 @@ class LibraryWatcherTest : ThothTest() {
 
     private fun titles() =
         transaction {
-            BooksTable
+            BookTable
                 .selectAll()
-                .where { BooksTable.visible }
-                .mapNotNull { it[BooksTable.title] }
+                .where { BookTable.visible }
+                .mapNotNull { it[BookTable.title] }
                 .sorted()
         }
 
-    private fun tracks() = transaction { TracksTable.selectAll().count() }
+    private fun tracks() = transaction { TrackTable.selectAll().count() }
 
     private fun eventually(
         timeout: Duration = 10.seconds,

@@ -6,13 +6,13 @@ import io.thoth.server.common.extensions.lastModifiedInstant
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookFileMetadataTable
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryRow
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackRow
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.layer
@@ -64,11 +64,11 @@ class TrackManager : KoinComponent {
     fun needsAnalysis(path: Path): Boolean =
         transaction {
             val known =
-                TracksTable
-                    .select(TracksTable.fileModifiedAt)
-                    .where { TracksTable.path eq path.canonicalString() }
+                TrackTable
+                    .select(TrackTable.fileModifiedAt)
+                    .where { TrackTable.path eq path.canonicalString() }
                     .firstOrNull()
-                    ?.get(TracksTable.fileModifiedAt)
+                    ?.get(TrackTable.fileModifiedAt)
                     ?: return@transaction true
             known < path.lastModifiedInstant()
         }
@@ -101,13 +101,13 @@ class TrackManager : KoinComponent {
     ) = transaction {
         val library = libraryRow(libraryId)
         val bookId = getOrCreateBook(scan, library)
-        val track = TracksTable
+        val track = TrackTable
             .selectAll()
-            .where { TracksTable.path eq scan.path }
+            .where { TrackTable.path eq scan.path }
             .firstOrNull()
             ?.toTrackRow()
         if (track != null) {
-            TracksTable.update(
+            TrackTable.update(
                 track.copy(
                     title = scan.title,
                     durationMs = scan.durationMs,
@@ -119,7 +119,7 @@ class TrackManager : KoinComponent {
                 ),
             )
         } else {
-            TracksTable.insert(
+            TrackTable.insert(
                 TrackRow(
                     id = UUID.randomUUID(),
                     title = scan.title,
@@ -140,10 +140,10 @@ class TrackManager : KoinComponent {
         libraryId: UUID,
     ) = transaction {
         val scanIndex = libraryRow(libraryId).scanIndex
-        TracksTable.update({
-            (TracksTable.library eq libraryId) and (TracksTable.path inList paths.map { it.canonicalString() })
+        TrackTable.update({
+            (TrackTable.library eq libraryId) and (TrackTable.path inList paths.map { it.canonicalString() })
         }) {
-            it[TracksTable.scanIndex] = scanIndex
+            it[TrackTable.scanIndex] = scanIndex
         }
     }
 
@@ -156,11 +156,11 @@ class TrackManager : KoinComponent {
         val scanIndex = libraryRow(libraryId).scanIndex
         val target = path.canonicalString()
         val subtree = LikePattern.ofLiteral(target + File.separator) + "%"
-        TracksTable.update({
-            ((TracksTable.path eq target) or (TracksTable.path like subtree)) and
-                (TracksTable.library eq libraryId)
+        TrackTable.update({
+            ((TrackTable.path eq target) or (TrackTable.path like subtree)) and
+                (TrackTable.library eq libraryId)
         }) {
-            it[TracksTable.scanIndex] = scanIndex
+            it[TrackTable.scanIndex] = scanIndex
         }
     }
 
@@ -168,9 +168,9 @@ class TrackManager : KoinComponent {
         path: Path,
         libraryId: UUID,
     ) = transaction {
-        TracksTable.deleteWhere {
-            (TracksTable.path eq path.canonicalString()) and
-                (TracksTable.library eq libraryId)
+        TrackTable.deleteWhere {
+            (TrackTable.path eq path.canonicalString()) and
+                (TrackTable.library eq libraryId)
         }
     }
 
@@ -181,17 +181,17 @@ class TrackManager : KoinComponent {
         // Rows hold normalised paths, and the separator keeps "/books/Dune" from also matching "/books/Dune 2"
         val target = path.canonicalString()
         val subtree = LikePattern.ofLiteral(target + File.separator) + "%"
-        TracksTable.deleteWhere {
-            ((TracksTable.path eq target) or (TracksTable.path like subtree)) and
-                (TracksTable.library eq libraryId)
+        TrackTable.deleteWhere {
+            ((TrackTable.path eq target) or (TrackTable.path like subtree)) and
+                (TrackTable.library eq libraryId)
         }
     }
 
     context(_: Transaction)
     private fun libraryRow(libraryId: UUID): LibraryRow =
-        LibrariesTable
+        LibraryTable
             .selectAll()
-            .where { LibrariesTable.id eq libraryId }
+            .where { LibraryTable.id eq libraryId }
             .single()
             .toLibraryRow()
 
@@ -210,7 +210,7 @@ class TrackManager : KoinComponent {
         val bookId =
             book?.id ?: run {
                 log.info { "Created new book: ${scan.book}" }
-                BooksTable.create(library.id, scan.book).also {
+                BookTable.create(library.id, scan.book).also {
                     autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.BOOK, it, library.id))
                 }
             }
@@ -247,7 +247,7 @@ class TrackManager : KoinComponent {
         replaceBookAuthors(bookId, MetadataLayer.FILE, authorIds)
         replaceBookSeries(bookId, MetadataLayer.FILE, listOfNotNull(seriesId).associateWith { scan.seriesIndex })
         // Unset deletion marker, since the book has a track again
-        BooksTable.update({ BooksTable.id eq bookId }) { it[deferDeletionUntil] = null }
+        BookTable.update({ BookTable.id eq bookId }) { it[deferDeletionUntil] = null }
         AuthorTable.update({ AuthorTable.id inList authorIds }) { it[deferDeletionUntil] = null }
         SeriesTable.update({ SeriesTable.id inList listOfNotNull(seriesId) }) { it[deferDeletionUntil] = null }
         return bookId

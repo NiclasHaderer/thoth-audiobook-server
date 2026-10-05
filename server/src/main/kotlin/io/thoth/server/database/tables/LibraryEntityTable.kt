@@ -13,8 +13,8 @@ sealed class LibraryEntityTable(
     table: String,
     nameColumn: String,
 ) : UUIDTable(table) {
-    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
-    val deferDeletionUntil = timestampMillis("deferDeletionUntil").nullable()
+    val library = reference("library_id", LibraryTable, onDelete = ReferenceOption.CASCADE).index()
+    val deferDeletionUntil = timestampMillis("defer_deletion_until").nullable()
     val name = text(nameColumn, collate = "NOCASE")
 
     val visible get() = deferDeletionUntil.isNull()

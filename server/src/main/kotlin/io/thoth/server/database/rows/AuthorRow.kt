@@ -46,6 +46,6 @@ fun ResultRow.toAuthorRow(): AuthorRow =
         bornIn = this[AuthorTable.bornIn],
         deathDate = this[AuthorTable.deathDate],
         provider = this[AuthorTable.provider],
-        providerID = this[AuthorTable.providerID],
-        imageID = this[AuthorTable.imageID]?.value,
+        providerID = this[AuthorTable.providerId],
+        imageID = this[AuthorTable.imageId]?.value,
     )

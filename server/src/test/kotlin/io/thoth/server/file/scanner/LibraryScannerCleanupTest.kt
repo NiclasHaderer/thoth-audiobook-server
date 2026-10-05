@@ -2,11 +2,11 @@ package io.thoth.server.file.scanner
 
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.BookTable
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
@@ -50,7 +50,7 @@ class LibraryScannerCleanupTest : ThothTest() {
     private fun setScanIndex(
         libraryId: UUID,
         index: ULong,
-    ) = transaction { LibrariesTable.update({ LibrariesTable.id eq libraryId }) { it[scanIndex] = index } }
+    ) = transaction { LibraryTable.update({ LibraryTable.id eq libraryId }) { it[scanIndex] = index } }
 
     private fun cleanup(libraryId: UUID) {
         cleanup.removeStaleTracks(libraryId)
@@ -61,7 +61,7 @@ class LibraryScannerCleanupTest : ThothTest() {
     private fun expireDeadlines() =
         transaction {
             val past = Instant.now().minus(DEFER_DELETION_GRACE).minusSeconds(60)
-            BooksTable.update({ BooksTable.deferDeletionUntil.isNotNull() }) { it[deferDeletionUntil] = past }
+            BookTable.update({ BookTable.deferDeletionUntil.isNotNull() }) { it[deferDeletionUntil] = past }
             AuthorTable.update({ AuthorTable.deferDeletionUntil.isNotNull() }) { it[deferDeletionUntil] = past }
             SeriesTable.update({ SeriesTable.deferDeletionUntil.isNotNull() }) { it[deferDeletionUntil] = past }
         }
@@ -69,8 +69,8 @@ class LibraryScannerCleanupTest : ThothTest() {
     private fun counts(libraryId: UUID) =
         transaction {
             listOf(
-                TracksTable.selectAll().where { TracksTable.library eq libraryId }.count(),
-                BooksTable.selectAll().where { BooksTable.library eq libraryId }.count(),
+                TrackTable.selectAll().where { TrackTable.library eq libraryId }.count(),
+                BookTable.selectAll().where { BookTable.library eq libraryId }.count(),
                 AuthorTable.selectAll().where { AuthorTable.library eq libraryId }.count(),
                 SeriesTable.selectAll().where { SeriesTable.library eq libraryId }.count(),
             )
@@ -79,9 +79,9 @@ class LibraryScannerCleanupTest : ThothTest() {
     private fun deferred(libraryId: UUID) =
         transaction {
             listOf(
-                BooksTable
+                BookTable
                     .selectAll()
-                    .where { (BooksTable.library eq libraryId) and BooksTable.deferDeletionUntil.isNotNull() }
+                    .where { (BookTable.library eq libraryId) and BookTable.deferDeletionUntil.isNotNull() }
                     .count(),
                 AuthorTable
                     .selectAll()
@@ -220,7 +220,7 @@ class LibraryScannerCleanupTest : ThothTest() {
         setScanIndex(scanned, 2uL)
         cleanup(scanned)
 
-        val bookId = transaction { BooksTable.selectAll().single()[BooksTable.id].value }
+        val bookId = transaction { BookTable.selectAll().single()[BookTable.id].value }
         newTrack("scanned Track", "/media/scanned/track.mp3", bookId, scanned, scanIndex = 2uL)
         expireDeadlines()
         cleanup.removeOrphans(scanned)

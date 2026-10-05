@@ -12,11 +12,11 @@ import java.util.UUID
 /**
  * Append-only: one row per progress write, never updated
  */
-object ProgressLogTable : UUIDTable("ProgressLog") {
-    val user = reference("user", UsersTable, onDelete = ReferenceOption.CASCADE)
-    val book = reference("book", BooksTable, onDelete = ReferenceOption.CASCADE)
-    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
-    val positionMs = long("positionMs")
+object ProgressLogTable : UUIDTable("progress_log") {
+    val user = reference("user_id", UserTable, onDelete = ReferenceOption.CASCADE)
+    val book = reference("book_id", BookTable, onDelete = ReferenceOption.CASCADE)
+    val library = reference("library_id", LibraryTable, onDelete = ReferenceOption.CASCADE).index()
+    val positionMs = long("position_ms")
     val at = timestampMillis("at")
 
     init {

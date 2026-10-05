@@ -4,7 +4,7 @@ import io.thoth.models.LibraryPermissionLevel
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 
-object LibraryUserTable : CompositeIdTable("LibraryUser") {
+object LibraryUserTable : CompositeIdTable("library_user") {
     val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE)
     val user = reference("user", UsersTable, onDelete = ReferenceOption.CASCADE).index()
     var permissions = enumeration<LibraryPermissionLevel>("permissions")

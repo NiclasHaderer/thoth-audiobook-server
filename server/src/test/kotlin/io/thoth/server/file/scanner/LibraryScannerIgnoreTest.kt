@@ -4,8 +4,8 @@ import io.thoth.models.FileScanner
 import io.thoth.server.ThothTest
 import io.thoth.server.common.extensions.canonical
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.BookTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.newLibrary
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -61,18 +61,18 @@ class LibraryScannerIgnoreTest : ThothTest() {
 
     private fun titles() =
         transaction {
-            BooksTable
+            BookTable
                 .selectAll()
-                .where { BooksTable.visible }
-                .mapNotNull { it[BooksTable.title] }
+                .where { BookTable.visible }
+                .mapNotNull { it[BookTable.title] }
                 .sorted()
         }
 
     private fun counts() =
         transaction {
             Triple(
-                TracksTable.selectAll().count(),
-                BooksTable.selectAll().where { BooksTable.deferDeletionUntil.isNull() }.count(),
+                TrackTable.selectAll().count(),
+                BookTable.selectAll().where { BookTable.deferDeletionUntil.isNull() }.count(),
                 AuthorTable.selectAll().where { AuthorTable.deferDeletionUntil.isNull() }.count(),
             )
         }

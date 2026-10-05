@@ -14,14 +14,14 @@ import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
 import java.util.UUID
 
-object UserBookProgressTable : CompositeIdTable("UserBookProgress") {
-    val user = reference("user", UsersTable, onDelete = ReferenceOption.CASCADE)
-    val book = reference("book", BooksTable, onDelete = ReferenceOption.CASCADE)
-    val library = reference("library", LibrariesTable, onDelete = ReferenceOption.CASCADE).index()
-    val positionMs = long("positionMs")
-    val updatedAt = timestampMillis("updatedAt")
-    val finishedAt = timestampMillis("finishedAt").nullable()
-    val dismissedAt = timestampMillis("dismissedAt").nullable()
+object UserBookProgressTable : CompositeIdTable("user_book_progress") {
+    val user = reference("user_id", UserTable, onDelete = ReferenceOption.CASCADE)
+    val book = reference("book_id", BookTable, onDelete = ReferenceOption.CASCADE)
+    val library = reference("library_id", LibraryTable, onDelete = ReferenceOption.CASCADE).index()
+    val positionMs = long("position_ms")
+    val updatedAt = timestampMillis("updated_at")
+    val finishedAt = timestampMillis("finished_at").nullable()
+    val dismissedAt = timestampMillis("dismissed_at").nullable()
 
     override val primaryKey = PrimaryKey(user, book)
 

@@ -16,28 +16,28 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 
-object LibrariesTable : UUIDTable("Libraries") {
+object LibraryTable : UUIDTable("library") {
     val name = varchar("name", 255)
     val icon = text("icon").nullable()
-    val scanIndex = ulong("scanIndex").default(0uL)
+    val scanIndex = ulong("scan_index").default(0uL)
     val folders =
         json<List<String>>("folders") {
             if (it.isEmpty()) {
                 throw ErrorResponse.userError("folders must have at least one element")
             }
         }
-    val preferEmbeddedMetadata = bool("preferEmbeddedMetadata").default(false)
+    val preferEmbeddedMetadata = bool("prefer_embedded_metadata").default(false)
 
     // Deliberately unconstrained: a library with no agents just does no online metadata lookups.
-    val metadataAgents = json<List<NamedMetadataAgent>>("metadataAgents")
-    val combineMetadataAgentFields = bool("combineMetadataAgentFields").default(true)
+    val metadataAgents = json<List<NamedMetadataAgent>>("metadata_agents")
+    val combineMetadataAgentFields = bool("combine_metadata_agent_fields").default(true)
     val fileScanners =
-        json<List<FileScanner>>("fileScanners") {
+        json<List<FileScanner>>("file_scanners") {
             if (it.isEmpty()) {
                 throw ErrorResponse.userError("fileScanners must have at least one element")
             }
         }
-    val combineFileScannerFields = bool("combineFileScannerFields").default(true)
+    val combineFileScannerFields = bool("combine_file_scanner_fields").default(true)
 
     val language = enumerationByName<MetadataLanguage>("language", 255)
     val region = enumerationByName<MetadataRegion>("region", 255)
@@ -76,45 +76,45 @@ data class LibraryRow(
 
 fun ResultRow.toLibraryRow(): LibraryRow =
     LibraryRow(
-        id = this[LibrariesTable.id].value,
-        name = this[LibrariesTable.name],
-        icon = this[LibrariesTable.icon],
-        scanIndex = this[LibrariesTable.scanIndex],
-        folders = this[LibrariesTable.folders],
-        preferEmbeddedMetadata = this[LibrariesTable.preferEmbeddedMetadata],
-        metadataAgents = this[LibrariesTable.metadataAgents],
-        combineMetadataAgentFields = this[LibrariesTable.combineMetadataAgentFields],
-        fileScanners = this[LibrariesTable.fileScanners],
-        combineFileScannerFields = this[LibrariesTable.combineFileScannerFields],
-        language = this[LibrariesTable.language],
-        region = this[LibrariesTable.region],
+        id = this[LibraryTable.id].value,
+        name = this[LibraryTable.name],
+        icon = this[LibraryTable.icon],
+        scanIndex = this[LibraryTable.scanIndex],
+        folders = this[LibraryTable.folders],
+        preferEmbeddedMetadata = this[LibraryTable.preferEmbeddedMetadata],
+        metadataAgents = this[LibraryTable.metadataAgents],
+        combineMetadataAgentFields = this[LibraryTable.combineMetadataAgentFields],
+        fileScanners = this[LibraryTable.fileScanners],
+        combineFileScannerFields = this[LibraryTable.combineFileScannerFields],
+        language = this[LibraryTable.language],
+        region = this[LibraryTable.region],
     )
 
 context(_: Transaction)
-fun LibrariesTable.insert(row: LibraryRow): UUID {
+fun LibraryTable.insert(row: LibraryRow): UUID {
     insert { write(it, row) }
     return row.id
 }
 
 context(_: Transaction)
-fun LibrariesTable.update(row: LibraryRow) {
-    update({ LibrariesTable.id eq row.id }) { write(it, row) }
+fun LibraryTable.update(row: LibraryRow) {
+    update({ LibraryTable.id eq row.id }) { write(it, row) }
 }
 
 private fun write(
     stmt: UpdateBuilder<*>,
     row: LibraryRow,
 ) {
-    stmt[LibrariesTable.id] = row.id
-    stmt[LibrariesTable.name] = row.name
-    stmt[LibrariesTable.icon] = row.icon
-    stmt[LibrariesTable.scanIndex] = row.scanIndex
-    stmt[LibrariesTable.folders] = row.folders
-    stmt[LibrariesTable.preferEmbeddedMetadata] = row.preferEmbeddedMetadata
-    stmt[LibrariesTable.metadataAgents] = row.metadataAgents
-    stmt[LibrariesTable.combineMetadataAgentFields] = row.combineMetadataAgentFields
-    stmt[LibrariesTable.fileScanners] = row.fileScanners
-    stmt[LibrariesTable.combineFileScannerFields] = row.combineFileScannerFields
-    stmt[LibrariesTable.language] = row.language
-    stmt[LibrariesTable.region] = row.region
+    stmt[LibraryTable.id] = row.id
+    stmt[LibraryTable.name] = row.name
+    stmt[LibraryTable.icon] = row.icon
+    stmt[LibraryTable.scanIndex] = row.scanIndex
+    stmt[LibraryTable.folders] = row.folders
+    stmt[LibraryTable.preferEmbeddedMetadata] = row.preferEmbeddedMetadata
+    stmt[LibraryTable.metadataAgents] = row.metadataAgents
+    stmt[LibraryTable.combineMetadataAgentFields] = row.combineMetadataAgentFields
+    stmt[LibraryTable.fileScanners] = row.fileScanners
+    stmt[LibraryTable.combineFileScannerFields] = row.combineFileScannerFields
+    stmt[LibraryTable.language] = row.language
+    stmt[LibraryTable.region] = row.region
 }

@@ -11,10 +11,10 @@ import io.thoth.models.UpdateUserPermissions
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.LibraryUserTable
 import io.thoth.server.database.tables.UserRow
-import io.thoth.server.database.tables.UsersTable
+import io.thoth.server.database.tables.UserTable
 import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.toUserRow
 import org.jetbrains.exposed.v1.core.*
@@ -43,9 +43,9 @@ private fun <T> rejectDuplicateUsername(
 
 context(_: Transaction)
 internal fun userRow(id: UUID): UserRow? =
-    UsersTable
+    UserTable
         .selectAll()
-        .where { UsersTable.id eq id }
+        .where { UserTable.id eq id }
         .firstOrNull()
         ?.toUserRow()
 
@@ -75,9 +75,9 @@ fun Application.configureAuthentication() {
 
         getUserByUsername { username ->
             transaction {
-                UsersTable
+                UserTable
                     .selectAll()
-                    .where { UsersTable.username eq username }
+                    .where { UserTable.username eq username }
                     .firstOrNull()
                     ?.toUserRow()
                     ?.toExternalUser()
@@ -88,7 +88,7 @@ fun Application.configureAuthentication() {
 
         getUserById { transaction { userRow(it)?.toExternalUser() } }
 
-        isFirstUser { transaction { UsersTable.selectAll().count() == 0L } }
+        isFirstUser { transaction { UserTable.selectAll().count() == 0L } }
 
         createUser { newUser ->
             transaction {
@@ -101,26 +101,26 @@ fun Application.configureAuthentication() {
                             admin = newUser.admin,
                             tokenVersion = 0,
                         )
-                    UsersTable.insert(row)
+                    UserTable.insert(row)
                     row.toExternalUser()
                 }
             }
         }
 
-        listAllUsers { transaction { UsersTable.selectAll().map { it.toUserRow().toExternalUser() } } }
+        listAllUsers { transaction { UserTable.selectAll().map { it.toUserRow().toExternalUser() } } }
 
         deleteUser {
             transaction {
                 val dbUser = userRow(it.id) ?: return@transaction
                 if (dbUser.admin) requireAnotherAdminExists(it.id)
-                UsersTable.deleteWhere { UsersTable.id eq dbUser.id }
+                UserTable.deleteWhere { UserTable.id eq dbUser.id }
             }
         }
 
         renameUser { user, newName ->
             transaction {
                 rejectDuplicateUsername(newName) {
-                    UsersTable.update({ UsersTable.id eq user.id }) { it[username] = newName }
+                    UserTable.update({ UserTable.id eq user.id }) { it[username] = newName }
                     userRow(user.id)!!.toExternalUser()
                 }
             }
@@ -128,7 +128,7 @@ fun Application.configureAuthentication() {
 
         updatePassword { user, newPassword ->
             transaction {
-                UsersTable.update({ UsersTable.id eq user.id }) {
+                UserTable.update({ UserTable.id eq user.id }) {
                     it[passwordHash] = newPassword
                     it[tokenVersion] = tokenVersion + 1
                 }
@@ -141,14 +141,14 @@ fun Application.configureAuthentication() {
                 val dbUser = userRow(currentUser.id)!!
 
                 if (dbUser.admin && !permissions.isAdmin) requireAnotherAdminExists(currentUser.id)
-                UsersTable.update({ UsersTable.id eq dbUser.id }) { it[admin] = permissions.isAdmin }
+                UserTable.update({ UserTable.id eq dbUser.id }) { it[admin] = permissions.isAdmin }
                 LibraryUserTable.deleteWhere { LibraryUserTable.user eq currentUser.id }
                 permissions.libraries.forEach { permission ->
                     val libraryId =
-                        LibrariesTable
-                            .select(LibrariesTable.id)
-                            .where { LibrariesTable.id eq permission.id }
-                            .single()[LibrariesTable.id]
+                        LibraryTable
+                            .select(LibraryTable.id)
+                            .where { LibraryTable.id eq permission.id }
+                            .single()[LibraryTable.id]
                     // TODO We are not super consistent with how we handle inserts. Sometimes we
                     //  require the [table]Row, someitmes we do this instead. But this is a probelm for
                     //  tomorrows Niclas...

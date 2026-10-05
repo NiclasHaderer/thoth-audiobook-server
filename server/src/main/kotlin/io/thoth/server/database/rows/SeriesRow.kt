@@ -4,7 +4,7 @@ import io.thoth.models.NamedId
 import io.thoth.models.Series
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.resolvedSeriesLinks
@@ -39,8 +39,8 @@ fun ResultRow.toSeriesRow(): SeriesRow =
         primaryWorks = this[SeriesTable.primaryWorks],
         description = this[SeriesTable.description],
         provider = this[SeriesTable.provider],
-        providerID = this[SeriesTable.providerID],
-        coverID = this[SeriesTable.coverID]?.value,
+        providerID = this[SeriesTable.providerId],
+        coverID = this[SeriesTable.coverId]?.value,
     )
 
 context(_: Transaction)
@@ -82,8 +82,8 @@ context(_: Transaction)
 fun seriesAuthors(seriesIds: List<UUID>): Map<UUID, List<NamedId>> =
     resolvedSeriesLinks
         .join(AuthorBookTable, JoinType.INNER, SeriesBookTable.book, AuthorBookTable.book) {
-            AuthorBookTable.addedBy eq BooksTable.authorsFrom
-        }.join(AuthorTable, JoinType.INNER, AuthorBookTable.authors, AuthorTable.id)
+            AuthorBookTable.addedBy eq BookTable.authorsFrom
+        }.join(AuthorTable, JoinType.INNER, AuthorBookTable.author, AuthorTable.id)
         .select(SeriesBookTable.series, AuthorTable.id, AuthorTable.name)
         .where { SeriesBookTable.series inList seriesIds }
         .groupBy({ it[SeriesBookTable.series].value }) {
@@ -98,9 +98,9 @@ data class SeriesBook(
 context(_: Transaction)
 fun seriesBooks(seriesIds: List<UUID>): Map<UUID, List<SeriesBook>> =
     resolvedSeriesLinks
-        .select(SeriesBookTable.series, SeriesBookTable.seriesIndex, BooksTable.coverID, BooksTable.genres)
-        .where { (SeriesBookTable.series inList seriesIds) and BooksTable.visible }
+        .select(SeriesBookTable.series, SeriesBookTable.seriesIndex, BookTable.coverId, BookTable.genres)
+        .where { (SeriesBookTable.series inList seriesIds) and BookTable.visible }
         .orderBy(SeriesBookTable.seriesIndex to SortOrder.ASC_NULLS_LAST)
         .groupBy({ it[SeriesBookTable.series].value }) {
-            SeriesBook(it[BooksTable.coverID]?.value, it[BooksTable.genres].orEmpty())
+            SeriesBook(it[BookTable.coverId]?.value, it[BookTable.genres].orEmpty())
         }

@@ -3,7 +3,7 @@ package io.thoth.server.repositories
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryEntityTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
@@ -39,7 +39,7 @@ fun visiblyLinked(
     owner: Column<EntityID<UUID>>,
 ) = resolvedLinks
     .select(owner)
-    .where { BooksTable.deferDeletionUntil.isNull() }
+    .where { BookTable.deferDeletionUntil.isNull() }
 
 context(_: Transaction)
 fun requireVisible(
@@ -80,7 +80,7 @@ fun refreshAuthorDeferral(authorIds: Collection<UUID>) =
         table = AuthorTable,
         deferUntil = AuthorTable.deferDeletionUntil,
         scope = AuthorTable.id inList authorIds,
-        orphaned = AuthorTable.id notInSubQuery visiblyLinked(resolvedAuthorLinks, AuthorBookTable.authors),
+        orphaned = AuthorTable.id notInSubQuery visiblyLinked(resolvedAuthorLinks, AuthorBookTable.author),
         now = Instant.now(),
     )
 
