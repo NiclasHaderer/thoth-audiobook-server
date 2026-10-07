@@ -154,15 +154,21 @@ class BookRepositoryImpl :
                     .selectAll()
                     .where { TrackTable.book eq id }
                     .map { it.toTrackRow() }
-            // Incomplete numbering cannot be trusted, so those books fall back to the file names
+            val numbered = tracks.mapNotNull { row -> row.trackNr?.let { row to it } }
+            // Incomplete numbering cannot be trusted, so those books fall back to the file names and are numbered by position
             val ordered =
-                if (tracks.any { it.trackNr == null }) {
-                    tracks.sortedWith(compareBy(naturalOrder) { it.path })
+                if (numbered.size == tracks.size) {
+                    numbered.sortedBy { (_, trackNr) -> trackNr }
                 } else {
-                    tracks.sortedBy { it.trackNr }
+                    tracks.sortedWith(compareBy(naturalOrder) { it.path }).mapIndexed { index, row -> row to index + 1 }
                 }
             val bookRef = TitledId(book.id, book.title)
-            BookDetailed.fromModel(book.toModel(userId), ordered.map { it.toModel(bookRef) })
+            BookDetailed.fromModel(
+                book.toModel(userId),
+                ordered.map { (row, trackNr) ->
+                    row.toModel(bookRef, trackNr)
+                },
+            )
         }
 
     override fun search(
