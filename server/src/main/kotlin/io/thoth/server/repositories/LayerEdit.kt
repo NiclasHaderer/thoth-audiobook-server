@@ -3,23 +3,29 @@ package io.thoth.server.repositories
 import io.thoth.openapi.common.Patch
 import io.thoth.openapi.common.orElse
 import io.thoth.openapi.ktor.errors.ErrorResponse
+import io.thoth.server.database.tables.LayerRow
+import io.thoth.server.database.tables.Layers
 
-class LayerEdit<F : Enum<F>>(
-    claimed: Set<F>,
+class LayerEdit<R : LayerRow<F>, F : Enum<F>>(
+    private val layers: Layers<R, F>,
     reset: Patch<List<F>>,
 ) {
+    val user: R get() = layers.user
+
     val claimed: Set<F>
-        field = claimed.toMutableSet()
+        field = layers.user.claimed.toMutableSet()
 
     private val reset = reset.orElse(emptyList()).toSet()
 
+    // A value equal to what the entity already resolves to is not an edit: claiming it would pin whatever a lower
+    // layer says today and stop later scans and matches from updating it.
     fun <T> value(
         field: F,
         change: Patch<T>,
-        current: T?,
-        resolved: T?,
-    ): T? =
-        when {
+        get: R.() -> T?,
+    ): T? {
+        val current = layers.user.get()
+        return when {
             field in reset -> {
                 release(field, change)
                 null
@@ -29,7 +35,7 @@ class LayerEdit<F : Enum<F>>(
                 current
             }
 
-            change.value == resolved -> {
+            change.value == layers.resolve(field, get) -> {
                 current
             }
 
@@ -38,8 +44,9 @@ class LayerEdit<F : Enum<F>>(
                 change.value
             }
         }
+    }
 
-    // The links the layer should hold afterwards, or null when they stay as they are
+    // The links the user layer should hold afterwards, or null when they stay as they are
     fun <T> links(
         field: F,
         change: Patch<List<T>?>,
