@@ -1,7 +1,5 @@
 package io.thoth.server.database.tables
 
-import com.fasterxml.jackson.annotation.JsonValue
-
 enum class MetadataLayer {
     FILE,
     AGENT,
@@ -11,7 +9,6 @@ enum class MetadataLayer {
 interface LayerField {
     val name: String
 
-    @get:JsonValue
     val column: String get() = name.lowercase()
 }
 

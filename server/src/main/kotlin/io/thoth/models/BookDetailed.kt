@@ -1,6 +1,7 @@
 package io.thoth.models
 
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.server.database.tables.BookField
 import java.time.LocalDate
 import java.util.UUID
 
@@ -25,6 +26,7 @@ class BookDetailed(
     positionMs: Long,
     status: PlayStatus,
     val tracks: List<Track>,
+    val overridden: List<BookField>,
 ) : Book(
         id = id,
         libraryId = libraryId,
@@ -50,6 +52,7 @@ class BookDetailed(
         fun fromModel(
             book: Book,
             tracks: List<Track>,
+            overridden: List<BookField>,
         ) = BookDetailed(
             id = book.id,
             libraryId = book.libraryId,
@@ -71,6 +74,7 @@ class BookDetailed(
             durationMs = book.durationMs,
             positionMs = book.positionMs,
             status = book.status,
+            overridden = overridden,
         )
     }
 }

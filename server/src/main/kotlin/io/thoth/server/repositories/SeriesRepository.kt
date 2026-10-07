@@ -130,6 +130,7 @@ class SeriesRepositoryImpl :
             SeriesDetailed.fromModel(
                 series = series.toModel(),
                 books = booksToModels(resolvedBooks(id), userId),
+                overridden = SeriesUserMetadataTable.layer(id).claimed.sorted(),
             )
         }
 
@@ -216,21 +217,32 @@ class SeriesRepositoryImpl :
             imageDownloader.download(partial.cover.orElse(null)?.takeUnless { it == currentCover?.toString() })
         return transaction {
             val user = SeriesUserMetadataTable.layer(id)
-            val edit = LayerEdit(user.claimed)
+            val series = raw(id, libraryId)
+            val edit = LayerEdit(user.claimed, partial.reset)
             SeriesUserMetadataTable.write(
                 user.copy(
-                    title = edit.value(SeriesField.TITLE, partial.title, user.title),
-                    provider = edit.value(SeriesField.PROVIDER, partial.provider, user.provider),
-                    providerID = edit.value(SeriesField.PROVIDER_ID, partial.providerID, user.providerID),
-                    totalBooks = edit.value(SeriesField.TOTAL_BOOKS, partial.totalBooks, user.totalBooks),
-                    primaryWorks = edit.value(SeriesField.PRIMARY_WORKS, partial.primaryWorks, user.primaryWorks),
+                    title = edit.value(SeriesField.TITLE, partial.title, user.title, series.title),
+                    provider = edit.value(SeriesField.PROVIDER, partial.provider, user.provider, series.provider),
+                    providerID =
+                        edit.value(SeriesField.PROVIDER_ID, partial.providerID, user.providerID, series.providerID),
+                    totalBooks =
+                        edit.value(SeriesField.TOTAL_BOOKS, partial.totalBooks, user.totalBooks, series.totalBooks),
+                    primaryWorks =
+                        edit.value(
+                            SeriesField.PRIMARY_WORKS,
+                            partial.primaryWorks,
+                            user.primaryWorks,
+                            series.primaryWorks,
+                        ),
                     coverID =
                         edit.value(
                             SeriesField.COVER_ID,
                             partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } },
                             user.coverID,
+                            series.coverID,
                         ),
-                    description = edit.value(SeriesField.DESCRIPTION, partial.description, user.description),
+                    description =
+                        edit.value(SeriesField.DESCRIPTION, partial.description, user.description, series.description),
                     claimed = edit.claimed,
                 ),
             )
