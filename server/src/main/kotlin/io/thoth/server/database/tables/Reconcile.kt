@@ -12,92 +12,101 @@ import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 
 context(_: Transaction)
-fun reconcileBook(bookId: UUID) {
-    val preferFile = prefersFile(BookTable, bookId) ?: return
-    val user = BookUserMetadataTable.layer(bookId)
-    val agent = BookAgentMetadataTable.layer(bookId)
-    val file = BookFileMetadataTable.layer(bookId)
+fun bookLayers(bookId: UUID): Layers<BookMetadataRow, BookField>? {
+    val preferFile = prefersFile(BookTable, bookId) ?: return null
+    return Layers(
+        BookUserMetadataTable.layer(bookId),
+        BookAgentMetadataTable.layer(bookId),
+        BookFileMetadataTable.layer(bookId),
+        preferFile,
+    )
+}
 
-    fun <T> pick(
-        field: BookField,
-        get: BookMetadataRow.() -> T?,
-    ) = resolve(field, get, user, agent, file, preferFile)
+context(_: Transaction)
+fun authorLayers(authorId: UUID): Layers<AuthorMetadataRow, AuthorField>? {
+    val preferFile = prefersFile(AuthorTable, authorId) ?: return null
+    return Layers(
+        AuthorUserMetadataTable.layer(authorId),
+        AuthorAgentMetadataTable.layer(authorId),
+        AuthorFileMetadataTable.layer(authorId),
+        preferFile,
+    )
+}
+
+context(_: Transaction)
+fun seriesLayers(seriesId: UUID): Layers<SeriesMetadataRow, SeriesField>? {
+    val preferFile = prefersFile(SeriesTable, seriesId) ?: return null
+    return Layers(
+        SeriesUserMetadataTable.layer(seriesId),
+        SeriesAgentMetadataTable.layer(seriesId),
+        SeriesFileMetadataTable.layer(seriesId),
+        preferFile,
+    )
+}
+
+context(_: Transaction)
+fun reconcileBook(bookId: UUID) {
+    val layers = bookLayers(bookId) ?: return
 
     BookTable.update({ BookTable.id eq bookId }) {
-        it[title] = pick(BookField.TITLE) { title } ?: named("Book", bookId)
-        it[releaseDate] = pick(BookField.RELEASE_DATE) { releaseDate }
-        it[publisher] = pick(BookField.PUBLISHER) { publisher }
-        it[language] = pick(BookField.LANGUAGE) { language }
-        it[description] = pick(BookField.DESCRIPTION) { description }
-        it[isbn] = pick(BookField.ISBN) { isbn }
-        it[provider] = pick(BookField.PROVIDER) { provider }
-        it[providerId] = pick(BookField.PROVIDER_ID) { providerID }
-        it[providerRating] = pick(BookField.PROVIDER_RATING) { providerRating }
-        it[coverId] = pick(BookField.COVER_ID) { coverID }
-        it[genres] = pick(BookField.GENRES) { genres }
-        it[narrators] = pick(BookField.NARRATORS) { narrators }
+        it[title] = layers.resolve(BookField.TITLE) { title } ?: named("Book", bookId)
+        it[releaseDate] = layers.resolve(BookField.RELEASE_DATE) { releaseDate }
+        it[publisher] = layers.resolve(BookField.PUBLISHER) { publisher }
+        it[language] = layers.resolve(BookField.LANGUAGE) { language }
+        it[description] = layers.resolve(BookField.DESCRIPTION) { description }
+        it[isbn] = layers.resolve(BookField.ISBN) { isbn }
+        it[provider] = layers.resolve(BookField.PROVIDER) { provider }
+        it[providerId] = layers.resolve(BookField.PROVIDER_ID) { providerID }
+        it[providerRating] = layers.resolve(BookField.PROVIDER_RATING) { providerRating }
+        it[coverId] = layers.resolve(BookField.COVER_ID) { coverID }
+        it[genres] = layers.resolve(BookField.GENRES) { genres }
+        it[narrators] = layers.resolve(BookField.NARRATORS) { narrators }
         it[authorsFrom] =
             resolveLayer(
-                BookField.AUTHORS in user.claimed,
-                BookField.AUTHORS in agent.claimed,
+                BookField.AUTHORS in layers.user.claimed,
+                BookField.AUTHORS in layers.agent.claimed,
                 namedByFileLayer(AuthorBookTable.book, AuthorBookTable.addedBy, bookId),
-                preferFile,
+                layers.preferFile,
             )
         it[seriesFrom] =
             resolveLayer(
-                BookField.SERIES in user.claimed,
-                BookField.SERIES in agent.claimed,
+                BookField.SERIES in layers.user.claimed,
+                BookField.SERIES in layers.agent.claimed,
                 namedByFileLayer(SeriesBookTable.book, SeriesBookTable.addedBy, bookId),
-                preferFile,
+                layers.preferFile,
             )
     }
 }
 
 context(_: Transaction)
 fun reconcileAuthor(authorId: UUID) {
-    val preferFile = prefersFile(AuthorTable, authorId) ?: return
-    val user = AuthorUserMetadataTable.layer(authorId)
-    val agent = AuthorAgentMetadataTable.layer(authorId)
-    val file = AuthorFileMetadataTable.layer(authorId)
-
-    fun <T> pick(
-        field: AuthorField,
-        get: AuthorMetadataRow.() -> T?,
-    ) = resolve(field, get, user, agent, file, preferFile)
+    val layers = authorLayers(authorId) ?: return
 
     AuthorTable.update({ AuthorTable.id eq authorId }) {
-        it[name] = pick(AuthorField.NAME) { name } ?: named("Author", authorId)
-        it[biography] = pick(AuthorField.BIOGRAPHY) { biography }
-        it[website] = pick(AuthorField.WEBSITE) { website }
-        it[birthDate] = pick(AuthorField.BIRTH_DATE) { birthDate }
-        it[bornIn] = pick(AuthorField.BORN_IN) { bornIn }
-        it[deathDate] = pick(AuthorField.DEATH_DATE) { deathDate }
-        it[provider] = pick(AuthorField.PROVIDER) { provider }
-        it[providerId] = pick(AuthorField.PROVIDER_ID) { providerID }
-        it[imageId] = pick(AuthorField.IMAGE_ID) { imageID }
+        it[name] = layers.resolve(AuthorField.NAME) { name } ?: named("Author", authorId)
+        it[biography] = layers.resolve(AuthorField.BIOGRAPHY) { biography }
+        it[website] = layers.resolve(AuthorField.WEBSITE) { website }
+        it[birthDate] = layers.resolve(AuthorField.BIRTH_DATE) { birthDate }
+        it[bornIn] = layers.resolve(AuthorField.BORN_IN) { bornIn }
+        it[deathDate] = layers.resolve(AuthorField.DEATH_DATE) { deathDate }
+        it[provider] = layers.resolve(AuthorField.PROVIDER) { provider }
+        it[providerId] = layers.resolve(AuthorField.PROVIDER_ID) { providerID }
+        it[imageId] = layers.resolve(AuthorField.IMAGE_ID) { imageID }
     }
 }
 
 context(_: Transaction)
 fun reconcileSeries(seriesId: UUID) {
-    val preferFile = prefersFile(SeriesTable, seriesId) ?: return
-    val user = SeriesUserMetadataTable.layer(seriesId)
-    val agent = SeriesAgentMetadataTable.layer(seriesId)
-    val file = SeriesFileMetadataTable.layer(seriesId)
-
-    fun <T> pick(
-        field: SeriesField,
-        get: SeriesMetadataRow.() -> T?,
-    ) = resolve(field, get, user, agent, file, preferFile)
+    val layers = seriesLayers(seriesId) ?: return
 
     SeriesTable.update({ SeriesTable.id eq seriesId }) {
-        it[title] = pick(SeriesField.TITLE) { title } ?: named("Series", seriesId)
-        it[totalBooks] = pick(SeriesField.TOTAL_BOOKS) { totalBooks }
-        it[primaryWorks] = pick(SeriesField.PRIMARY_WORKS) { primaryWorks }
-        it[description] = pick(SeriesField.DESCRIPTION) { description }
-        it[provider] = pick(SeriesField.PROVIDER) { provider }
-        it[providerId] = pick(SeriesField.PROVIDER_ID) { providerID }
-        it[coverId] = pick(SeriesField.COVER_ID) { coverID }
+        it[title] = layers.resolve(SeriesField.TITLE) { title } ?: named("Series", seriesId)
+        it[totalBooks] = layers.resolve(SeriesField.TOTAL_BOOKS) { totalBooks }
+        it[primaryWorks] = layers.resolve(SeriesField.PRIMARY_WORKS) { primaryWorks }
+        it[description] = layers.resolve(SeriesField.DESCRIPTION) { description }
+        it[provider] = layers.resolve(SeriesField.PROVIDER) { provider }
+        it[providerId] = layers.resolve(SeriesField.PROVIDER_ID) { providerID }
+        it[coverId] = layers.resolve(SeriesField.COVER_ID) { coverID }
     }
 }
 
