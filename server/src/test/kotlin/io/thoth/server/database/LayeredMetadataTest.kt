@@ -342,6 +342,36 @@ class LayeredMetadataTest : ThothTest() {
     }
 
     @Test
+    fun `resubmitting the resolved values claims nothing`() {
+        trackManager.insert(scan(description = "From the tags"), libId)
+        val id = bookId()
+        val authors = bookRepository.get(userId, id, libId).authors.map { it.id }
+
+        bookRepository.modify(
+            userId,
+            id,
+            libId,
+            bookUpdate(title = "A Book", description = "From the tags", authors = authors),
+        )
+        trackManager.insert(scan(description = "Retagged"), libId)
+
+        assertEquals(emptySet(), transaction { BookUserMetadataTable.layer(id).claimed })
+        assertEquals("Retagged", bookRepository.raw(id, libId).description)
+    }
+
+    @Test
+    fun `resetting hand picked authors brings back the tagged ones`() {
+        trackManager.insert(scan(), libId)
+        val id = bookId()
+        bookRepository.modify(userId, id, libId, bookUpdate(authors = listOf(newAuthor("Hand Picked", libId))))
+
+        bookRepository.modify(userId, id, libId, BookUpdate(reset = Patch.Set(listOf(BookField.AUTHORS))))
+
+        assertEquals(listOf("An Author"), authorNames(id))
+        assertEquals(emptySet(), transaction { BookUserMetadataTable.layer(id).claimed })
+    }
+
+    @Test
     fun `a blanked series list stays empty through a rescan`() {
         trackManager.insert(scan(series = "Tagged Series"), libId)
         val id = bookId()

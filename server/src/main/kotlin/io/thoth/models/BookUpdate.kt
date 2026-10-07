@@ -6,6 +6,7 @@ import io.thoth.openapi.common.Patch
 import io.thoth.openapi.common.ifSet
 import io.thoth.openapi.ktor.ValidateObject
 import io.thoth.openapi.ktor.errors.ErrorResponse
+import io.thoth.server.database.tables.BookField
 import org.jetbrains.exposed.v1.core.Op
 import java.time.LocalDate
 import java.util.UUID
@@ -25,6 +26,7 @@ data class BookUpdate(
     val genres: Patch<List<String>?> = Patch.Absent,
     val isbn: Patch<String?> = Patch.Absent,
     val cover: Patch<String?> = Patch.Absent,
+    val reset: Patch<List<BookField>> = Patch.Absent,
 ) : ValidateObject {
     override suspend fun RoutingContext.validateBody() {
         title.ifSet { if (it.isBlank()) throw ErrorResponse.userError("A book title cannot be empty") }

@@ -19,6 +19,7 @@ import io.thoth.server.common.extensions.naturalOrder
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.rows.BookRow
 import io.thoth.server.database.rows.bookAuthors
+import io.thoth.server.database.rows.bookSeries
 import io.thoth.server.database.rows.booksToModels
 import io.thoth.server.database.rows.toBookRow
 import io.thoth.server.database.rows.toModel
@@ -168,6 +169,7 @@ class BookRepositoryImpl :
                 ordered.map { (row, trackNr) ->
                     row.toModel(bookRef, trackNr)
                 },
+                BookUserMetadataTable.layer(id).claimed.sorted(),
             )
         }
 
@@ -200,27 +202,50 @@ class BookRepositoryImpl :
             imageDownloader.download(partial.cover.orElse(null)?.takeUnless { it == currentCover?.toString() })
         return transaction {
             val user = BookUserMetadataTable.layer(id)
-            val edit = LayerEdit(user.claimed)
-            val authors = edit.links(BookField.AUTHORS, partial.authors)
-            val series = edit.links(BookField.SERIES, partial.series)
+            val book = raw(id, libraryId)
+            val edit = LayerEdit(user.claimed, partial.reset)
+            val authors =
+                edit.links(BookField.AUTHORS, partial.authors, bookAuthors(listOf(id))[id].orEmpty().map { it.id })
+            val series =
+                edit.links(BookField.SERIES, partial.series, bookSeries(listOf(id))[id].orEmpty().map { it.id })
             BookUserMetadataTable.write(
                 user.copy(
-                    title = edit.value(BookField.TITLE, partial.title, user.title),
-                    provider = edit.value(BookField.PROVIDER, partial.provider, user.provider),
-                    providerID = edit.value(BookField.PROVIDER_ID, partial.providerID, user.providerID),
-                    providerRating = edit.value(BookField.PROVIDER_RATING, partial.providerRating, user.providerRating),
-                    releaseDate = edit.value(BookField.RELEASE_DATE, partial.releaseDate, user.releaseDate),
-                    publisher = edit.value(BookField.PUBLISHER, partial.publisher, user.publisher),
-                    language = edit.value(BookField.LANGUAGE, partial.language, user.language),
-                    description = edit.value(BookField.DESCRIPTION, partial.description, user.description),
-                    narrators = edit.value(BookField.NARRATORS, partial.narrators, user.narrators),
-                    genres = edit.value(BookField.GENRES, partial.genres, user.genres),
-                    isbn = edit.value(BookField.ISBN, partial.isbn, user.isbn),
+                    title = edit.value(BookField.TITLE, partial.title, user.title, book.title),
+                    provider = edit.value(BookField.PROVIDER, partial.provider, user.provider, book.provider),
+                    providerID = edit.value(
+                        BookField.PROVIDER_ID,
+                        partial.providerID,
+                        user.providerID,
+                        book.providerID,
+                    ),
+                    providerRating =
+                        edit.value(
+                            BookField.PROVIDER_RATING,
+                            partial.providerRating,
+                            user.providerRating,
+                            book.providerRating,
+                        ),
+                    releaseDate =
+                        edit.value(BookField.RELEASE_DATE, partial.releaseDate, user.releaseDate, book.releaseDate),
+                    publisher = edit.value(BookField.PUBLISHER, partial.publisher, user.publisher, book.publisher),
+                    language = edit.value(BookField.LANGUAGE, partial.language, user.language, book.language),
+                    description =
+                        edit.value(BookField.DESCRIPTION, partial.description, user.description, book.description),
+                    narrators =
+                        edit.value(
+                            BookField.NARRATORS,
+                            partial.narrators,
+                            user.narrators,
+                            book.narrators.ifEmpty { null },
+                        ),
+                    genres = edit.value(BookField.GENRES, partial.genres, user.genres, book.genres.ifEmpty { null }),
+                    isbn = edit.value(BookField.ISBN, partial.isbn, user.isbn, book.isbn),
                     coverID =
                         edit.value(
                             BookField.COVER_ID,
                             partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } },
                             user.coverID,
+                            book.coverID,
                         ),
                     claimed = edit.claimed,
                 ),
