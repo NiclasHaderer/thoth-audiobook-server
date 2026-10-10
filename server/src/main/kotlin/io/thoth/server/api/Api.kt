@@ -162,6 +162,13 @@ class Api {
         private val parent: Api,
     )
 
+    @Summary("Get api version", method = "GET")
+    @Tagged("Server")
+    @Resource("version")
+    data class Version(
+        private val parent: Api,
+    )
+
     @Secured(Guards.Normal)
     @Summary("List third party licenses", method = "GET")
     @Tagged("Server")
