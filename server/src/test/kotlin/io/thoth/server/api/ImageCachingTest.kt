@@ -10,18 +10,18 @@ import io.thoth.server.ThothTest
 import io.thoth.server.api
 import io.thoth.server.bearer
 import io.thoth.server.database.access.getOrCreateImage
-import io.thoth.server.database.tables.BookFileMetadataTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.ImageTable
-import io.thoth.server.database.tables.layer
-import io.thoth.server.database.tables.write
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
 import io.thoth.server.pngBytes
 import io.thoth.server.registerWithAccess
 import io.thoth.server.thothServer
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.statements.api.ExposedBlob
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -83,7 +83,7 @@ class ImageCachingTest : ThothTest() {
                 val id =
                     getOrCreateImage(bytes, null)
                         ?: ImageTable.insertAndGetId { it[image] = ExposedBlob(bytes) }.value
-                BookFileMetadataTable.write(BookFileMetadataTable.layer(bookId).copy(coverID = id))
+                BookTable.update({ BookTable.id eq bookId }) { it[coverId] = id }
                 id
             }
         block(bearer(registerWithAccess("listener", libId, LibraryPermissionLevel.READONLY)), imageId)

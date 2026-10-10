@@ -5,13 +5,13 @@ import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.searchHit
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
-import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.file.scanner.LibraryImportPipeline
 import io.thoth.server.newLibrary
 import io.thoth.server.schedules.AutoMatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.dsl.module
@@ -69,14 +69,14 @@ class AutoMatchOnScanTest : ThothTest() {
             matched() == books()
         }
         assertTrue(
-            transaction { BookAgentMetadataTable.selectAll().all { it[BookAgentMetadataTable.provider] != null } },
+            transaction { BookTable.selectAll().all { it[BookTable.provider] == "fake" } },
             "every match must record the agent it came from",
         )
     }
 
     private fun books() = transaction { BookTable.selectAll().count() }
 
-    private fun matched() = transaction { BookAgentMetadataTable.selectAll().count() }
+    private fun matched() = transaction { BookTable.selectAll().where { BookTable.provider.isNotNull() }.count() }
 
     private fun eventually(
         timeout: Duration = 30.seconds,

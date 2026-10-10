@@ -10,19 +10,19 @@ import io.thoth.server.ThothTest
 import io.thoth.server.api
 import io.thoth.server.bearer
 import io.thoth.server.database.access.getOrCreateImage
-import io.thoth.server.database.tables.BookFileMetadataTable
-import io.thoth.server.database.tables.BookUserMetadataTable
+import io.thoth.server.database.tables.BookField
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.ImageTable
-import io.thoth.server.database.tables.layer
-import io.thoth.server.database.tables.write
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.scanner.LibraryRoots
 import io.thoth.server.newLibrary
 import io.thoth.server.pngBytes
 import io.thoth.server.registerWithAccess
 import io.thoth.server.thothServer
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
 import java.time.Instant
@@ -167,15 +167,17 @@ class TrackManagerTest : ThothTest() {
 
             val edited = transaction { getOrCreateImage(pngBytes(9, 9, 9), null)!! }
             transaction {
-                BookUserMetadataTable.write(BookUserMetadataTable.layer(bookId).copy(coverID = edited))
+                BookTable.update({ BookTable.id eq bookId }) {
+                    it[coverId] = edited
+                    it[locked] = setOf(BookField.COVER_ID)
+                }
             }
+            val images = transaction { ImageTable.selectAll().count() }
 
             trackManager.insert(scanWithCover(pngBytes(7, 7, 7)), libId)
 
             assertEquals(edited, theBook(token).coverID, "the file's embedded art must not replace an edited cover")
-            val fileCover = transaction { BookFileMetadataTable.layer(bookId).coverID }
-            assertNotEquals(edited, fileCover, "the file layer must have taken the new art")
-            assertNotNull(fileCover, "and must still name an image")
+            assertEquals(images, transaction { ImageTable.selectAll().count() }, "and the skipped art is not stored")
         }
 
     @Test

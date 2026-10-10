@@ -61,13 +61,13 @@ class ChapterApiTest : ThothTest() {
             val edited = api.getBook(bookId, libId, token).body()
             assertEquals(listOf("Prologue", "Arrakis"), edited.chapters.map { it.title })
             assertEquals(listOf(500L, 2000L), edited.chapters.map { it.endMs })
-            assertEquals(listOf(BookField.CHAPTERS), edited.overridden)
+            assertEquals(listOf(BookField.CHAPTERS), edited.locked)
 
-            api.updateBook(bookId, libId, BookUpdateImpl(reset = Patch.Set(listOf(BookField.CHAPTERS))), token)
+            api.updateBook(bookId, libId, BookUpdateImpl(unlock = Patch.Set(listOf(BookField.CHAPTERS))), token)
 
-            val reset = api.getBook(bookId, libId, token).body()
-            assertEquals(listOf("Part 1", "Part 2"), reset.chapters.map { it.title })
-            assertEquals(emptyList(), reset.overridden)
+            val unlocked = api.getBook(bookId, libId, token).body()
+            assertEquals(listOf("Part 1", "Part 2"), unlocked.chapters.map { it.title })
+            assertEquals(emptyList(), unlocked.locked)
         }
 
     @Test

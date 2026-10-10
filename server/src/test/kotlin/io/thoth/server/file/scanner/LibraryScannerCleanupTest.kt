@@ -4,7 +4,6 @@ import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryTable
-import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.create
@@ -95,51 +94,43 @@ class LibraryScannerCleanupTest : ThothTest() {
         }
 
     @Test
-    fun `an author the user moved a book away from is hidden but kept`() {
+    fun `an author the user moved a book away from is hidden and then deleted`() {
         val scanned = newLibrary("scanned")
         val tagged = newAuthor("Tagged Author", scanned)
         val chosen = newAuthor("Chosen Author", scanned)
         val book = newBook("Mort", scanned, authors = listOf(tagged))
         newTrack(title = "Mort Track", path = "/media/scanned/mort.mp3", bookId = book, libraryId = scanned)
-        transaction { replaceBookAuthors(book, MetadataLayer.USER, listOf(chosen)) }
+        transaction { replaceBookAuthors(book, listOf(chosen)) }
 
         cleanup(scanned)
 
-        assertEquals(listOf(1L, 1L, 2L, 0L), counts(scanned), "both authors survive the pass")
-        assertEquals(listOf(0L, 1L, 0L), deferred(scanned), "the author nothing resolves to any more is hidden")
+        assertEquals(listOf(1L, 1L, 2L, 0L), counts(scanned), "both authors survive the first pass")
+        assertEquals(listOf(0L, 1L, 0L), deferred(scanned), "the author without a book is hidden")
 
         expireDeadlines()
         cleanup(scanned)
 
-        assertEquals(
-            listOf(1L, 1L, 2L, 0L),
-            counts(scanned),
-            "but they are never deleted: the file layer still links the book to them",
-        )
+        assertEquals(listOf(1L, 1L, 1L, 0L), counts(scanned), "nothing links the book to it any more")
     }
 
     @Test
-    fun `a series the user moved a book out of is hidden but kept`() {
+    fun `a series the user moved a book out of is hidden and then deleted`() {
         val scanned = newLibrary("scanned")
         val tagged = newSeries("Tagged Series", scanned)
         val chosen = newSeries("Chosen Series", scanned)
         val book = newBook("Mort", scanned, series = listOf(tagged))
         newTrack(title = "Mort Track", path = "/media/scanned/mort.mp3", bookId = book, libraryId = scanned)
-        transaction { replaceBookSeries(book, MetadataLayer.USER, mapOf(chosen to null)) }
+        transaction { replaceBookSeries(book, mapOf(chosen to null)) }
 
         cleanup(scanned)
 
-        assertEquals(listOf(1L, 1L, 0L, 2L), counts(scanned), "both series survive the pass")
-        assertEquals(listOf(0L, 0L, 1L), deferred(scanned), "the series nothing resolves to any more is hidden")
+        assertEquals(listOf(1L, 1L, 0L, 2L), counts(scanned), "both series survive the first pass")
+        assertEquals(listOf(0L, 0L, 1L), deferred(scanned), "the series without a book is hidden")
 
         expireDeadlines()
         cleanup(scanned)
 
-        assertEquals(
-            listOf(1L, 1L, 0L, 2L),
-            counts(scanned),
-            "but it is never deleted: the file layer still links the book to it, so a rescan can bring it back",
-        )
+        assertEquals(listOf(1L, 1L, 0L, 1L), counts(scanned), "nothing links the book to it any more")
     }
 
     @Test

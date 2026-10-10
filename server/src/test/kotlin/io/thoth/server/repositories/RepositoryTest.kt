@@ -10,12 +10,9 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackTable
-import io.thoth.server.database.tables.layer
-import io.thoth.server.database.tables.write
 import io.thoth.server.file.scanner.LibraryCleanup
 import io.thoth.server.newAuthor
 import io.thoth.server.newBook
@@ -29,6 +26,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
 import java.util.UUID
 import kotlin.test.BeforeTest
@@ -331,7 +329,7 @@ class RepositoryTest : ThothTest() {
     fun `modify treats the book's own cover id as unchanged`() {
         val id = bookRepository.create("Covered", libId, emptyList(), emptyList()).id
         val cover = transaction { getOrCreateImage(pngBytes(1, 2, 3), null)!! }
-        transaction { BookFileMetadataTable.write(BookFileMetadataTable.layer(id).copy(coverID = cover)) }
+        transaction { BookTable.update({ BookTable.id eq id }) { it[coverId] = cover } }
 
         val result =
             bookRepository.modify(
