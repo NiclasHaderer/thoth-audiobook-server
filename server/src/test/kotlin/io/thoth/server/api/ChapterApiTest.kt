@@ -42,7 +42,7 @@ class ChapterApiTest : ThothTest() {
         }
 
     @Test
-    fun `edited chapters override the files until they are reset`() =
+    fun `edited chapters override the files until they are unlocked`() =
         thothServer {
             val libId = newLibrary("lib", folders = listOf("/media/books"))
             val bookId = newBook("Dune", libId)

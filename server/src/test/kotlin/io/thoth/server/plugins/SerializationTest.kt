@@ -124,7 +124,7 @@ class SerializationTest : ThothTest() {
         }
 
     @Test
-    fun `a layer field goes over the wire under the name the generated clients use`() =
+    fun `a metadata field goes over the wire under the name the generated clients use`() =
         withMapper { mapper ->
             assertEquals("\"BORN_IN\"", mapper.writeValueAsString(AuthorField.BORN_IN))
             assertEquals(AuthorField.BORN_IN, mapper.readValue("\"BORN_IN\"", AuthorField::class.java))
