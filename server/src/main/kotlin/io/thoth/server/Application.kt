@@ -12,6 +12,7 @@ import io.thoth.server.api.audioRouting
 import io.thoth.server.api.authRoutes
 import io.thoth.server.api.authorRouting
 import io.thoth.server.api.bookRouting
+import io.thoth.server.api.eventRouting
 import io.thoth.server.api.fileSystemRouting
 import io.thoth.server.api.genreRouting
 import io.thoth.server.api.imageRouting
@@ -111,6 +112,9 @@ fun Application.routing() {
 
         // Per-user listening progress and history
         progressRouting()
+
+        // Change events over a websocket
+        eventRouting()
 
         // Static files
         audioRouting()

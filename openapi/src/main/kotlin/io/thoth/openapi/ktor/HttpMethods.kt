@@ -5,7 +5,6 @@ package io.thoth.openapi.ktor
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.resources.resource
 import io.ktor.server.response.respond
@@ -14,11 +13,9 @@ import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.application
 import io.ktor.server.routing.method
 import io.ktor.server.routing.route
-import io.thoth.openapi.common.findAnnotationUp
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.openapi.ktor.plugins.OpenAPIConfigurationKey
 import io.thoth.openapi.ktor.responses.BaseResponse
-import kotlin.reflect.full.findAnnotation
 import io.ktor.server.resources.handle as resourceHandle
 
 suspend inline fun <reified BODY : Any> ApplicationCall.parseBody(): BODY =
@@ -73,20 +70,7 @@ inline fun <reified PARAMS : Any, reified BODY : Any, reified RESPONSE> Route.wr
     routeCollector.addRoute(openApiRoute)
     val status = openApiRoute.responseStatusCode
 
-    // Check if ktor should secure the route
-    val ignoreSecured = PARAMS::class.findAnnotation<NotSecured>() != null
-    val secured = PARAMS::class.findAnnotationUp<Secured>()
-    if (secured != null && !ignoreSecured) {
-        authenticate(secured.name) {
-            if (PARAMS::class == Unit::class) {
-                method(method) { handle { wrapHandler(callback, Unit as PARAMS, status) } }
-            } else {
-                resource<PARAMS> {
-                    method(method) { resourceHandle<PARAMS> { params -> wrapHandler(callback, params, status) } }
-                }
-            }
-        }
-    } else {
+    guarded<PARAMS> {
         if (PARAMS::class == Unit::class) {
             method(method) { handle { wrapHandler(callback, Unit as PARAMS, status) } }
         } else {

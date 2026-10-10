@@ -615,6 +615,12 @@ class Api {
     }
 
     @Secured(Guards.Media)
+    @Resource("events")
+    data class Events(
+        private val parent: Api,
+    )
+
+    @Secured(Guards.Media)
     @Resource("stream")
     @Tagged("Files")
     data class Files(

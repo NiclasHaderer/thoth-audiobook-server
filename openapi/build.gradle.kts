@@ -17,6 +17,7 @@ dependencies {
     implementation(libs.ktor.server.resources)
     implementation(libs.ktor.server.data.conversion)
     implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.websockets.jvm)
 
     // Openapi
     implementation(libs.swagger.models)
