@@ -7,7 +7,7 @@ import io.thoth.server.database.rows.bookGroupCount
 import io.thoth.server.database.rows.bookGroups
 import io.thoth.server.database.rows.booksInGroup
 import io.thoth.server.database.rows.booksToModels
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
@@ -37,7 +37,7 @@ class GenreRepositoryImpl : GenreRepository {
         offset: Long,
     ): List<Genre> =
         transaction {
-            BooksTable.genres
+            BookTable.genres
                 .bookGroups(libraryId, order, limit, offset)
                 .map { Genre(name = it.name, bookCount = it.bookCount) }
         }
@@ -49,10 +49,10 @@ class GenreRepositoryImpl : GenreRepository {
     ): GenreDetailed =
         transaction {
             val match =
-                BooksTable.genres.booksInGroup(name, libraryId)
+                BookTable.genres.booksInGroup(name, libraryId)
                     ?: throw ErrorResponse.notFound("Genre", name)
             GenreDetailed(name = match.name, books = booksToModels(match.books, userId))
         }
 
-    override fun total(libraryId: UUID): Long = transaction { BooksTable.genres.bookGroupCount(libraryId) }
+    override fun total(libraryId: UUID): Long = transaction { BookTable.genres.bookGroupCount(libraryId) }
 }

@@ -3,7 +3,7 @@ package io.thoth.server.schedules
 import io.thoth.server.common.scheduling.CronTask
 import io.thoth.server.common.scheduling.EventTask
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.file.scanner.LibraryImportPipeline
 import io.thoth.server.file.scanner.ScanRequest
 import org.jetbrains.exposed.v1.jdbc.select
@@ -21,7 +21,7 @@ class ThothSchedules : KoinComponent {
             config.fullScanCron,
             callback = {
                 val libraries =
-                    transaction { LibrariesTable.select(LibrariesTable.id).map { it[LibrariesTable.id].value } }
+                    transaction { LibraryTable.select(LibraryTable.id).map { it[LibraryTable.id].value } }
                 libraries.forEach { pipeline.scanLibrary(it) }
             },
         )

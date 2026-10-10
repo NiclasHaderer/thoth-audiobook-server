@@ -2,7 +2,7 @@ package io.thoth.server.file
 
 import io.thoth.server.ThothTest
 import io.thoth.server.common.extensions.canonicalString
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
 import io.thoth.server.newTrack
@@ -78,10 +78,10 @@ class TrackManagerScanStateTest : ThothTest() {
 
         val scanIndex =
             transaction {
-                TracksTable
-                    .select(TracksTable.scanIndex)
-                    .where { TracksTable.id eq track }
-                    .single()[TracksTable.scanIndex]
+                TrackTable
+                    .select(TrackTable.scanIndex)
+                    .where { TrackTable.id eq track }
+                    .single()[TrackTable.scanIndex]
             }
         assertEquals(7uL, scanIndex)
     }

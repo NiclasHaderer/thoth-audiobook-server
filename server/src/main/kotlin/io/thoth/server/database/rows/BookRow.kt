@@ -7,10 +7,10 @@ import io.thoth.models.PlayStatus
 import io.thoth.models.TitledId
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.UserBookProgressRow
 import io.thoth.server.database.tables.UserBookProgressTable
 import io.thoth.server.database.tables.resolvedAuthorLinks
@@ -48,20 +48,20 @@ data class BookRow(
 
 fun ResultRow.toBookRow(): BookRow =
     BookRow(
-        id = this[BooksTable.id].value,
-        library = this[BooksTable.library].value,
-        title = this[BooksTable.title],
-        releaseDate = this[BooksTable.releaseDate],
-        publisher = this[BooksTable.publisher],
-        language = this[BooksTable.language],
-        description = this[BooksTable.description],
-        narrators = this[BooksTable.narrators].orEmpty(),
-        isbn = this[BooksTable.isbn],
-        provider = this[BooksTable.provider],
-        providerID = this[BooksTable.providerID],
-        providerRating = this[BooksTable.providerRating],
-        coverID = this[BooksTable.coverID]?.value,
-        genres = this[BooksTable.genres].orEmpty(),
+        id = this[BookTable.id].value,
+        library = this[BookTable.library].value,
+        title = this[BookTable.title],
+        releaseDate = this[BookTable.releaseDate],
+        publisher = this[BookTable.publisher],
+        language = this[BookTable.language],
+        description = this[BookTable.description],
+        narrators = this[BookTable.narrators].orEmpty(),
+        isbn = this[BookTable.isbn],
+        provider = this[BookTable.provider],
+        providerID = this[BookTable.providerId],
+        providerRating = this[BookTable.providerRating],
+        coverID = this[BookTable.coverId]?.value,
+        genres = this[BookTable.genres].orEmpty(),
     )
 
 context(_: Transaction)
@@ -118,12 +118,12 @@ fun booksToModels(
 
 context(_: Transaction)
 fun bookDurations(bookIds: List<UUID>): Map<UUID, Long> {
-    val total = TracksTable.durationMs.sum()
-    return TracksTable
-        .select(TracksTable.book, total)
-        .where { TracksTable.book inList bookIds }
-        .groupBy(TracksTable.book)
-        .associate { it[TracksTable.book].value to (it[total] ?: 0L) }
+    val total = TrackTable.durationMs.sum()
+    return TrackTable
+        .select(TrackTable.book, total)
+        .where { TrackTable.book inList bookIds }
+        .groupBy(TrackTable.book)
+        .associate { it[TrackTable.book].value to (it[total] ?: 0L) }
 }
 
 context(_: Transaction)
@@ -139,7 +139,7 @@ fun bookProgress(
 context(_: Transaction)
 fun bookAuthors(bookIds: List<UUID>): Map<UUID, List<NamedId>> =
     resolvedAuthorLinks
-        .join(AuthorTable, JoinType.INNER, AuthorBookTable.authors, AuthorTable.id)
+        .join(AuthorTable, JoinType.INNER, AuthorBookTable.author, AuthorTable.id)
         .select(AuthorBookTable.book, AuthorTable.id, AuthorTable.name)
         .where { AuthorBookTable.book inList bookIds }
         .groupBy({ it[AuthorBookTable.book].value }) {

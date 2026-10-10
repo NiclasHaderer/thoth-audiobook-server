@@ -1,17 +1,37 @@
 package io.thoth.server.database.tables
 
+import com.fasterxml.jackson.annotation.JsonValue
+
 enum class MetadataLayer {
     FILE,
     AGENT,
     USER,
 }
 
-fun <T> resolve(
-    user: T?,
-    agent: T?,
-    file: T?,
+interface LayerField {
+    val name: String
+
+    @get:JsonValue
+    val column: String get() = name.lowercase()
+}
+
+interface LayerRow<F : Enum<F>> {
+    val claimed: Set<F>
+}
+
+// A layer speaks for a field when it holds a value, or when it claimed the field: a claim without a value is a
+// deliberate blank that has to hide whatever the layers below say.
+fun <R : LayerRow<F>, F : Enum<F>, T> resolve(
+    field: F,
+    get: R.() -> T?,
+    user: R,
+    agent: R,
+    file: R,
     preferFile: Boolean,
-): T? = user ?: if (preferFile) file ?: agent else agent ?: file
+): T? {
+    val order = if (preferFile) listOf(user, file, agent) else listOf(user, agent, file)
+    return order.firstOrNull { field in it.claimed || it.get() != null }?.get()
+}
 
 fun resolveLayer(
     userClaims: Boolean,

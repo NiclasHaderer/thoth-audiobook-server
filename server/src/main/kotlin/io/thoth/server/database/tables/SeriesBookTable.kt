@@ -3,10 +3,10 @@ package io.thoth.server.database.tables
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 
-object SeriesBookTable : Table("SeriesBook") {
-    val series = reference("series", SeriesTable, onDelete = ReferenceOption.CASCADE)
-    val book = reference("book", BooksTable, onDelete = ReferenceOption.CASCADE).index()
-    val seriesIndex = float("index").nullable()
-    val addedBy = enumerationByName<MetadataLayer>("addedBy", 8)
+object SeriesBookTable : Table("series_book") {
+    val series = reference("series_id", SeriesTable, onDelete = ReferenceOption.CASCADE)
+    val book = reference("book_id", BookTable, onDelete = ReferenceOption.CASCADE).index()
+    val seriesIndex = float("series_index").nullable()
+    val addedBy = enumerationByName<MetadataLayer>("added_by", 8)
     override val primaryKey = PrimaryKey(series, book, addedBy)
 }

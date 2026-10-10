@@ -145,7 +145,8 @@ abstract class KtTypeGenerator : TypeGenerator<KtTypeGenerator.KtType, KtTypeGen
                                     argClassifier.name
                                 } else {
                                     val subType = generateSubType(ClassType.create(it.type!!))
-                                    if (impl) subType.referenceImpl() else subType.reference()
+                                    val name = if (impl) subType.referenceImpl() else subType.reference()
+                                    if (it.type!!.isMarkedNullable) "$name?" else name
                                 }
                             }
                         val parameterizedType = generateSubType(classType.forMember(property))

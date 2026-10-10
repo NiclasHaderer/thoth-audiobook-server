@@ -61,6 +61,7 @@ val schemaGenerators: List<SchemaGenerator> =
         NumberSchemaGenerator(),
         ObjectSchemaGenerator(),
         PairSchemaGenerator(),
+        PatchSchemaGenerator(),
         RedirectSchemaGenerator(),
         StringSchemaGenerator(),
         UnitSchemaGenerator(),

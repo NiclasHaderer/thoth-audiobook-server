@@ -15,38 +15,54 @@ import org.jetbrains.exposed.v1.jdbc.update
 import java.time.LocalDate
 import java.util.UUID
 
+enum class BookField : LayerField {
+    TITLE,
+    AUTHORS,
+    SERIES,
+    PROVIDER,
+    PROVIDER_ID,
+    PROVIDER_RATING,
+    RELEASE_DATE,
+    PUBLISHER,
+    LANGUAGE,
+    DESCRIPTION,
+    NARRATORS,
+    GENRES,
+    ISBN,
+    COVER_ID,
+}
+
 sealed class BookMetadata(
     name: String,
 ) : IdTable<UUID>(name) {
-    final override val id = reference("book", BooksTable, onDelete = ReferenceOption.CASCADE)
+    final override val id = reference("book_id", BookTable, onDelete = ReferenceOption.CASCADE)
     final override val primaryKey = PrimaryKey(id)
 
-    val title = text("title").nullable()
-    val releaseDate = date("releaseDate").nullable()
-    val publisher = varchar("publisher", 255).nullable()
-    val language = enumerationByName<MetadataLanguage>("language", 255).nullable()
-    val description = text("description").nullable()
-    val isbn = varchar("isbn", 255).nullable()
-    val provider = varchar("provider", 255).nullable()
-    val providerID = varchar("providerID", 255).nullable()
-    val providerRating = float("rating").nullable()
-    val coverID = reference("cover", ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
+    val title = text(BookField.TITLE.column).nullable()
+    val releaseDate = date(BookField.RELEASE_DATE.column).nullable()
+    val publisher = varchar(BookField.PUBLISHER.column, 255).nullable()
+    val language = enumerationByName<MetadataLanguage>(BookField.LANGUAGE.column, 255).nullable()
+    val description = text(BookField.DESCRIPTION.column).nullable()
+    val isbn = varchar(BookField.ISBN.column, 255).nullable()
+    val provider = varchar(BookField.PROVIDER.column, 255).nullable()
+    val providerId = varchar(BookField.PROVIDER_ID.column, 255).nullable()
+    val providerRating = float(BookField.PROVIDER_RATING.column).nullable()
+    val coverId = reference(BookField.COVER_ID.column, ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
 
-    val genres = json<List<String>>("genres").nullable()
-    val narrators = json<List<String>>("narrators").nullable()
+    val genres = json<List<String>>(BookField.GENRES.column).nullable()
+    val narrators = json<List<String>>(BookField.NARRATORS.column).nullable()
 
-    // Claims the relation for this layer. Mostly this is the same as owning a link row, but an empty claim
-    // has no row to carry an `addedBy`, so dropping a book's last series would otherwise read as "the user
-    // said nothing" and the next scan would put the tagged series back.
-    val authorsSet = bool("authorsSet").default(false)
-    val seriesSet = bool("seriesSet").default(false)
+    // For the relations a claim matters even with links: an empty claim has no link row to carry an `addedBy`,
+    // so dropping a book's last series would otherwise read as "the user said nothing" and the next scan would
+    // put the tagged series back.
+    val claimed = json<Set<BookField>>("claimed").default(emptySet())
 }
 
-object BookFileMetadataTable : BookMetadata("BookFileMetadata")
+object BookFileMetadataTable : BookMetadata("book_file_metadata")
 
-object BookAgentMetadataTable : BookMetadata("BookAgentMetadata")
+object BookAgentMetadataTable : BookMetadata("book_agent_metadata")
 
-object BookUserMetadataTable : BookMetadata("BookUserMetadata")
+object BookUserMetadataTable : BookMetadata("book_user_metadata")
 
 data class BookMetadataRow(
     val book: UUID,
@@ -62,9 +78,8 @@ data class BookMetadataRow(
     val coverID: UUID? = null,
     val genres: List<String>? = null,
     val narrators: List<String>? = null,
-    val authorsSet: Boolean = false,
-    val seriesSet: Boolean = false,
-)
+    override val claimed: Set<BookField> = emptySet(),
+) : LayerRow<BookField>
 
 context(_: Transaction)
 fun BookMetadata.layer(bookId: UUID): BookMetadataRow =
@@ -84,13 +99,12 @@ private fun ResultRow.toBookMetadataRow(table: BookMetadata): BookMetadataRow =
         description = this[table.description],
         isbn = this[table.isbn],
         provider = this[table.provider],
-        providerID = this[table.providerID],
+        providerID = this[table.providerId],
         providerRating = this[table.providerRating],
-        coverID = this[table.coverID]?.value,
+        coverID = this[table.coverId]?.value,
         genres = this[table.genres],
         narrators = this[table.narrators],
-        authorsSet = this[table.authorsSet],
-        seriesSet = this[table.seriesSet],
+        claimed = this[table.claimed],
     )
 
 // Nothing outside of this file may write a book layer.
@@ -113,11 +127,10 @@ private fun BookMetadata.write(
     stmt[description] = row.description
     stmt[isbn] = row.isbn
     stmt[provider] = row.provider
-    stmt[providerID] = row.providerID
+    stmt[providerId] = row.providerID
     stmt[providerRating] = row.providerRating
-    stmt[coverID] = row.coverID
+    stmt[coverId] = row.coverID
     stmt[genres] = row.genres
     stmt[narrators] = row.narrators
-    stmt[authorsSet] = row.authorsSet
-    stmt[seriesSet] = row.seriesSet
+    stmt[claimed] = row.claimed
 }

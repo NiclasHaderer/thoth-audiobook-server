@@ -6,6 +6,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.thoth.client.gen.models.BookUpdateImpl
 import io.thoth.client.gen.models.LibraryPermissionLevel
 import io.thoth.client.gen.models.ProgressUpdateImpl
+import io.thoth.openapi.common.Patch
 import io.thoth.server.ThothTest
 import io.thoth.server.api
 import io.thoth.server.bearer
@@ -34,7 +35,7 @@ class ProgressPermissionTest : ThothTest() {
             )
             assertEquals(
                 HttpStatusCode.Forbidden,
-                api.updateBook(bookId, libId, BookUpdateImpl(title = "Renamed"), token).status,
+                api.updateBook(bookId, libId, BookUpdateImpl(title = Patch.Set("Renamed")), token).status,
                 "library content is still off limits",
             )
         }
@@ -48,7 +49,7 @@ class ProgressPermissionTest : ThothTest() {
             )
             assertEquals(
                 HttpStatusCode.OK,
-                api.updateBook(bookId, libId, BookUpdateImpl(title = "Renamed"), token).status,
+                api.updateBook(bookId, libId, BookUpdateImpl(title = Patch.Set("Renamed")), token).status,
             )
         }
 

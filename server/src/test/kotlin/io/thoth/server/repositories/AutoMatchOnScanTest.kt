@@ -6,7 +6,7 @@ import io.thoth.metadata.searchHit
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.BookAgentMetadataTable
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.file.scanner.LibraryImportPipeline
 import io.thoth.server.newLibrary
 import io.thoth.server.schedules.AutoMatcher
@@ -74,7 +74,7 @@ class AutoMatchOnScanTest : ThothTest() {
         )
     }
 
-    private fun books() = transaction { BooksTable.selectAll().count() }
+    private fun books() = transaction { BookTable.selectAll().count() }
 
     private fun matched() = transaction { BookAgentMetadataTable.selectAll().count() }
 

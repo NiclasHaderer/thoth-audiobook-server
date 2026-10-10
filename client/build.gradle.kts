@@ -23,6 +23,7 @@ tasks.named("compileKotlin") {
 }
 
 dependencies {
+    api(project(":openapi-models"))
     api(libs.arrow.core)
     api(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)

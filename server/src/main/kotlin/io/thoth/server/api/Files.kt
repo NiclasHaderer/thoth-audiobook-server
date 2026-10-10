@@ -19,14 +19,14 @@ import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.AuthorUserMetadataTable
 import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookFileMetadataTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.ImageTable
 import io.thoth.server.database.tables.SeriesAgentMetadataTable
 import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.SeriesUserMetadataTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.plugins.auth.assertLibraryPermissions
 import io.thoth.server.plugins.auth.thothPrincipal
 import io.thoth.server.plugins.sandbox
@@ -47,12 +47,12 @@ fun Routing.audioRouting() {
         val (track, libraryId) =
             transaction {
                 val row =
-                    TracksTable
-                        .select(TracksTable.path, TracksTable.library)
-                        .where { TracksTable.id eq id }
+                    TrackTable
+                        .select(TrackTable.path, TrackTable.library)
+                        .where { TrackTable.id eq id }
                         .firstOrNull()
                         ?: throw ErrorResponse.notFound("Track", id)
-                row[TracksTable.path] to row[TracksTable.library].value
+                row[TrackTable.path] to row[TrackTable.library].value
             }
         assertLibraryPermissions(libraryId)
         val path = Path.of(track)
@@ -76,17 +76,17 @@ fun Routing.imageRouting() {
             val allowed = permissions.libraries.mapTo(mutableSetOf()) { it.id }
             val covers =
                 listOf(BookFileMetadataTable, BookAgentMetadataTable, BookUserMetadataTable)
-                    .map { cover(BooksTable, BooksTable.library, it, it.coverID, id, allowed) } +
+                    .map { cover(BookTable, BookTable.library, it, it.coverId, id, allowed) } +
                     listOf(SeriesFileMetadataTable, SeriesAgentMetadataTable, SeriesUserMetadataTable)
-                        .map { cover(SeriesTable, SeriesTable.library, it, it.coverID, id, allowed) } +
+                        .map { cover(SeriesTable, SeriesTable.library, it, it.coverId, id, allowed) } +
                     listOf(AuthorFileMetadataTable, AuthorAgentMetadataTable, AuthorUserMetadataTable)
-                        .map { cover(AuthorTable, AuthorTable.library, it, it.imageID, id, allowed) }
+                        .map { cover(AuthorTable, AuthorTable.library, it, it.imageId, id, allowed) }
             val image =
                 covers
                     .reduce { acc: AbstractQuery<*>, query -> acc.unionAll(query) }
                     .limit(1)
                     .firstOrNull() ?: throw ErrorResponse.notFound("Image", id)
-            val bytes = image[ImageTable.blob].bytes
+            val bytes = image[ImageTable.image].bytes
             binaryResponse(
                 bytes,
                 contentType = imageContentType(bytes) ?: ContentType.Application.OctetStream,
@@ -110,5 +110,5 @@ private fun cover(
 ): Query =
     (core innerJoin layer)
         .join(ImageTable, JoinType.INNER, image, ImageTable.id)
-        .select(ImageTable.blob)
+        .select(ImageTable.image)
         .where { (image eq imageId) and (library inList allowed) }

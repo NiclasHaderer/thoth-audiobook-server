@@ -6,6 +6,9 @@ import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.FileScanner
 import io.thoth.models.NamedMetadataAgent
+import io.thoth.openapi.common.Patch
+import io.thoth.openapi.common.ifSet
+import io.thoth.openapi.common.orElse
 import io.thoth.openapi.ktor.ValidateObject
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
@@ -31,23 +34,21 @@ data class UpdateLibrary(
 }
 
 data class PartialUpdateLibrary(
-    val name: String?,
-    val icon: String?,
-    val folders: List<String>?,
-    val preferEmbeddedMetadata: Boolean?,
-    val metadataAgents: List<NamedMetadataAgent>?,
-    val combineMetadataAgentFields: Boolean?,
-    val fileScanners: List<FileScanner>?,
-    val combineFileScannerFields: Boolean?,
-    val language: MetadataLanguage?,
-    val region: MetadataRegion?,
+    val name: Patch<String> = Patch.Absent,
+    val icon: Patch<String?> = Patch.Absent,
+    val folders: Patch<List<String>> = Patch.Absent,
+    val preferEmbeddedMetadata: Patch<Boolean> = Patch.Absent,
+    val metadataAgents: Patch<List<NamedMetadataAgent>> = Patch.Absent,
+    val combineMetadataAgentFields: Patch<Boolean> = Patch.Absent,
+    val fileScanners: Patch<List<FileScanner>> = Patch.Absent,
+    val combineFileScannerFields: Patch<Boolean> = Patch.Absent,
+    val language: Patch<MetadataLanguage> = Patch.Absent,
+    val region: Patch<MetadataRegion> = Patch.Absent,
 ) : ValidateObject {
     override suspend fun RoutingContext.validateBody() {
-        // An absent list means "leave unchanged", so it is skipped. An empty one is an explicit new value and
-        // gets the same treatment as on a create.
-        folders?.let { requireNotEmpty(it, "folder") }
-        fileScanners?.let { requireNotEmpty(it, "file scanner") }
-        requireRegistered(metadataAgents.orEmpty(), fileScanners.orEmpty())
+        folders.ifSet { requireNotEmpty(it, "folder") }
+        fileScanners.ifSet { requireNotEmpty(it, "file scanner") }
+        requireRegistered(metadataAgents.orElse(emptyList()), fileScanners.orElse(emptyList()))
     }
 }
 

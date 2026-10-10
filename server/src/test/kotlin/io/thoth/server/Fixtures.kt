@@ -11,18 +11,18 @@ import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.AuthorUserMetadataTable
 import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookMetadataRow
-import io.thoth.server.database.tables.BooksTable
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryRow
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.LibraryUserTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesMetadataRow
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackRow
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.UserRow
-import io.thoth.server.database.tables.UsersTable
+import io.thoth.server.database.tables.UserTable
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.replaceBookAuthors
@@ -50,7 +50,7 @@ fun newLibrary(
     combineMetadataAgentFields: Boolean = true,
 ): UUID =
     transaction {
-        LibrariesTable.insert(
+        LibraryTable.insert(
             LibraryRow(
                 id = UUID.randomUUID(),
                 name = name,
@@ -101,7 +101,7 @@ fun newBook(
     genres: List<String>? = null,
 ): UUID =
     transaction {
-        val id = BooksTable.create(libraryId, title)
+        val id = BookTable.create(libraryId, title)
         BookFileMetadataTable.write(
             BookMetadataRow(book = id, title = title, narrators = narrators, genres = genres),
         )
@@ -120,7 +120,7 @@ fun newTrack(
     trackNr: Int? = null,
 ): UUID =
     transaction {
-        TracksTable.insert(
+        TrackTable.insert(
             TrackRow(
                 id = UUID.randomUUID(),
                 title = title,
@@ -142,7 +142,7 @@ fun newUser(
 ): UUID =
     transaction {
         val id =
-            UsersTable.insert(
+            UserTable.insert(
                 UserRow(
                     id = UUID.randomUUID(),
                     username = username,

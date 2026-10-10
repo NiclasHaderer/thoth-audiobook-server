@@ -4,14 +4,16 @@ import io.ktor.http.HttpStatusCode
 import io.thoth.models.AuthorUpdate
 import io.thoth.models.BookUpdate
 import io.thoth.models.SeriesUpdate
+import io.thoth.openapi.common.Patch
+import io.thoth.openapi.common.orAbsent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookFileMetadataTable
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.write
 import io.thoth.server.file.scanner.LibraryCleanup
@@ -53,7 +55,7 @@ class RepositoryTest : ThothTest() {
             "sanity: visible while it has a track",
         )
 
-        transaction { TracksTable.deleteWhere { TracksTable.book eq book } }
+        transaction { TrackTable.deleteWhere { TrackTable.book eq book } }
         getKoin().get<LibraryCleanup>().removeOrphans(libId)
 
         assertEquals(emptyList(), bookRepository.getAll(userId, libId, SortOrder.ASC), "hidden by default")
@@ -287,54 +289,16 @@ class RepositoryTest : ThothTest() {
         assertEquals(id, bookRepository.findByTaggedName("Guards! Guards!", emptyList(), libId)?.id)
     }
 
-    private fun seriesRenamedTo(newTitle: String) =
-        SeriesUpdate(
-            title = newTitle,
-            books = null,
-            provider = null,
-            providerID = null,
-            totalBooks = null,
-            primaryWorks = null,
-            cover = null,
-            description = null,
-        )
+    private fun seriesRenamedTo(newTitle: String) = SeriesUpdate(title = Patch.Set(newTitle))
 
     private fun bookAssignedTo(
         authors: List<UUID>? = null,
         series: List<UUID>? = null,
-    ) = bookRenamedTo("Mort").copy(authors = authors, series = series)
+    ) = bookRenamedTo("Mort").copy(authors = authors.orAbsent(), series = series.orAbsent())
 
-    private fun bookRenamedTo(newTitle: String) =
-        BookUpdate(
-            title = newTitle,
-            authors = null,
-            series = null,
-            provider = null,
-            providerID = null,
-            providerRating = null,
-            releaseDate = null,
-            publisher = null,
-            language = null,
-            description = null,
-            narrators = null,
-            genres = null,
-            isbn = null,
-            cover = null,
-        )
+    private fun bookRenamedTo(newTitle: String) = BookUpdate(title = Patch.Set(newTitle))
 
-    private fun authorRenamedTo(newName: String) =
-        AuthorUpdate(
-            name = newName,
-            provider = null,
-            providerID = null,
-            biography = null,
-            image = null,
-            website = null,
-            bornIn = null,
-            birthDate = null,
-            deathDate = null,
-            books = null,
-        )
+    private fun authorRenamedTo(newName: String) = AuthorUpdate(name = Patch.Set(newName))
 
     @Test
     fun `book findByTaggedName finds a book that has no authors`() {
@@ -369,7 +333,13 @@ class RepositoryTest : ThothTest() {
         val cover = transaction { getOrCreateImage(pngBytes(1, 2, 3), null)!! }
         transaction { BookFileMetadataTable.write(BookFileMetadataTable.layer(id).copy(coverID = cover)) }
 
-        val result = bookRepository.modify(userId, id, libId, bookRenamedTo("Covered").copy(cover = cover.toString()))
+        val result =
+            bookRepository.modify(
+                userId,
+                id,
+                libId,
+                bookRenamedTo("Covered").copy(cover = Patch.Set(cover.toString())),
+            )
 
         assertEquals(cover, result.coverID, "echoing the current cover id back must not touch the image")
     }
@@ -380,7 +350,12 @@ class RepositoryTest : ThothTest() {
         val foreignImage = transaction { getOrCreateImage(pngBytes(9, 9, 9), null)!! }
 
         assertFails("an image id that is not the book's own must not be linkable") {
-            bookRepository.modify(userId, id, libId, bookRenamedTo("Plain").copy(cover = foreignImage.toString()))
+            bookRepository.modify(
+                userId,
+                id,
+                libId,
+                bookRenamedTo("Plain").copy(cover = Patch.Set(foreignImage.toString())),
+            )
         }
         assertEquals(null, bookRepository.raw(id, libId).coverID)
     }
@@ -499,7 +474,7 @@ class RepositoryTest : ThothTest() {
         libraryRepository.delete(libId)
 
         assertFailsWith<ErrorResponse> { libraryRepository.get(libId) }
-        assertEquals(0L, transaction { BooksTable.selectAll().count() })
+        assertEquals(0L, transaction { BookTable.selectAll().count() })
     }
 
     @Test

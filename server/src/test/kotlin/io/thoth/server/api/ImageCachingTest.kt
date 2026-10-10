@@ -82,7 +82,7 @@ class ImageCachingTest : ThothTest() {
             transaction {
                 val id =
                     getOrCreateImage(bytes, null)
-                        ?: ImageTable.insertAndGetId { it[blob] = ExposedBlob(bytes) }.value
+                        ?: ImageTable.insertAndGetId { it[image] = ExposedBlob(bytes) }.value
                 BookFileMetadataTable.write(BookFileMetadataTable.layer(bookId).copy(coverID = id))
                 id
             }

@@ -3,6 +3,7 @@ package io.thoth.openapi.client.typescript.types
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.typescript.TsTypeGenerator
 import io.thoth.openapi.common.ClassType
+import io.thoth.openapi.common.isPatch
 import kotlin.reflect.KClass
 
 class InterfaceTsGenerator : TsTypeGenerator() {
@@ -31,11 +32,18 @@ class InterfaceTsGenerator : TsTypeGenerator() {
                 .forEach { property ->
                     append("  ")
                     if (property.overwrites) append("override ")
-                    append("${property.name}: ${property.type.name}")
-                    if (property.type.typeArguments.isNotEmpty()) {
-                        append("<${property.type.typeArguments.joinToString(", ")}>")
-                    }
-                    if (property.nullable) append(" | undefined")
+                    val optional = property.underlyingProperty.isPatch
+                    val arguments = property.type.typeArguments
+                    val type =
+                        when {
+                            optional -> arguments.single()
+                            arguments.isEmpty() -> property.type.name
+                            else -> "${property.type.name}<${arguments.joinToString(", ")}>"
+                        }
+                    append(property.name)
+                    if (optional) append("?")
+                    append(": $type")
+                    if (property.nullable) append(" | null")
                     append(";\n")
                 }
             append("}")

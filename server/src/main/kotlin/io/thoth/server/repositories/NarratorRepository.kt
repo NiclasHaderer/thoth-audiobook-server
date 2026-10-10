@@ -7,7 +7,7 @@ import io.thoth.server.database.rows.bookGroupCount
 import io.thoth.server.database.rows.bookGroups
 import io.thoth.server.database.rows.booksInGroup
 import io.thoth.server.database.rows.booksToModels
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.UUID
@@ -37,7 +37,7 @@ class NarratorRepositoryImpl : NarratorRepository {
         offset: Long,
     ): List<Narrator> =
         transaction {
-            BooksTable.narrators
+            BookTable.narrators
                 .bookGroups(libraryId, order, limit, offset)
                 .map { Narrator(name = it.name, bookCount = it.bookCount) }
         }
@@ -49,10 +49,10 @@ class NarratorRepositoryImpl : NarratorRepository {
     ): NarratorDetailed =
         transaction {
             val match =
-                BooksTable.narrators.booksInGroup(name, libraryId)
+                BookTable.narrators.booksInGroup(name, libraryId)
                     ?: throw ErrorResponse.notFound("Narrator", name)
             NarratorDetailed(name = match.name, books = booksToModels(match.books, userId))
         }
 
-    override fun total(libraryId: UUID): Long = transaction { BooksTable.narrators.bookGroupCount(libraryId) }
+    override fun total(libraryId: UUID): Long = transaction { BookTable.narrators.bookGroupCount(libraryId) }
 }

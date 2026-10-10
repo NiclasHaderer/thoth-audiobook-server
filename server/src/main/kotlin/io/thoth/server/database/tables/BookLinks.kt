@@ -24,7 +24,7 @@ context(_: Transaction)
 fun bookIdsLinkedToAuthor(authorId: UUID): List<UUID> =
     AuthorBookTable
         .select(AuthorBookTable.book)
-        .where { AuthorBookTable.authors eq authorId }
+        .where { AuthorBookTable.author eq authorId }
         .mapTo(mutableSetOf()) { it[AuthorBookTable.book].value }
         .toList()
 
@@ -39,9 +39,9 @@ fun seriesIdsLinkedToBook(bookId: UUID): List<UUID> =
 context(_: Transaction)
 fun authorIdsLinkedToBook(bookId: UUID): List<UUID> =
     AuthorBookTable
-        .select(AuthorBookTable.authors)
+        .select(AuthorBookTable.author)
         .where { AuthorBookTable.book eq bookId }
-        .mapTo(mutableSetOf()) { it[AuthorBookTable.authors].value }
+        .mapTo(mutableSetOf()) { it[AuthorBookTable.author].value }
         .toList()
 
 context(_: Transaction)
@@ -53,14 +53,14 @@ fun replaceBookAuthors(
     val mine = (book eq bookId) and (AuthorBookTable.addedBy eq source)
     val wanted = authorIds.toSet()
     val existing =
-        select(authors).where { mine }.mapTo(mutableSetOf()) { it[authors].value }
+        select(author).where { mine }.mapTo(mutableSetOf()) { it[author].value }
 
     val stale = existing - wanted
-    if (stale.isNotEmpty()) deleteWhere { mine and (authors inList stale) }
+    if (stale.isNotEmpty()) deleteWhere { mine and (author inList stale) }
     (wanted - existing).forEach { authorId ->
         insert {
             it[book] = bookId
-            it[authors] = authorId
+            it[author] = authorId
             it[AuthorBookTable.addedBy] = source
         }
     }
@@ -92,17 +92,17 @@ fun replaceBookSeries(
 val resolvedAuthorLinks
     get() =
         AuthorBookTable.join(
-            BooksTable,
+            BookTable,
             JoinType.INNER,
             AuthorBookTable.book,
-            BooksTable.id,
-        ) { AuthorBookTable.addedBy eq BooksTable.authorsFrom }
+            BookTable.id,
+        ) { AuthorBookTable.addedBy eq BookTable.authorsFrom }
 
 val resolvedSeriesLinks
     get() =
         SeriesBookTable.join(
-            BooksTable,
+            BookTable,
             JoinType.INNER,
             SeriesBookTable.book,
-            BooksTable.id,
-        ) { SeriesBookTable.addedBy eq BooksTable.seriesFrom }
+            BookTable.id,
+        ) { SeriesBookTable.addedBy eq BookTable.seriesFrom }

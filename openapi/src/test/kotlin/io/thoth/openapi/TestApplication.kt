@@ -7,6 +7,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.dataconversion.DataConversion
 import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
+import io.thoth.openapi.common.Patch
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.plugins.OpenAPIRouting
@@ -65,6 +66,10 @@ class ListRoute(
 class MapRoute(
     val name: Boolean,
     val someParam: Map<String, UUID>,
+    val note: Patch<String?>,
+    val label: Patch<String>,
+    val lookup: Patch<HashMap<String, UUID>?>,
+    val hint: String?,
 )
 
 class SetRoute(

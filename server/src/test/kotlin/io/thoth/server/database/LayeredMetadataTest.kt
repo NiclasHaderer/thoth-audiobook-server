@@ -1,20 +1,23 @@
 package io.thoth.server.database
 
 import io.thoth.models.BookUpdate
+import io.thoth.openapi.common.Patch
+import io.thoth.openapi.common.orAbsent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookAgentMetadataTable
+import io.thoth.server.database.tables.BookField
 import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookMetadata
 import io.thoth.server.database.tables.BookMetadataRow
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.write
@@ -46,6 +49,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class LayeredMetadataTest : ThothTest() {
@@ -157,7 +161,7 @@ class LayeredMetadataTest : ThothTest() {
 
         transaction {
             replaceBookAuthors(id, MetadataLayer.AGENT, listOf(agentAuthor))
-            BookAgentMetadataTable.write(BookAgentMetadataTable.layer(id).copy(authorsSet = true))
+            BookAgentMetadataTable.write(BookAgentMetadataTable.layer(id).copy(claimed = setOf(BookField.AUTHORS)))
         }
 
         assertEquals(listOf("Agent Author"), authorNames(id))
@@ -225,7 +229,7 @@ class LayeredMetadataTest : ThothTest() {
     private fun fileLayerAuthorNames(bookId: UUID): List<String> =
         transaction {
             AuthorBookTable
-                .join(AuthorTable, JoinType.INNER, AuthorBookTable.authors, AuthorTable.id)
+                .join(AuthorTable, JoinType.INNER, AuthorBookTable.author, AuthorTable.id)
                 .select(AuthorTable.name)
                 .where { (AuthorBookTable.book eq bookId) and (AuthorBookTable.addedBy eq MetadataLayer.FILE) }
                 .map { it[AuthorTable.name] }
@@ -261,7 +265,7 @@ class LayeredMetadataTest : ThothTest() {
         cleanup.removeOrphans(libId)
         // The first cleanup only gives the orphan a deadline; the second one deletes it once it passed
         transaction {
-            BooksTable.update({ BooksTable.deferDeletionUntil.isNotNull() }) {
+            BookTable.update({ BookTable.deferDeletionUntil.isNotNull() }) {
                 it[deferDeletionUntil] = Instant.now().minus(DEFER_DELETION_GRACE).minusSeconds(60)
             }
         }
@@ -291,10 +295,10 @@ class LayeredMetadataTest : ThothTest() {
         )
     }
 
-    private fun bookCount() = transaction { BooksTable.selectAll().count() }
+    private fun bookCount() = transaction { BookTable.selectAll().count() }
 
     private fun trackCount(bookId: UUID) =
-        transaction { TracksTable.selectAll().where { TracksTable.book eq bookId }.count() }
+        transaction { TrackTable.selectAll().where { TrackTable.book eq bookId }.count() }
 
     @Test
     fun `a renamed book keeps importing into the same row`() {
@@ -322,12 +326,39 @@ class LayeredMetadataTest : ThothTest() {
     }
 
     @Test
+    fun `a blanked field stays blank through a rescan until it is set`() {
+        trackManager.insert(scan(description = "From the tags"), libId)
+        val id = bookId()
+
+        bookRepository.modify(userId, id, libId, BookUpdate(description = Patch.Set(null)))
+        trackManager.insert(scan(description = "Retagged"), libId)
+        assertNull(bookRepository.raw(id, libId).description, "a rescan must not fill a blanked field")
+
+        bookRepository.modify(userId, id, libId, bookUpdate(title = "Other field"))
+        assertNull(bookRepository.raw(id, libId).description, "editing another field must keep the blank")
+
+        bookRepository.modify(userId, id, libId, bookUpdate(description = "Mine"))
+        assertEquals("Mine", bookRepository.raw(id, libId).description)
+    }
+
+    @Test
+    fun `a blanked series list stays empty through a rescan`() {
+        trackManager.insert(scan(series = "Tagged Series"), libId)
+        val id = bookId()
+        assertEquals(1, bookRepository.get(userId, id, libId).series.size, "sanity: the tags name a series")
+
+        bookRepository.modify(userId, id, libId, BookUpdate(series = Patch.Set(null)))
+        trackManager.insert(scan(series = "Tagged Series"), libId)
+
+        assertEquals(emptyList(), bookRepository.get(userId, id, libId).series.map { it.title })
+    }
+
+    @Test
     fun `every layer column is nullable and has a resolved column to land in`() {
-        val flags = setOf("authorsSet", "seriesSet")
-        val projected = BooksTable.columns.map { it.name }.toSet()
+        val projected = BookTable.columns.map { it.name }.toSet()
 
         listOf(BookFileMetadataTable, BookAgentMetadataTable, BookUserMetadataTable).forEach { layer: BookMetadata ->
-            layer.columns.filterNot { it.name == "book" || it.name in flags }.forEach { column ->
+            layer.columns.filterNot { it == layer.id || it == layer.claimed }.forEach { column ->
                 assertTrue(column.columnType.nullable, "${layer.tableName}.${column.name} must be nullable")
                 assertTrue(
                     column.name in projected,
@@ -345,19 +376,9 @@ class LayeredMetadataTest : ThothTest() {
         authors: List<UUID>? = null,
         series: List<UUID>? = null,
     ) = BookUpdate(
-        title = title,
-        authors = authors,
-        series = series,
-        provider = null,
-        providerID = null,
-        providerRating = null,
-        releaseDate = null,
-        publisher = null,
-        language = null,
-        description = description,
-        narrators = null,
-        genres = null,
-        isbn = null,
-        cover = null,
+        title = title.orAbsent(),
+        authors = authors.orAbsent(),
+        series = series.orAbsent(),
+        description = description.orAbsent(),
     )
 }

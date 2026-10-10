@@ -16,7 +16,7 @@ fun Application.configureOpenApi() {
     install(OpenAPIRouting) {
         info {
             title = "Thoth"
-            version = "0.0.1"
+            version = "0.0.2"
             description = "Audiobook server"
         }
         addServer { url = thothConfig.baseUrl }

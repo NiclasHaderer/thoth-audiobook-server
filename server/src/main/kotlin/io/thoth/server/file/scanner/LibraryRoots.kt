@@ -1,7 +1,7 @@
 package io.thoth.server.file.scanner
 
 import io.thoth.server.common.extensions.canonical
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryTable
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -20,13 +20,13 @@ data class LibraryEntityModel(
 )
 
 class LibraryRoots {
-    fun all(): List<LibraryEntityModel> = transaction { LibrariesTable.selectAll().map { it.toRoot() } }
+    fun all(): List<LibraryEntityModel> = transaction { LibraryTable.selectAll().map { it.toRoot() } }
 
     fun of(id: UUID): LibraryEntityModel? =
         transaction {
-            LibrariesTable
+            LibraryTable
                 .selectAll()
-                .where { LibrariesTable.id eq id }
+                .where { LibraryTable.id eq id }
                 .firstOrNull()
                 ?.toRoot()
         }
@@ -40,10 +40,10 @@ class LibraryRoots {
 
     private fun ResultRow.toRoot() =
         LibraryEntityModel(
-            id = this[LibrariesTable.id].value,
-            name = this[LibrariesTable.name],
-            folders = this[LibrariesTable.folders].map { Path.of(it).canonical() },
-            fileScanners = this[LibrariesTable.fileScanners].map { it.name },
-            combineFileScannerFields = this[LibrariesTable.combineFileScannerFields],
+            id = this[LibraryTable.id].value,
+            name = this[LibraryTable.name],
+            folders = this[LibraryTable.folders].map { Path.of(it).canonical() },
+            fileScanners = this[LibraryTable.fileScanners].map { it.name },
+            combineFileScannerFields = this[LibraryTable.combineFileScannerFields],
         )
 }

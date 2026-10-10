@@ -16,7 +16,7 @@ import io.thoth.server.database.rows.toAuthorRow
 import io.thoth.server.database.rows.toBookRow
 import io.thoth.server.database.rows.toSeriesRow
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.SeriesTable
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -33,9 +33,9 @@ object SearchRepository {
     ): LibrarySearchResult =
         transaction {
             val books =
-                BooksTable
+                BookTable
                     .selectAll()
-                    .where { (BooksTable.library inList libsToSearch) and BooksTable.visible }
+                    .where { (BookTable.library inList libsToSearch) and BookTable.visible }
                     .map { it.toBookRow() }
             val authors =
                 AuthorTable

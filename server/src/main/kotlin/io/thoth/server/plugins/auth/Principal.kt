@@ -10,7 +10,7 @@ import io.thoth.models.LibraryPermissions
 import io.thoth.models.UserPermissions
 import io.thoth.openapi.ktor.RouteParamsKey
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.LibraryUserTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
@@ -29,22 +29,22 @@ fun resolveUserPermissions(userId: UUID): UserPermissions =
         val user = userRow(userId) ?: throw ErrorResponse.notFound("User", userId)
         val permissions: List<LibraryPermissions> =
             if (user.admin) {
-                LibrariesTable.selectAll().map {
+                LibraryTable.selectAll().map {
                     LibraryPermissions(
-                        id = it[LibrariesTable.id].value,
+                        id = it[LibraryTable.id].value,
                         permissions = LibraryPermissionLevel.READ_WRITE,
-                        name = it[LibrariesTable.name],
+                        name = it[LibraryTable.name],
                     )
                 }
             } else {
-                (LibraryUserTable innerJoin LibrariesTable)
-                    .select(LibrariesTable.id, LibrariesTable.name, LibraryUserTable.permissions)
+                (LibraryUserTable innerJoin LibraryTable)
+                    .select(LibraryTable.id, LibraryTable.name, LibraryUserTable.permissions)
                     .where { LibraryUserTable.user eq userId }
                     .map {
                         LibraryPermissions(
-                            id = it[LibrariesTable.id].value,
+                            id = it[LibraryTable.id].value,
                             permissions = it[LibraryUserTable.permissions],
-                            name = it[LibrariesTable.name],
+                            name = it[LibraryTable.name],
                         )
                     }
             }

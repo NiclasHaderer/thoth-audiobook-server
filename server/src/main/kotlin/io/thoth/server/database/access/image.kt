@@ -14,7 +14,7 @@ private val log = logger {}
 
 context(_: Transaction)
 private fun createImage(imageBytes: ByteArray): UUID =
-    ImageTable.insertAndGetId { it[blob] = ExposedBlob(imageBytes) }.value
+    ImageTable.insertAndGetId { it[image] = ExposedBlob(imageBytes) }.value
 
 context(_: Transaction)
 fun getOrCreateImage(
@@ -31,10 +31,10 @@ fun getOrCreateImage(
     val currentBytes =
         currentImageID?.let { id ->
             ImageTable
-                .select(ImageTable.blob)
+                .select(ImageTable.image)
                 .where { ImageTable.id eq id }
                 .singleOrNull()
-                ?.get(ImageTable.blob)
+                ?.get(ImageTable.image)
                 ?.bytes
         }
     return if (currentBytes?.contentEquals(newImage) == true) currentImageID else createImage(newImage)

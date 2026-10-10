@@ -13,10 +13,11 @@ import io.thoth.server.ThothTest
 import io.thoth.server.api
 import io.thoth.server.bearer
 import io.thoth.server.database.tables.BookAgentMetadataTable
+import io.thoth.server.database.tables.BookField
 import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookMetadataRow
 import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.layer
@@ -119,7 +120,9 @@ class ReconciliationTest : ThothTest() {
 
             transaction {
                 replaceBookSeries(bookId, MetadataLayer.AGENT, mapOf(chosen to null))
-                BookAgentMetadataTable.write(BookAgentMetadataTable.layer(bookId).copy(seriesSet = true))
+                BookAgentMetadataTable.write(
+                    BookAgentMetadataTable.layer(bookId).copy(claimed = setOf(BookField.SERIES)),
+                )
                 refreshSeriesDeferral(listOf(tagged, chosen))
             }
 
@@ -167,12 +170,12 @@ class ReconciliationTest : ThothTest() {
 
             transaction {
                 val library =
-                    LibrariesTable
+                    LibraryTable
                         .selectAll()
-                        .where { LibrariesTable.id eq libId }
+                        .where { LibraryTable.id eq libId }
                         .single()
                         .toLibraryRow()
-                LibrariesTable.update(library.copy(preferEmbeddedMetadata = true))
+                LibraryTable.update(library.copy(preferEmbeddedMetadata = true))
                 reconcileLibrary(libId)
             }
 
@@ -196,7 +199,9 @@ class ReconciliationTest : ThothTest() {
 
             transaction {
                 replaceBookAuthors(bookId, MetadataLayer.USER, listOf(second))
-                BookUserMetadataTable.write(BookUserMetadataTable.layer(bookId).copy(authorsSet = true))
+                BookUserMetadataTable.write(
+                    BookUserMetadataTable.layer(bookId).copy(claimed = setOf(BookField.AUTHORS)),
+                )
             }
 
             assertEquals(listOf("Second"), authorNames(bookId, libId, token), "the user layer now owns the list")

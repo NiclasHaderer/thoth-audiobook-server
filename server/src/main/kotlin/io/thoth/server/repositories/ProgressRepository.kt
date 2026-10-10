@@ -6,10 +6,10 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.rows.booksToModels
 import io.thoth.server.database.rows.toBookRow
-import io.thoth.server.database.tables.BooksTable
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.ProgressLogRow
 import io.thoth.server.database.tables.ProgressLogTable
-import io.thoth.server.database.tables.TracksTable
+import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.UserBookProgressRow
 import io.thoth.server.database.tables.UserBookProgressTable
 import io.thoth.server.database.tables.insert
@@ -254,9 +254,9 @@ class ProgressRepositoryImpl :
         val ids = bookIds.distinct()
         if (ids.isEmpty()) return emptyMap()
         val rows =
-            BooksTable
+            BookTable
                 .selectAll()
-                .where { (BooksTable.id inList ids) and (BooksTable.library inList readable) }
+                .where { (BookTable.id inList ids) and (BookTable.library inList readable) }
                 .map { it.toBookRow() }
         return booksToModels(rows, userId).associateBy { it.id }
     }
@@ -277,12 +277,12 @@ class ProgressRepositoryImpl :
         libraryId: UUID,
         bookId: UUID,
     ): Long {
-        val total = TracksTable.durationMs.sum()
+        val total = TrackTable.durationMs.sum()
         val row =
-            (BooksTable leftJoin TracksTable)
-                .select(BooksTable.id, total)
-                .where { (BooksTable.id eq bookId) and (BooksTable.library eq libraryId) }
-                .groupBy(BooksTable.id)
+            (BookTable leftJoin TrackTable)
+                .select(BookTable.id, total)
+                .where { (BookTable.id eq bookId) and (BookTable.library eq libraryId) }
+                .groupBy(BookTable.id)
                 .firstOrNull() ?: throw ErrorResponse.notFound("Book", bookId)
         // Can be null if the book has no tracks
         return row[total] ?: 0

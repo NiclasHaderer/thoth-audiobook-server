@@ -3,6 +3,7 @@ package io.thoth.openapi.client.kotlin.types
 import io.thoth.openapi.client.common.GenerateType
 import io.thoth.openapi.client.kotlin.KtTypeGenerator
 import io.thoth.openapi.common.ClassType
+import io.thoth.openapi.common.isPatch
 import kotlin.reflect.KClass
 import kotlin.reflect.KTypeParameter
 
@@ -40,7 +41,9 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                         append("    ")
                         if (it.overwrites) append("override ")
                         append("val ${it.name}: ${it.type.name}")
-                        if (it.type.typeArguments.isNotEmpty()) append("<${it.type.typeArguments.joinToString(", ")}>")
+                        if (it.type.typeArguments.isNotEmpty()) {
+                            append("<${it.type.typeArguments.joinToString(", ")}>")
+                        }
                         if (it.nullable) append("?")
                         append("\n")
                     }
@@ -88,11 +91,16 @@ class InterfaceKtGenerator : KtTypeGenerator() {
                                     it.type.toString()
                                 }
                             append(typeName)
+                            if (it.type!!.isMarkedNullable) append("?")
                         }
                         append(">")
                     }
-                    // A nullable field defaults to null so callers only name the ones they mean
-                    if (it.nullable) append("? = null")
+                    // Fields that may be left out get a default, so callers only name the ones they mean
+                    if (it.underlyingProperty.isPatch) {
+                        append(" = Patch.Absent")
+                    } else if (it.nullable) {
+                        append("? = null")
+                    }
                     if (i < ktImplProperties.size - 1) append(",\n")
                 }
 

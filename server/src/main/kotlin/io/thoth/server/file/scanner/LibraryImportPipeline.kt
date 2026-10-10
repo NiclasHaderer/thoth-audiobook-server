@@ -4,7 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.common.ConcurrentUniqQueue
 import io.thoth.server.common.extensions.hasAudioExtension
 import io.thoth.server.config.ThothConfig
-import io.thoth.server.database.tables.LibrariesTable
+import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import org.jetbrains.exposed.v1.core.eq
@@ -21,6 +21,7 @@ import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.UUID
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -141,11 +142,11 @@ class LibraryImportPipeline : KoinComponent {
         // The bump and the walk are one operation: everything the walk does not stamp is what the sweep collects
         transaction {
             val current =
-                LibrariesTable
-                    .select(LibrariesTable.scanIndex)
-                    .where { LibrariesTable.id eq libraryId }
-                    .single()[LibrariesTable.scanIndex]
-            LibrariesTable.update({ LibrariesTable.id eq libraryId }) { it[scanIndex] = current + 1uL }
+                LibraryTable
+                    .select(LibraryTable.scanIndex)
+                    .where { LibraryTable.id eq libraryId }
+                    .single()[LibraryTable.scanIndex]
+            LibraryTable.update({ LibraryTable.id eq libraryId }) { it[scanIndex] = current + 1uL }
         }
         walkLibrary(library, reanalyze)
         return true
@@ -359,7 +360,7 @@ class LibraryImportPipeline : KoinComponent {
             val stopping = drainWriter
             val command =
                 try {
-                    dbWriterQueue.poll()
+                    dbWriterQueue.poll(10, TimeUnit.MILLISECONDS)
                 } catch (_: InterruptedException) {
                     continue
                 }

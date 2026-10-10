@@ -8,6 +8,9 @@ import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.Series
 import io.thoth.models.SeriesDetailed
 import io.thoth.models.SeriesUpdate
+import io.thoth.openapi.common.ifSet
+import io.thoth.openapi.common.map
+import io.thoth.openapi.common.orElse
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.common.ImageDownloader
 import io.thoth.server.common.exposed.unless
@@ -24,11 +27,13 @@ import io.thoth.server.database.rows.toModel
 import io.thoth.server.database.rows.toSeriesRow
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BookField
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.BooksTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesAgentMetadataTable
 import io.thoth.server.database.tables.SeriesBookTable
+import io.thoth.server.database.tables.SeriesField
 import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesMetadata
 import io.thoth.server.database.tables.SeriesMetadataRow
@@ -207,23 +212,31 @@ class SeriesRepositoryImpl :
         partial: SeriesUpdate,
     ): Series {
         val currentCover = raw(id, libraryId).coverID
-        val newCover = imageDownloader.download(partial.cover?.takeUnless { it == currentCover?.toString() })
+        val newCover =
+            imageDownloader.download(partial.cover.orElse(null)?.takeUnless { it == currentCover?.toString() })
         return transaction {
             val user = SeriesUserMetadataTable.layer(id)
+            val edit = LayerEdit(user.claimed)
             SeriesUserMetadataTable.write(
                 user.copy(
-                    title = partial.title ?: user.title,
-                    provider = partial.provider ?: user.provider,
-                    providerID = partial.providerID ?: user.providerID,
-                    totalBooks = partial.totalBooks ?: user.totalBooks,
-                    primaryWorks = partial.primaryWorks ?: user.primaryWorks,
-                    coverID = getOrCreateImage(newCover, currentImageID = user.coverID),
-                    description = partial.description ?: user.description,
+                    title = edit.value(SeriesField.TITLE, partial.title, user.title),
+                    provider = edit.value(SeriesField.PROVIDER, partial.provider, user.provider),
+                    providerID = edit.value(SeriesField.PROVIDER_ID, partial.providerID, user.providerID),
+                    totalBooks = edit.value(SeriesField.TOTAL_BOOKS, partial.totalBooks, user.totalBooks),
+                    primaryWorks = edit.value(SeriesField.PRIMARY_WORKS, partial.primaryWorks, user.primaryWorks),
+                    coverID =
+                        edit.value(
+                            SeriesField.COVER_ID,
+                            partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } },
+                            user.coverID,
+                        ),
+                    description = edit.value(SeriesField.DESCRIPTION, partial.description, user.description),
+                    claimed = edit.claimed,
                 ),
             )
 
-            if (partial.books != null) {
-                setBooks(id, partial.books.map { bookRepository.raw(it, libraryId).id }.toSet())
+            partial.books.ifSet { books ->
+                setBooks(id, books.map { bookRepository.raw(it, libraryId).id }.toSet())
             }
 
             refreshSeriesDeferral(listOf(id))
@@ -246,7 +259,8 @@ class SeriesRepositoryImpl :
             val next = if (bookId in wanted) current + seriesId else current - seriesId
             if (next == current) return@forEach
             replaceBookSeries(bookId, MetadataLayer.USER, next.associateWith { null })
-            BookUserMetadataTable.write(BookUserMetadataTable.layer(bookId).copy(seriesSet = true))
+            val layer = BookUserMetadataTable.layer(bookId)
+            BookUserMetadataTable.write(layer.copy(claimed = layer.claimed + BookField.SERIES))
         }
     }
 
@@ -254,8 +268,8 @@ class SeriesRepositoryImpl :
     private fun resolvedBooks(seriesId: UUID): List<BookRow> =
         resolvedSeriesLinks
             .selectAll()
-            .where { (SeriesBookTable.series eq seriesId) and BooksTable.visible }
-            .orderBy(BooksTable.title to SortOrder.ASC)
+            .where { (SeriesBookTable.series eq seriesId) and BookTable.visible }
+            .orderBy(BookTable.title to SortOrder.ASC)
             .map { it.toBookRow() }
 
     override fun autoMatch(
@@ -302,8 +316,8 @@ class SeriesRepositoryImpl :
     private fun seriesAuthorNames(seriesId: UUID): List<String> =
         resolvedSeriesLinks
             .join(AuthorBookTable, JoinType.INNER, SeriesBookTable.book, AuthorBookTable.book) {
-                AuthorBookTable.addedBy eq BooksTable.authorsFrom
-            }.join(AuthorTable, JoinType.INNER, AuthorBookTable.authors, AuthorTable.id)
+                AuthorBookTable.addedBy eq BookTable.authorsFrom
+            }.join(AuthorTable, JoinType.INNER, AuthorBookTable.author, AuthorTable.id)
             .select(AuthorTable.name)
             .where { SeriesBookTable.series eq seriesId }
             .map { it[AuthorTable.name] }
