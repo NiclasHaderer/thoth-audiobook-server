@@ -100,7 +100,9 @@ internal fun testSeries(
 internal class FakeMetadataAgent(
     override val name: String = "fake",
     private val hits: List<MetadataSearchBook> = emptyList(),
-    private val resolveBook: suspend (String) -> MetadataBook? = { testBook(it) },
+    private val resolveBook: suspend (String) -> MetadataBook? = { id ->
+        testBook(id).copy(authors = hits.firstOrNull { it.id.itemID == id }?.authors)
+    },
     private val resolveChapters: suspend (String) -> MetadataChapters? = { null },
     private val resolveAuthor: suspend (String) -> MetadataAuthor = { testAuthor(it, name) },
     private val resolveSeries: suspend (String) -> MetadataSeries = { testSeries(it, name) },
