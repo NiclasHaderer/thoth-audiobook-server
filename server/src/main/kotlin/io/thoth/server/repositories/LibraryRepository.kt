@@ -96,7 +96,10 @@ class LibraryRepositoryImpl :
         partial: PartialUpdateLibrary,
     ): Library =
         libraryMutationLock.withLock {
-            val reanalyze = partial.fileScanners.isSet || partial.combineFileScannerFields.isSet
+            // Which source wins is applied when a file is read, so a library that flipped it reads them all again
+            val reanalyze =
+                partial.fileScanners.isSet || partial.combineFileScannerFields.isSet ||
+                    partial.preferEmbeddedMetadata.isSet
             val needsScan = partial.folders.isSet || partial.metadataAgents.isSet || reanalyze
             val model =
                 transaction {

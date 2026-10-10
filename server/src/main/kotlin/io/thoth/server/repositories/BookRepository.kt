@@ -39,6 +39,7 @@ import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.seriesIdsLinkedToBook
 import io.thoth.server.database.tables.toTrackRow
+import io.thoth.server.file.scanner.LibraryImportPipeline
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.MatchableEntity
@@ -49,8 +50,11 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.nio.file.Path
+import java.time.Instant
 import java.util.UUID
 import kotlin.math.abs
 
@@ -85,6 +89,7 @@ class BookRepositoryImpl :
     private val metadataAgents by inject<MetadataAgents>()
     private val imageDownloader by inject<ImageDownloader>()
     private val autoMatcher by inject<AutoMatcher>()
+    private val pipeline by inject<LibraryImportPipeline>()
 
     override fun total(
         libraryId: UUID,
@@ -204,6 +209,8 @@ class BookRepositoryImpl :
         val currentCover = raw(id, libraryId).coverID
         val newCover =
             imageDownloader.download(partial.cover.orElse(null)?.takeUnless { it == currentCover?.toString() })
+        // Queued after the commit: the pipeline reads through its own connection
+        var reread = emptyList<Path>()
         return transaction {
             val book = raw(id, libraryId)
             val edit = UserEdit(book.locked, partial.unlock)
@@ -255,8 +262,22 @@ class BookRepositoryImpl :
                 replaceBookSeries(id, seriesIds.associateWith { null })
                 refreshSeriesDeferral(touched)
             }
+            // Chapters are never written by a scan, so unlocking them needs no file
+            if ((book.locked - edit.locked - BookField.CHAPTERS).isNotEmpty()) reread = forgetAnalysis(id)
             raw(id, libraryId).toModel(userId)
-        }
+        }.also { reread.forEach(pipeline::enqueue) }
+    }
+
+    // An unlocked field keeps its value until a scan writes it, and a scan only reads a file that changed since
+    // its last analysis. Forgetting when that was makes the pipeline read the book's files again, and the next
+    // scan does it should the queued paths get lost.
+    context(_: Transaction)
+    private fun forgetAnalysis(bookId: UUID): List<Path> {
+        TrackTable.update({ TrackTable.book eq bookId }) { it[fileModifiedAt] = Instant.EPOCH }
+        return TrackTable
+            .select(TrackTable.path)
+            .where { TrackTable.book eq bookId }
+            .map { Path.of(it[TrackTable.path]) }
     }
 
     override fun create(
