@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
+import me.xdrop.fuzzywuzzy.FuzzySearch
 
 private val log = logger {}
 
@@ -104,7 +105,7 @@ class MetadataAgentWrapper(
         narrator: String? = null,
         language: MetadataLanguage? = null,
     ): MetadataBook? =
-        bestMatch(MetadataBook::fillFrom) {
+        bestMatch(MetadataBook::fillFrom, { it.isWrittenBy(authorName) }) {
             it.getBookByName(
                 bookName = bookName,
                 region = region,
@@ -127,11 +128,12 @@ class MetadataAgentWrapper(
 
     private suspend fun <T : Any> bestMatch(
         fill: (T, T) -> T,
+        accept: (T) -> Boolean = { true },
         query: (MetadataAgent) -> Flow<T>,
     ): T? {
         var best: T? = null
         for (agent in agentList) {
-            val candidate = query(agent).firstOrNull() ?: continue
+            val candidate = query(agent).firstOrNull(accept) ?: continue
             if (!combineFields) return candidate
             best = best?.let { fill(it, candidate) } ?: candidate
         }
@@ -155,6 +157,14 @@ class MetadataAgentWrapper(
         return agent
     }
 }
+
+private const val AUTHOR_MATCH_THRESHOLD = 80
+
+// Not every agent can search by author: AudiobookDB only searches titles, so its best hit for a common title is
+// whichever book it ranks first. A candidate that names no author is rejected as well, it cannot be told apart.
+private fun MetadataBook.isWrittenBy(authorName: String?): Boolean =
+    authorName.isNullOrBlank() ||
+        authors.orEmpty().any { FuzzySearch.tokenSetRatio(authorName, it.name ?: "") >= AUTHOR_MATCH_THRESHOLD }
 
 private fun MetadataAuthor.fillFrom(other: MetadataAuthor): MetadataAuthor =
     MetadataAuthorImpl(
