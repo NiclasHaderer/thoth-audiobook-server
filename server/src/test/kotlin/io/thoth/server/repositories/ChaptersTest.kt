@@ -67,8 +67,8 @@ class ChaptersTest {
     }
 
     @Test
-    fun `untitled and blank markers have no title`() {
-        val m4b = track("Book", 4000, TrackChapter(null, 0), TrackChapter(" ", 2000))
+    fun `untitled markers have no title`() {
+        val m4b = track("Book", 4000, TrackChapter(null, 0), TrackChapter(null, 2000))
 
         val chapters = buildChapters(fileChapterMarks(listOf(m4b)), listOf(m4b))
 

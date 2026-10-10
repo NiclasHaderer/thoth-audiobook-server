@@ -3,7 +3,9 @@ package io.thoth.server.database
 import io.thoth.metadata.FakeMetadataAgent
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.searchHit
+import io.thoth.metadata.testAuthor
 import io.thoth.metadata.testBook
+import io.thoth.metadata.testSeries
 import io.thoth.models.AuthorUpdate
 import io.thoth.models.BookUpdate
 import io.thoth.models.NamedMetadataAgent
@@ -12,15 +14,19 @@ import io.thoth.openapi.common.Patch
 import io.thoth.openapi.common.orAbsent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
+import io.thoth.server.database.rows.bookSeries
+import io.thoth.server.database.tables.AuthorField
 import io.thoth.server.database.tables.BookField
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.SeriesBookTable
+import io.thoth.server.database.tables.SeriesField
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.analyzer.AudioFileAnalysisResultImpl
 import io.thoth.server.file.scanner.LibraryCleanup
 import io.thoth.server.newAuthor
+import io.thoth.server.newBook
 import io.thoth.server.newLibrary
 import io.thoth.server.newSeries
 import io.thoth.server.newUser
@@ -48,6 +54,7 @@ import kotlin.test.assertNull
 class MetadataWriteTest : ThothTest() {
     private val bookRepository by lazy { getKoin().get<BookRepository>() }
     private val authorRepository by lazy { getKoin().get<AuthorRepository>() }
+    private val seriesRepository by lazy { getKoin().get<SeriesRepository>() }
     private val trackManager by lazy { getKoin().get<TrackManager>() }
 
     private var libId: UUID = UUID.randomUUID()
@@ -158,7 +165,7 @@ class MetadataWriteTest : ThothTest() {
                     ).copy(title = "Agent Title", description = "From the agent", isbn = "123")
                 },
             )
-        getKoin().loadModules(listOf(module { single { MetadataAgents(listOf(agent)) } }), allowOverride = true)
+        useAgent(agent)
         val preferring =
             newLibrary(
                 "prefer",
@@ -177,6 +184,7 @@ class MetadataWriteTest : ThothTest() {
 
         val matched = bookRepository.raw(locked, libId)
         assertEquals("Mine", matched.title, "a locked field is never matched over")
+        assertEquals(setOf(BookField.TITLE), matched.locked)
         assertEquals("From the agent", matched.description)
         assertEquals("fake", matched.provider)
         val preferred = bookRepository.raw(fileWins, preferring)
@@ -242,7 +250,6 @@ class MetadataWriteTest : ThothTest() {
         val book = bookRepository.get(userId, bookId(), libId)
         val authorId = book.authors.single().id
         val seriesId = book.series.single().id
-        val seriesRepository = getKoin().get<SeriesRepository>()
         authorRepository.modify(userId, authorId, libId, AuthorUpdate(name = Patch.Set("Renamed")))
         seriesRepository.modify(userId, seriesId, libId, SeriesUpdate(title = Patch.Set("Renamed")))
 
@@ -401,6 +408,161 @@ class MetadataWriteTest : ThothTest() {
             }
         assertEquals(3f, index)
     }
+
+    @Test
+    fun `unlocking one field leaves the other locks alone`() {
+        trackManager.insert(scan(), libId)
+        val id = bookId()
+        bookRepository.modify(userId, id, libId, bookUpdate(title = "Mine", description = "Mine"))
+
+        bookRepository.modify(userId, id, libId, BookUpdate(unlock = Patch.Set(listOf(BookField.DESCRIPTION))))
+
+        assertEquals(setOf(BookField.TITLE), bookRepository.raw(id, libId).locked)
+    }
+
+    @Test
+    fun `a tag that disappears from the files leaves the value it wrote`() {
+        trackManager.insert(scan(description = "From the tags", narrators = listOf("Tagged")), libId)
+        val id = bookId()
+
+        trackManager.insert(scan(), libId)
+
+        val book = bookRepository.raw(id, libId)
+        assertEquals("From the tags", book.description)
+        assertEquals(listOf("Tagged"), book.narrators)
+    }
+
+    @Test
+    fun `an edited field survives a match and follows the next one once unlocked`() {
+        useAgent(
+            FakeMetadataAgent(
+                hits = listOf(searchHit("A Book", authors = listOf("An Author"))),
+                resolveBook = { testBook(it).copy(description = "From the agent") },
+            ),
+        )
+        trackManager.insert(scan(description = "From the tags"), libId)
+        val id = bookId()
+        bookRepository.modify(userId, id, libId, bookUpdate(description = "Mine"))
+
+        bookRepository.autoMatch(userId, id, libId)
+        assertEquals("Mine", bookRepository.raw(id, libId).description)
+        assertEquals(setOf(BookField.DESCRIPTION), bookRepository.raw(id, libId).locked, "a match releases no lock")
+
+        bookRepository.modify(userId, id, libId, BookUpdate(unlock = Patch.Set(listOf(BookField.DESCRIPTION))))
+        bookRepository.autoMatch(userId, id, libId)
+        assertEquals("From the agent", bookRepository.raw(id, libId).description)
+    }
+
+    @Test
+    fun `unlocking a hand picked series lets the next scan bring back the tagged one`() {
+        trackManager.insert(scan(series = "Tagged Series"), libId)
+        val id = bookId()
+        bookRepository.modify(userId, id, libId, bookUpdate(series = listOf(newSeries("Hand Picked", libId))))
+        trackManager.insert(scan(series = "Tagged Series"), libId)
+        assertEquals(listOf("Hand Picked"), seriesTitles(id), "sanity: the lock holds through a rescan")
+
+        bookRepository.modify(userId, id, libId, BookUpdate(unlock = Patch.Set(listOf(BookField.SERIES))))
+        trackManager.insert(scan(series = "Tagged Series"), libId)
+
+        assertEquals(listOf("Tagged Series"), seriesTitles(id))
+    }
+
+    @Test
+    fun `a book taken out of a series from the side of the series stays out through a rescan`() {
+        trackManager.insert(scan(series = "Tagged Series"), libId)
+        val id = bookId()
+        val seriesId = seriesRepository.findByTaggedName("Tagged Series", libId)!!.id
+        val other = newBook("Other Book", libId)
+
+        seriesRepository.modify(userId, seriesId, libId, SeriesUpdate(books = Patch.Set(listOf(other))))
+        trackManager.insert(scan(series = "Tagged Series"), libId)
+
+        assertEquals(emptyList(), seriesTitles(id))
+        assertEquals(listOf("Tagged Series"), seriesTitles(other))
+        assertEquals(setOf(BookField.SERIES), bookRepository.raw(id, libId).locked)
+    }
+
+    @Test
+    fun `an author added from the side of the author stays through a rescan`() {
+        trackManager.insert(scan(), libId)
+        val id = bookId()
+        val added = newAuthor("Added Author", libId)
+
+        authorRepository.modify(userId, added, libId, AuthorUpdate(books = Patch.Set(listOf(id))))
+        trackManager.insert(scan(), libId)
+
+        assertEquals(listOf("Added Author", "An Author"), authorNames(id).sorted())
+        assertEquals(setOf(BookField.AUTHORS), bookRepository.raw(id, libId).locked)
+    }
+
+    @Test
+    fun `an edited author field survives a match and follows the next one once unlocked`() {
+        useAgent(
+            FakeMetadataAgent(
+                hits = listOf(searchHit("A Book", authors = listOf("An Author"))),
+                resolveAuthor = { testAuthor(it).copy(biography = "From the agent") },
+            ),
+        )
+        trackManager.insert(scan(), libId)
+        val id = authorRepository.findByTaggedName("An Author", libId)!!.id
+        authorRepository.modify(userId, id, libId, AuthorUpdate(biography = Patch.Set("Mine")))
+
+        authorRepository.autoMatch(userId, id, libId)
+        assertEquals("Mine", authorRepository.raw(id, libId).biography)
+        assertEquals("fake", authorRepository.raw(id, libId).provider)
+
+        authorRepository.modify(userId, id, libId, AuthorUpdate(unlock = Patch.Set(listOf(AuthorField.BIOGRAPHY))))
+        assertEquals("Mine", authorRepository.raw(id, libId).biography, "unlocking alone changes no value")
+        authorRepository.autoMatch(userId, id, libId)
+        assertEquals("From the agent", authorRepository.raw(id, libId).biography)
+    }
+
+    @Test
+    fun `an edited series field survives a match and follows the next one once unlocked`() {
+        useAgent(
+            FakeMetadataAgent(
+                hits =
+                    listOf(searchHit("A Book", authors = listOf("An Author"), series = listOf("Tagged Series"))),
+                resolveSeries = { testSeries(it).copy(description = "From the agent") },
+            ),
+        )
+        trackManager.insert(scan(series = "Tagged Series"), libId)
+        val id = seriesRepository.findByTaggedName("Tagged Series", libId)!!.id
+        seriesRepository.modify(userId, id, libId, SeriesUpdate(description = Patch.Set("Mine")))
+
+        seriesRepository.autoMatch(userId, id, libId)
+        assertEquals("Mine", seriesRepository.raw(id, libId).description)
+        assertEquals("fake", seriesRepository.raw(id, libId).provider)
+
+        seriesRepository.modify(userId, id, libId, SeriesUpdate(unlock = Patch.Set(listOf(SeriesField.DESCRIPTION))))
+        seriesRepository.autoMatch(userId, id, libId)
+        assertEquals("From the agent", seriesRepository.raw(id, libId).description)
+    }
+
+    @Test
+    fun `a match does not rename an author the user created`() {
+        useAgent(
+            FakeMetadataAgent(
+                hits = listOf(searchHit("A Book", authors = listOf("My Author"))),
+                resolveAuthor = { testAuthor(it).copy(name = "Agent Name", biography = "From the agent") },
+            ),
+        )
+        val id = authorRepository.createManual("My Author", libId).id
+
+        authorRepository.autoMatch(userId, id, libId)
+
+        val author = authorRepository.raw(id, libId)
+        assertEquals("My Author", author.name)
+        assertEquals("From the agent", author.biography)
+    }
+
+    private fun useAgent(agent: FakeMetadataAgent) =
+        getKoin().loadModules(listOf(module { single { MetadataAgents(listOf(agent)) } }), allowOverride = true)
+
+    // Not through the repository: it hides a book whose files the pipeline found missing, and these files never
+    // existed
+    private fun seriesTitles(bookId: UUID) =
+        transaction { bookSeries(listOf(bookId))[bookId].orEmpty().map { it.title } }
 
     private fun bookCount() = transaction { BookTable.selectAll().count() }
 

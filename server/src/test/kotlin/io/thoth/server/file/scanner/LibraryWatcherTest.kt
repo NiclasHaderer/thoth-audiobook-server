@@ -2,13 +2,16 @@ package io.thoth.server.file.scanner
 
 import io.methvin.watcher.DirectoryChangeEvent
 import io.thoth.models.FileScanner
+import io.thoth.openapi.common.Patch
 import io.thoth.server.ThothTest
+import io.thoth.server.api.PartialUpdateLibrary
 import io.thoth.server.common.extensions.canonical
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.newLibrary
+import io.thoth.server.repositories.LibraryRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,8 +19,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
 import java.util.UUID
@@ -114,6 +119,22 @@ class LibraryWatcherTest : ThothTest() {
         addBook("An Author", "A Book")
 
         eventually(describe = { "the book to be imported, saw ${titles()}" }) { titles() == listOf("A Book") }
+    }
+
+    @Test
+    fun `a library that flips which source it prefers re-reads its files`() {
+        addBook("An Author", "A Book")
+        eventually(describe = { "the book to import first" }) { titles() == listOf("A Book") }
+        val imported = transaction { TrackTable.selectAll().single()[TrackTable.title] }
+        transaction { TrackTable.update({ TrackTable.library eq libId }) { it[title] = "Stale" } }
+
+        getKoin()
+            .get<LibraryRepository>()
+            .modify(libId, PartialUpdateLibrary(preferEmbeddedMetadata = Patch.Set(true)))
+
+        eventually(describe = { "the file to be read again although it did not change" }) {
+            transaction { TrackTable.selectAll().single()[TrackTable.title] } == imported
+        }
     }
 
     @Test

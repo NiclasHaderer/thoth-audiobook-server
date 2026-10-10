@@ -102,6 +102,8 @@ internal class FakeMetadataAgent(
     private val hits: List<MetadataSearchBook> = emptyList(),
     private val resolveBook: suspend (String) -> MetadataBook? = { testBook(it) },
     private val resolveChapters: suspend (String) -> MetadataChapters? = { null },
+    private val resolveAuthor: suspend (String) -> MetadataAuthor = { testAuthor(it, name) },
+    private val resolveSeries: suspend (String) -> MetadataSeries = { testSeries(it, name) },
 ) : SearchBasedMetadataAgent() {
     override val supportedRegions = listOf(MetadataRegion.US)
 
@@ -131,7 +133,7 @@ internal class FakeMetadataAgent(
         region: MetadataRegion,
     ): MetadataAuthor {
         authorLookups += "$authorId@$region"
-        return testAuthor(authorId, name)
+        return resolveAuthor(authorId)
     }
 
     override suspend fun getBookByID(
@@ -155,7 +157,7 @@ internal class FakeMetadataAgent(
         region: MetadataRegion,
     ): MetadataSeries {
         seriesLookups += "$seriesId@$region"
-        return testSeries(seriesId, name)
+        return resolveSeries(seriesId)
     }
 }
 

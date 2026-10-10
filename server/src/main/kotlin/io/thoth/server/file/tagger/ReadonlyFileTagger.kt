@@ -27,7 +27,7 @@ class ReadonlyFileTagger(
         TagLibFile(filePath).use { file ->
             properties = file.properties()
             cover = file.pictures().firstOrNull()?.data
-            chapters = file.chapters().map { TrackChapter(it.title, it.startMs) }
+            chapters = file.chapters().map { TrackChapter(it.title?.ifBlank { null }, it.startMs) }
             durationMs = file.lengthInMilliseconds.toLong()
         }
     }

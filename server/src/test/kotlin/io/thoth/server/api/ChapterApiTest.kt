@@ -87,7 +87,7 @@ class ChapterApiTest : ThothTest() {
 
             assertEquals(HttpStatusCode.OK, response.status)
             val edited = api.getBook(bookId, libId, token).body()
-            assertEquals(listOf("Prologue", null), edited.chapters.map { it.title })
+            assertEquals(listOf("Prologue", " "), edited.chapters.map { it.title })
         }
 
     @Test
