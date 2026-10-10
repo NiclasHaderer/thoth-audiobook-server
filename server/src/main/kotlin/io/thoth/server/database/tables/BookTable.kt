@@ -6,6 +6,24 @@ import io.thoth.server.database.extensions.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.javatime.date
 
+enum class BookField : MetadataField {
+    TITLE,
+    AUTHORS,
+    SERIES,
+    PROVIDER,
+    PROVIDER_ID,
+    PROVIDER_RATING,
+    RELEASE_DATE,
+    PUBLISHER,
+    LANGUAGE,
+    DESCRIPTION,
+    NARRATORS,
+    GENRES,
+    ISBN,
+    COVER_ID,
+    CHAPTERS,
+}
+
 object BookTable : LibraryEntityTable("book", BookField.TITLE.column) {
     val title get() = name
     val releaseDate = date(BookField.RELEASE_DATE.column).nullable()
@@ -19,8 +37,9 @@ object BookTable : LibraryEntityTable("book", BookField.TITLE.column) {
     val coverId = reference(BookField.COVER_ID.column, ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
     val genres = json<List<String>>(BookField.GENRES.column).nullable()
     val narrators = json<List<String>>(BookField.NARRATORS.column).nullable()
-    val chapters = json<List<ChapterMark>>(BookField.CHAPTERS.column).nullable()
 
-    val authorsFrom = enumerationByName<MetadataLayer>("authors_from", 8).default(MetadataLayer.FILE)
-    val seriesFrom = enumerationByName<MetadataLayer>("series_from", 8).default(MetadataLayer.FILE)
+    // Null while nobody said anything about the chapters: they are then derived from the tracks, which a scan
+    // never writes down here because they depend on all tracks of the book
+    val chapters = json<List<ChapterMark>>(BookField.CHAPTERS.column).nullable()
+    val locked = json<Set<BookField>>("locked").default(emptySet())
 }

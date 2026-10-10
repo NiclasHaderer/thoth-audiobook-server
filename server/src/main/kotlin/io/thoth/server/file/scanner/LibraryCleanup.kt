@@ -1,24 +1,15 @@
 package io.thoth.server.file.scanner
 
-import io.thoth.server.database.tables.AuthorAgentMetadataTable
 import io.thoth.server.database.tables.AuthorBookTable
-import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.AuthorUserMetadataTable
-import io.thoth.server.database.tables.BookAgentMetadataTable
-import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookTable
-import io.thoth.server.database.tables.BookUserMetadataTable
 import io.thoth.server.database.tables.ImageTable
 import io.thoth.server.database.tables.LibraryTable
-import io.thoth.server.database.tables.SeriesAgentMetadataTable
 import io.thoth.server.database.tables.SeriesBookTable
-import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.SeriesUserMetadataTable
 import io.thoth.server.database.tables.TrackTable
-import io.thoth.server.database.tables.resolvedAuthorLinks
-import io.thoth.server.database.tables.resolvedSeriesLinks
+import io.thoth.server.database.tables.authorLinksWithBooks
+import io.thoth.server.database.tables.seriesLinksWithBooks
 import io.thoth.server.repositories.stampDeferral
 import io.thoth.server.repositories.visiblyLinked
 import org.jetbrains.exposed.v1.core.Column
@@ -74,7 +65,7 @@ class LibraryCleanup {
                 library = AuthorTable.library,
                 deferUntil = AuthorTable.deferDeletionUntil,
                 libraryId = libraryId,
-                hidden = AuthorTable.id notInSubQuery visiblyLinked(resolvedAuthorLinks, AuthorBookTable.author),
+                hidden = AuthorTable.id notInSubQuery visiblyLinked(authorLinksWithBooks, AuthorBookTable.author),
                 deletable = AuthorTable.id notInSubQuery AuthorBookTable.select(AuthorBookTable.author),
                 now = now,
             )
@@ -83,7 +74,7 @@ class LibraryCleanup {
                 library = SeriesTable.library,
                 deferUntil = SeriesTable.deferDeletionUntil,
                 libraryId = libraryId,
-                hidden = SeriesTable.id notInSubQuery visiblyLinked(resolvedSeriesLinks, SeriesBookTable.series),
+                hidden = SeriesTable.id notInSubQuery visiblyLinked(seriesLinksWithBooks, SeriesBookTable.series),
                 deletable = SeriesTable.id notInSubQuery SeriesBookTable.select(SeriesBookTable.series),
                 now = now,
             )
@@ -111,16 +102,10 @@ class LibraryCleanup {
         transaction {
             ImageTable.deleteWhere {
                 ImageTable.id notInSubQuery
-                    BookFileMetadataTable
-                        .referenced(BookFileMetadataTable.coverId)
-                        .union(BookAgentMetadataTable.referenced(BookAgentMetadataTable.coverId))
-                        .union(BookUserMetadataTable.referenced(BookUserMetadataTable.coverId))
-                        .union(SeriesFileMetadataTable.referenced(SeriesFileMetadataTable.coverId))
-                        .union(SeriesAgentMetadataTable.referenced(SeriesAgentMetadataTable.coverId))
-                        .union(SeriesUserMetadataTable.referenced(SeriesUserMetadataTable.coverId))
-                        .union(AuthorFileMetadataTable.referenced(AuthorFileMetadataTable.imageId))
-                        .union(AuthorAgentMetadataTable.referenced(AuthorAgentMetadataTable.imageId))
-                        .union(AuthorUserMetadataTable.referenced(AuthorUserMetadataTable.imageId))
+                    BookTable
+                        .referenced(BookTable.coverId)
+                        .union(SeriesTable.referenced(SeriesTable.coverId))
+                        .union(AuthorTable.referenced(AuthorTable.imageId))
             }
         }
 

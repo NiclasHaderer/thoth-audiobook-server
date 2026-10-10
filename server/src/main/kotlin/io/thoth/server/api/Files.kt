@@ -13,19 +13,11 @@ import io.thoth.openapi.ktor.responses.binaryResponse
 import io.thoth.openapi.ktor.responses.fileResponse
 import io.thoth.server.common.audioContentType
 import io.thoth.server.common.imageContentType
-import io.thoth.server.database.tables.AuthorAgentMetadataTable
-import io.thoth.server.database.tables.AuthorFileMetadataTable
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.AuthorUserMetadataTable
-import io.thoth.server.database.tables.BookAgentMetadataTable
-import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookTable
-import io.thoth.server.database.tables.BookUserMetadataTable
 import io.thoth.server.database.tables.ImageTable
-import io.thoth.server.database.tables.SeriesAgentMetadataTable
-import io.thoth.server.database.tables.SeriesFileMetadataTable
+import io.thoth.server.database.tables.LibraryEntityTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.SeriesUserMetadataTable
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.plugins.auth.assertLibraryPermissions
 import io.thoth.server.plugins.auth.thothPrincipal
@@ -75,12 +67,11 @@ fun Routing.imageRouting() {
         transaction {
             val allowed = permissions.libraries.mapTo(mutableSetOf()) { it.id }
             val covers =
-                listOf(BookFileMetadataTable, BookAgentMetadataTable, BookUserMetadataTable)
-                    .map { cover(BookTable, BookTable.library, it, it.coverId, id, allowed) } +
-                    listOf(SeriesFileMetadataTable, SeriesAgentMetadataTable, SeriesUserMetadataTable)
-                        .map { cover(SeriesTable, SeriesTable.library, it, it.coverId, id, allowed) } +
-                    listOf(AuthorFileMetadataTable, AuthorAgentMetadataTable, AuthorUserMetadataTable)
-                        .map { cover(AuthorTable, AuthorTable.library, it, it.imageId, id, allowed) }
+                listOf(
+                    cover(BookTable, BookTable.coverId, id, allowed),
+                    cover(SeriesTable, SeriesTable.coverId, id, allowed),
+                    cover(AuthorTable, AuthorTable.imageId, id, allowed),
+                )
             val image =
                 covers
                     .reduce { acc: AbstractQuery<*>, query -> acc.unionAll(query) }
@@ -101,14 +92,12 @@ fun Routing.imageRouting() {
 private const val IMAGE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60
 
 private fun cover(
-    core: Table,
-    library: Column<EntityID<UUID>>,
-    layer: Table,
+    owner: LibraryEntityTable,
     image: Column<EntityID<UUID>?>,
     imageId: UUID,
     allowed: Set<UUID>,
 ): Query =
-    (core innerJoin layer)
+    owner
         .join(ImageTable, JoinType.INNER, image, ImageTable.id)
         .select(ImageTable.image)
-        .where { (image eq imageId) and (library inList allowed) }
+        .where { (image eq imageId) and (owner.library inList allowed) }

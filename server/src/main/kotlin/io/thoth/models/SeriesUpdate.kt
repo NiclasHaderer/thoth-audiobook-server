@@ -17,7 +17,7 @@ data class SeriesUpdate(
     val primaryWorks: Patch<Int?> = Patch.Absent,
     val cover: Patch<String?> = Patch.Absent,
     val description: Patch<String?> = Patch.Absent,
-    val reset: Patch<List<SeriesField>> = Patch.Absent,
+    val unlock: Patch<List<SeriesField>> = Patch.Absent,
 ) : ValidateObject {
     override suspend fun RoutingContext.validateBody() {
         title.ifSet { if (it.isBlank()) throw ErrorResponse.userError("A series title cannot be empty") }

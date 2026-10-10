@@ -18,7 +18,7 @@ class AuthorDetailed(
     deathDate: LocalDate?,
     val books: List<Book>,
     val series: List<Series>,
-    val overridden: List<AuthorField>,
+    val locked: List<AuthorField>,
 ) : Author(
         id = id,
         libraryId = libraryId,
@@ -37,7 +37,7 @@ class AuthorDetailed(
             author: Author,
             books: List<Book>,
             series: List<Series>,
-            overridden: List<AuthorField>,
+            locked: List<AuthorField>,
         ) = AuthorDetailed(
             id = author.id,
             libraryId = author.libraryId,
@@ -52,7 +52,7 @@ class AuthorDetailed(
             series = series,
             provider = author.provider,
             providerID = author.providerID,
-            overridden = overridden,
+            locked = locked,
         )
     }
 }

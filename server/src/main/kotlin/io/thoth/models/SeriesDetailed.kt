@@ -19,7 +19,7 @@ class SeriesDetailed(
     val yearRange: YearRange?,
     val narrators: List<String>,
     val books: List<Book>,
-    val overridden: List<SeriesField>,
+    val locked: List<SeriesField>,
 ) : Series(
         id = id,
         libraryId = libraryId,
@@ -38,7 +38,7 @@ class SeriesDetailed(
         fun fromModel(
             series: Series,
             books: List<Book>,
-            overridden: List<SeriesField>,
+            locked: List<SeriesField>,
         ): SeriesDetailed {
             val years = books.mapNotNull { it.releaseDate }
 
@@ -58,7 +58,7 @@ class SeriesDetailed(
                 providerID = series.providerID,
                 genres = series.genres,
                 bookCoverIDs = series.bookCoverIDs,
-                overridden = overridden,
+                locked = locked,
             )
         }
     }
