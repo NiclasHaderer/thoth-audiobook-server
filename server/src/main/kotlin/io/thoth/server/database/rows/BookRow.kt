@@ -2,6 +2,7 @@ package io.thoth.server.database.rows
 
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.models.Book
+import io.thoth.models.ChapterMark
 import io.thoth.models.NamedId
 import io.thoth.models.PlayStatus
 import io.thoth.models.TitledId
@@ -44,6 +45,7 @@ data class BookRow(
     val providerRating: Float?,
     val coverID: UUID?,
     val genres: List<String>,
+    val chapters: List<ChapterMark>?,
 )
 
 fun ResultRow.toBookRow(): BookRow =
@@ -62,6 +64,7 @@ fun ResultRow.toBookRow(): BookRow =
         providerRating = this[BookTable.providerRating],
         coverID = this[BookTable.coverId]?.value,
         genres = this[BookTable.genres].orEmpty(),
+        chapters = this[BookTable.chapters],
     )
 
 context(_: Transaction)

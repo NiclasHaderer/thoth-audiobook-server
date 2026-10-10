@@ -26,6 +26,7 @@ class BookDetailed(
     positionMs: Long,
     status: PlayStatus,
     val tracks: List<Track>,
+    val chapters: List<Chapter>,
     val overridden: List<BookField>,
 ) : Book(
         id = id,
@@ -52,6 +53,7 @@ class BookDetailed(
         fun fromModel(
             book: Book,
             tracks: List<Track>,
+            chapters: List<Chapter>,
             overridden: List<BookField>,
         ) = BookDetailed(
             id = book.id,
@@ -61,6 +63,7 @@ class BookDetailed(
             language = book.language,
             description = book.description,
             tracks = tracks,
+            chapters = chapters,
             authors = book.authors,
             narrators = book.narrators,
             series = book.series,

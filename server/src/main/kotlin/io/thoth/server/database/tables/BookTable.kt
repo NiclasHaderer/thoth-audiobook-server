@@ -1,6 +1,7 @@
 package io.thoth.server.database.tables
 
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.models.ChapterMark
 import io.thoth.server.database.extensions.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.javatime.date
@@ -18,6 +19,7 @@ object BookTable : LibraryEntityTable("book", BookField.TITLE.column) {
     val coverId = reference(BookField.COVER_ID.column, ImageTable, onDelete = ReferenceOption.SET_NULL).nullable()
     val genres = json<List<String>>(BookField.GENRES.column).nullable()
     val narrators = json<List<String>>(BookField.NARRATORS.column).nullable()
+    val chapters = json<List<ChapterMark>>(BookField.CHAPTERS.column).nullable()
 
     val authorsFrom = enumerationByName<MetadataLayer>("authors_from", 8).default(MetadataLayer.FILE)
     val seriesFrom = enumerationByName<MetadataLayer>("series_from", 8).default(MetadataLayer.FILE)

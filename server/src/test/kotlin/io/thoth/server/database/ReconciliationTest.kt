@@ -102,6 +102,7 @@ class ReconciliationTest : ThothTest() {
                     authors = listOf(NamedIdImpl(author, "Terry Pratchett")),
                     series = listOf(TitledIdImpl(series, "Discworld")),
                     tracks = emptyList(),
+                    chapters = emptyList(),
                     durationMs = 0,
                     positionMs = 0,
                     status = PlayStatus.UNPLAYED,

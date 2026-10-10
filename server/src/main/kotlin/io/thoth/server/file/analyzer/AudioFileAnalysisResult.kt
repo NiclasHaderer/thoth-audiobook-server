@@ -1,6 +1,7 @@
 package io.thoth.server.file.analyzer
 
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.server.database.tables.TrackChapter
 import java.time.Instant
 import java.time.LocalDate
 
@@ -20,6 +21,7 @@ class AudioFileAnalysisResultImpl(
     override val seriesIndex: Float? = null,
     override val genres: List<String> = emptyList(),
     override val cover: ByteArray? = null,
+    override val chapters: List<TrackChapter> = emptyList(),
 ) : AudioFileAnalysisResult
 
 interface AudioFileAnalysisResult {
@@ -35,6 +37,7 @@ interface AudioFileAnalysisResult {
     val seriesIndex: Float?
     val genres: List<String>
     val cover: ByteArray?
+    val chapters: List<TrackChapter>
     val durationMs: Long
     val path: String
     val lastModified: Instant

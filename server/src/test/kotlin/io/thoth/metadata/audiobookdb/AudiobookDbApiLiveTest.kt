@@ -26,6 +26,7 @@ class AudiobookDbApiLiveTest {
     private val orderOfThePhoenix = "Harry Potter and the Order of the Phoenix, Book 5"
     private val friedRelease = "jKWANb7wdVbc"
     private val daleRelease = "NbxYfApUqBtF"
+    private val duneRelease = "YAjbHtPzyNPT"
 
     @Test
     fun `maps a release`() =
@@ -188,5 +189,17 @@ class AudiobookDbApiLiveTest {
             val book = agent.getBookByName(orderOfThePhoenix, MetadataRegion.US, narrator = "Nobody At All").first()
 
             assertTrue(book.id.itemID in listOf(friedRelease, daleRelease), "resolved ${book.id.itemID}")
+        }
+
+    @Test
+    fun `maps the chapters of a release`() =
+        runBlocking {
+            val chapters = assertNotNull(agent.getBookChapters("audiobookdb", duneRelease, MetadataRegion.US))
+
+            assertEquals(75_735_564L, chapters.runtimeMs)
+            assertEquals(
+                listOf("Opening Credits" to 0L, "Book One: Dune" to 60_970L),
+                chapters.chapters.take(2).map { it.title to it.startMs },
+            )
         }
 }

@@ -16,6 +16,7 @@ import io.thoth.metadata.httpsApiUrl
 import io.thoth.metadata.responses.MetadataAgentIDImpl
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBookImpl
+import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchBookImpl
@@ -98,6 +99,25 @@ class AudibleMetadataAgent(
         // The ASIN of a series resolves to a placeholder product, which is not a book
         if (product.contentDeliveryType == AUDIBLE_SERIES_DELIVERY_TYPE) return null
         return product.toMetadataBook(audibleRegion, imageSize)
+    }
+
+    // The catalog does not know the chapters, the content metadata does and answers without an account as well
+    override suspend fun getBookChapters(
+        providerId: String,
+        bookId: String,
+        region: MetadataRegion,
+    ): MetadataChapters? {
+        val url =
+            httpsApiUrl(
+                AudibleRegions.from(region).apiHost,
+                listOf(AUDIBLE_API_VERSION, "content", bookId, "metadata"),
+                Parameters.build { append("response_groups", "chapter_info") },
+            )
+        return http
+            .getJson<AudibleApiContentMetadataResponse>(url)
+            ?.contentMetadata
+            ?.chapterInfo
+            ?.toMetadataChapters()
     }
 
     override suspend fun getSeriesByID(
