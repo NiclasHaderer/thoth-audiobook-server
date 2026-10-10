@@ -37,6 +37,7 @@ import io.thoth.server.database.tables.BookUserMetadataTable
 import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
+import io.thoth.server.database.tables.authorLayers
 import io.thoth.server.database.tables.bookIdsLinkedToAuthor
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
@@ -259,6 +260,7 @@ class AuthorServiceImpl :
                 author = author.toModel(),
                 books = booksToModels(books, userId),
                 series = seriesToModels(series),
+                overridden = AuthorUserMetadataTable.layer(id).claimed.sorted(),
             )
         }
 
@@ -272,24 +274,19 @@ class AuthorServiceImpl :
         val newImage =
             imageDownloader.download(partial.image.orElse(null)?.takeUnless { it == currentImage?.toString() })
         return transaction {
-            val user = AuthorUserMetadataTable.layer(id)
-            val edit = LayerEdit(user.claimed)
+            val edit = LayerEdit(authorLayers(id) ?: throw ErrorResponse.notFound("Author", id), partial.reset)
+            val image = partial.image.map { it?.let { getOrCreateImage(newImage, currentImageID = currentImage) } }
             AuthorUserMetadataTable.write(
-                user.copy(
-                    name = edit.value(AuthorField.NAME, partial.name, user.name),
-                    provider = edit.value(AuthorField.PROVIDER, partial.provider, user.provider),
-                    providerID = edit.value(AuthorField.PROVIDER_ID, partial.providerID, user.providerID),
-                    biography = edit.value(AuthorField.BIOGRAPHY, partial.biography, user.biography),
-                    website = edit.value(AuthorField.WEBSITE, partial.website, user.website),
-                    bornIn = edit.value(AuthorField.BORN_IN, partial.bornIn, user.bornIn),
-                    birthDate = edit.value(AuthorField.BIRTH_DATE, partial.birthDate, user.birthDate),
-                    deathDate = edit.value(AuthorField.DEATH_DATE, partial.deathDate, user.deathDate),
-                    imageID =
-                        edit.value(
-                            AuthorField.IMAGE_ID,
-                            partial.image.map { it?.let { getOrCreateImage(newImage, currentImageID = currentImage) } },
-                            user.imageID,
-                        ),
+                edit.user.copy(
+                    name = edit.value(AuthorField.NAME, partial.name) { name },
+                    provider = edit.value(AuthorField.PROVIDER, partial.provider) { provider },
+                    providerID = edit.value(AuthorField.PROVIDER_ID, partial.providerID) { providerID },
+                    biography = edit.value(AuthorField.BIOGRAPHY, partial.biography) { biography },
+                    website = edit.value(AuthorField.WEBSITE, partial.website) { website },
+                    bornIn = edit.value(AuthorField.BORN_IN, partial.bornIn) { bornIn },
+                    birthDate = edit.value(AuthorField.BIRTH_DATE, partial.birthDate) { birthDate },
+                    deathDate = edit.value(AuthorField.DEATH_DATE, partial.deathDate) { deathDate },
+                    imageID = edit.value(AuthorField.IMAGE_ID, image) { imageID },
                     claimed = edit.claimed,
                 ),
             )

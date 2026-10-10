@@ -5,6 +5,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.thoth.client.gen.models.BookField
 import io.thoth.client.gen.models.BookUpdateImpl
 import io.thoth.openapi.common.Patch
 import io.thoth.server.ThothTest
@@ -42,6 +43,48 @@ class BookPatchTest : ThothTest() {
             assertNull(book.description, "null must blank the tagged description")
             assertEquals("Tagged", book.publisher, "a key that was not sent must not change anything")
             assertEquals("Dune", book.title, "an unsent title must not change anything")
+        }
+
+    @Test
+    fun `resetting an overridden field falls back to the layers underneath`() =
+        thothServer {
+            val libId = newLibrary("lib", folders = listOf("/media/books"))
+            val bookId = newBook("Dune", libId)
+            transaction {
+                BookFileMetadataTable.write(BookFileMetadataTable.layer(bookId).copy(description = "From the tags"))
+            }
+            val token = bearer(login("admin"))
+
+            api.updateBook(bookId, libId, BookUpdateImpl(description = Patch.Set("Mine")), token)
+            val edited = api.getBook(bookId, libId, token).body()
+            assertEquals("Mine", edited.description)
+            assertEquals(listOf(BookField.DESCRIPTION), edited.overridden)
+
+            val response =
+                api.updateBook(bookId, libId, BookUpdateImpl(reset = Patch.Set(listOf(BookField.DESCRIPTION))), token)
+
+            assertEquals(HttpStatusCode.OK, response.status)
+            val reset = api.getBook(bookId, libId, token).body()
+            assertEquals("From the tags", reset.description)
+            assertEquals(emptyList(), reset.overridden)
+        }
+
+    @Test
+    fun `setting and resetting the same field is rejected`() =
+        thothServer {
+            val libId = newLibrary("lib", folders = listOf("/media/books"))
+            val bookId = newBook("Dune", libId)
+            val token = bearer(login("admin"))
+
+            val response =
+                api.updateBook(
+                    bookId,
+                    libId,
+                    BookUpdateImpl(description = Patch.Set("Mine"), reset = Patch.Set(listOf(BookField.DESCRIPTION))),
+                    token,
+                )
+
+            assertEquals(HttpStatusCode.BadRequest, response.status)
         }
 
     @Test

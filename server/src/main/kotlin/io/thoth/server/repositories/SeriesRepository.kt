@@ -44,6 +44,7 @@ import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.resolvedSeriesLinks
+import io.thoth.server.database.tables.seriesLayers
 import io.thoth.server.database.tables.write
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
@@ -130,6 +131,7 @@ class SeriesRepositoryImpl :
             SeriesDetailed.fromModel(
                 series = series.toModel(),
                 books = booksToModels(resolvedBooks(id), userId),
+                overridden = SeriesUserMetadataTable.layer(id).claimed.sorted(),
             )
         }
 
@@ -215,22 +217,17 @@ class SeriesRepositoryImpl :
         val newCover =
             imageDownloader.download(partial.cover.orElse(null)?.takeUnless { it == currentCover?.toString() })
         return transaction {
-            val user = SeriesUserMetadataTable.layer(id)
-            val edit = LayerEdit(user.claimed)
+            val edit = LayerEdit(seriesLayers(id) ?: throw ErrorResponse.notFound("Series", id), partial.reset)
+            val cover = partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } }
             SeriesUserMetadataTable.write(
-                user.copy(
-                    title = edit.value(SeriesField.TITLE, partial.title, user.title),
-                    provider = edit.value(SeriesField.PROVIDER, partial.provider, user.provider),
-                    providerID = edit.value(SeriesField.PROVIDER_ID, partial.providerID, user.providerID),
-                    totalBooks = edit.value(SeriesField.TOTAL_BOOKS, partial.totalBooks, user.totalBooks),
-                    primaryWorks = edit.value(SeriesField.PRIMARY_WORKS, partial.primaryWorks, user.primaryWorks),
-                    coverID =
-                        edit.value(
-                            SeriesField.COVER_ID,
-                            partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } },
-                            user.coverID,
-                        ),
-                    description = edit.value(SeriesField.DESCRIPTION, partial.description, user.description),
+                edit.user.copy(
+                    title = edit.value(SeriesField.TITLE, partial.title) { title },
+                    provider = edit.value(SeriesField.PROVIDER, partial.provider) { provider },
+                    providerID = edit.value(SeriesField.PROVIDER_ID, partial.providerID) { providerID },
+                    totalBooks = edit.value(SeriesField.TOTAL_BOOKS, partial.totalBooks) { totalBooks },
+                    primaryWorks = edit.value(SeriesField.PRIMARY_WORKS, partial.primaryWorks) { primaryWorks },
+                    coverID = edit.value(SeriesField.COVER_ID, cover) { coverID },
+                    description = edit.value(SeriesField.DESCRIPTION, partial.description) { description },
                     claimed = edit.claimed,
                 ),
             )

@@ -105,6 +105,7 @@ class ReconciliationTest : ThothTest() {
                     durationMs = 0,
                     positionMs = 0,
                     status = PlayStatus.UNPLAYED,
+                    overridden = emptyList(),
                 ),
                 book,
             )
