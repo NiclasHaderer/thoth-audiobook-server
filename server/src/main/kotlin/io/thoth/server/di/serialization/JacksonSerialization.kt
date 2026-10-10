@@ -2,17 +2,14 @@ package io.thoth.server.di.serialization
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.thoth.openapi.serializion.jackson.configureForOpenApi
 import java.lang.reflect.Type
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.javaType
 
 class JacksonSerialization : Serialization {
-    /**
-     * Ktor builds the mapper, so this is filled in by configureSerialization. It cannot be a constructor argument:
-     * table definitions resolve this class while the database connects, which happens before the plugins are set up.
-     */
-    lateinit var objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper = ObjectMapper().configureForOpenApi()
 
     override fun serializeValue(value: Any): String = objectMapper.writeValueAsString(value)
 

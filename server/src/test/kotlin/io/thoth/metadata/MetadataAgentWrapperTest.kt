@@ -1,6 +1,7 @@
 package io.thoth.metadata
 
 import io.thoth.metadata.responses.MetadataRegion
+import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -64,6 +65,58 @@ class MetadataAgentWrapperTest {
             val match = MetadataAgentWrapper(listOf(silent, openLibrary)).bestBookMatch("b", MetadataRegion.US)
 
             assertEquals("b", match?.id?.itemID)
+        }
+
+    private fun agentWithBooksBy(
+        name: String,
+        authorsByBook: Map<String, String>,
+    ) = FakeMetadataAgent(
+        name = name,
+        hits = authorsByBook.keys.map { searchHit(it, title = "Playing with Fire", provider = name) },
+        resolveBook = { id ->
+            val author = authorsByBook.getValue(id)
+            testBook(id, name).copy(
+                authors = listOf(MetadataSearchAuthorImpl(TestId(author, name), author, "link/$author")),
+            )
+        },
+    )
+
+    @Test
+    fun `a best match skips the books of another author`() =
+        runBlocking {
+            val agent =
+                agentWithBooksBy("audiobookdb", mapOf("gerritsen" to "Tess Gerritsen", "landy" to "Derek Landy"))
+
+            val match =
+                MetadataAgentWrapper(listOf(agent))
+                    .bestBookMatch("Playing with Fire", MetadataRegion.US, authorName = "Derek Landy")
+
+            assertEquals("landy", match?.id?.itemID)
+        }
+
+    @Test
+    fun `a best match asks the next agent when the preferred one only knows another author`() =
+        runBlocking {
+            val preferred = agentWithBooksBy("audiobookdb", mapOf("gerritsen" to "Tess Gerritsen"))
+            val other = agentWithBooksBy("audible", mapOf("landy" to "Derek Landy"))
+
+            val match =
+                MetadataAgentWrapper(listOf(preferred, other))
+                    .bestBookMatch("Playing with Fire", MetadataRegion.US, authorName = "Derek Landy")
+
+            assertEquals(TestId("landy", "audible"), match?.id)
+        }
+
+    @Test
+    fun `a best match is nothing when every candidate is by another author`() =
+        runBlocking {
+            val agent = agentWithBooksBy("audiobookdb", mapOf("gerritsen" to "Tess Gerritsen"))
+
+            val match =
+                MetadataAgentWrapper(listOf(agent))
+                    .bestBookMatch("Playing with Fire", MetadataRegion.US, authorName = "Derek Landy")
+
+            assertNull(match)
         }
 
     @Test
