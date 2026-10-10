@@ -5,13 +5,13 @@ import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.searchHit
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.server.ThothTest
-import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.file.scanner.LibraryImportPipeline
 import io.thoth.server.newLibrary
 import io.thoth.server.schedules.AutoMatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.dsl.module
@@ -24,6 +24,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class AutoMatchOnScanTest : ThothTest() {
@@ -55,10 +56,16 @@ class AutoMatchOnScanTest : ThothTest() {
 
     @Test
     fun `a new library matches its books against its metadata agent`() {
+        // The author is read from the folder above the series, and a match is only accepted for that author
+        val root = dataDir.resolve("library")
+        testResources
+            .resolve("Dan Brown/Robert Langdon")
+            .toFile()
+            .copyRecursively(root.resolve("Dan Brown/Robert Langdon").toFile())
         val libId =
             newLibrary(
                 "fake",
-                folders = listOf(testResources.resolve("Dan Brown").absolutePathString()),
+                folders = listOf(root.absolutePathString()),
                 metadataAgents = listOf(NamedMetadataAgent("fake")),
             )
 
@@ -69,14 +76,14 @@ class AutoMatchOnScanTest : ThothTest() {
             matched() == books()
         }
         assertTrue(
-            transaction { BookAgentMetadataTable.selectAll().all { it[BookAgentMetadataTable.provider] != null } },
+            transaction { BookTable.selectAll().all { it[BookTable.provider] == "fake" } },
             "every match must record the agent it came from",
         )
     }
 
     private fun books() = transaction { BookTable.selectAll().count() }
 
-    private fun matched() = transaction { BookAgentMetadataTable.selectAll().count() }
+    private fun matched() = transaction { BookTable.selectAll().where { BookTable.provider.isNotNull() }.count() }
 
     private fun eventually(
         timeout: Duration = 30.seconds,
@@ -86,7 +93,7 @@ class AutoMatchOnScanTest : ThothTest() {
         val deadline = System.nanoTime() + timeout.inWholeNanoseconds
         while (System.nanoTime() < deadline) {
             if (until()) return@runBlocking
-            delay(50)
+            delay(50.milliseconds)
         }
         throw AssertionError("Timed out waiting for: ${describe()}")
     }

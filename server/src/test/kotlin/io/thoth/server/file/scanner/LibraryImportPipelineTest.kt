@@ -1,16 +1,21 @@
 package io.thoth.server.file.scanner
 
+import io.thoth.models.BookUpdate
 import io.thoth.models.FileScanner
+import io.thoth.openapi.common.Patch
 import io.thoth.server.ThothTest
 import io.thoth.server.common.extensions.canonical
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.sqliteUrl
 import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BookField
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.newLibrary
+import io.thoth.server.newUser
+import io.thoth.server.repositories.BookRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.eq
@@ -144,6 +149,25 @@ class LibraryImportPipelineTest : ThothTest() {
 
         pipeline.scanLibrary(id, reanalyze = true)
         assertEquals(imported, trackTitles(), "a re-analyzing scan must read it regardless of its mtime")
+    }
+
+    @Test
+    fun `unlocking a field re-reads the files of the book`() {
+        val root = dataDir.resolve("library").also { it.createDirectories() }
+        book(root, "An Author", "A Book")
+        val id = library(root)
+        scan(id)
+        val bookId = transaction { BookTable.selectAll().single()[BookTable.id].value }
+        val books = getKoin().get<BookRepository>()
+        val userId = newUser("test-user", admin = true)
+        books.modify(userId, bookId, id, BookUpdate(title = Patch.Set("Mine")))
+        assertEquals(listOf("Mine"), titles())
+
+        books.modify(userId, bookId, id, BookUpdate(unlock = Patch.Set(listOf(BookField.TITLE))))
+
+        eventually(describe = { "the title of the files to come back, titles are ${titles()}" }) {
+            titles() == listOf("A Book")
+        }
     }
 
     @Test

@@ -27,7 +27,7 @@ class BookDetailed(
     status: PlayStatus,
     val tracks: List<Track>,
     val chapters: List<Chapter>,
-    val overridden: List<BookField>,
+    val locked: List<BookField>,
 ) : Book(
         id = id,
         libraryId = libraryId,
@@ -54,7 +54,7 @@ class BookDetailed(
             book: Book,
             tracks: List<Track>,
             chapters: List<Chapter>,
-            overridden: List<BookField>,
+            locked: List<BookField>,
         ) = BookDetailed(
             id = book.id,
             libraryId = book.libraryId,
@@ -77,7 +77,7 @@ class BookDetailed(
             durationMs = book.durationMs,
             positionMs = book.positionMs,
             status = book.status,
-            overridden = overridden,
+            locked = locked,
         )
     }
 }

@@ -5,19 +5,11 @@ import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.FileScanner
 import io.thoth.models.LibraryPermissionLevel
 import io.thoth.models.NamedMetadataAgent
-import io.thoth.server.database.tables.AuthorFileMetadataTable
-import io.thoth.server.database.tables.AuthorMetadataRow
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.AuthorUserMetadataTable
-import io.thoth.server.database.tables.BookFileMetadataTable
-import io.thoth.server.database.tables.BookMetadataRow
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.LibraryUserTable
-import io.thoth.server.database.tables.MetadataLayer
-import io.thoth.server.database.tables.SeriesFileMetadataTable
-import io.thoth.server.database.tables.SeriesMetadataRow
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackChapter
 import io.thoth.server.database.tables.TrackRow
@@ -28,9 +20,10 @@ import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
-import io.thoth.server.database.tables.write
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
 import java.util.UUID
 
@@ -73,25 +66,12 @@ fun newAuthor(
     name: String,
     libraryId: UUID,
     renamedTo: String? = null,
-): UUID =
-    transaction {
-        val id = AuthorTable.create(libraryId, name)
-        AuthorFileMetadataTable.write(AuthorMetadataRow(author = id, name = name))
-        if (renamedTo != null) {
-            AuthorUserMetadataTable.write(AuthorMetadataRow(author = id, name = renamedTo))
-        }
-        id
-    }
+): UUID = transaction { AuthorTable.create(libraryId, renamedTo ?: name, taggedName = name) }
 
 fun newSeries(
     title: String,
     libraryId: UUID,
-): UUID =
-    transaction {
-        val id = SeriesTable.create(libraryId, title)
-        SeriesFileMetadataTable.write(SeriesMetadataRow(series = id, title = title))
-        id
-    }
+): UUID = transaction { SeriesTable.create(libraryId, title, taggedName = title) }
 
 fun newBook(
     title: String,
@@ -102,12 +82,13 @@ fun newBook(
     genres: List<String>? = null,
 ): UUID =
     transaction {
-        val id = BookTable.create(libraryId, title)
-        BookFileMetadataTable.write(
-            BookMetadataRow(book = id, title = title, narrators = narrators, genres = genres),
-        )
-        replaceBookAuthors(id, MetadataLayer.FILE, authors)
-        replaceBookSeries(id, MetadataLayer.FILE, series.associateWith { null })
+        val id = BookTable.create(libraryId, title, taggedName = title)
+        BookTable.update({ BookTable.id eq id }) {
+            it[BookTable.narrators] = narrators
+            it[BookTable.genres] = genres
+        }
+        replaceBookAuthors(id, authors)
+        replaceBookSeries(id, series.associateWith { null })
         id
     }
 

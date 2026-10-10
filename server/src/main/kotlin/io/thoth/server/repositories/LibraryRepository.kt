@@ -13,7 +13,6 @@ import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.insert
-import io.thoth.server.database.tables.reconcileLibrary
 import io.thoth.server.database.tables.toLibraryRow
 import io.thoth.server.database.tables.update
 import io.thoth.server.file.scanner.LibraryCleanup
@@ -97,7 +96,10 @@ class LibraryRepositoryImpl :
         partial: PartialUpdateLibrary,
     ): Library =
         libraryMutationLock.withLock {
-            val reanalyze = partial.fileScanners.isSet || partial.combineFileScannerFields.isSet
+            // Which source wins is applied when a file is read, so a library that flipped it reads them all again
+            val reanalyze =
+                partial.fileScanners.isSet || partial.combineFileScannerFields.isSet ||
+                    partial.preferEmbeddedMetadata.isSet
             val needsScan = partial.folders.isSet || partial.metadataAgents.isSet || reanalyze
             val model =
                 transaction {
@@ -122,11 +124,6 @@ class LibraryRepositoryImpl :
                             region = partial.region.orElse(library.region),
                         )
                     LibraryTable.update(updated)
-                    // Which layer wins is baked into every row of the library, so flipping it has to
-                    // re-resolve them.
-                    if (updated.preferEmbeddedMetadata != library.preferEmbeddedMetadata) {
-                        reconcileLibrary(id)
-                    }
                     updated.toModel(bookCount(id))
                 }
 

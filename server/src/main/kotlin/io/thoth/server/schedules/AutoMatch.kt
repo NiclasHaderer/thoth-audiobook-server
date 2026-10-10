@@ -3,15 +3,16 @@ package io.thoth.server.schedules
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.ktor.http.HttpStatusCode
 import io.thoth.openapi.ktor.errors.ErrorResponse
-import io.thoth.server.database.tables.AuthorAgentMetadataTable
-import io.thoth.server.database.tables.BookAgentMetadataTable
-import io.thoth.server.database.tables.SeriesAgentMetadataTable
-import io.thoth.server.database.tables.layer
+import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BookTable
+import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.repositories.AuthorRepository
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -109,10 +110,17 @@ class AutoMatcher : KoinComponent {
     }
 
     context(_: Transaction)
-    private fun alreadyMatched(request: AutoMatchRequest): Boolean =
-        when (request.entity) {
-            MatchableEntity.BOOK -> BookAgentMetadataTable.layer(request.id).provider
-            MatchableEntity.AUTHOR -> AuthorAgentMetadataTable.layer(request.id).provider
-            MatchableEntity.SERIES -> SeriesAgentMetadataTable.layer(request.id).provider
-        } != null
+    private fun alreadyMatched(request: AutoMatchRequest): Boolean {
+        val (table, provider) =
+            when (request.entity) {
+                MatchableEntity.BOOK -> BookTable to BookTable.provider
+                MatchableEntity.AUTHOR -> AuthorTable to AuthorTable.provider
+                MatchableEntity.SERIES -> SeriesTable to SeriesTable.provider
+            }
+        return table
+            .select(provider)
+            .where { table.id eq request.id }
+            .firstOrNull()
+            ?.get(provider) != null
+    }
 }

@@ -11,14 +11,14 @@ import io.thoth.openapi.common.Patch
 import io.thoth.server.ThothTest
 import io.thoth.server.api
 import io.thoth.server.bearer
-import io.thoth.server.database.tables.BookFileMetadataTable
-import io.thoth.server.database.tables.layer
-import io.thoth.server.database.tables.write
+import io.thoth.server.database.tables.BookTable
 import io.thoth.server.login
 import io.thoth.server.newBook
 import io.thoth.server.newLibrary
 import io.thoth.server.thothServer
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -30,9 +30,10 @@ class BookPatchTest : ThothTest() {
             val libId = newLibrary("lib", folders = listOf("/media/books"))
             val bookId = newBook("Dune", libId)
             transaction {
-                BookFileMetadataTable.write(
-                    BookFileMetadataTable.layer(bookId).copy(description = "From the tags", publisher = "Tagged"),
-                )
+                BookTable.update({ BookTable.id eq bookId }) {
+                    it[description] = "From the tags"
+                    it[publisher] = "Tagged"
+                }
             }
             val token = bearer(login("admin"))
 
@@ -46,31 +47,28 @@ class BookPatchTest : ThothTest() {
         }
 
     @Test
-    fun `resetting an overridden field falls back to the layers underneath`() =
+    fun `an edit locks the field until it is unlocked`() =
         thothServer {
             val libId = newLibrary("lib", folders = listOf("/media/books"))
             val bookId = newBook("Dune", libId)
-            transaction {
-                BookFileMetadataTable.write(BookFileMetadataTable.layer(bookId).copy(description = "From the tags"))
-            }
             val token = bearer(login("admin"))
 
             api.updateBook(bookId, libId, BookUpdateImpl(description = Patch.Set("Mine")), token)
             val edited = api.getBook(bookId, libId, token).body()
             assertEquals("Mine", edited.description)
-            assertEquals(listOf(BookField.DESCRIPTION), edited.overridden)
+            assertEquals(listOf(BookField.DESCRIPTION), edited.locked)
 
             val response =
-                api.updateBook(bookId, libId, BookUpdateImpl(reset = Patch.Set(listOf(BookField.DESCRIPTION))), token)
+                api.updateBook(bookId, libId, BookUpdateImpl(unlock = Patch.Set(listOf(BookField.DESCRIPTION))), token)
 
             assertEquals(HttpStatusCode.OK, response.status)
-            val reset = api.getBook(bookId, libId, token).body()
-            assertEquals("From the tags", reset.description)
-            assertEquals(emptyList(), reset.overridden)
+            val unlocked = api.getBook(bookId, libId, token).body()
+            assertEquals("Mine", unlocked.description, "unlocking keeps the value until the next scan or match")
+            assertEquals(emptyList(), unlocked.locked)
         }
 
     @Test
-    fun `setting and resetting the same field is rejected`() =
+    fun `setting and unlocking the same field is rejected`() =
         thothServer {
             val libId = newLibrary("lib", folders = listOf("/media/books"))
             val bookId = newBook("Dune", libId)
@@ -80,7 +78,7 @@ class BookPatchTest : ThothTest() {
                 api.updateBook(
                     bookId,
                     libId,
-                    BookUpdateImpl(description = Patch.Set("Mine"), reset = Patch.Set(listOf(BookField.DESCRIPTION))),
+                    BookUpdateImpl(description = Patch.Set("Mine"), unlock = Patch.Set(listOf(BookField.DESCRIPTION))),
                     token,
                 )
 

@@ -10,12 +10,9 @@ import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.ThothTest
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BookFileMetadataTable
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackTable
-import io.thoth.server.database.tables.layer
-import io.thoth.server.database.tables.write
 import io.thoth.server.file.scanner.LibraryCleanup
 import io.thoth.server.newAuthor
 import io.thoth.server.newBook
@@ -29,6 +26,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.mp.KoinPlatform.getKoin
 import java.util.UUID
 import kotlin.test.BeforeTest
@@ -133,12 +131,12 @@ class RepositoryTest : ThothTest() {
         assertEquals(
             listOf(chosen),
             authorRepository.getAll(userId, libId, SortOrder.ASC).map { it.id },
-            "the author the file layer still names is hidden, since nothing resolves to them any more",
+            "the author the tags name is hidden, since no book is linked to them any more",
         )
         assertEquals(
             listOf(chosen, tagged).sorted(),
             authorRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id }.sorted(),
-            "they are only hidden: the row is still there for the file layer to claim back",
+            "they are only hidden: the row is still there for a scan to link again",
         )
     }
 
@@ -148,8 +146,6 @@ class RepositoryTest : ThothTest() {
         val chosen = newSeries("Chosen Series", libId)
         val book = newBook("Mort", libId, authors = listOf(newAuthor("Pratchett")), series = listOf(tagged))
 
-        // Moving the book claims the relation for the user layer; the file layer keeps naming the series
-        // the tags did, so that a rescan can still see it
         bookRepository.modify(userId, book, libId, bookAssignedTo(series = listOf(chosen)))
 
         assertEquals(
@@ -160,12 +156,12 @@ class RepositoryTest : ThothTest() {
         assertEquals(
             listOf(chosen),
             seriesRepository.getAll(userId, libId, SortOrder.ASC).map { it.id },
-            "the series the file layer still names is hidden, since nothing resolves to it any more",
+            "the series the tags name is hidden, since no book is linked to it any more",
         )
         assertEquals(
             listOf(chosen, tagged).sorted(),
             seriesRepository.getAll(userId, libId, SortOrder.ASC, showInvisible = true).map { it.id }.sorted(),
-            "it is only hidden: the row is still there for the file layer to claim back",
+            "it is only hidden: the row is still there for a scan to link again",
         )
     }
 
@@ -263,7 +259,7 @@ class RepositoryTest : ThothTest() {
         val id = newAuthor("Terry Pratchet")
         authorRepository.modify(userId, id, libId, authorRenamedTo("Terry Pratchett"))
 
-        // The tags on disk were corrected too, so discovery now sees the name only the user layer knows about
+        // The tags on disk were corrected too, so the scan now sees the name the user gave, not the tagged one
         assertEquals(id, authorRepository.getOrCreate("Terry Pratchett", libId).id)
         assertEquals(1L, authorCount())
     }
@@ -331,7 +327,7 @@ class RepositoryTest : ThothTest() {
     fun `modify treats the book's own cover id as unchanged`() {
         val id = bookRepository.create("Covered", libId, emptyList(), emptyList()).id
         val cover = transaction { getOrCreateImage(pngBytes(1, 2, 3), null)!! }
-        transaction { BookFileMetadataTable.write(BookFileMetadataTable.layer(id).copy(coverID = cover)) }
+        transaction { BookTable.update({ BookTable.id eq id }) { it[coverId] = cover } }
 
         val result =
             bookRepository.modify(

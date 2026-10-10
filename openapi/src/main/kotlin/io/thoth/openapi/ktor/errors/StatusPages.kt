@@ -17,6 +17,7 @@ import io.ktor.server.plugins.statuspages.StatusPagesConfig
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
+import io.ktor.util.cio.ChannelWriteException
 
 @PublishedApi
 internal fun logCommitted(
@@ -71,9 +72,19 @@ fun Application.configureStatusPages(errorStatuses: ErrorStatuses.() -> Unit = {
             )
         }
 
-        exception<Throwable>(
-            formatException(logger, HttpStatusCode.InternalServerError) { logger.error(it) { it.message } },
-        )
+        val serverError =
+            formatException<Throwable>(logger, HttpStatusCode.InternalServerError) { logger.error(it) { it.message } }
+        exception<Throwable> { call, cause ->
+            // The client hung up while the response was written, which a player does on every seek and skip.
+            // Nothing failed on the server, and nobody is left to send an error to.
+            if (generateSequence(cause) { it.cause }.any { it is ChannelWriteException }) {
+                logger.debug {
+                    "Client closed the connection during ${call.request.httpMethod.value} ${call.request.path()}"
+                }
+            } else {
+                serverError(call, cause)
+            }
+        }
         exception<BadRequestException>(formatException(logger, HttpStatusCode.BadRequest))
         exception<MissingRequestParameterException>(formatException(logger, HttpStatusCode.BadRequest))
         exception<ParameterConversionException>(formatException(logger, HttpStatusCode.BadRequest))

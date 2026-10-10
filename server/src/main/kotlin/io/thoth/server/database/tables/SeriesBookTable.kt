@@ -7,6 +7,5 @@ object SeriesBookTable : Table("series_book") {
     val series = reference("series_id", SeriesTable, onDelete = ReferenceOption.CASCADE)
     val book = reference("book_id", BookTable, onDelete = ReferenceOption.CASCADE).index()
     val seriesIndex = float("series_index").nullable()
-    val addedBy = enumerationByName<MetadataLayer>("added_by", 8)
-    override val primaryKey = PrimaryKey(series, book, addedBy)
+    override val primaryKey = PrimaryKey(series, book)
 }

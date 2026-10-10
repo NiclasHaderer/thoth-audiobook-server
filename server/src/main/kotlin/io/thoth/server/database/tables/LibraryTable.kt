@@ -26,6 +26,8 @@ object LibraryTable : UUIDTable("library") {
                 throw ErrorResponse.userError("folders must have at least one element")
             }
         }
+
+    // Decides who may overwrite whom when a scan or a match writes, so flipping it leaves existing values alone
     val preferEmbeddedMetadata = bool("prefer_embedded_metadata").default(false)
 
     // Deliberately unconstrained: a library with no agents just does no online metadata lookups.

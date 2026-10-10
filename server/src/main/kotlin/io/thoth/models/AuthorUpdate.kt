@@ -20,7 +20,7 @@ data class AuthorUpdate(
     val birthDate: Patch<LocalDate?> = Patch.Absent,
     val deathDate: Patch<LocalDate?> = Patch.Absent,
     val books: Patch<List<UUID>> = Patch.Absent,
-    val reset: Patch<List<AuthorField>> = Patch.Absent,
+    val unlock: Patch<List<AuthorField>> = Patch.Absent,
 ) : ValidateObject {
     override suspend fun RoutingContext.validateBody() {
         name.ifSet { if (it.isBlank()) throw ErrorResponse.userError("An author name cannot be empty") }

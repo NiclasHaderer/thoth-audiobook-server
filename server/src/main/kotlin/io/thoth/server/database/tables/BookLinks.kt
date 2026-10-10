@@ -17,92 +17,71 @@ fun bookIdsLinkedToSeries(seriesId: UUID): List<UUID> =
     SeriesBookTable
         .select(SeriesBookTable.book)
         .where { SeriesBookTable.series eq seriesId }
-        .mapTo(mutableSetOf()) { it[SeriesBookTable.book].value }
-        .toList()
+        .map { it[SeriesBookTable.book].value }
 
 context(_: Transaction)
 fun bookIdsLinkedToAuthor(authorId: UUID): List<UUID> =
     AuthorBookTable
         .select(AuthorBookTable.book)
         .where { AuthorBookTable.author eq authorId }
-        .mapTo(mutableSetOf()) { it[AuthorBookTable.book].value }
-        .toList()
+        .map { it[AuthorBookTable.book].value }
 
 context(_: Transaction)
 fun seriesIdsLinkedToBook(bookId: UUID): List<UUID> =
     SeriesBookTable
         .select(SeriesBookTable.series)
         .where { SeriesBookTable.book eq bookId }
-        .mapTo(mutableSetOf()) { it[SeriesBookTable.series].value }
-        .toList()
+        .map { it[SeriesBookTable.series].value }
 
 context(_: Transaction)
 fun authorIdsLinkedToBook(bookId: UUID): List<UUID> =
     AuthorBookTable
         .select(AuthorBookTable.author)
         .where { AuthorBookTable.book eq bookId }
-        .mapTo(mutableSetOf()) { it[AuthorBookTable.author].value }
-        .toList()
+        .map { it[AuthorBookTable.author].value }
 
 context(_: Transaction)
 fun replaceBookAuthors(
     bookId: UUID,
-    source: MetadataLayer,
     authorIds: Collection<UUID>,
 ) = with(AuthorBookTable) {
-    val mine = (book eq bookId) and (AuthorBookTable.addedBy eq source)
     val wanted = authorIds.toSet()
-    val existing =
-        select(author).where { mine }.mapTo(mutableSetOf()) { it[author].value }
+    val existing = authorIdsLinkedToBook(bookId).toSet()
 
     val stale = existing - wanted
-    if (stale.isNotEmpty()) deleteWhere { mine and (author inList stale) }
+    if (stale.isNotEmpty()) deleteWhere { (book eq bookId) and (author inList stale) }
     (wanted - existing).forEach { authorId ->
         insert {
             it[book] = bookId
             it[author] = authorId
-            it[AuthorBookTable.addedBy] = source
         }
     }
-    reconcileBook(bookId)
 }
 
+// A null index leaves the one a series already has alone: a user moving a book between series says nothing
+// about its position, and dropping the position the tags gave it would be a loss nobody asked for.
 context(_: Transaction)
 fun replaceBookSeries(
     bookId: UUID,
-    source: MetadataLayer,
     targets: Map<UUID, Float?>,
 ) = with(SeriesBookTable) {
-    val mine = (book eq bookId) and (SeriesBookTable.addedBy eq source)
-    deleteWhere { mine and (series notInList targets.keys) }
+    deleteWhere { (book eq bookId) and (series notInList targets.keys) }
+    val existing = seriesIdsLinkedToBook(bookId).toSet()
     targets.forEach { (seriesId, index) ->
-        val updated = update({ mine and (series eq seriesId) }) { it[seriesIndex] = index }
-        if (updated == 0) {
+        if (seriesId in existing) {
+            if (index != null) update({ (book eq bookId) and (series eq seriesId) }) { it[seriesIndex] = index }
+        } else {
             insert {
                 it[book] = bookId
                 it[series] = seriesId
                 it[seriesIndex] = index
-                it[SeriesBookTable.addedBy] = source
             }
         }
     }
-    reconcileBook(bookId)
 }
 
-val resolvedAuthorLinks
-    get() =
-        AuthorBookTable.join(
-            BookTable,
-            JoinType.INNER,
-            AuthorBookTable.book,
-            BookTable.id,
-        ) { AuthorBookTable.addedBy eq BookTable.authorsFrom }
+val authorLinksWithBooks
+    get() = AuthorBookTable.join(BookTable, JoinType.INNER, AuthorBookTable.book, BookTable.id)
 
-val resolvedSeriesLinks
-    get() =
-        SeriesBookTable.join(
-            BookTable,
-            JoinType.INNER,
-            SeriesBookTable.book,
-            BookTable.id,
-        ) { SeriesBookTable.addedBy eq BookTable.seriesFrom }
+val seriesLinksWithBooks
+    get() = SeriesBookTable.join(BookTable, JoinType.INNER, SeriesBookTable.book, BookTable.id)

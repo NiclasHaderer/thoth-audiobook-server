@@ -6,8 +6,9 @@ import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.SeriesBookTable
+import io.thoth.server.database.tables.SeriesField
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.resolvedSeriesLinks
+import io.thoth.server.database.tables.seriesLinksWithBooks
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -16,18 +17,21 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 
 data class SeriesRow(
     val id: UUID,
     val library: UUID,
     val title: String,
+    val taggedName: String?,
     val totalBooks: Int?,
     val primaryWorks: Int?,
     val description: String?,
     val provider: String?,
     val providerID: String?,
     val coverID: UUID?,
+    val locked: Set<SeriesField>,
 )
 
 fun ResultRow.toSeriesRow(): SeriesRow =
@@ -35,13 +39,30 @@ fun ResultRow.toSeriesRow(): SeriesRow =
         id = this[SeriesTable.id].value,
         library = this[SeriesTable.library].value,
         title = this[SeriesTable.title],
+        taggedName = this[SeriesTable.taggedName],
         totalBooks = this[SeriesTable.totalBooks],
         primaryWorks = this[SeriesTable.primaryWorks],
         description = this[SeriesTable.description],
         provider = this[SeriesTable.provider],
         providerID = this[SeriesTable.providerId],
         coverID = this[SeriesTable.coverId]?.value,
+        locked = this[SeriesTable.locked],
     )
+
+context(_: Transaction)
+fun SeriesTable.update(row: SeriesRow) {
+    update({ id eq row.id }) {
+        it[name] = row.title
+        it[taggedName] = row.taggedName
+        it[totalBooks] = row.totalBooks
+        it[primaryWorks] = row.primaryWorks
+        it[description] = row.description
+        it[provider] = row.provider
+        it[providerId] = row.providerID
+        it[coverId] = row.coverID
+        it[locked] = row.locked
+    }
+}
 
 context(_: Transaction)
 fun SeriesRow.toModel(authorOrder: SortOrder = SortOrder.ASC): Series =
@@ -80,10 +101,9 @@ fun seriesToModels(
 
 context(_: Transaction)
 fun seriesAuthors(seriesIds: List<UUID>): Map<UUID, List<NamedId>> =
-    resolvedSeriesLinks
-        .join(AuthorBookTable, JoinType.INNER, SeriesBookTable.book, AuthorBookTable.book) {
-            AuthorBookTable.addedBy eq BookTable.authorsFrom
-        }.join(AuthorTable, JoinType.INNER, AuthorBookTable.author, AuthorTable.id)
+    SeriesBookTable
+        .join(AuthorBookTable, JoinType.INNER, SeriesBookTable.book, AuthorBookTable.book)
+        .join(AuthorTable, JoinType.INNER, AuthorBookTable.author, AuthorTable.id)
         .select(SeriesBookTable.series, AuthorTable.id, AuthorTable.name)
         .where { SeriesBookTable.series inList seriesIds }
         .groupBy({ it[SeriesBookTable.series].value }) {
@@ -97,7 +117,7 @@ data class SeriesBook(
 
 context(_: Transaction)
 fun seriesBooks(seriesIds: List<UUID>): Map<UUID, List<SeriesBook>> =
-    resolvedSeriesLinks
+    seriesLinksWithBooks
         .select(SeriesBookTable.series, SeriesBookTable.seriesIndex, BookTable.coverId, BookTable.genres)
         .where { (SeriesBookTable.series inList seriesIds) and BookTable.visible }
         .orderBy(SeriesBookTable.seriesIndex to SortOrder.ASC_NULLS_LAST)

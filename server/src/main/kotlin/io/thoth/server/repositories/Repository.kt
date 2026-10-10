@@ -7,8 +7,8 @@ import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryEntityTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.resolvedAuthorLinks
-import io.thoth.server.database.tables.resolvedSeriesLinks
+import io.thoth.server.database.tables.authorLinksWithBooks
+import io.thoth.server.database.tables.seriesLinksWithBooks
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ColumnSet
 import org.jetbrains.exposed.v1.core.Op
@@ -35,9 +35,9 @@ val DEFER_DELETION_GRACE: Duration = Duration.ofHours(24)
 // Hidden books do not count: an author or series whose every book is on its way out hides them
 context(_: Transaction)
 fun visiblyLinked(
-    resolvedLinks: ColumnSet,
+    linksWithBooks: ColumnSet,
     owner: Column<EntityID<UUID>>,
-) = resolvedLinks
+) = linksWithBooks
     .select(owner)
     .where { BookTable.deferDeletionUntil.isNull() }
 
@@ -80,7 +80,7 @@ fun refreshAuthorDeferral(authorIds: Collection<UUID>) =
         table = AuthorTable,
         deferUntil = AuthorTable.deferDeletionUntil,
         scope = AuthorTable.id inList authorIds,
-        orphaned = AuthorTable.id notInSubQuery visiblyLinked(resolvedAuthorLinks, AuthorBookTable.author),
+        orphaned = AuthorTable.id notInSubQuery visiblyLinked(authorLinksWithBooks, AuthorBookTable.author),
         now = Instant.now(),
     )
 
@@ -90,7 +90,7 @@ fun refreshSeriesDeferral(seriesIds: Collection<UUID>) =
         table = SeriesTable,
         deferUntil = SeriesTable.deferDeletionUntil,
         scope = SeriesTable.id inList seriesIds,
-        orphaned = SeriesTable.id notInSubQuery visiblyLinked(resolvedSeriesLinks, SeriesBookTable.series),
+        orphaned = SeriesTable.id notInSubQuery visiblyLinked(seriesLinksWithBooks, SeriesBookTable.series),
         now = Instant.now(),
     )
 

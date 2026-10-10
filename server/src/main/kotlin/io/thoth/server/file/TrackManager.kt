@@ -4,28 +4,28 @@ import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import io.thoth.server.common.extensions.canonicalString
 import io.thoth.server.common.extensions.lastModifiedInstant
 import io.thoth.server.database.access.getOrCreateImage
+import io.thoth.server.database.rows.toBookRow
+import io.thoth.server.database.rows.update
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.BookFileMetadataTable
+import io.thoth.server.database.tables.BookField
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.LibraryTable
-import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.insert
-import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.toLibraryRow
 import io.thoth.server.database.tables.toTrackRow
 import io.thoth.server.database.tables.update
-import io.thoth.server.database.tables.write
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.scanner.LibraryEntityModel
 import io.thoth.server.repositories.AuthorRepository
+import io.thoth.server.repositories.AutomaticWrite
 import io.thoth.server.repositories.BookRepository
 import io.thoth.server.repositories.SeriesRepository
 import io.thoth.server.schedules.AutoMatchRequest
@@ -100,12 +100,14 @@ class TrackManager : KoinComponent {
         libraryId: UUID,
     ) = transaction {
         val library = libraryRow(libraryId)
-        val bookId = getOrCreateBook(scan, library)
         val track = TrackTable
             .selectAll()
             .where { TrackTable.path eq scan.path }
             .firstOrNull()
             ?.toTrackRow()
+        val authorIds = getOrCreateAuthors(scan, library)
+        val bookId = getOrCreateBook(scan, authorIds, library)
+        writeFileMetadata(bookId, scan, authorIds, library)
         if (track != null) {
             TrackTable.update(
                 track.copy(
@@ -200,59 +202,62 @@ class TrackManager : KoinComponent {
     context(_: Transaction)
     private fun getOrCreateBook(
         scan: AudioFileAnalysisResult,
+        authorIds: List<UUID>,
         library: LibraryRow,
-    ): UUID {
-        val authorIds = getOrCreateAuthors(scan, library)
-        val book =
-            bookRepository.findByTaggedName(
-                bookTitle = scan.book,
-                authorIds = authorIds,
-                libraryId = library.id,
-            )
-        val bookId =
-            book?.id ?: run {
+    ): UUID =
+        bookRepository.findByTaggedName(bookTitle = scan.book, authorIds = authorIds, libraryId = library.id)?.id
+            ?: run {
                 log.info { "Created new book: ${scan.book}" }
-                BookTable.create(library.id, scan.book).also {
+                BookTable.create(library.id, scan.book, taggedName = scan.book).also {
                     autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.BOOK, it, library.id))
                 }
             }
-        return writeFileLayer(bookId, scan, authorIds, library)
-    }
 
-    // Only ever writes the file layer: whatever the user or a metadata agent said about this book lives in
-    // its own layer and survives any number of rescans.
+    // Tracks of one book that disagree about their tags leave it up to whichever is imported last
     context(_: Transaction)
-    private fun writeFileLayer(
+    private fun writeFileMetadata(
         bookId: UUID,
         scan: AudioFileAnalysisResult,
         authorIds: List<UUID>,
         library: LibraryRow,
-    ): UUID {
-        val seriesId = scan.series?.let { seriesRepository.getOrCreate(it, library.id).id }
-        val file = BookFileMetadataTable.layer(bookId)
-        val genres = normalizeGenres(scan.genres)
-
-        BookFileMetadataTable.write(
-            file.copy(
-                title = scan.book,
-                coverID = getOrCreateImage(scan.cover, file.coverID),
-                language = scan.language,
-                description = scan.description,
-                narrators = scan.narrators,
-                releaseDate = scan.date,
-                genres = genres,
+    ) {
+        val book = BookTable
+            .selectAll()
+            .where { BookTable.id eq bookId }
+            .single()
+            .toBookRow()
+        // An unmatched book has no agent data that preferring the agent could protect
+        val write =
+            AutomaticWrite(
+                book.locked,
+                onlyFillEmpty = !library.preferEmbeddedMetadata && book.provider != null,
+            )
+        BookTable.update(
+            book.copy(
+                title = write.value(BookField.TITLE, book.title) { scan.book },
+                coverID = write.value(BookField.COVER_ID, book.coverID) { getOrCreateImage(scan.cover, it) },
+                language = write.value(BookField.LANGUAGE, book.language) { scan.language },
+                description = write.value(BookField.DESCRIPTION, book.description) { scan.description },
+                narrators = write.value(BookField.NARRATORS, book.narrators) { scan.narrators.ifEmpty { null } },
+                releaseDate = write.value(BookField.RELEASE_DATE, book.releaseDate) { scan.date },
+                genres = write.value(BookField.GENRES, book.genres) { normalizeGenres(scan.genres).ifEmpty { null } },
             ),
         )
-        // The whole file layer is what the last imported track's tags say, relations included. Tracks of one
-        // book that disagree about their series or authors leave it up to whichever is imported last, the same
-        // way they already do for the title or the narrator.
-        replaceBookAuthors(bookId, MetadataLayer.FILE, authorIds)
-        replaceBookSeries(bookId, MetadataLayer.FILE, listOfNotNull(seriesId).associateWith { scan.seriesIndex })
+        // Agents never name authors or series, so for these the files are the only source and only a lock stops them
+        val linkedAuthors =
+            if (write.mayWrite(BookField.AUTHORS)) authorIds.also { replaceBookAuthors(bookId, it) } else emptyList()
+        val linkedSeries =
+            if (write.mayWrite(BookField.SERIES)) {
+                val seriesId = scan.series?.let { seriesRepository.getOrCreate(it, library.id).id }
+                replaceBookSeries(bookId, listOfNotNull(seriesId).associateWith { scan.seriesIndex })
+                listOfNotNull(seriesId)
+            } else {
+                emptyList()
+            }
         // Unset deletion marker, since the book has a track again
         BookTable.update({ BookTable.id eq bookId }) { it[deferDeletionUntil] = null }
-        AuthorTable.update({ AuthorTable.id inList authorIds }) { it[deferDeletionUntil] = null }
-        SeriesTable.update({ SeriesTable.id inList listOfNotNull(seriesId) }) { it[deferDeletionUntil] = null }
-        return bookId
+        AuthorTable.update({ AuthorTable.id inList linkedAuthors }) { it[deferDeletionUntil] = null }
+        SeriesTable.update({ SeriesTable.id inList linkedSeries }) { it[deferDeletionUntil] = null }
     }
 
     // The same genre spelled differently by two files is one genre

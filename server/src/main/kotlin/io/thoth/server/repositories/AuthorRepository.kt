@@ -17,33 +17,23 @@ import io.thoth.server.common.extensions.escape
 import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.rows.AuthorRow
-import io.thoth.server.database.rows.bookAuthors
 import io.thoth.server.database.rows.booksToModels
+import io.thoth.server.database.rows.lockBookField
 import io.thoth.server.database.rows.seriesToModels
 import io.thoth.server.database.rows.toAuthorRow
 import io.thoth.server.database.rows.toBookRow
 import io.thoth.server.database.rows.toSeriesRow
-import io.thoth.server.database.tables.AuthorAgentMetadataTable
+import io.thoth.server.database.rows.update
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorField
-import io.thoth.server.database.tables.AuthorFileMetadataTable
-import io.thoth.server.database.tables.AuthorMetadata
-import io.thoth.server.database.tables.AuthorMetadataRow
 import io.thoth.server.database.tables.AuthorTable
-import io.thoth.server.database.tables.AuthorUserMetadataTable
 import io.thoth.server.database.tables.BookField
 import io.thoth.server.database.tables.BookTable
-import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.authorLayers
+import io.thoth.server.database.tables.authorLinksWithBooks
 import io.thoth.server.database.tables.bookIdsLinkedToAuthor
 import io.thoth.server.database.tables.create
-import io.thoth.server.database.tables.layer
-import io.thoth.server.database.tables.replaceBookAuthors
-import io.thoth.server.database.tables.resolvedAuthorLinks
-import io.thoth.server.database.tables.write
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.MatchableEntity
@@ -51,9 +41,12 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.Instant
@@ -138,8 +131,7 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): AuthorRow =
         transaction {
-            val id = AuthorTable.create(libraryRepository.raw(libraryId).id, authorName)
-            AuthorFileMetadataTable.write(AuthorMetadataRow(author = id, name = authorName))
+            val id = AuthorTable.create(libraryRepository.raw(libraryId).id, authorName, taggedName = authorName)
             autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.AUTHOR, id, libraryId))
             raw(id, libraryId)
         }
@@ -149,14 +141,15 @@ class AuthorServiceImpl :
         libraryId: UUID,
     ): AuthorRow =
         transaction {
-            // Born an orphan: hidden and on the clock until the caller attaches books
+            // Born an orphan: hidden and on the clock until the caller attaches books. The user named it, so a
+            // later match must not rename it.
             val id =
                 AuthorTable.create(
                     libraryRepository.raw(libraryId).id,
                     authorName,
                     deferDeletionUntil = Instant.now().plus(DEFER_DELETION_GRACE),
                 )
-            AuthorUserMetadataTable.write(AuthorMetadataRow(author = id, name = authorName))
+            AuthorTable.update({ AuthorTable.id eq id }) { it[locked] = setOf(AuthorField.NAME) }
             raw(id, libraryId)
         }
 
@@ -165,7 +158,7 @@ class AuthorServiceImpl :
         id: UUID,
         libraryId: UUID,
     ): Author {
-        val (metadataAgent, authorName, region, language) =
+        val (metadataAgent, authorName, region, language, preferFile) =
             transaction {
                 val library = libraryRepository.raw(libraryId)
                 AutoMatchQuery(
@@ -173,6 +166,7 @@ class AuthorServiceImpl :
                     raw(id, libraryId).name,
                     library.region,
                     library.language,
+                    library.preferEmbeddedMetadata,
                 )
             }
         val result =
@@ -182,18 +176,19 @@ class AuthorServiceImpl :
         val newImage = imageDownloader.download(result.imageURL)
 
         return transaction {
-            val agent = AuthorAgentMetadataTable.layer(id)
-            AuthorAgentMetadataTable.write(
-                agent.copy(
-                    name = result.name ?: agent.name,
-                    provider = result.id.provider,
-                    providerID = result.id.itemID,
-                    biography = result.biography ?: agent.biography,
-                    website = result.website ?: agent.website,
-                    bornIn = result.bornIn ?: agent.bornIn,
-                    birthDate = result.birthDate ?: agent.birthDate,
-                    deathDate = result.deathDate ?: agent.deathDate,
-                    imageID = getOrCreateImage(newImage, currentImageID = agent.imageID),
+            val author = raw(id, libraryId)
+            val write = AutomaticWrite(author.locked, onlyFillEmpty = preferFile)
+            AuthorTable.update(
+                author.copy(
+                    name = write.value(AuthorField.NAME, author.name) { result.name },
+                    provider = write.overwrite(AuthorField.PROVIDER, author.provider) { result.id.provider },
+                    providerID = write.overwrite(AuthorField.PROVIDER_ID, author.providerID) { result.id.itemID },
+                    biography = write.value(AuthorField.BIOGRAPHY, author.biography) { result.biography },
+                    website = write.value(AuthorField.WEBSITE, author.website) { result.website },
+                    bornIn = write.value(AuthorField.BORN_IN, author.bornIn) { result.bornIn },
+                    birthDate = write.value(AuthorField.BIRTH_DATE, author.birthDate) { result.birthDate },
+                    deathDate = write.value(AuthorField.DEATH_DATE, author.deathDate) { result.deathDate },
+                    imageID = write.value(AuthorField.IMAGE_ID, author.imageID) { getOrCreateImage(newImage, it) },
                 ),
             )
             raw(id, libraryId).toModel()
@@ -205,6 +200,7 @@ class AuthorServiceImpl :
         val authorName: String,
         val region: MetadataRegion,
         val language: MetadataLanguage,
+        val preferFile: Boolean,
     )
 
     override fun getAll(
@@ -237,16 +233,15 @@ class AuthorServiceImpl :
             if (!showInvisible) requireVisible(AuthorTable, "Author", id)
 
             val books =
-                resolvedAuthorLinks
+                authorLinksWithBooks
                     .selectAll()
                     .where { (AuthorBookTable.author eq id) and BookTable.visible }
                     .orderBy(BookTable.title to SortOrder.ASC)
                     .map { it.toBookRow() }
             val seriesIds =
-                resolvedAuthorLinks
-                    .join(SeriesBookTable, JoinType.INNER, AuthorBookTable.book, SeriesBookTable.book) {
-                        SeriesBookTable.addedBy eq BookTable.seriesFrom
-                    }.select(SeriesBookTable.series)
+                AuthorBookTable
+                    .join(SeriesBookTable, JoinType.INNER, AuthorBookTable.book, SeriesBookTable.book)
+                    .select(SeriesBookTable.series)
                     .where { AuthorBookTable.author eq id }
                     .mapTo(mutableSetOf()) { it[SeriesBookTable.series].value }
             val series =
@@ -260,7 +255,7 @@ class AuthorServiceImpl :
                 author = author.toModel(),
                 books = booksToModels(books, userId),
                 series = seriesToModels(series),
-                overridden = AuthorUserMetadataTable.layer(id).claimed.sorted(),
+                locked = author.locked.sorted(),
             )
         }
 
@@ -274,20 +269,21 @@ class AuthorServiceImpl :
         val newImage =
             imageDownloader.download(partial.image.orElse(null)?.takeUnless { it == currentImage?.toString() })
         return transaction {
-            val edit = LayerEdit(authorLayers(id) ?: throw ErrorResponse.notFound("Author", id), partial.reset)
+            val author = raw(id, libraryId)
+            val edit = UserEdit(author.locked, partial.unlock)
             val image = partial.image.map { it?.let { getOrCreateImage(newImage, currentImageID = currentImage) } }
-            AuthorUserMetadataTable.write(
-                edit.user.copy(
-                    name = edit.value(AuthorField.NAME, partial.name) { name },
-                    provider = edit.value(AuthorField.PROVIDER, partial.provider) { provider },
-                    providerID = edit.value(AuthorField.PROVIDER_ID, partial.providerID) { providerID },
-                    biography = edit.value(AuthorField.BIOGRAPHY, partial.biography) { biography },
-                    website = edit.value(AuthorField.WEBSITE, partial.website) { website },
-                    bornIn = edit.value(AuthorField.BORN_IN, partial.bornIn) { bornIn },
-                    birthDate = edit.value(AuthorField.BIRTH_DATE, partial.birthDate) { birthDate },
-                    deathDate = edit.value(AuthorField.DEATH_DATE, partial.deathDate) { deathDate },
-                    imageID = edit.value(AuthorField.IMAGE_ID, image) { imageID },
-                    claimed = edit.claimed,
+            AuthorTable.update(
+                author.copy(
+                    name = edit.value(AuthorField.NAME, author.name, partial.name),
+                    provider = edit.value(AuthorField.PROVIDER, author.provider, partial.provider),
+                    providerID = edit.value(AuthorField.PROVIDER_ID, author.providerID, partial.providerID),
+                    biography = edit.value(AuthorField.BIOGRAPHY, author.biography, partial.biography),
+                    website = edit.value(AuthorField.WEBSITE, author.website, partial.website),
+                    bornIn = edit.value(AuthorField.BORN_IN, author.bornIn, partial.bornIn),
+                    birthDate = edit.value(AuthorField.BIRTH_DATE, author.birthDate, partial.birthDate),
+                    deathDate = edit.value(AuthorField.DEATH_DATE, author.deathDate, partial.deathDate),
+                    imageID = edit.value(AuthorField.IMAGE_ID, author.imageID, image),
+                    locked = edit.locked,
                 ),
             )
 
@@ -305,17 +301,23 @@ class AuthorServiceImpl :
         authorId: UUID,
         wanted: Set<UUID>,
     ) {
-        val affected = (bookIdsLinkedToAuthor(authorId) + wanted).distinct()
-        val resolved = bookAuthors(affected)
-        affected.forEach { bookId ->
-            val current = resolved[bookId].orEmpty().map { it.id }.toSet()
-            val next = if (bookId in wanted) current + authorId else current - authorId
-            if (next == current) return@forEach
-            if (next.isEmpty()) throw ErrorResponse.userError("A book must have at least one author")
-            replaceBookAuthors(bookId, MetadataLayer.USER, next)
-            val layer = BookUserMetadataTable.layer(bookId)
-            BookUserMetadataTable.write(layer.copy(claimed = layer.claimed + BookField.AUTHORS))
+        val current = bookIdsLinkedToAuthor(authorId).toSet()
+        val removed = current - wanted
+        val added = wanted - current
+        AuthorBookTable.deleteWhere { (author eq authorId) and (book inList removed) }
+        val stillAuthored =
+            AuthorBookTable
+                .select(AuthorBookTable.book)
+                .where { AuthorBookTable.book inList removed }
+                .mapTo(mutableSetOf()) { it[AuthorBookTable.book].value }
+        if (!stillAuthored.containsAll(removed)) throw ErrorResponse.userError("A book must have at least one author")
+        added.forEach { bookId ->
+            AuthorBookTable.insert {
+                it[book] = bookId
+                it[author] = authorId
+            }
         }
+        (removed + added).forEach { lockBookField(it, BookField.AUTHORS) }
     }
 
     override fun total(
@@ -336,20 +338,12 @@ private fun idOfTaggedName(
     pattern: String,
     libraryId: UUID,
 ): UUID? =
-    idInLayer(AuthorFileMetadataTable, pattern, libraryId)
-        ?: idInLayer(AuthorUserMetadataTable, pattern, libraryId)
-        ?: idInLayer(AuthorAgentMetadataTable, pattern, libraryId)
-
-context(_: Transaction)
-private fun idInLayer(
-    table: AuthorMetadata,
-    pattern: String,
-    libraryId: UUID,
-): UUID? =
-    (AuthorTable innerJoin table)
+    AuthorTable
         .select(AuthorTable.id)
-        .where { (table.name ilike pattern) and (AuthorTable.library eq libraryId) }
-        .firstOrNull()
+        .where {
+            ((AuthorTable.name ilike pattern) or (AuthorTable.taggedName ilike pattern)) and
+                (AuthorTable.library eq libraryId)
+        }.firstOrNull()
         ?.get(AuthorTable.id)
         ?.value
 

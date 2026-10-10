@@ -20,4 +20,11 @@ class ReadonlyFileTaggerTest {
         assertEquals(listOf(0L, 2000L, 4000L), tags.chapters.map { it.startMs })
         assertTrue(tags.durationMs > 4000, "the length must cover the last chapter, was ${tags.durationMs}ms")
     }
+
+    @Test
+    fun `a chapter whose title is only whitespace has no title`() {
+        val tags = ReadonlyFileTagger(taglibFixture("blank-chapter.m4b"))
+
+        assertEquals(listOf("Chapter One", null, "Chapter Three"), tags.chapters.map { it.title })
+    }
 }

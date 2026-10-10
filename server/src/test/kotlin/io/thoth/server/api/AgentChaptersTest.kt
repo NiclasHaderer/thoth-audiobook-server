@@ -2,12 +2,15 @@ package io.thoth.server.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.ApplicationTestBuilder
+import io.thoth.client.gen.models.BookUpdateImpl
+import io.thoth.client.gen.models.ChapterMarkImpl
 import io.thoth.metadata.FakeMetadataAgent
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.searchHit
 import io.thoth.models.ChapterMark
 import io.thoth.models.NamedMetadataAgent
+import io.thoth.openapi.common.Patch
 import io.thoth.server.ThothTest
 import io.thoth.server.api
 import io.thoth.server.bearer
@@ -38,6 +41,7 @@ class AgentChaptersTest : ThothTest() {
     private suspend fun ApplicationTestBuilder.matchedChapterTitles(
         preferEmbeddedMetadata: Boolean = false,
         trackChapters: List<TrackChapter> = emptyList(),
+        edited: List<ChapterMarkImpl>? = null,
     ): List<String?> {
         val name = "lib-$preferEmbeddedMetadata"
         val libId =
@@ -49,6 +53,7 @@ class AgentChaptersTest : ThothTest() {
         val bookId = newBook("Dune", libId, authors = listOf(newAuthor("Frank Herbert", libId)))
         newTrack("Dune", "/media/$name/dune.m4b", bookId, libId, durationMs = 60_000, chapters = trackChapters)
         val token = bearer(login("admin"))
+        if (edited != null) api.updateBook(bookId, libId, BookUpdateImpl(chapters = Patch.Set(edited)), token)
 
         assertEquals(HttpStatusCode.OK, api.autoMatchBook(bookId, libId, token).status)
 
@@ -65,6 +70,17 @@ class AgentChaptersTest : ThothTest() {
             useAgent(runtimeMs = 60_000 + 9_000)
 
             assertEquals(listOf("Prologue", "Arrakis"), matchedChapterTitles())
+        }
+
+    @Test
+    fun `a match leaves edited chapters alone`() =
+        thothServer {
+            useAgent(runtimeMs = 60_000)
+
+            assertEquals(
+                listOf("Mine"),
+                matchedChapterTitles(edited = listOf(ChapterMarkImpl(startMs = 0, title = "Mine"))),
+            )
         }
 
     @Test
