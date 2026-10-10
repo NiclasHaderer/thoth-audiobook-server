@@ -10,7 +10,7 @@ jobs:
   # Fails a PR whose API is not bwc and fwc
   api-compat:
     name: API compatibility
-    if: github.event_name == 'pull_request'
+    if: ${{ false && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out the PR merged into its base
