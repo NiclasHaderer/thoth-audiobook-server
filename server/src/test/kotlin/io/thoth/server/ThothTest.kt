@@ -1,12 +1,10 @@
 package io.thoth.server
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.zaxxer.hikari.HikariDataSource
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.DatabaseConnector
 import io.thoth.server.database.migrations.DatabaseMigrator
 import io.thoth.server.database.sqliteDataSource
-import io.thoth.server.di.serialization.JacksonSerialization
 import io.thoth.server.di.thothModule
 import io.thoth.server.file.scanner.LibraryImportPipeline
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -40,8 +38,6 @@ abstract class ThothTest(
         dataDir = createTempDirectory("thoth-test")
         config = configure(dataDir)
         startKoin { modules(thothModule(config)) }
-        // Ktor normally supplies the mapper through configureSerialization, which no test installs.
-        getKoin().get<JacksonSerialization>().objectMapper = jacksonObjectMapper()
 
         dataSource = sqliteDataSource(config.sqliteFile, config.importThreads, busyTimeoutMillis = 500)
         database = DatabaseConnector.connect(dataSource)
