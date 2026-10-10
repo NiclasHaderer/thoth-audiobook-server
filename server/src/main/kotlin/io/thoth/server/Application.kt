@@ -24,6 +24,7 @@ import io.thoth.server.api.pingRouting
 import io.thoth.server.api.progressRouting
 import io.thoth.server.api.scannerRouting
 import io.thoth.server.api.seriesRouting
+import io.thoth.server.api.versionRouting
 import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.database.DatabaseConnector
@@ -117,6 +118,7 @@ fun Application.routing() {
 
         // Routes for checking if the server is available
         pingRouting()
+        versionRouting()
 
         // Attribution for the dependencies shipped in the jar
         licenseRouting()
