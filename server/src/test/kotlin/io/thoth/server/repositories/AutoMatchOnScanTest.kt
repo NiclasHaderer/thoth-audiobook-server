@@ -24,6 +24,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class AutoMatchOnScanTest : ThothTest() {
@@ -55,10 +56,16 @@ class AutoMatchOnScanTest : ThothTest() {
 
     @Test
     fun `a new library matches its books against its metadata agent`() {
+        // The author is read from the folder above the series, and a match is only accepted for that author
+        val root = dataDir.resolve("library")
+        testResources
+            .resolve("Dan Brown/Robert Langdon")
+            .toFile()
+            .copyRecursively(root.resolve("Dan Brown/Robert Langdon").toFile())
         val libId =
             newLibrary(
                 "fake",
-                folders = listOf(testResources.resolve("Dan Brown").absolutePathString()),
+                folders = listOf(root.absolutePathString()),
                 metadataAgents = listOf(NamedMetadataAgent("fake")),
             )
 
@@ -86,7 +93,7 @@ class AutoMatchOnScanTest : ThothTest() {
         val deadline = System.nanoTime() + timeout.inWholeNanoseconds
         while (System.nanoTime() < deadline) {
             if (until()) return@runBlocking
-            delay(50)
+            delay(50.milliseconds)
         }
         throw AssertionError("Timed out waiting for: ${describe()}")
     }

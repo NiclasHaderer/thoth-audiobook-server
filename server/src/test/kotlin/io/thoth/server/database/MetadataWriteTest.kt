@@ -156,13 +156,17 @@ class MetadataWriteTest : ThothTest() {
 
     @Test
     fun `a match neither touches a locked field nor overwrites the files the library prefers`() {
+        val hit = searchHit("A Book", authors = listOf("An Author"))
         val agent =
             FakeMetadataAgent(
-                hits = listOf(searchHit("A Book", authors = listOf("An Author"))),
+                hits = listOf(hit),
                 resolveBook = {
-                    testBook(
-                        it,
-                    ).copy(title = "Agent Title", description = "From the agent", isbn = "123")
+                    testBook(it).copy(
+                        title = "Agent Title",
+                        authors = hit.authors,
+                        description = "From the agent",
+                        isbn = "123",
+                    )
                 },
             )
         useAgent(agent)
@@ -434,10 +438,11 @@ class MetadataWriteTest : ThothTest() {
 
     @Test
     fun `an edited field survives a match and follows the next one once unlocked`() {
+        val hit = searchHit("A Book", authors = listOf("An Author"))
         useAgent(
             FakeMetadataAgent(
-                hits = listOf(searchHit("A Book", authors = listOf("An Author"))),
-                resolveBook = { testBook(it).copy(description = "From the agent") },
+                hits = listOf(hit),
+                resolveBook = { testBook(it).copy(authors = hit.authors, description = "From the agent") },
             ),
         )
         trackManager.insert(scan(description = "From the tags"), libId)
