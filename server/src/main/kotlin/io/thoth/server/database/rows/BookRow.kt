@@ -8,14 +8,13 @@ import io.thoth.models.PlayStatus
 import io.thoth.models.TitledId
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
+import io.thoth.server.database.tables.BookField
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.UserBookProgressRow
 import io.thoth.server.database.tables.UserBookProgressTable
-import io.thoth.server.database.tables.resolvedAuthorLinks
-import io.thoth.server.database.tables.resolvedSeriesLinks
 import io.thoth.server.database.tables.toUserBookProgressRow
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -27,6 +26,7 @@ import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.sum
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import java.time.LocalDate
 import java.util.UUID
 
@@ -34,18 +34,20 @@ data class BookRow(
     val id: UUID,
     val library: UUID,
     val title: String,
+    val taggedName: String?,
     val releaseDate: LocalDate?,
     val publisher: String?,
     val language: MetadataLanguage?,
     val description: String?,
-    val narrators: List<String>,
+    val narrators: List<String>?,
     val isbn: String?,
     val provider: String?,
     val providerID: String?,
     val providerRating: Float?,
     val coverID: UUID?,
-    val genres: List<String>,
+    val genres: List<String>?,
     val chapters: List<ChapterMark>?,
+    val locked: Set<BookField>,
 )
 
 fun ResultRow.toBookRow(): BookRow =
@@ -53,19 +55,51 @@ fun ResultRow.toBookRow(): BookRow =
         id = this[BookTable.id].value,
         library = this[BookTable.library].value,
         title = this[BookTable.title],
+        taggedName = this[BookTable.taggedName],
         releaseDate = this[BookTable.releaseDate],
         publisher = this[BookTable.publisher],
         language = this[BookTable.language],
         description = this[BookTable.description],
-        narrators = this[BookTable.narrators].orEmpty(),
+        narrators = this[BookTable.narrators],
         isbn = this[BookTable.isbn],
         provider = this[BookTable.provider],
         providerID = this[BookTable.providerId],
         providerRating = this[BookTable.providerRating],
         coverID = this[BookTable.coverId]?.value,
-        genres = this[BookTable.genres].orEmpty(),
+        genres = this[BookTable.genres],
         chapters = this[BookTable.chapters],
+        locked = this[BookTable.locked],
     )
+
+context(_: Transaction)
+fun BookTable.update(row: BookRow) {
+    update({ id eq row.id }) {
+        it[name] = row.title
+        it[taggedName] = row.taggedName
+        it[releaseDate] = row.releaseDate
+        it[publisher] = row.publisher
+        it[language] = row.language
+        it[description] = row.description
+        it[narrators] = row.narrators
+        it[isbn] = row.isbn
+        it[provider] = row.provider
+        it[providerId] = row.providerID
+        it[providerRating] = row.providerRating
+        it[coverId] = row.coverID
+        it[genres] = row.genres
+        it[chapters] = row.chapters
+        it[locked] = row.locked
+    }
+}
+
+context(_: Transaction)
+fun lockBookField(
+    bookId: UUID,
+    field: BookField,
+) {
+    val locked = BookTable.select(BookTable.locked).where { BookTable.id eq bookId }.single()[BookTable.locked]
+    BookTable.update({ BookTable.id eq bookId }) { it[BookTable.locked] = locked + field }
+}
 
 context(_: Transaction)
 fun BookRow.toModel(
@@ -99,7 +133,7 @@ fun booksToModels(
             providerRating = row.providerRating,
             coverID = row.coverID,
             releaseDate = row.releaseDate,
-            narrators = row.narrators,
+            narrators = row.narrators.orEmpty(),
             isbn = row.isbn,
             language = row.language,
             publisher = row.publisher,
@@ -111,7 +145,7 @@ fun booksToModels(
                 (series[row.id] ?: emptyList())
                     .sortedBy { it.title.lowercase() }
                     .let { if (seriesOrder == SortOrder.DESC) it.reversed() else it },
-            genres = row.genres,
+            genres = row.genres.orEmpty(),
             durationMs = durations[row.id] ?: 0,
             positionMs = bookProgress?.positionMs ?: 0,
             status = bookProgress?.status ?: PlayStatus.UNPLAYED,
@@ -141,7 +175,7 @@ fun bookProgress(
 
 context(_: Transaction)
 fun bookAuthors(bookIds: List<UUID>): Map<UUID, List<NamedId>> =
-    resolvedAuthorLinks
+    AuthorBookTable
         .join(AuthorTable, JoinType.INNER, AuthorBookTable.author, AuthorTable.id)
         .select(AuthorBookTable.book, AuthorTable.id, AuthorTable.name)
         .where { AuthorBookTable.book inList bookIds }
@@ -151,7 +185,7 @@ fun bookAuthors(bookIds: List<UUID>): Map<UUID, List<NamedId>> =
 
 context(_: Transaction)
 fun bookSeries(bookIds: List<UUID>): Map<UUID, List<TitledId>> =
-    resolvedSeriesLinks
+    SeriesBookTable
         .join(SeriesTable, JoinType.INNER, SeriesBookTable.series, SeriesTable.id)
         .select(SeriesBookTable.book, SeriesTable.id, SeriesTable.title)
         .where { SeriesBookTable.book inList bookIds }

@@ -19,33 +19,23 @@ import io.thoth.server.common.extensions.ilike
 import io.thoth.server.database.access.getOrCreateImage
 import io.thoth.server.database.rows.BookRow
 import io.thoth.server.database.rows.SeriesRow
-import io.thoth.server.database.rows.bookSeries
 import io.thoth.server.database.rows.booksToModels
+import io.thoth.server.database.rows.lockBookField
 import io.thoth.server.database.rows.seriesToModels
 import io.thoth.server.database.rows.toBookRow
 import io.thoth.server.database.rows.toModel
 import io.thoth.server.database.rows.toSeriesRow
+import io.thoth.server.database.rows.update
 import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookField
 import io.thoth.server.database.tables.BookTable
-import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.MetadataLayer
-import io.thoth.server.database.tables.SeriesAgentMetadataTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesField
-import io.thoth.server.database.tables.SeriesFileMetadataTable
-import io.thoth.server.database.tables.SeriesMetadata
-import io.thoth.server.database.tables.SeriesMetadataRow
 import io.thoth.server.database.tables.SeriesTable
-import io.thoth.server.database.tables.SeriesUserMetadataTable
 import io.thoth.server.database.tables.bookIdsLinkedToSeries
 import io.thoth.server.database.tables.create
-import io.thoth.server.database.tables.layer
-import io.thoth.server.database.tables.replaceBookSeries
-import io.thoth.server.database.tables.resolvedSeriesLinks
-import io.thoth.server.database.tables.seriesLayers
-import io.thoth.server.database.tables.write
+import io.thoth.server.database.tables.seriesLinksWithBooks
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.MatchableEntity
@@ -53,9 +43,12 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.Instant
@@ -130,8 +123,8 @@ class SeriesRepositoryImpl :
 
             SeriesDetailed.fromModel(
                 series = series.toModel(),
-                books = booksToModels(resolvedBooks(id), userId),
-                overridden = SeriesUserMetadataTable.layer(id).claimed.sorted(),
+                books = booksToModels(linkedBooks(id), userId),
+                locked = series.locked.sorted(),
             )
         }
 
@@ -185,8 +178,7 @@ class SeriesRepositoryImpl :
     ): SeriesRow =
         transaction {
             log.info { "Created series: $seriesName" }
-            val id = SeriesTable.create(libraryRepository.raw(libraryId).id, seriesName)
-            SeriesFileMetadataTable.write(SeriesMetadataRow(series = id, title = seriesName))
+            val id = SeriesTable.create(libraryRepository.raw(libraryId).id, seriesName, taggedName = seriesName)
             autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.SERIES, id, libraryId))
             raw(id, libraryId)
         }
@@ -196,14 +188,15 @@ class SeriesRepositoryImpl :
         libraryId: UUID,
     ): SeriesRow =
         transaction {
-            // Born an orphan: hidden and on the clock until the caller attaches books
+            // Born an orphan: hidden and on the clock until the caller attaches books. The user named it, so a
+            // later match must not rename it.
             val id =
                 SeriesTable.create(
                     libraryRepository.raw(libraryId).id,
                     seriesName,
                     deferDeletionUntil = Instant.now().plus(DEFER_DELETION_GRACE),
                 )
-            SeriesUserMetadataTable.write(SeriesMetadataRow(series = id, title = seriesName))
+            SeriesTable.update({ SeriesTable.id eq id }) { it[locked] = setOf(SeriesField.TITLE) }
             raw(id, libraryId)
         }
 
@@ -217,18 +210,19 @@ class SeriesRepositoryImpl :
         val newCover =
             imageDownloader.download(partial.cover.orElse(null)?.takeUnless { it == currentCover?.toString() })
         return transaction {
-            val edit = LayerEdit(seriesLayers(id) ?: throw ErrorResponse.notFound("Series", id), partial.reset)
+            val series = raw(id, libraryId)
+            val edit = UserEdit(series.locked, partial.unlock)
             val cover = partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } }
-            SeriesUserMetadataTable.write(
-                edit.user.copy(
-                    title = edit.value(SeriesField.TITLE, partial.title) { title },
-                    provider = edit.value(SeriesField.PROVIDER, partial.provider) { provider },
-                    providerID = edit.value(SeriesField.PROVIDER_ID, partial.providerID) { providerID },
-                    totalBooks = edit.value(SeriesField.TOTAL_BOOKS, partial.totalBooks) { totalBooks },
-                    primaryWorks = edit.value(SeriesField.PRIMARY_WORKS, partial.primaryWorks) { primaryWorks },
-                    coverID = edit.value(SeriesField.COVER_ID, cover) { coverID },
-                    description = edit.value(SeriesField.DESCRIPTION, partial.description) { description },
-                    claimed = edit.claimed,
+            SeriesTable.update(
+                series.copy(
+                    title = edit.value(SeriesField.TITLE, series.title, partial.title),
+                    provider = edit.value(SeriesField.PROVIDER, series.provider, partial.provider),
+                    providerID = edit.value(SeriesField.PROVIDER_ID, series.providerID, partial.providerID),
+                    totalBooks = edit.value(SeriesField.TOTAL_BOOKS, series.totalBooks, partial.totalBooks),
+                    primaryWorks = edit.value(SeriesField.PRIMARY_WORKS, series.primaryWorks, partial.primaryWorks),
+                    coverID = edit.value(SeriesField.COVER_ID, series.coverID, cover),
+                    description = edit.value(SeriesField.DESCRIPTION, series.description, partial.description),
+                    locked = edit.locked,
                 ),
             )
 
@@ -246,24 +240,24 @@ class SeriesRepositoryImpl :
         seriesId: UUID,
         wanted: Set<UUID>,
     ) {
-        // Every layer counts here, not just the winning one: dropping a book from the series has to write a
-        // user layer for a book whose file tags still name it, or the next scan puts it straight back.
-        val affected = (bookIdsLinkedToSeries(seriesId) + wanted).distinct()
-        // Read the current membership before writing, so each book keeps the series it already resolved to
-        val resolved = bookSeries(affected)
-        affected.forEach { bookId ->
-            val current = resolved[bookId].orEmpty().map { it.id }.toSet()
-            val next = if (bookId in wanted) current + seriesId else current - seriesId
-            if (next == current) return@forEach
-            replaceBookSeries(bookId, MetadataLayer.USER, next.associateWith { null })
-            val layer = BookUserMetadataTable.layer(bookId)
-            BookUserMetadataTable.write(layer.copy(claimed = layer.claimed + BookField.SERIES))
+        val current = bookIdsLinkedToSeries(seriesId).toSet()
+        val removed = current - wanted
+        val added = wanted - current
+        SeriesBookTable.deleteWhere { (series eq seriesId) and (book inList removed) }
+        added.forEach { bookId ->
+            SeriesBookTable.insert {
+                it[book] = bookId
+                it[series] = seriesId
+            }
         }
+        // Dropping a book from the series locks its series, or the next scan of a file that still names it puts it
+        // straight back.
+        (removed + added).forEach { lockBookField(it, BookField.SERIES) }
     }
 
     context(_: Transaction)
-    private fun resolvedBooks(seriesId: UUID): List<BookRow> =
-        resolvedSeriesLinks
+    private fun linkedBooks(seriesId: UUID): List<BookRow> =
+        seriesLinksWithBooks
             .selectAll()
             .where { (SeriesBookTable.series eq seriesId) and BookTable.visible }
             .orderBy(BookTable.title to SortOrder.ASC)
@@ -274,7 +268,7 @@ class SeriesRepositoryImpl :
         id: UUID,
         libraryId: UUID,
     ): Series {
-        val (metadataWrapper, title, region, authorName, language) =
+        val (metadataWrapper, title, region, authorName, language, preferFile) =
             transaction {
                 val series = raw(id, libraryId)
                 val library = libraryRepository.raw(libraryId)
@@ -284,6 +278,7 @@ class SeriesRepositoryImpl :
                     library.region,
                     seriesAuthorNames(id).joinToString(", "),
                     library.language,
+                    library.preferEmbeddedMetadata,
                 )
             }
 
@@ -294,16 +289,20 @@ class SeriesRepositoryImpl :
 
         val newCover = imageDownloader.download(seriesMetadata.coverURL)
         return transaction {
-            val agent = SeriesAgentMetadataTable.layer(id)
-            SeriesAgentMetadataTable.write(
-                agent.copy(
-                    title = seriesMetadata.title ?: agent.title,
-                    provider = seriesMetadata.id.provider,
-                    providerID = seriesMetadata.id.itemID,
-                    totalBooks = seriesMetadata.totalBooks ?: agent.totalBooks,
-                    primaryWorks = seriesMetadata.primaryWorks ?: agent.primaryWorks,
-                    description = seriesMetadata.description ?: agent.description,
-                    coverID = getOrCreateImage(newCover, currentImageID = agent.coverID),
+            val series = raw(id, libraryId)
+            val write = AutomaticWrite(series.locked, onlyFillEmpty = preferFile)
+            SeriesTable.update(
+                series.copy(
+                    title = write.value(SeriesField.TITLE, series.title) { seriesMetadata.title },
+                    provider = write.overwrite(SeriesField.PROVIDER, series.provider) { seriesMetadata.id.provider },
+                    providerID =
+                        write.overwrite(SeriesField.PROVIDER_ID, series.providerID) { seriesMetadata.id.itemID },
+                    totalBooks = write.value(SeriesField.TOTAL_BOOKS, series.totalBooks) { seriesMetadata.totalBooks },
+                    primaryWorks =
+                        write.value(SeriesField.PRIMARY_WORKS, series.primaryWorks) { seriesMetadata.primaryWorks },
+                    description =
+                        write.value(SeriesField.DESCRIPTION, series.description) { seriesMetadata.description },
+                    coverID = write.value(SeriesField.COVER_ID, series.coverID) { getOrCreateImage(newCover, it) },
                 ),
             )
             raw(id, libraryId).toModel()
@@ -311,10 +310,9 @@ class SeriesRepositoryImpl :
     }
 
     private fun seriesAuthorNames(seriesId: UUID): List<String> =
-        resolvedSeriesLinks
-            .join(AuthorBookTable, JoinType.INNER, SeriesBookTable.book, AuthorBookTable.book) {
-                AuthorBookTable.addedBy eq BookTable.authorsFrom
-            }.join(AuthorTable, JoinType.INNER, AuthorBookTable.author, AuthorTable.id)
+        SeriesBookTable
+            .join(AuthorBookTable, JoinType.INNER, SeriesBookTable.book, AuthorBookTable.book)
+            .join(AuthorTable, JoinType.INNER, AuthorBookTable.author, AuthorTable.id)
             .select(AuthorTable.name)
             .where { SeriesBookTable.series eq seriesId }
             .map { it[AuthorTable.name] }
@@ -326,6 +324,7 @@ class SeriesRepositoryImpl :
         val region: MetadataRegion,
         val authorName: String,
         val language: MetadataLanguage,
+        val preferFile: Boolean,
     )
 
     override fun total(
@@ -346,20 +345,12 @@ private fun idOfTaggedName(
     pattern: String,
     libraryId: UUID,
 ): UUID? =
-    idInLayer(SeriesFileMetadataTable, pattern, libraryId)
-        ?: idInLayer(SeriesUserMetadataTable, pattern, libraryId)
-        ?: idInLayer(SeriesAgentMetadataTable, pattern, libraryId)
-
-context(_: Transaction)
-private fun idInLayer(
-    table: SeriesMetadata,
-    pattern: String,
-    libraryId: UUID,
-): UUID? =
-    (SeriesTable innerJoin table)
+    SeriesTable
         .select(SeriesTable.id)
-        .where { (table.title ilike pattern) and (SeriesTable.library eq libraryId) }
-        .firstOrNull()
+        .where {
+            ((SeriesTable.title ilike pattern) or (SeriesTable.taggedName ilike pattern)) and
+                (SeriesTable.library eq libraryId)
+        }.firstOrNull()
         ?.get(SeriesTable.id)
         ?.value
 

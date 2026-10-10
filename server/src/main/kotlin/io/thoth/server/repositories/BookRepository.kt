@@ -27,26 +27,18 @@ import io.thoth.server.database.rows.bookSeries
 import io.thoth.server.database.rows.booksToModels
 import io.thoth.server.database.rows.toBookRow
 import io.thoth.server.database.rows.toModel
+import io.thoth.server.database.rows.update
 import io.thoth.server.database.tables.AuthorBookTable
-import io.thoth.server.database.tables.BookAgentMetadataTable
 import io.thoth.server.database.tables.BookField
-import io.thoth.server.database.tables.BookFileMetadataTable
-import io.thoth.server.database.tables.BookMetadata
-import io.thoth.server.database.tables.BookMetadataRow
 import io.thoth.server.database.tables.BookTable
-import io.thoth.server.database.tables.BookUserMetadataTable
-import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.authorIdsLinkedToBook
-import io.thoth.server.database.tables.bookLayers
 import io.thoth.server.database.tables.create
-import io.thoth.server.database.tables.layer
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.seriesIdsLinkedToBook
 import io.thoth.server.database.tables.toTrackRow
-import io.thoth.server.database.tables.write
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.MatchableEntity
@@ -159,18 +151,13 @@ class BookRepositoryImpl :
             if (!showInvisible) requireVisible(BookTable, "Book", id)
             val ordered = orderedTracks(id)
             val tracks = ordered.map { (row, _) -> row }
-            // The file layer never holds chapters, so a library preferring the files has to be honoured here. Only
-            // markers count: one chapter per file is a fallback, not something the files say about the book.
-            val filesWin =
-                hasEmbeddedChapters(tracks) && BookUserMetadataTable.layer(id).chapters == null &&
-                    libraryRepository.raw(libraryId).preferEmbeddedMetadata
-            val marks = book.chapters?.takeUnless { filesWin } ?: fileChapterMarks(tracks)
+            val marks = book.chapters ?: fileChapterMarks(tracks)
             val bookRef = TitledId(book.id, book.title)
             BookDetailed.fromModel(
                 book = book.toModel(userId),
                 tracks = ordered.map { (row, trackNr) -> row.toModel(bookRef, trackNr) },
                 chapters = buildChapters(marks, tracks),
-                overridden = BookUserMetadataTable.layer(id).claimed.sorted(),
+                locked = book.locked.sorted(),
             )
         }
 
@@ -218,11 +205,10 @@ class BookRepositoryImpl :
         val newCover =
             imageDownloader.download(partial.cover.orElse(null)?.takeUnless { it == currentCover?.toString() })
         return transaction {
-            val edit = LayerEdit(bookLayers(id) ?: throw ErrorResponse.notFound("Book", id), partial.reset)
-            val authors =
-                edit.links(BookField.AUTHORS, partial.authors, bookAuthors(listOf(id))[id].orEmpty().map { it.id })
-            val series =
-                edit.links(BookField.SERIES, partial.series, bookSeries(listOf(id))[id].orEmpty().map { it.id })
+            val book = raw(id, libraryId)
+            val edit = UserEdit(book.locked, partial.unlock)
+            val authors = edit.links(BookField.AUTHORS, authorIdsLinkedToBook(id), partial.authors)
+            val series = edit.links(BookField.SERIES, seriesIdsLinkedToBook(id), partial.series)
             val cover = partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } }
             partial.chapters.ifSet { marks ->
                 val durationMs = orderedTracks(id).sumOf { (row, _) -> row.durationMs }
@@ -233,35 +219,40 @@ class BookRepositoryImpl :
                     )
                 }
             }
-            BookUserMetadataTable.write(
-                edit.user.copy(
-                    title = edit.value(BookField.TITLE, partial.title) { title },
-                    provider = edit.value(BookField.PROVIDER, partial.provider) { provider },
-                    providerID = edit.value(BookField.PROVIDER_ID, partial.providerID) { providerID },
-                    providerRating = edit.value(BookField.PROVIDER_RATING, partial.providerRating) { providerRating },
-                    releaseDate = edit.value(BookField.RELEASE_DATE, partial.releaseDate) { releaseDate },
-                    publisher = edit.value(BookField.PUBLISHER, partial.publisher) { publisher },
-                    language = edit.value(BookField.LANGUAGE, partial.language) { language },
-                    description = edit.value(BookField.DESCRIPTION, partial.description) { description },
-                    narrators = edit.value(BookField.NARRATORS, partial.narrators) { narrators },
-                    genres = edit.value(BookField.GENRES, partial.genres) { genres },
-                    isbn = edit.value(BookField.ISBN, partial.isbn) { isbn },
-                    coverID = edit.value(BookField.COVER_ID, cover) { coverID },
-                    chapters = edit.value(BookField.CHAPTERS, partial.chapters) { chapters },
-                    claimed = edit.claimed,
+            // Unlike the other fields, unlocked chapters have no value to keep: what the files say is not stored,
+            // so the user's chapters have to go for the files' to come back
+            val unlocksChapters =
+                BookField.CHAPTERS in book.locked && BookField.CHAPTERS in partial.unlock.orElse(emptyList())
+            val chapters = edit.value(BookField.CHAPTERS, book.chapters, partial.chapters)
+            BookTable.update(
+                book.copy(
+                    title = edit.value(BookField.TITLE, book.title, partial.title),
+                    provider = edit.value(BookField.PROVIDER, book.provider, partial.provider),
+                    providerID = edit.value(BookField.PROVIDER_ID, book.providerID, partial.providerID),
+                    providerRating = edit.value(BookField.PROVIDER_RATING, book.providerRating, partial.providerRating),
+                    releaseDate = edit.value(BookField.RELEASE_DATE, book.releaseDate, partial.releaseDate),
+                    publisher = edit.value(BookField.PUBLISHER, book.publisher, partial.publisher),
+                    language = edit.value(BookField.LANGUAGE, book.language, partial.language),
+                    description = edit.value(BookField.DESCRIPTION, book.description, partial.description),
+                    narrators = edit.value(BookField.NARRATORS, book.narrators, partial.narrators),
+                    genres = edit.value(BookField.GENRES, book.genres, partial.genres),
+                    isbn = edit.value(BookField.ISBN, book.isbn, partial.isbn),
+                    coverID = edit.value(BookField.COVER_ID, book.coverID, cover),
+                    chapters = chapters.takeUnless { unlocksChapters },
+                    locked = edit.locked,
                 ),
             )
             // Both ends of the change: whoever lost the book can be an orphan now, whoever gained it is not
             if (authors != null) {
                 val authorIds = authors.map { authorRepository.raw(it, libraryId).id }
                 val touched = authorIdsLinkedToBook(id) + authorIds
-                replaceBookAuthors(id, MetadataLayer.USER, authorIds)
+                replaceBookAuthors(id, authorIds)
                 refreshAuthorDeferral(touched)
             }
             if (series != null) {
                 val seriesIds = series.map { seriesRepository.raw(it, libraryId).id }
                 val touched = seriesIdsLinkedToBook(id) + seriesIds
-                replaceBookSeries(id, MetadataLayer.USER, seriesIds.associateWith { null })
+                replaceBookSeries(id, seriesIds.associateWith { null })
                 refreshSeriesDeferral(touched)
             }
             raw(id, libraryId).toModel(userId)
@@ -275,10 +266,9 @@ class BookRepositoryImpl :
         series: List<UUID>,
     ): BookRow =
         transaction {
-            val id = BookTable.create(libraryRepository.raw(libraryId).id, bookName)
-            BookFileMetadataTable.write(BookMetadataRow(book = id, title = bookName))
-            replaceBookAuthors(id, MetadataLayer.FILE, authors)
-            replaceBookSeries(id, MetadataLayer.FILE, series.associateWith { null })
+            val id = BookTable.create(libraryRepository.raw(libraryId).id, bookName, taggedName = bookName)
+            replaceBookAuthors(id, authors)
+            replaceBookSeries(id, series.associateWith { null })
             autoMatcher.matchOnCommit(AutoMatchRequest(MatchableEntity.BOOK, id, libraryId))
             raw(id, libraryId)
         }
@@ -298,7 +288,7 @@ class BookRepositoryImpl :
         id: UUID,
         libraryId: UUID,
     ): Book {
-        val (metadataWrapper, bookName, region, authorName, language, narrator) =
+        val (metadataWrapper, bookName, region, authorName, language, narrator, preferFile) =
             transaction {
                 val book = raw(id, libraryId)
                 val library = libraryRepository.raw(libraryId)
@@ -308,7 +298,8 @@ class BookRepositoryImpl :
                     library.region,
                     bookAuthors(listOf(id))[id].orEmpty().joinToString(", ") { it.name },
                     book.language ?: library.language,
-                    book.narrators.firstOrNull(),
+                    book.narrators?.firstOrNull(),
+                    library.preferEmbeddedMetadata,
                 )
             }
 
@@ -331,22 +322,33 @@ class BookRepositoryImpl :
         // rename a shared author, changing every other book by them, or mint a duplicate. Improving an
         // author or series name is its own match, against its own id.
         return transaction {
-            val agent = BookAgentMetadataTable.layer(id)
-            val durationMs = orderedTracks(id).sumOf { (row, _) -> row.durationMs }
-            BookAgentMetadataTable.write(
-                agent.copy(
-                    title = bookMetadata.title ?: agent.title,
-                    provider = bookMetadata.id.provider,
-                    providerID = bookMetadata.id.itemID,
-                    providerRating = bookMetadata.providerRating ?: agent.providerRating,
-                    releaseDate = bookMetadata.releaseDate ?: agent.releaseDate,
-                    publisher = bookMetadata.publisher ?: agent.publisher,
-                    language = bookMetadata.language ?: agent.language,
-                    description = bookMetadata.description ?: agent.description,
-                    narrators = bookMetadata.narrators.ifEmpty { null } ?: agent.narrators,
-                    isbn = bookMetadata.isbn ?: agent.isbn,
-                    coverID = getOrCreateImage(newCover, currentImageID = agent.coverID),
-                    chapters = matchedChapters?.fitting(durationMs) ?: agent.chapters,
+            val book = raw(id, libraryId)
+            val tracks = orderedTracks(id).map { (row, _) -> row }
+            val durationMs = tracks.sumOf { it.durationMs }
+            // A scan never stores chapters, so a library preferring the files is honoured by not storing the
+            // agent's. Only markers count: one chapter per file is a fallback, not something the files say about
+            // the book.
+            val filesWin = preferFile && hasEmbeddedChapters(tracks)
+            val write = AutomaticWrite(book.locked, onlyFillEmpty = preferFile)
+            BookTable.update(
+                book.copy(
+                    title = write.value(BookField.TITLE, book.title) { bookMetadata.title },
+                    provider = write.overwrite(BookField.PROVIDER, book.provider) { bookMetadata.id.provider },
+                    providerID = write.overwrite(BookField.PROVIDER_ID, book.providerID) { bookMetadata.id.itemID },
+                    providerRating =
+                        write.value(BookField.PROVIDER_RATING, book.providerRating) { bookMetadata.providerRating },
+                    releaseDate = write.value(BookField.RELEASE_DATE, book.releaseDate) { bookMetadata.releaseDate },
+                    publisher = write.value(BookField.PUBLISHER, book.publisher) { bookMetadata.publisher },
+                    language = write.value(BookField.LANGUAGE, book.language) { bookMetadata.language },
+                    description = write.value(BookField.DESCRIPTION, book.description) { bookMetadata.description },
+                    narrators =
+                        write.value(BookField.NARRATORS, book.narrators) { bookMetadata.narrators.ifEmpty { null } },
+                    isbn = write.value(BookField.ISBN, book.isbn) { bookMetadata.isbn },
+                    coverID = write.value(BookField.COVER_ID, book.coverID) { getOrCreateImage(newCover, it) },
+                    chapters =
+                        write.value(BookField.CHAPTERS, book.chapters) {
+                            matchedChapters?.fitting(durationMs)?.takeUnless { filesWin }
+                        },
                 ),
             )
             raw(id, libraryId).toModel(userId)
@@ -360,30 +362,24 @@ class BookRepositoryImpl :
         val authorName: String,
         val language: MetadataLanguage,
         val narrator: String?,
+        val preferFile: Boolean,
     )
 }
 
+// The current title or the one the files use, by one of the tagged authors. Any link counts: a user may have
+// edited the authors since, but a book that shares none of them is somebody else's book of the same name.
 context(_: Transaction)
 private fun idOfTaggedName(
     pattern: String,
     authorIds: List<UUID>,
     libraryId: UUID,
 ): UUID? =
-    idInLayer(BookFileMetadataTable, pattern, authorIds, libraryId)
-        ?: idInLayer(BookUserMetadataTable, pattern, authorIds, libraryId)
-        ?: idInLayer(BookAgentMetadataTable, pattern, authorIds, libraryId)
-
-context(_: Transaction)
-private fun idInLayer(
-    table: BookMetadata,
-    pattern: String,
-    authorIds: List<UUID>,
-    libraryId: UUID,
-): UUID? =
-    (BookTable innerJoin table)
+    BookTable
         .select(BookTable.id)
         .where {
-            val sameTitle = (table.title ilike pattern) and (BookTable.library eq libraryId)
+            val sameTitle =
+                ((BookTable.title ilike pattern) or (BookTable.taggedName ilike pattern)) and
+                    (BookTable.library eq libraryId)
             // An empty author list would make `inList` match nothing, so books without authors are
             // identified by title alone instead of never being found.
             if (authorIds.isEmpty()) {
@@ -392,10 +388,7 @@ private fun idInLayer(
                 val booksOfAuthors =
                     AuthorBookTable
                         .select(AuthorBookTable.book)
-                        .where {
-                            (AuthorBookTable.author inList authorIds) and
-                                (AuthorBookTable.addedBy eq MetadataLayer.FILE)
-                        }
+                        .where { AuthorBookTable.author inList authorIds }
                 sameTitle and (BookTable.id inSubQuery booksOfAuthors)
             }
         }.firstOrNull()
@@ -434,7 +427,7 @@ internal fun buildChapters(
     val inBook = marks.filter { it.startMs < bookEnd }
     return inBook.mapIndexed { index, mark ->
         Chapter(
-            title = mark.title?.ifBlank { null },
+            title = mark.title,
             startMs = mark.startMs,
             endMs = inBook.getOrNull(index + 1)?.startMs ?: bookEnd,
             trackId = tracks[trackStarts.indexOfLast { it <= mark.startMs }].id,
