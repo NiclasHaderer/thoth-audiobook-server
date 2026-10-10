@@ -3,6 +3,7 @@ package io.thoth.server.file.tagger
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.server.common.extensions.canonicalString
 import io.thoth.server.common.extensions.lastModifiedInstant
+import io.thoth.server.database.tables.TrackChapter
 import io.thoth.taglib.TagLibFile
 import java.nio.file.Path
 import java.time.Instant
@@ -17,6 +18,7 @@ class ReadonlyFileTagger(
     private val properties: Map<String, List<String>>
 
     val cover: ByteArray?
+    val chapters: List<TrackChapter>
     val durationMs: Long
     val path: String = filePath.canonicalString()
     val lastModified: Instant = filePath.lastModifiedInstant()
@@ -25,7 +27,8 @@ class ReadonlyFileTagger(
         TagLibFile(filePath).use { file ->
             properties = file.properties()
             cover = file.pictures().firstOrNull()?.data
-            durationMs = file.lengthInSeconds * 1000L
+            chapters = file.chapters().map { TrackChapter(it.title, it.startMs) }
+            durationMs = file.lengthInMilliseconds.toLong()
         }
     }
 

@@ -15,6 +15,7 @@ import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataBookImpl
+import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchBookImpl
@@ -139,6 +140,12 @@ class AudiobookDbMetadataAgent(
             release.toMetadataBook(book = book.await(), rating = rating.await())
         }
     }
+
+    override suspend fun getBookChapters(
+        providerId: String,
+        bookId: String,
+        region: MetadataRegion,
+    ): MetadataChapters? = release(bookId)?.toMetadataChapters()
 
     private suspend fun release(releaseId: String): AudiobookDbApiReleaseDetail? =
         http.getJson<AudiobookDbApiReleaseDetail>(apiUrl(listOf("releases", releaseId)))

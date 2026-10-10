@@ -116,6 +116,7 @@ class TrackManager : KoinComponent {
                     book = bookId,
                     trackNr = scan.trackNr,
                     scanIndex = library.scanIndex,
+                    chapters = scan.chapters,
                 ),
             )
         } else {
@@ -130,6 +131,7 @@ class TrackManager : KoinComponent {
                     library = library.id,
                     scanIndex = library.scanIndex,
                     trackNr = scan.trackNr,
+                    chapters = scan.chapters,
                 ),
             )
         }

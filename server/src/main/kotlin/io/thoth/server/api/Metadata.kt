@@ -5,6 +5,7 @@ import io.thoth.metadata.MetadataAgent
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
+import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSeries
@@ -42,6 +43,12 @@ fun Routing.metadataRouting() {
         val (metadataAgent, region) = agentFor(it.libraryId)
         metadataAgent.getBookByID(providerId = it.provider, region = region, bookId = it.id)
             ?: throw ErrorResponse.notFound("Book", it.id, "Provider ${it.provider}")
+    }
+
+    get<Api.Libraries.Id.Metadata.Book.Id.Chapters, MetadataChapters> {
+        val (metadataAgent, region) = agentFor(it.libraryId)
+        metadataAgent.getBookChapters(providerId = it.provider, bookId = it.id, region = region)
+            ?: throw ErrorResponse.notFound("Chapters of book", it.id, "Provider ${it.provider}")
     }
 
     get<Api.Libraries.Id.Metadata.Book.Search, List<MetadataBook>> {

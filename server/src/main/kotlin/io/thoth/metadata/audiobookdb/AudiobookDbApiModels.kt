@@ -6,10 +6,12 @@ import io.thoth.metadata.responses.MetadataAgentIDImpl
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
+import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
 import io.thoth.metadata.responses.MetadataSeriesImpl
+import io.thoth.models.ChapterMark
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -128,7 +130,15 @@ internal data class AudiobookDbApiReleaseDetail(
     val people: List<AudiobookDbApiCredit> = emptyList(),
     val images: List<AudiobookDbApiImage> = emptyList(),
     val book: AudiobookDbApiIdTitle? = null,
+    val runtimeLengthMs: Long? = null,
+    val chapterDetail: AudiobookDbApiChapterDetail? = null,
 ) {
+    fun toMetadataChapters(): MetadataChapters? {
+        val runtime = runtimeLengthMs ?: return null
+        val entries = chapterDetail?.chapters?.sortedBy { it.startOffsetMs }?.ifEmpty { null } ?: return null
+        return MetadataChapters(runtime, entries.map { ChapterMark(it.title, it.startOffsetMs) })
+    }
+
     fun toMetadataBook(
         book: AudiobookDbApiBook?,
         rating: Float?,
@@ -154,6 +164,17 @@ internal data class AudiobookDbApiReleaseDetail(
             isbn = isbn,
         )
 }
+
+@Serializable
+internal data class AudiobookDbApiChapterDetail(
+    val chapters: List<AudiobookDbApiChapter> = emptyList(),
+)
+
+@Serializable
+internal data class AudiobookDbApiChapter(
+    val title: String? = null,
+    val startOffsetMs: Long,
+)
 
 @Serializable
 internal data class AudiobookDbApiPerson(

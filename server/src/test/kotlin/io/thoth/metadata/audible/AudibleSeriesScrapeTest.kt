@@ -14,6 +14,7 @@ import kotlin.test.assertTrue
 class AudibleSeriesScrapeTest {
     private val provider = AudibleMetadataAgent()
     private val dungeonCrawlerCarl = "B0937FGLYC"
+    private val sorcerersStone = "B017V4IM1G"
 
     @Test
     fun `scrapes the description of a series`() =
@@ -55,5 +56,16 @@ class AudibleSeriesScrapeTest {
                 series.books?.take(8)?.map { it.id.itemID },
             )
             assertEquals("Dungeon Crawler Carl", series.books?.first()?.title)
+        }
+
+    @Test
+    fun `maps the chapters of a book`() =
+        runBlocking {
+            val chapters = assertNotNull(provider.getBookChapters("audible", sorcerersStone, MetadataRegion.US))
+
+            assertEquals(29_919_273L, chapters.runtimeMs)
+            assertEquals(19, chapters.chapters.size)
+            assertEquals("Opening Credits" to 0L, chapters.chapters[0].let { it.title to it.startMs })
+            assertEquals("1: The Boy Who Lived" to 64_040L, chapters.chapters[1].let { it.title to it.startMs })
         }
 }

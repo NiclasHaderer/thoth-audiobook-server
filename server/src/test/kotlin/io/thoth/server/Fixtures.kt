@@ -19,6 +19,7 @@ import io.thoth.server.database.tables.MetadataLayer
 import io.thoth.server.database.tables.SeriesFileMetadataTable
 import io.thoth.server.database.tables.SeriesMetadataRow
 import io.thoth.server.database.tables.SeriesTable
+import io.thoth.server.database.tables.TrackChapter
 import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.UserRow
@@ -118,19 +119,22 @@ fun newTrack(
     fileModifiedAt: Instant = Instant.EPOCH,
     scanIndex: ULong = 0uL,
     trackNr: Int? = null,
+    durationMs: Long = 60_000,
+    chapters: List<TrackChapter> = emptyList(),
 ): UUID =
     transaction {
         TrackTable.insert(
             TrackRow(
                 id = UUID.randomUUID(),
                 title = title,
-                durationMs = 60_000,
+                durationMs = durationMs,
                 fileModifiedAt = fileModifiedAt,
                 path = path,
                 book = bookId,
                 library = libraryId,
                 scanIndex = scanIndex,
                 trackNr = trackNr,
+                chapters = chapters,
             ),
         )
     }
