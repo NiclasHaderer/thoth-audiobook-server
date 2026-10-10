@@ -2,12 +2,16 @@ package io.thoth.server.repositories
 
 import io.thoth.metadata.MetadataAgentWrapper
 import io.thoth.metadata.MetadataAgents
+import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.Book
 import io.thoth.models.BookDetailed
 import io.thoth.models.BookUpdate
+import io.thoth.models.Chapter
+import io.thoth.models.ChapterMark
 import io.thoth.models.TitledId
+import io.thoth.openapi.common.ifSet
 import io.thoth.openapi.common.map
 import io.thoth.openapi.common.orElse
 import io.thoth.openapi.ktor.errors.ErrorResponse
@@ -32,6 +36,7 @@ import io.thoth.server.database.tables.BookMetadataRow
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.BookUserMetadataTable
 import io.thoth.server.database.tables.MetadataLayer
+import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.authorIdsLinkedToBook
 import io.thoth.server.database.tables.bookLayers
@@ -55,6 +60,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.UUID
+import kotlin.math.abs
 
 interface BookRepository : Repository<BookRow, Book, BookDetailed, BookUpdate> {
     fun findByTaggedName(
@@ -151,28 +157,38 @@ class BookRepositoryImpl :
         transaction {
             val book = raw(id, libraryId)
             if (!showInvisible) requireVisible(BookTable, "Book", id)
-            val tracks =
-                TrackTable
-                    .selectAll()
-                    .where { TrackTable.book eq id }
-                    .map { it.toTrackRow() }
-            val numbered = tracks.mapNotNull { row -> row.trackNr?.let { row to it } }
-            // Incomplete numbering cannot be trusted, so those books fall back to the file names and are numbered by position
-            val ordered =
-                if (numbered.size == tracks.size) {
-                    numbered.sortedBy { (_, trackNr) -> trackNr }
-                } else {
-                    tracks.sortedWith(compareBy(naturalOrder) { it.path }).mapIndexed { index, row -> row to index + 1 }
-                }
+            val ordered = orderedTracks(id)
+            val tracks = ordered.map { (row, _) -> row }
+            // The file layer never holds chapters, so a library preferring the files has to be honoured here. Only
+            // markers count: one chapter per file is a fallback, not something the files say about the book.
+            val filesWin =
+                hasEmbeddedChapters(tracks) && BookUserMetadataTable.layer(id).chapters == null &&
+                    libraryRepository.raw(libraryId).preferEmbeddedMetadata
+            val marks = book.chapters?.takeUnless { filesWin } ?: fileChapterMarks(tracks)
             val bookRef = TitledId(book.id, book.title)
             BookDetailed.fromModel(
-                book.toModel(userId),
-                ordered.map { (row, trackNr) ->
-                    row.toModel(bookRef, trackNr)
-                },
-                BookUserMetadataTable.layer(id).claimed.sorted(),
+                book = book.toModel(userId),
+                tracks = ordered.map { (row, trackNr) -> row.toModel(bookRef, trackNr) },
+                chapters = buildChapters(marks, tracks),
+                overridden = BookUserMetadataTable.layer(id).claimed.sorted(),
             )
         }
+
+    context(_: Transaction)
+    private fun orderedTracks(bookId: UUID): List<Pair<TrackRow, Int>> {
+        val tracks =
+            TrackTable
+                .selectAll()
+                .where { TrackTable.book eq bookId }
+                .map { it.toTrackRow() }
+        val numbered = tracks.mapNotNull { row -> row.trackNr?.let { row to it } }
+        // Incomplete numbering cannot be trusted, so those books fall back to the file names and are numbered by position
+        return if (numbered.size == tracks.size) {
+            numbered.sortedBy { (_, trackNr) -> trackNr }
+        } else {
+            tracks.sortedWith(compareBy(naturalOrder) { it.path }).mapIndexed { index, row -> row to index + 1 }
+        }
+    }
 
     override fun search(
         userId: UUID,
@@ -208,6 +224,15 @@ class BookRepositoryImpl :
             val series =
                 edit.links(BookField.SERIES, partial.series, bookSeries(listOf(id))[id].orEmpty().map { it.id })
             val cover = partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } }
+            partial.chapters.ifSet { marks ->
+                val durationMs = orderedTracks(id).sumOf { (row, _) -> row.durationMs }
+                if (marks.last().startMs >= durationMs) {
+                    throw ErrorResponse.userError(
+                        "The last chapter starts at ${marks.last().startMs}ms, " +
+                            "but the book is only ${durationMs}ms long",
+                    )
+                }
+            }
             BookUserMetadataTable.write(
                 edit.user.copy(
                     title = edit.value(BookField.TITLE, partial.title) { title },
@@ -222,6 +247,7 @@ class BookRepositoryImpl :
                     genres = edit.value(BookField.GENRES, partial.genres) { genres },
                     isbn = edit.value(BookField.ISBN, partial.isbn) { isbn },
                     coverID = edit.value(BookField.COVER_ID, cover) { coverID },
+                    chapters = edit.value(BookField.CHAPTERS, partial.chapters) { chapters },
                     claimed = edit.claimed,
                 ),
             )
@@ -296,6 +322,8 @@ class BookRepositoryImpl :
                     language = language,
                 )
             } ?: throw noMatch(bookName)
+        val matchedChapters =
+            runBlocking { metadataWrapper.getBookChapters(bookMetadata.id.provider, bookMetadata.id.itemID, region) }
 
         val newCover = imageDownloader.download(bookMetadata.coverURL)
         // `bookMetadata.authors` and `.series` are deliberately dropped. Matching an entity updates that
@@ -304,6 +332,7 @@ class BookRepositoryImpl :
         // author or series name is its own match, against its own id.
         return transaction {
             val agent = BookAgentMetadataTable.layer(id)
+            val durationMs = orderedTracks(id).sumOf { (row, _) -> row.durationMs }
             BookAgentMetadataTable.write(
                 agent.copy(
                     title = bookMetadata.title ?: agent.title,
@@ -317,6 +346,7 @@ class BookRepositoryImpl :
                     narrators = bookMetadata.narrators.ifEmpty { null } ?: agent.narrators,
                     isbn = bookMetadata.isbn ?: agent.isbn,
                     coverID = getOrCreateImage(newCover, currentImageID = agent.coverID),
+                    chapters = matchedChapters?.fitting(durationMs) ?: agent.chapters,
                 ),
             )
             raw(id, libraryId).toModel(userId)
@@ -373,3 +403,41 @@ private fun idInLayer(
         ?.value
 
 private fun matchesTitle(query: String): Op<Boolean> = BookTable.title ilike "%${escape(query)}%"
+
+private const val CHAPTER_RUNTIME_TOLERANCE_MS = 30_000L
+
+internal fun MetadataChapters.fitting(durationMs: Long): List<ChapterMark>? =
+    chapters.takeIf { abs(runtimeMs - durationMs) <= CHAPTER_RUNTIME_TOLERANCE_MS }
+
+internal fun hasEmbeddedChapters(tracks: List<TrackRow>): Boolean =
+    tracks.isNotEmpty() && tracks.all { it.chapters.isNotEmpty() }
+
+internal fun fileChapterMarks(tracks: List<TrackRow>): List<ChapterMark> {
+    val useMarkers = hasEmbeddedChapters(tracks)
+    val trackStarts = tracks.runningFold(0L) { start, track -> start + track.durationMs }
+    return tracks.zip(trackStarts).flatMap { (track, trackStart) ->
+        if (useMarkers) {
+            track.chapters.sortedBy { it.startMs }.map { ChapterMark(it.title, trackStart + it.startMs) }
+        } else {
+            listOf(ChapterMark(track.title, trackStart))
+        }
+    }
+}
+
+// Marks are measured from the start of the book, so an edit made before the files changed can point past their end
+internal fun buildChapters(
+    marks: List<ChapterMark>,
+    tracks: List<TrackRow>,
+): List<Chapter> {
+    val trackStarts = tracks.runningFold(0L) { start, track -> start + track.durationMs }
+    val bookEnd = trackStarts.last()
+    val inBook = marks.filter { it.startMs < bookEnd }
+    return inBook.mapIndexed { index, mark ->
+        Chapter(
+            title = mark.title?.ifBlank { null },
+            startMs = mark.startMs,
+            endMs = inBook.getOrNull(index + 1)?.startMs ?: bookEnd,
+            trackId = tracks[trackStarts.indexOfLast { it <= mark.startMs }].id,
+        )
+    }
+}

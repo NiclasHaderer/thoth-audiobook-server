@@ -553,6 +553,19 @@ class Api {
                     ) {
                         val libraryId
                             get() = parent.parent.libraryId
+
+                        @Summary("Get book chapter metadata", method = "GET")
+                        @Resource("chapters")
+                        data class Chapters(
+                            private val parent: Id,
+                        ) {
+                            val libraryId
+                                get() = parent.libraryId
+                            val id
+                                get() = parent.id
+                            val provider
+                                get() = parent.provider
+                        }
                     }
 
                     @Summary("Search book metadata", method = "GET")

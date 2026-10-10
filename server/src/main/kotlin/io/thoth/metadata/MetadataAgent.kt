@@ -2,6 +2,7 @@ package io.thoth.metadata
 
 import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataBook
+import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSeries
@@ -22,6 +23,12 @@ interface MetadataAgent {
         bookId: String,
         region: MetadataRegion,
     ): MetadataBook?
+
+    suspend fun getBookChapters(
+        providerId: String,
+        bookId: String,
+        region: MetadataRegion,
+    ): MetadataChapters? = null
 
     suspend fun getSeriesByID(
         providerId: String,

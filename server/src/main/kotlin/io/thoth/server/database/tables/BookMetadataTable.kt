@@ -1,6 +1,7 @@
 package io.thoth.server.database.tables
 
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.models.ChapterMark
 import io.thoth.server.database.extensions.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -30,6 +31,7 @@ enum class BookField : LayerField {
     GENRES,
     ISBN,
     COVER_ID,
+    CHAPTERS,
 }
 
 sealed class BookMetadata(
@@ -51,6 +53,10 @@ sealed class BookMetadata(
 
     val genres = json<List<String>>(BookField.GENRES.column).nullable()
     val narrators = json<List<String>>(BookField.NARRATORS.column).nullable()
+
+    // Never written by the file layer: the chapters the files name depend on all tracks of a book, so they are
+    // derived from the tracks
+    val chapters = json<List<ChapterMark>>(BookField.CHAPTERS.column).nullable()
 
     // For the relations a claim matters even with links: an empty claim has no link row to carry an `addedBy`,
     // so dropping a book's last series would otherwise read as "the user said nothing" and the next scan would
@@ -78,6 +84,7 @@ data class BookMetadataRow(
     val coverID: UUID? = null,
     val genres: List<String>? = null,
     val narrators: List<String>? = null,
+    val chapters: List<ChapterMark>? = null,
     override val claimed: Set<BookField> = emptySet(),
 ) : LayerRow<BookField>
 
@@ -104,6 +111,7 @@ private fun ResultRow.toBookMetadataRow(table: BookMetadata): BookMetadataRow =
         coverID = this[table.coverId]?.value,
         genres = this[table.genres],
         narrators = this[table.narrators],
+        chapters = this[table.chapters],
         claimed = this[table.claimed],
     )
 
@@ -132,5 +140,6 @@ private fun BookMetadata.write(
     stmt[coverId] = row.coverID
     stmt[genres] = row.genres
     stmt[narrators] = row.narrators
+    stmt[chapters] = row.chapters
     stmt[claimed] = row.claimed
 }

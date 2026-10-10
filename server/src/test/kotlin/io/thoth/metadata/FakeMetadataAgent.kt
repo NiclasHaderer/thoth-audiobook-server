@@ -6,6 +6,7 @@ import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
+import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
@@ -100,6 +101,7 @@ internal class FakeMetadataAgent(
     override val name: String = "fake",
     private val hits: List<MetadataSearchBook> = emptyList(),
     private val resolveBook: suspend (String) -> MetadataBook? = { testBook(it) },
+    private val resolveChapters: suspend (String) -> MetadataChapters? = { null },
 ) : SearchBasedMetadataAgent() {
     override val supportedRegions = listOf(MetadataRegion.US)
 
@@ -140,6 +142,12 @@ internal class FakeMetadataAgent(
         bookLookups += "$bookId@$region"
         return resolveBook(bookId)
     }
+
+    override suspend fun getBookChapters(
+        providerId: String,
+        bookId: String,
+        region: MetadataRegion,
+    ): MetadataChapters? = resolveChapters(bookId)
 
     override suspend fun getSeriesByID(
         providerId: String,

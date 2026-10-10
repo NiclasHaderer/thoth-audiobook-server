@@ -2,6 +2,7 @@ package io.thoth.server.database.tables
 
 import io.thoth.models.TitledId
 import io.thoth.models.Track
+import io.thoth.server.database.extensions.json
 import io.thoth.server.database.extensions.timestampMillis
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -23,7 +24,13 @@ object TrackTable : UUIDTable("track") {
     val library = reference("library_id", LibraryTable, onDelete = ReferenceOption.CASCADE).index()
     val scanIndex = ulong("scan_index")
     val trackNr = integer("track_nr").nullable()
+    val chapters = json<List<TrackChapter>>("chapters").default(emptyList())
 }
+
+data class TrackChapter(
+    val title: String?,
+    val startMs: Long,
+)
 
 data class TrackRow(
     val id: UUID,
@@ -35,6 +42,7 @@ data class TrackRow(
     val library: UUID,
     val scanIndex: ULong,
     val trackNr: Int?,
+    val chapters: List<TrackChapter> = emptyList(),
 ) {
     fun toModel(
         book: TitledId,
@@ -61,6 +69,7 @@ fun ResultRow.toTrackRow(): TrackRow =
         library = this[TrackTable.library].value,
         scanIndex = this[TrackTable.scanIndex],
         trackNr = this[TrackTable.trackNr],
+        chapters = this[TrackTable.chapters],
     )
 
 context(_: Transaction)
@@ -87,4 +96,5 @@ private fun write(
     stmt[TrackTable.library] = row.library
     stmt[TrackTable.scanIndex] = row.scanIndex
     stmt[TrackTable.trackNr] = row.trackNr
+    stmt[TrackTable.chapters] = row.chapters
 }

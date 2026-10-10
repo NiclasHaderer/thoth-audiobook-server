@@ -5,9 +5,11 @@ import io.thoth.metadata.parseDateOrNull
 import io.thoth.metadata.responses.MetadataAgentIDImpl
 import io.thoth.metadata.responses.MetadataBookImpl
 import io.thoth.metadata.responses.MetadataBookSeriesImpl
+import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataSearchAuthorImpl
 import io.thoth.metadata.responses.MetadataSearchBookImpl
+import io.thoth.models.ChapterMark
 import io.thoth.server.common.extensions.replaceAll
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -24,6 +26,40 @@ internal data class AudibleApiProductResponse(
 internal data class AudibleApiProductsResponse(
     val products: List<AudibleApiProduct> = emptyList(),
 )
+
+@Serializable
+internal data class AudibleApiContentMetadataResponse(
+    @SerialName("content_metadata") val contentMetadata: AudibleApiContentMetadata? = null,
+)
+
+@Serializable
+internal data class AudibleApiContentMetadata(
+    @SerialName("chapter_info") val chapterInfo: AudibleApiChapterInfo? = null,
+)
+
+@Serializable
+internal data class AudibleApiChapterInfo(
+    @SerialName("runtime_length_ms") val runtimeLengthMs: Long? = null,
+    // Audible flags timings it only estimated, which would start chapters mid-sentence in the actual audio
+    @SerialName("is_accurate") val isAccurate: Boolean = true,
+    val chapters: List<AudibleApiChapter> = emptyList(),
+) {
+    fun toMetadataChapters(): MetadataChapters? {
+        val runtime = runtimeLengthMs?.takeIf { isAccurate } ?: return null
+        val entries = chapters.flatMap { it.flatten() }.ifEmpty { return null }
+        return MetadataChapters(runtime, entries.map { ChapterMark(it.title, it.startOffsetMs) })
+    }
+}
+
+// A part can hold its chapters, which play after the part's own start
+@Serializable
+internal data class AudibleApiChapter(
+    val title: String? = null,
+    @SerialName("start_offset_ms") val startOffsetMs: Long,
+    val chapters: List<AudibleApiChapter> = emptyList(),
+) {
+    fun flatten(): List<AudibleApiChapter> = listOf(this) + chapters.flatMap { it.flatten() }
+}
 
 @Serializable
 internal data class AudibleApiProduct(

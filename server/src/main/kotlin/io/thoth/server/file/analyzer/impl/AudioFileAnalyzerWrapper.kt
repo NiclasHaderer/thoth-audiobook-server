@@ -55,4 +55,5 @@ private fun AudioFileAnalysisResult.fillFrom(other: AudioFileAnalysisResult): Au
         seriesIndex = seriesIndex ?: other.seriesIndex,
         genres = genres.ifEmpty { other.genres },
         cover = cover ?: other.cover,
+        chapters = chapters,
     )

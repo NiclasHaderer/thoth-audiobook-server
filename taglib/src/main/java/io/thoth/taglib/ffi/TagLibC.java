@@ -382,6 +382,66 @@ public class TagLibC extends TagLibC$shared {
         }
     }
 
+    private static class taglib_audioproperties_length_ms {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            TagLibC.C_INT,
+            TagLibC.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("taglib_audioproperties_length_ms");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * int taglib_audioproperties_length_ms(const TagLib_AudioProperties *audioProperties)
+     * }
+     */
+    public static FunctionDescriptor taglib_audioproperties_length_ms$descriptor() {
+        return taglib_audioproperties_length_ms.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * int taglib_audioproperties_length_ms(const TagLib_AudioProperties *audioProperties)
+     * }
+     */
+    public static MethodHandle taglib_audioproperties_length_ms$handle() {
+        return taglib_audioproperties_length_ms.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * int taglib_audioproperties_length_ms(const TagLib_AudioProperties *audioProperties)
+     * }
+     */
+    public static MemorySegment taglib_audioproperties_length_ms$address() {
+        return taglib_audioproperties_length_ms.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * int taglib_audioproperties_length_ms(const TagLib_AudioProperties *audioProperties)
+     * }
+     */
+    public static int taglib_audioproperties_length_ms(MemorySegment audioProperties) {
+        var mh$ = taglib_audioproperties_length_ms.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("taglib_audioproperties_length_ms", audioProperties);
+            }
+            return (int)mh$.invokeExact(audioProperties);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class taglib_audioproperties_bitrate {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             TagLibC.C_INT,

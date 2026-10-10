@@ -21,6 +21,7 @@ class TagLibFileTest {
             assertEquals(listOf("Test Author"), properties["ARTIST"])
             assertEquals(listOf("Test Album"), properties["ALBUM"])
             assertEquals(6, file.lengthInSeconds)
+            assertTrue(file.lengthInMilliseconds in 6000..6999)
             assertEquals(22050, file.sampleRate)
             assertEquals(1, file.channels)
             assertTrue(file.bitrate > 0)

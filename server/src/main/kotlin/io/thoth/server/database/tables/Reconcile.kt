@@ -61,6 +61,7 @@ fun reconcileBook(bookId: UUID) {
         it[coverId] = layers.resolve(BookField.COVER_ID) { coverID }
         it[genres] = layers.resolve(BookField.GENRES) { genres }
         it[narrators] = layers.resolve(BookField.NARRATORS) { narrators }
+        it[chapters] = layers.resolve(BookField.CHAPTERS) { chapters }
         it[authorsFrom] =
             resolveLayer(
                 BookField.AUTHORS in layers.user.claimed,

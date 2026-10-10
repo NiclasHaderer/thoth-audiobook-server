@@ -70,6 +70,9 @@ class TagLibFile(
     val lengthInSeconds: Int
         get() = audioProperties { TagLibC.taglib_audioproperties_length(it) } ?: 0
 
+    val lengthInMilliseconds: Int
+        get() = audioProperties { TagLibC.taglib_audioproperties_length_ms(it) } ?: 0
+
     val bitrate: Int
         get() = audioProperties { TagLibC.taglib_audioproperties_bitrate(it) } ?: 0
 

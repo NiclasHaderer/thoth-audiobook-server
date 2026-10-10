@@ -5,6 +5,7 @@ import io.thoth.metadata.responses.MetadataAuthor
 import io.thoth.metadata.responses.MetadataAuthorImpl
 import io.thoth.metadata.responses.MetadataBook
 import io.thoth.metadata.responses.MetadataBookImpl
+import io.thoth.metadata.responses.MetadataChapters
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.metadata.responses.MetadataSeries
@@ -37,6 +38,12 @@ class MetadataAgentWrapper(
         bookId: String,
         region: MetadataRegion,
     ): MetadataBook? = agent(providerId)?.getBookByID(providerId = providerId, bookId = bookId, region = region)
+
+    override suspend fun getBookChapters(
+        providerId: String,
+        bookId: String,
+        region: MetadataRegion,
+    ): MetadataChapters? = agent(providerId)?.getBookChapters(providerId = providerId, bookId = bookId, region = region)
 
     override suspend fun getSeriesByID(
         providerId: String,

@@ -1,5 +1,6 @@
 package io.thoth.metadata.responses
 
+import io.thoth.models.ChapterMark
 import java.time.LocalDate
 
 interface MetadataSearchBook {
@@ -32,6 +33,13 @@ interface MetadataBook : MetadataSearchBook {
     val publisher: String?
     val isbn: String?
 }
+
+// The timings belong to the provider's edition of the book. Its runtime is what tells whether they fit the files at
+// hand, an abridged or differently mastered edition would put every chapter in the wrong place.
+data class MetadataChapters(
+    val runtimeMs: Long,
+    val chapters: List<ChapterMark>,
+)
 
 data class MetadataBookImpl(
     override val id: MetadataAgentID,
