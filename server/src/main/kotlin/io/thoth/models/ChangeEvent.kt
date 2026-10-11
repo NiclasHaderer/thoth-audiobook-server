@@ -24,4 +24,5 @@ data class ChangeEvent(
 
 data class ChangeEventBatch(
     val events: List<ChangeEvent>,
+    val missedPreviousEvents: Boolean = false,
 )

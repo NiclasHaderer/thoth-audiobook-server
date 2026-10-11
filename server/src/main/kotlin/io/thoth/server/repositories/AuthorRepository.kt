@@ -7,6 +7,7 @@ import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.Author
 import io.thoth.models.AuthorDetailed
 import io.thoth.models.AuthorUpdate
+import io.thoth.models.ChangeType
 import io.thoth.openapi.common.ifSet
 import io.thoth.openapi.common.map
 import io.thoth.openapi.common.orElse
@@ -34,6 +35,7 @@ import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.authorLinksWithBooks
 import io.thoth.server.database.tables.bookIdsLinkedToAuthor
 import io.thoth.server.database.tables.create
+import io.thoth.server.database.tables.record
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.MatchableEntity
@@ -318,6 +320,8 @@ class AuthorServiceImpl :
             }
         }
         (removed + added).forEach { lockBookField(it, BookField.AUTHORS) }
+        BookTable.record(ChangeType.UPDATED, removed + added)
+        if (current != wanted) AuthorTable.record(ChangeType.UPDATED, listOf(authorId))
     }
 
     override fun total(

@@ -17,6 +17,7 @@ import io.thoth.server.database.tables.UserRow
 import io.thoth.server.database.tables.UserTable
 import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.toUserRow
+import io.thoth.server.events.ChangeEvents
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -51,6 +52,7 @@ internal fun userRow(id: UUID): UserRow? =
 
 fun Application.configureAuthentication() {
     val thothConfig by inject<ThothConfig>()
+    val changeEvents by inject<ChangeEvents>()
     val keyPair = getOrCreateKeyPair(thothConfig.jwtKeyFile)
 
     install(ThothAuthenticationPlugin.build<UserPermissions, UpdateUserPermissions>()) {
@@ -115,6 +117,7 @@ fun Application.configureAuthentication() {
                 if (dbUser.admin) requireAnotherAdminExists(it.id)
                 UserTable.deleteWhere { UserTable.id eq dbUser.id }
             }
+            changeEvents.permissionsChanged()
         }
 
         renameUser { user, newName ->
@@ -159,7 +162,7 @@ fun Application.configureAuthentication() {
                     }
                 }
                 userRow(dbUser.id)!!.toExternalUser()
-            }
+            }.also { changeEvents.permissionsChanged() }
         }
 
         isAdminUser { user: ThothDatabaseUser -> transaction { userRow(user.id)?.admin ?: false } }

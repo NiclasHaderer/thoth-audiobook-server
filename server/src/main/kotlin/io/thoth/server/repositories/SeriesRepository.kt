@@ -5,6 +5,7 @@ import io.thoth.metadata.MetadataAgentWrapper
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
+import io.thoth.models.ChangeType
 import io.thoth.models.Series
 import io.thoth.models.SeriesDetailed
 import io.thoth.models.SeriesUpdate
@@ -35,6 +36,7 @@ import io.thoth.server.database.tables.SeriesField
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.bookIdsLinkedToSeries
 import io.thoth.server.database.tables.create
+import io.thoth.server.database.tables.record
 import io.thoth.server.database.tables.seriesLinksWithBooks
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
@@ -253,6 +255,8 @@ class SeriesRepositoryImpl :
         // Dropping a book from the series locks its series, or the next scan of a file that still names it puts it
         // straight back.
         (removed + added).forEach { lockBookField(it, BookField.SERIES) }
+        BookTable.record(ChangeType.UPDATED, removed + added)
+        if (current != wanted) SeriesTable.record(ChangeType.UPDATED, listOf(seriesId))
     }
 
     context(_: Transaction)
