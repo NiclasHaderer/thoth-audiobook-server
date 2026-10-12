@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import io.thoth.models.ChangeType
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.and
@@ -56,6 +57,8 @@ fun replaceBookAuthors(
             it[author] = authorId
         }
     }
+    AuthorTable.record(ChangeType.UPDATED, existing + wanted)
+    BookTable.record(ChangeType.UPDATED, listOf(bookId))
 }
 
 // A null index leaves the one a series already has alone: a user moving a book between series says nothing
@@ -65,8 +68,8 @@ fun replaceBookSeries(
     bookId: UUID,
     targets: Map<UUID, Float?>,
 ) = with(SeriesBookTable) {
-    deleteWhere { (book eq bookId) and (series notInList targets.keys) }
     val existing = seriesIdsLinkedToBook(bookId).toSet()
+    deleteWhere { (book eq bookId) and (series notInList targets.keys) }
     targets.forEach { (seriesId, index) ->
         if (seriesId in existing) {
             if (index != null) update({ (book eq bookId) and (series eq seriesId) }) { it[seriesIndex] = index }
@@ -78,6 +81,9 @@ fun replaceBookSeries(
             }
         }
     }
+    // Only the series the book left: recording the book announces the ones it is in now
+    SeriesTable.record(ChangeType.UPDATED, existing)
+    BookTable.record(ChangeType.UPDATED, listOf(bookId))
 }
 
 val authorLinksWithBooks

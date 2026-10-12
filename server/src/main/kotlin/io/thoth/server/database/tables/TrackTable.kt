@@ -1,16 +1,20 @@
 package io.thoth.server.database.tables
 
+import io.thoth.models.ChangeType
 import io.thoth.models.TitledId
 import io.thoth.models.Track
 import io.thoth.server.database.extensions.json
 import io.thoth.server.database.extensions.timestampMillis
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
 import java.util.UUID
@@ -80,7 +84,16 @@ fun TrackTable.insert(row: TrackRow): UUID {
 
 context(_: Transaction)
 fun TrackTable.update(row: TrackRow) {
+    val previousBook = select(book).where { TrackTable.id eq row.id }.single()[book].value
     update({ TrackTable.id eq row.id }) { write(it, row) }
+    BookTable.record(ChangeType.UPDATED, setOf(previousBook, row.book))
+}
+
+context(_: Transaction)
+fun TrackTable.remove(where: Op<Boolean>) {
+    val books = select(book).where { where }.withDistinct().map { it[book].value }
+    deleteWhere { where }
+    BookTable.record(ChangeType.UPDATED, books)
 }
 
 private fun write(

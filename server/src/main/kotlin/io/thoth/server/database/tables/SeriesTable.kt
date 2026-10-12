@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import io.thoth.models.ChangedEntity
 import io.thoth.server.database.extensions.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 
@@ -13,7 +14,7 @@ enum class SeriesField : MetadataField {
     DESCRIPTION,
 }
 
-object SeriesTable : LibraryEntityTable("series", SeriesField.TITLE.column) {
+object SeriesTable : LibraryEntityTable("series", SeriesField.TITLE.column, ChangedEntity.SERIES) {
     val title get() = name
     val totalBooks = integer(SeriesField.TOTAL_BOOKS.column).nullable()
     val primaryWorks = integer(SeriesField.PRIMARY_WORKS.column).nullable()

@@ -1,5 +1,6 @@
 package io.thoth.server.database.tables
 
+import io.thoth.models.ChangedEntity
 import io.thoth.server.database.extensions.json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.javatime.date
@@ -16,7 +17,7 @@ enum class AuthorField : MetadataField {
     DEATH_DATE,
 }
 
-object AuthorTable : LibraryEntityTable("author", AuthorField.NAME.column) {
+object AuthorTable : LibraryEntityTable("author", AuthorField.NAME.column, ChangedEntity.AUTHOR) {
     val biography = text(AuthorField.BIOGRAPHY.column).nullable()
     val website = varchar(AuthorField.WEBSITE.column, 255).nullable()
     val birthDate = date(AuthorField.BIRTH_DATE.column).nullable()

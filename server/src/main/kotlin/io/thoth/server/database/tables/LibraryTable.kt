@@ -2,16 +2,20 @@ package io.thoth.server.database.tables
 
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
+import io.thoth.models.ChangeType
+import io.thoth.models.ChangedEntity
 import io.thoth.models.FileScanner
 import io.thoth.models.Library
 import io.thoth.models.NamedMetadataAgent
 import io.thoth.openapi.ktor.errors.ErrorResponse
 import io.thoth.server.database.extensions.json
+import io.thoth.server.events.recordChange
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
@@ -95,13 +99,27 @@ fun ResultRow.toLibraryRow(): LibraryRow =
 context(_: Transaction)
 fun LibraryTable.insert(row: LibraryRow): UUID {
     insert { write(it, row) }
+    record(ChangeType.CREATED, row.id)
     return row.id
 }
 
 context(_: Transaction)
 fun LibraryTable.update(row: LibraryRow) {
     update({ LibraryTable.id eq row.id }) { write(it, row) }
+    record(ChangeType.UPDATED, row.id)
 }
+
+context(_: Transaction)
+fun LibraryTable.delete(libraryId: UUID): Boolean =
+    (deleteWhere { LibraryTable.id eq libraryId } > 0).also { deleted ->
+        if (deleted) record(ChangeType.DELETED, libraryId)
+    }
+
+context(_: Transaction)
+private fun record(
+    type: ChangeType,
+    libraryId: UUID,
+) = recordChange(ChangedEntity.LIBRARY, type, libraryId, libraryId)
 
 private fun write(
     stmt: UpdateBuilder<*>,
