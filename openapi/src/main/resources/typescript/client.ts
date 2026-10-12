@@ -98,3 +98,48 @@ export const _mergeHeaders = (headers: Headers, newHeaders: HeadersInit): Header
     }
     return mergedHeaders
 }
+
+export type ApiSocket<SEND, RECEIVE> = {
+    socket: WebSocket,
+    send: (message: SEND) => void,
+    onMessage: (listener: (message: RECEIVE) => void) => () => void,
+    close: () => void,
+}
+
+export type ApiSocketData = {
+    requiresAuth: boolean,
+    route: string,
+    messageSerializer: (message: unknown) => string,
+    executor: (socketData: ApiSocketData) => WebSocket,
+}
+
+export type ApiSocketInterceptor = (param: ApiSocketData) => ApiSocketData | Promise<ApiSocketData>
+
+export const _socket = async <SEND, RECEIVE>(
+    route: string,
+    interceptors: ApiSocketInterceptor[],
+    executor: ApiSocketData["executor"],
+    requiresAuth: boolean,
+): Promise<ApiSocket<SEND, RECEIVE>> => {
+    let socketData: ApiSocketData = {
+        route,
+        messageSerializer: (message: unknown) => JSON.stringify(message),
+        executor,
+        requiresAuth,
+    };
+    for (const interceptor of interceptors) {
+        socketData = await interceptor(socketData);
+    }
+
+    const socket = socketData.executor(socketData)
+    return {
+        socket,
+        send: (message) => socket.send(socketData.messageSerializer(message)),
+        onMessage: (listener) => {
+            const handler = (event: MessageEvent) => listener(JSON.parse(event.data))
+            socket.addEventListener("message", handler)
+            return () => socket.removeEventListener("message", handler)
+        },
+        close: () => socket.close(),
+    }
+}
