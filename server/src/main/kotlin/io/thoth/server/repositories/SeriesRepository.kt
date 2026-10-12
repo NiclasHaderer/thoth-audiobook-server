@@ -36,7 +36,6 @@ import io.thoth.server.database.tables.SeriesField
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.bookIdsLinkedToSeries
 import io.thoth.server.database.tables.create
-import io.thoth.server.database.tables.record
 import io.thoth.server.database.tables.seriesLinksWithBooks
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
@@ -216,6 +215,7 @@ class SeriesRepositoryImpl :
             val edit = UserEdit(series.locked, partial.unlock)
             val cover = partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } }
             SeriesTable.update(
+                series,
                 series.copy(
                     title = edit.value(SeriesField.TITLE, series.title, partial.title),
                     provider = edit.value(SeriesField.PROVIDER, series.provider, partial.provider),
@@ -255,8 +255,7 @@ class SeriesRepositoryImpl :
         // Dropping a book from the series locks its series, or the next scan of a file that still names it puts it
         // straight back.
         (removed + added).forEach { lockBookField(it, BookField.SERIES) }
-        BookTable.record(ChangeType.UPDATED, removed + added)
-        if (current != wanted) SeriesTable.record(ChangeType.UPDATED, listOf(seriesId))
+        SeriesTable.record(ChangeType.UPDATED, listOf(seriesId))
     }
 
     context(_: Transaction)
@@ -296,6 +295,7 @@ class SeriesRepositoryImpl :
             val series = raw(id, libraryId)
             val write = AutomaticWrite(series.locked, onlyFillEmpty = preferFile)
             SeriesTable.update(
+                series,
                 series.copy(
                     title = write.value(SeriesField.TITLE, series.title) { seriesMetadata.title },
                     provider = write.overwrite(SeriesField.PROVIDER, series.provider) { seriesMetadata.id.provider },

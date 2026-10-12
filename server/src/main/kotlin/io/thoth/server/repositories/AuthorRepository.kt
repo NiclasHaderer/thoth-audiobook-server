@@ -35,7 +35,6 @@ import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.authorLinksWithBooks
 import io.thoth.server.database.tables.bookIdsLinkedToAuthor
 import io.thoth.server.database.tables.create
-import io.thoth.server.database.tables.record
 import io.thoth.server.schedules.AutoMatchRequest
 import io.thoth.server.schedules.AutoMatcher
 import io.thoth.server.schedules.MatchableEntity
@@ -181,6 +180,7 @@ class AuthorServiceImpl :
             val author = raw(id, libraryId)
             val write = AutomaticWrite(author.locked, onlyFillEmpty = preferFile)
             AuthorTable.update(
+                author,
                 author.copy(
                     name = write.value(AuthorField.NAME, author.name) { result.name },
                     provider = write.overwrite(AuthorField.PROVIDER, author.provider) { result.id.provider },
@@ -275,6 +275,7 @@ class AuthorServiceImpl :
             val edit = UserEdit(author.locked, partial.unlock)
             val image = partial.image.map { it?.let { getOrCreateImage(newImage, currentImageID = currentImage) } }
             AuthorTable.update(
+                author,
                 author.copy(
                     name = edit.value(AuthorField.NAME, author.name, partial.name),
                     provider = edit.value(AuthorField.PROVIDER, author.provider, partial.provider),
@@ -320,8 +321,7 @@ class AuthorServiceImpl :
             }
         }
         (removed + added).forEach { lockBookField(it, BookField.AUTHORS) }
-        BookTable.record(ChangeType.UPDATED, removed + added)
-        if (current != wanted) AuthorTable.record(ChangeType.UPDATED, listOf(authorId))
+        AuthorTable.record(ChangeType.UPDATED, listOf(authorId))
     }
 
     override fun total(

@@ -232,6 +232,7 @@ class BookRepositoryImpl :
                 BookField.CHAPTERS in book.locked && BookField.CHAPTERS in partial.unlock.orElse(emptyList())
             val chapters = edit.value(BookField.CHAPTERS, book.chapters, partial.chapters)
             BookTable.update(
+                book,
                 book.copy(
                     title = edit.value(BookField.TITLE, book.title, partial.title),
                     provider = edit.value(BookField.PROVIDER, book.provider, partial.provider),
@@ -352,6 +353,7 @@ class BookRepositoryImpl :
             val filesWin = preferFile && hasEmbeddedChapters(tracks)
             val write = AutomaticWrite(book.locked, onlyFillEmpty = preferFile)
             BookTable.update(
+                book,
                 book.copy(
                     title = write.value(BookField.TITLE, book.title) { bookMetadata.title },
                     provider = write.overwrite(BookField.PROVIDER, book.provider) { bookMetadata.id.provider },

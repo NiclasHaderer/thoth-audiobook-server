@@ -230,6 +230,7 @@ class TrackManager : KoinComponent {
                 onlyFillEmpty = !library.preferEmbeddedMetadata && book.provider != null,
             )
         BookTable.update(
+            book,
             book.copy(
                 title = write.value(BookField.TITLE, book.title) { scan.book },
                 coverID = write.value(BookField.COVER_ID, book.coverID) { getOrCreateImage(scan.cover, it) },

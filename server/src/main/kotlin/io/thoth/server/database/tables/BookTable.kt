@@ -5,6 +5,7 @@ import io.thoth.models.ChangeType
 import io.thoth.models.ChangedEntity
 import io.thoth.models.ChapterMark
 import io.thoth.server.database.extensions.json
+import io.thoth.server.events.recordChange
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.inList
@@ -64,5 +65,16 @@ object BookTable : LibraryEntityTable("book", BookField.TITLE.column, ChangedEnt
                     .map { it[SeriesBookTable.series].value }
             SeriesTable.record(ChangeType.UPDATED, series)
         }
+    }
+
+    // A library shows how many books it has, so it changes with every book that appears or disappears
+    context(_: Transaction)
+    override fun announce(
+        type: ChangeType,
+        id: UUID,
+        libraryId: UUID,
+    ) {
+        super.announce(type, id, libraryId)
+        if (type != ChangeType.UPDATED) recordChange(ChangedEntity.LIBRARY, ChangeType.UPDATED, libraryId, libraryId)
     }
 }
