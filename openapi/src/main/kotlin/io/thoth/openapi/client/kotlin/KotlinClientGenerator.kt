@@ -20,6 +20,7 @@ enum class KtErrorHandling {
 class KotlinClientGenerator(
     // TODO  UserPermissionsModel (to many imports)
     override val routes: List<OpenApiRoute>,
+    private val webSockets: List<OpenApiRoute>,
     private val packageName: String,
     private val apiClientName: String,
     private val apiVersion: String,
@@ -34,6 +35,7 @@ class KotlinClientGenerator(
     private val staticFiles by lazy {
         listOf(
             "RequestRunner" to getResourceContent("/kotlin/RequestRunner.kt"),
+            "ApiSocket" to getResourceContent("/kotlin/ApiSocket.kt"),
             "ApiError" to getResourceContent("/kotlin/ApiError.kt"),
             "RequestMetadata" to getResourceContent("/kotlin/RequestMetadata.kt"),
             "OpenApiHttpResponse" to getResourceContent("/kotlin/OpenApiHttpResponse.kt"),
@@ -51,14 +53,15 @@ class KotlinClientGenerator(
     override fun generateClient(): List<ClientPart> =
         buildList {
             val clientFunctions =
-                routes.map {
+                (routes.map { it to false } + webSockets.map { it to true }).map { (route, webSocket) ->
                     KtClientFunction(
                         getRouteName = this@KotlinClientGenerator::getRouteName,
-                        route = it,
+                        route = route,
                         clientImports = clientImports,
                         typeDefinitions = typeDefinitions,
                         typeProviders = typeProviders,
                         errorHandling = errorHandling,
+                        webSocket = webSocket,
                     )
                 }
 
@@ -196,6 +199,7 @@ fun Application.generateKotlinClient(
     val config = this.attributes[OpenAPIConfigurationKey]
     KotlinClientGenerator(
         routes = routes ?: config.routeCollector.values(),
+        webSockets = config.routeCollector.webSockets,
         packageName = apiClientPackageName,
         dist = savePath,
         apiClientName = apiClientName,

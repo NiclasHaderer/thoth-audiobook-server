@@ -80,13 +80,15 @@ class TsGenerationTest {
             // noinspection JSUnusedGlobalSymbols,ES6UnusedImports
             // noinspection ES6UnusedImports
             // @ts-nocheck
-            import {ApiCallData, ApiInterceptor, ApiResponse, _request, _createUrl, _mergeHeaders} from "./client";
+            import {ApiCallData, ApiInterceptor, ApiResponse, ApiSocket, ApiSocketData, ApiSocketInterceptor, _request, _createUrl, _mergeHeaders, _socket} from "./client";
             import type {GenericRoute, GenericRoute2, GenericRoute3, ListRoute, MapRoute, SetRoute, Something, UUID} from "./models";
 
             export const createTestApi = (
               defaultHeaders: HeadersInit = {},
               defaultInterceptors: ApiInterceptor[] = [],
-              executor = (callData: ApiCallData) => fetch(callData.route, {method: callData.method, headers: callData.headers, body: callData.bodySerializer(callData.body)})
+              executor = (callData: ApiCallData) => fetch(callData.route, {method: callData.method, headers: callData.headers, body: callData.bodySerializer(callData.body)}),
+              defaultSocketInterceptors: ApiSocketInterceptor[] = [],
+              socketExecutor = (socketData: ApiSocketData) => new WebSocket(socketData.route)
             ) => {
               const defaultHeadersImpl = new Headers(defaultHeaders)
               return {
@@ -105,6 +107,9 @@ class TsGenerationTest {
                 },
                 v5: ({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, body: GenericRoute2<number, UUID>, headers: HeadersInit = {}, interceptors: ApiInterceptor[] = []): Promise<ApiResponse<GenericRoute3<number>>> => {
                   return _request(_createUrl(`/${path}/V5`, {name, someParam}), "POST", "json", _mergeHeaders(defaultHeadersImpl, headers), body, [...defaultInterceptors, ...interceptors], executor, false);
+                },
+                listen: ({name, someParam, path}: {name: string,someParam: Array<number>,path: UUID}, interceptors: ApiSocketInterceptor[] = []): Promise<ApiSocket<never, ListRoute>> => {
+                  return _socket(_createUrl(`/${path}/listen`, {name, someParam}), [...defaultSocketInterceptors, ...interceptors], socketExecutor, false);
                 }
               } as const;
             }

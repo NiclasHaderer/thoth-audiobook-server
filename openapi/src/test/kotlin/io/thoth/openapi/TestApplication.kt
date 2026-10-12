@@ -7,11 +7,13 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.dataconversion.DataConversion
 import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
+import io.ktor.server.websocket.WebSockets
 import io.thoth.openapi.common.Patch
 import io.thoth.openapi.ktor.Summary
 import io.thoth.openapi.ktor.get
 import io.thoth.openapi.ktor.plugins.OpenAPIRouting
 import io.thoth.openapi.ktor.post
+import io.thoth.openapi.ktor.webSocket
 import io.thoth.openapi.serializion.kotlin.UUID_S
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -50,6 +52,12 @@ class Routes(
     @Summary(summary = "V5", method = "POST")
     @Resource("V5")
     class V5(
+        val parent: Routes,
+    )
+
+    @Summary(summary = "Listen", method = "GET")
+    @Resource("listen")
+    class Listen(
         val parent: Routes,
     )
 }
@@ -98,6 +106,7 @@ fun Application.testRoutes() {
     install(Resources)
     install(DataConversion)
     install(ContentNegotiation)
+    install(WebSockets)
     install(OpenAPIRouting) {
         info { version = "1.2.3" }
     }
@@ -108,5 +117,6 @@ fun Application.testRoutes() {
         get<Routes.V3, SetRoute> { TODO() }
         get<Routes.V4, GenericRoute<UUID>> { TODO() }
         post<Routes.V5, GenericRoute2<LocalDate, UUID>, GenericRoute3<LocalDateTime>> { _, _ -> TODO() }
+        webSocket<Routes.Listen, Unit, ListRoute> { TODO() }
     }
 }

@@ -16,10 +16,12 @@ import io.thoth.server.database.tables.TrackRow
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.create
 import io.thoth.server.database.tables.insert
+import io.thoth.server.database.tables.remove
 import io.thoth.server.database.tables.replaceBookAuthors
 import io.thoth.server.database.tables.replaceBookSeries
 import io.thoth.server.database.tables.toLibraryRow
 import io.thoth.server.database.tables.toTrackRow
+import io.thoth.server.database.tables.unhide
 import io.thoth.server.database.tables.update
 import io.thoth.server.file.analyzer.AudioFileAnalysisResult
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
@@ -38,7 +40,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -172,10 +173,7 @@ class TrackManager : KoinComponent {
         path: Path,
         libraryId: UUID,
     ) = transaction {
-        TrackTable.deleteWhere {
-            (TrackTable.path eq path.canonicalString()) and
-                (TrackTable.library eq libraryId)
-        }
+        TrackTable.remove((TrackTable.path eq path.canonicalString()) and (TrackTable.library eq libraryId))
     }
 
     fun removeFolder(
@@ -185,10 +183,9 @@ class TrackManager : KoinComponent {
         // Rows hold normalised paths, and the separator keeps "/books/Dune" from also matching "/books/Dune 2"
         val target = path.canonicalString()
         val subtree = LikePattern.ofLiteral(target + File.separator) + "%"
-        TrackTable.deleteWhere {
-            ((TrackTable.path eq target) or (TrackTable.path like subtree)) and
-                (TrackTable.library eq libraryId)
-        }
+        TrackTable.remove(
+            ((TrackTable.path eq target) or (TrackTable.path like subtree)) and (TrackTable.library eq libraryId),
+        )
     }
 
     context(_: Transaction)
@@ -233,6 +230,7 @@ class TrackManager : KoinComponent {
                 onlyFillEmpty = !library.preferEmbeddedMetadata && book.provider != null,
             )
         BookTable.update(
+            book,
             book.copy(
                 title = write.value(BookField.TITLE, book.title) { scan.book },
                 coverID = write.value(BookField.COVER_ID, book.coverID) { getOrCreateImage(scan.cover, it) },
@@ -255,9 +253,9 @@ class TrackManager : KoinComponent {
                 emptyList()
             }
         // Unset deletion marker, since the book has a track again
-        BookTable.update({ BookTable.id eq bookId }) { it[deferDeletionUntil] = null }
-        AuthorTable.update({ AuthorTable.id inList linkedAuthors }) { it[deferDeletionUntil] = null }
-        SeriesTable.update({ SeriesTable.id inList linkedSeries }) { it[deferDeletionUntil] = null }
+        BookTable.unhide(BookTable.id eq bookId)
+        AuthorTable.unhide(AuthorTable.id inList linkedAuthors)
+        SeriesTable.unhide(SeriesTable.id inList linkedSeries)
     }
 
     // The same genre spelled differently by two files is one genre

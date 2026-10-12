@@ -12,6 +12,7 @@ import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.LibraryRow
 import io.thoth.server.database.tables.LibraryTable
+import io.thoth.server.database.tables.delete
 import io.thoth.server.database.tables.insert
 import io.thoth.server.database.tables.toLibraryRow
 import io.thoth.server.database.tables.update
@@ -21,7 +22,6 @@ import io.thoth.server.file.scanner.LibraryWatcher
 import io.thoth.server.file.scanner.ScanRequest
 import io.thoth.server.schedules.ThothSchedules
 import org.jetbrains.exposed.v1.core.*
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.koin.core.component.KoinComponent
@@ -166,8 +166,7 @@ class LibraryRepositoryImpl :
     override fun delete(id: UUID) {
         libraryMutationLock.withLock {
             transaction {
-                val deleted = LibraryTable.deleteWhere { LibraryTable.id eq id }
-                if (deleted == 0) throw ErrorResponse.notFound("Library", id)
+                if (!LibraryTable.delete(id)) throw ErrorResponse.notFound("Library", id)
                 cleanup.removeOrphanedImages()
             }
             watcher.restart()

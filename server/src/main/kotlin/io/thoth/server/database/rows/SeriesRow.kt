@@ -1,5 +1,6 @@
 package io.thoth.server.database.rows
 
+import io.thoth.models.ChangeType
 import io.thoth.models.NamedId
 import io.thoth.models.Series
 import io.thoth.server.database.tables.AuthorBookTable
@@ -50,7 +51,11 @@ fun ResultRow.toSeriesRow(): SeriesRow =
     )
 
 context(_: Transaction)
-fun SeriesTable.update(row: SeriesRow) {
+fun SeriesTable.update(
+    stored: SeriesRow,
+    row: SeriesRow,
+) {
+    if (stored == row) return
     update({ id eq row.id }) {
         it[name] = row.title
         it[taggedName] = row.taggedName
@@ -62,6 +67,7 @@ fun SeriesTable.update(row: SeriesRow) {
         it[coverId] = row.coverID
         it[locked] = row.locked
     }
+    record(ChangeType.UPDATED, listOf(row.id))
 }
 
 context(_: Transaction)

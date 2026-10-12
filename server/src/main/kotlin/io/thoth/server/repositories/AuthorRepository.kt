@@ -7,6 +7,7 @@ import io.thoth.metadata.responses.MetadataRegion
 import io.thoth.models.Author
 import io.thoth.models.AuthorDetailed
 import io.thoth.models.AuthorUpdate
+import io.thoth.models.ChangeType
 import io.thoth.openapi.common.ifSet
 import io.thoth.openapi.common.map
 import io.thoth.openapi.common.orElse
@@ -179,6 +180,7 @@ class AuthorServiceImpl :
             val author = raw(id, libraryId)
             val write = AutomaticWrite(author.locked, onlyFillEmpty = preferFile)
             AuthorTable.update(
+                author,
                 author.copy(
                     name = write.value(AuthorField.NAME, author.name) { result.name },
                     provider = write.overwrite(AuthorField.PROVIDER, author.provider) { result.id.provider },
@@ -273,6 +275,7 @@ class AuthorServiceImpl :
             val edit = UserEdit(author.locked, partial.unlock)
             val image = partial.image.map { it?.let { getOrCreateImage(newImage, currentImageID = currentImage) } }
             AuthorTable.update(
+                author,
                 author.copy(
                     name = edit.value(AuthorField.NAME, author.name, partial.name),
                     provider = edit.value(AuthorField.PROVIDER, author.provider, partial.provider),
@@ -318,6 +321,7 @@ class AuthorServiceImpl :
             }
         }
         (removed + added).forEach { lockBookField(it, BookField.AUTHORS) }
+        AuthorTable.record(ChangeType.UPDATED, listOf(authorId))
     }
 
     override fun total(

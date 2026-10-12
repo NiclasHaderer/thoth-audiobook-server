@@ -1,10 +1,17 @@
 package io.thoth.server.database.tables
 
 import io.thoth.metadata.responses.MetadataLanguage
+import io.thoth.models.ChangeType
+import io.thoth.models.ChangedEntity
 import io.thoth.models.ChapterMark
 import io.thoth.server.database.extensions.json
+import io.thoth.server.events.recordChange
 import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.javatime.date
+import org.jetbrains.exposed.v1.jdbc.select
+import java.util.UUID
 
 enum class BookField : MetadataField {
     TITLE,
@@ -24,7 +31,7 @@ enum class BookField : MetadataField {
     CHAPTERS,
 }
 
-object BookTable : LibraryEntityTable("book", BookField.TITLE.column) {
+object BookTable : LibraryEntityTable("book", BookField.TITLE.column, ChangedEntity.BOOK) {
     val title get() = name
     val releaseDate = date(BookField.RELEASE_DATE.column).nullable()
     val publisher = varchar(BookField.PUBLISHER.column, 255).nullable()
@@ -42,4 +49,32 @@ object BookTable : LibraryEntityTable("book", BookField.TITLE.column) {
     // never writes down here because they depend on all tracks of the book
     val chapters = json<List<ChapterMark>>(BookField.CHAPTERS.column).nullable()
     val locked = json<Set<BookField>>("locked").default(emptySet())
+
+    // A book is also announced together with the series it is in
+    context(_: Transaction)
+    override fun record(
+        type: ChangeType,
+        ids: Collection<UUID>,
+    ) {
+        super.record(type, ids)
+        ids.chunked(500).forEach { chunk ->
+            val series =
+                SeriesBookTable
+                    .select(SeriesBookTable.series)
+                    .where { SeriesBookTable.book inList chunk }
+                    .map { it[SeriesBookTable.series].value }
+            SeriesTable.record(ChangeType.UPDATED, series)
+        }
+    }
+
+    // A library shows how many books it has, so it changes with every book that appears or disappears
+    context(_: Transaction)
+    override fun announce(
+        type: ChangeType,
+        id: UUID,
+        libraryId: UUID,
+    ) {
+        super.announce(type, id, libraryId)
+        if (type != ChangeType.UPDATED) recordChange(ChangedEntity.LIBRARY, ChangeType.UPDATED, libraryId, libraryId)
+    }
 }

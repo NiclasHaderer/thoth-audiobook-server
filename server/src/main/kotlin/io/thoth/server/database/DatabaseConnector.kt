@@ -72,7 +72,6 @@ object DatabaseConnector : KoinComponent {
                 dataSource,
                 databaseConfig =
                     DatabaseConfig.invoke {
-                        useNestedTransactions = true
                         // A write that loses a race against another writer comes back as SQLITE_BUSY at once
                         // instead of going through busy_timeout, and Exposed retries with no delay by default
                         defaultMinRetryDelay = 50

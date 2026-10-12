@@ -5,6 +5,7 @@ import io.thoth.metadata.MetadataAgentWrapper
 import io.thoth.metadata.MetadataAgents
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.metadata.responses.MetadataRegion
+import io.thoth.models.ChangeType
 import io.thoth.models.Series
 import io.thoth.models.SeriesDetailed
 import io.thoth.models.SeriesUpdate
@@ -214,6 +215,7 @@ class SeriesRepositoryImpl :
             val edit = UserEdit(series.locked, partial.unlock)
             val cover = partial.cover.map { it?.let { getOrCreateImage(newCover, currentImageID = currentCover) } }
             SeriesTable.update(
+                series,
                 series.copy(
                     title = edit.value(SeriesField.TITLE, series.title, partial.title),
                     provider = edit.value(SeriesField.PROVIDER, series.provider, partial.provider),
@@ -253,6 +255,7 @@ class SeriesRepositoryImpl :
         // Dropping a book from the series locks its series, or the next scan of a file that still names it puts it
         // straight back.
         (removed + added).forEach { lockBookField(it, BookField.SERIES) }
+        SeriesTable.record(ChangeType.UPDATED, listOf(seriesId))
     }
 
     context(_: Transaction)
@@ -292,6 +295,7 @@ class SeriesRepositoryImpl :
             val series = raw(id, libraryId)
             val write = AutomaticWrite(series.locked, onlyFillEmpty = preferFile)
             SeriesTable.update(
+                series,
                 series.copy(
                     title = write.value(SeriesField.TITLE, series.title) { seriesMetadata.title },
                     provider = write.overwrite(SeriesField.PROVIDER, series.provider) { seriesMetadata.id.provider },

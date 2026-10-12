@@ -4,11 +4,13 @@ import io.thoth.server.database.tables.AuthorBookTable
 import io.thoth.server.database.tables.AuthorTable
 import io.thoth.server.database.tables.BookTable
 import io.thoth.server.database.tables.ImageTable
+import io.thoth.server.database.tables.LibraryEntityTable
 import io.thoth.server.database.tables.LibraryTable
 import io.thoth.server.database.tables.SeriesBookTable
 import io.thoth.server.database.tables.SeriesTable
 import io.thoth.server.database.tables.TrackTable
 import io.thoth.server.database.tables.authorLinksWithBooks
+import io.thoth.server.database.tables.remove
 import io.thoth.server.database.tables.seriesLinksWithBooks
 import io.thoth.server.repositories.stampDeferral
 import io.thoth.server.repositories.visiblyLinked
@@ -40,9 +42,7 @@ class LibraryCleanup {
                     .select(LibraryTable.scanIndex)
                     .where { LibraryTable.id eq libraryId }
                     .single()[LibraryTable.scanIndex]
-            TrackTable.deleteWhere {
-                (TrackTable.library eq libraryId) and (TrackTable.scanIndex less scanIndex)
-            }
+            TrackTable.remove((TrackTable.library eq libraryId) and (TrackTable.scanIndex less scanIndex))
         }
 
     fun removeOrphans(libraryId: UUID): Unit =
@@ -53,8 +53,6 @@ class LibraryCleanup {
             val bookHasNoTrack = BookTable.id notInSubQuery TrackTable.select(TrackTable.book)
             reap(
                 table = BookTable,
-                library = BookTable.library,
-                deferUntil = BookTable.deferDeletionUntil,
                 libraryId = libraryId,
                 hidden = bookHasNoTrack,
                 deletable = bookHasNoTrack,
@@ -62,8 +60,6 @@ class LibraryCleanup {
             )
             reap(
                 table = AuthorTable,
-                library = AuthorTable.library,
-                deferUntil = AuthorTable.deferDeletionUntil,
                 libraryId = libraryId,
                 hidden = AuthorTable.id notInSubQuery visiblyLinked(authorLinksWithBooks, AuthorBookTable.author),
                 deletable = AuthorTable.id notInSubQuery AuthorBookTable.select(AuthorBookTable.author),
@@ -71,8 +67,6 @@ class LibraryCleanup {
             )
             reap(
                 table = SeriesTable,
-                library = SeriesTable.library,
-                deferUntil = SeriesTable.deferDeletionUntil,
                 libraryId = libraryId,
                 hidden = SeriesTable.id notInSubQuery visiblyLinked(seriesLinksWithBooks, SeriesBookTable.series),
                 deletable = SeriesTable.id notInSubQuery SeriesBookTable.select(SeriesBookTable.series),
@@ -85,17 +79,15 @@ class LibraryCleanup {
     // One cleanup stamps the orphan with a deadline, the first cleanup past that deadline deletes it
     context(_: Transaction)
     private fun reap(
-        table: Table,
-        library: Column<EntityID<UUID>>,
-        deferUntil: Column<Instant?>,
+        table: LibraryEntityTable,
         libraryId: UUID,
         hidden: Op<Boolean>,
         deletable: Op<Boolean>,
         now: Instant,
     ) {
-        val inLibrary = library eq libraryId
-        table.deleteWhere { inLibrary and deletable and (deferUntil lessEq now) }
-        stampDeferral(table, deferUntil, inLibrary, hidden, now)
+        val inLibrary = table.library eq libraryId
+        table.deleteWhere { inLibrary and deletable and (table.deferDeletionUntil lessEq now) }
+        stampDeferral(table, inLibrary, hidden, now)
     }
 
     fun removeOrphanedImages(): Unit =

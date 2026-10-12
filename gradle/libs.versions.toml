@@ -73,7 +73,6 @@ arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 # Exposed
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 
@@ -119,7 +118,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 slf4j-jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j", version.ref = "slf4j" }
 
 [bundles]
-exposed = ["exposed-core", "exposed-json", "exposed-dao", "exposed-jdbc", "exposed-java-time"]
+exposed = ["exposed-core", "exposed-json", "exposed-jdbc", "exposed-java-time"]
 hoplite = ["hoplite-core", "hoplite-json", "hoplite-yaml", "hoplite-toml", "hoplite-hocon"]
 koin = ["koin-ktor", "koin-logger-slf4j"]
 bouncycastle = ["bouncycastle-prov", "bouncycastle-pkix"]

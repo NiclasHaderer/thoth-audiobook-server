@@ -2,6 +2,7 @@ package io.thoth.server.database.rows
 
 import io.thoth.metadata.responses.MetadataLanguage
 import io.thoth.models.Book
+import io.thoth.models.ChangeType
 import io.thoth.models.ChapterMark
 import io.thoth.models.NamedId
 import io.thoth.models.PlayStatus
@@ -72,7 +73,11 @@ fun ResultRow.toBookRow(): BookRow =
     )
 
 context(_: Transaction)
-fun BookTable.update(row: BookRow) {
+fun BookTable.update(
+    stored: BookRow,
+    row: BookRow,
+) {
+    if (stored == row) return
     update({ id eq row.id }) {
         it[name] = row.title
         it[taggedName] = row.taggedName
@@ -90,6 +95,7 @@ fun BookTable.update(row: BookRow) {
         it[chapters] = row.chapters
         it[locked] = row.locked
     }
+    record(ChangeType.UPDATED, listOf(row.id))
 }
 
 context(_: Transaction)
@@ -99,6 +105,7 @@ fun lockBookField(
 ) {
     val locked = BookTable.select(BookTable.locked).where { BookTable.id eq bookId }.single()[BookTable.locked]
     BookTable.update({ BookTable.id eq bookId }) { it[BookTable.locked] = locked + field }
+    BookTable.record(ChangeType.UPDATED, listOf(bookId))
 }
 
 context(_: Transaction)

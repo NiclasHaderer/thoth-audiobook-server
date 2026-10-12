@@ -1,6 +1,7 @@
 package io.thoth.server.database.rows
 
 import io.thoth.models.Author
+import io.thoth.models.ChangeType
 import io.thoth.server.database.tables.AuthorField
 import io.thoth.server.database.tables.AuthorTable
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -59,7 +60,11 @@ fun ResultRow.toAuthorRow(): AuthorRow =
     )
 
 context(_: Transaction)
-fun AuthorTable.update(row: AuthorRow) {
+fun AuthorTable.update(
+    stored: AuthorRow,
+    row: AuthorRow,
+) {
+    if (stored == row) return
     update({ id eq row.id }) {
         it[name] = row.name
         it[taggedName] = row.taggedName
@@ -73,4 +78,5 @@ fun AuthorTable.update(row: AuthorRow) {
         it[imageId] = row.imageID
         it[locked] = row.locked
     }
+    record(ChangeType.UPDATED, listOf(row.id))
 }

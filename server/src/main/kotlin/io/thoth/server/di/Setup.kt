@@ -9,6 +9,7 @@ import io.thoth.server.common.scheduling.Scheduler
 import io.thoth.server.config.ThothConfig
 import io.thoth.server.di.serialization.JacksonSerialization
 import io.thoth.server.di.serialization.Serialization
+import io.thoth.server.events.ChangeEvents
 import io.thoth.server.file.TrackManager
 import io.thoth.server.file.analyzer.AudioFileAnalyzers
 import io.thoth.server.file.analyzer.impl.AudioFolderScanner
@@ -63,6 +64,7 @@ fun thothModule(config: ThothConfig) =
         single { Scheduler() }
         single { ThothSchedules() }
         single { AutoMatcher() }
+        single { ChangeEvents() }
     }
 
 fun setupDependencyInjection(config: ThothConfig) {

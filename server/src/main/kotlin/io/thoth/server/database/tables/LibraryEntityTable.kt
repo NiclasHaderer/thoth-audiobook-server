@@ -1,11 +1,20 @@
 package io.thoth.server.database.tables
 
+import io.thoth.models.ChangeType
+import io.thoth.models.ChangedEntity
 import io.thoth.server.database.extensions.timestampMillis
+import io.thoth.server.events.recordChange
+import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
 import java.util.UUID
 
@@ -18,6 +27,7 @@ interface MetadataField {
 sealed class LibraryEntityTable(
     table: String,
     nameColumn: String,
+    val entity: ChangedEntity,
 ) : UUIDTable(table) {
     val library = reference("library_id", LibraryTable, onDelete = ReferenceOption.CASCADE).index()
     val deferDeletionUntil = timestampMillis("defer_deletion_until").nullable()
@@ -29,6 +39,25 @@ sealed class LibraryEntityTable(
     val taggedName = text("tagged_name", collate = "NOCASE").nullable()
 
     val visible get() = deferDeletionUntil.isNull()
+
+    context(_: Transaction)
+    open fun record(
+        type: ChangeType,
+        ids: Collection<UUID>,
+    ) = ids.chunked(500).forEach { chunk ->
+        // Sqlite has a max nr of parameters
+        val listed = id inList chunk
+        select(id, library)
+            .where { if (type == ChangeType.DELETED) listed else listed and visible }
+            .forEach { announce(type, it[id].value, it[library].value) }
+    }
+
+    context(_: Transaction)
+    protected open fun announce(
+        type: ChangeType,
+        id: UUID,
+        libraryId: UUID,
+    ) = recordChange(entity, type, id, libraryId)
 
     init {
         // deferDeletionUntil sits behind the sort column on purpose. In front of it SQLite seeks on both
@@ -50,4 +79,29 @@ fun LibraryEntityTable.create(
         it[this.name] = name
         it[this.taggedName] = taggedName
         it[this.deferDeletionUntil] = deferDeletionUntil
-    }.value
+    }.value.also {
+        record(ChangeType.CREATED, listOf(it))
+    }
+
+context(_: Transaction)
+fun LibraryEntityTable.hide(
+    where: Op<Boolean>,
+    until: Instant,
+) {
+    val visibleOnes = where and visible
+    val ids = idsWhere(visibleOnes)
+    update({ visibleOnes }) { it[deferDeletionUntil] = until }
+    record(ChangeType.DELETED, ids)
+}
+
+context(_: Transaction)
+fun LibraryEntityTable.unhide(where: Op<Boolean>) {
+    val hiddenOnes = where and deferDeletionUntil.isNotNull()
+    val ids = idsWhere(hiddenOnes)
+    update({ hiddenOnes }) { it[deferDeletionUntil] = null }
+    record(ChangeType.CREATED, ids)
+}
+
+context(_: Transaction)
+private fun LibraryEntityTable.idsWhere(where: Op<Boolean>): List<UUID> =
+    select(id).where { where }.map { it[id].value }
