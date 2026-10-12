@@ -13,6 +13,7 @@ class KtClientFunction(
     private val typeProviders:
         TypeGenerator.Provider<KtTypeGenerator.KtType, KtTypeGenerator.KtDataType, KtTypeGenerator>,
     private val errorHandling: KtErrorHandling,
+    private val webSocket: Boolean = false,
 ) {
     companion object {
         private val log = logger {}
@@ -42,7 +43,7 @@ class KtClientFunction(
         requiredParams.forEach(::addParameter)
 
         // Body
-        if (route.requestBodyType.clazz != Unit::class) {
+        if (!webSocket && route.requestBodyType.clazz != Unit::class) {
             val (actual, all) = typeProviders.generateTypes(route.requestBodyType)
             clientImports.addAll(actual.imports())
             typeDefinitions.putAll(all.mappedKtReference())
@@ -53,6 +54,11 @@ class KtClientFunction(
 
         // Headers
         add("headers: Headers${withIfNotImpl("= Headers.Empty")},")
+
+        if (webSocket) {
+            add("onBeforeRequest: OnBeforeRequest<Unit>${withIfNotImpl(" = { _, _ -> }")}")
+            return@buildList
+        }
 
         val (responseBody, _) = typeProviders.generateTypes(route.responseBodyType)
         val (requestBody, _) = typeProviders.generateTypes(route.requestBodyType)
@@ -82,17 +88,24 @@ class KtClientFunction(
         return buildString {
             append("    ${if (impl) "override" else ""} suspend fun $routeName(\n")
             getParameters(route, impl).forEach { append("        $it\n") }
+
+            // A direction nothing travels in is Nothing, so that a client cannot send what the server does not read
+            fun message(type: KtTypeGenerator.KtType) = if (type.reference() == "Unit") "Nothing" else type.reference()
             val functionRunner =
-                when (errorHandling) {
-                    KtErrorHandling.Result -> {
+                when {
+                    webSocket -> {
+                        "= run" to "ApiSocket<${message(requestBody)}, ${message(responseBody)}>"
+                    }
+
+                    errorHandling == KtErrorHandling.Result -> {
                         "= runCatching" to "Result<OpenApiHttpResponse<${responseBody.reference()}>>"
                     }
 
-                    KtErrorHandling.Exception -> {
+                    errorHandling == KtErrorHandling.Exception -> {
                         "= run" to "OpenApiHttpResponse<${responseBody.reference()}>"
                     }
 
-                    KtErrorHandling.Either -> {
+                    else -> {
                         "= wrapInEither" to "Either<OpenApiHttpResponse<${responseBody.reference()}>, ApiError>"
                     }
                 }
@@ -102,14 +115,15 @@ class KtClientFunction(
                 return@buildString
             }
             append(" ${functionRunner.first} {\n")
-            append("        makeRequest(\n")
+            append("        ${if (webSocket) "openSocket" else "makeRequest"}(\n")
             append("            RequestMetadata(\n")
             // Path parameters are spelled {name} in the route, which is also their name in the generated
             // signature, so turning the braces into Kotlin interpolation fills them in.
             append("                path = \"${route.fullPath.replace("{", "\${")}\",\n")
             append("                method = HttpMethod(\"${route.method.value}\"),\n")
             append("                headers = headers,\n")
-            append("                body = ${if (route.requestBodyType.clazz == Unit::class) "Unit" else "body"},\n")
+            val body = if (webSocket || route.requestBodyType.clazz == Unit::class) "Unit" else "body"
+            append("                body = $body,\n")
             append("                shouldLogin = ${route.secured != null},\n")
             append("                securitySchema = \"${route.secured?.name}\",\n")
             if (route.queryParameters.isNotEmpty()) {
@@ -121,8 +135,12 @@ class KtClientFunction(
             append("            ),\n")
             append("            typeInfo<${requestBody.referenceImpl()}>(),\n")
             append("            typeInfo<${responseBody.referenceImpl()}>(),\n")
-            append("            onBeforeRequest=onBeforeRequest,\n")
-            append("            onAfterRequest=onAfterRequest\n")
+            if (webSocket) {
+                append("            onBeforeRequest=onBeforeRequest\n")
+            } else {
+                append("            onBeforeRequest=onBeforeRequest,\n")
+                append("            onAfterRequest=onAfterRequest\n")
+            }
             append("        )")
             append("\n    }")
         }

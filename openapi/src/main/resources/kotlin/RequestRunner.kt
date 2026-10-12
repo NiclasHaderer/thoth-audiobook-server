@@ -1,17 +1,22 @@
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
+import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.request
+import io.ktor.client.request.takeFrom
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.URLBuilder
+import io.ktor.http.URLProtocol
 import io.ktor.http.Url
 import io.ktor.http.appendEncodedPathSegments
 import io.ktor.http.content.NullBody
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
+import io.ktor.http.isSecure
 import io.ktor.http.isSuccess
+import io.ktor.http.takeFrom
 import io.ktor.util.reflect.TypeInfo
 import io.ktor.utils.io.InternalAPI
 
@@ -62,16 +67,8 @@ abstract class RequestRunner(
         onBeforeRequest: OnBeforeRequest<T>,
         onAfterRequest: OnAfterRequest<T, R>,
     ): OpenApiHttpResponse<R> {
-        val finalUrl =
-            URLBuilder(baseUrl)
-                .appendEncodedPathSegments(metadata.path)
-                .apply {
-                    metadata.queryParameters.forEach { (name, value) ->
-                        if (value != null) parameters.append(name, value.toString())
-                    }
-                }.build()
         val response =
-            client.request(finalUrl) {
+            client.request(urlOf(metadata)) {
                 this.method = metadata.method
                 val serializer = this@RequestRunner.getClosestSerializer<T>(requestBody.kotlinType!!)
                 serializer(this, metadata.body, requestBody)
@@ -93,6 +90,33 @@ abstract class RequestRunner(
         }
         return apiResponse
     }
+
+    // The client has to have the WebSockets plugin installed, with a contentConverter for the messages
+    suspend fun <SEND, RECEIVE> openSocket(
+        metadata: RequestMetadata<Unit>,
+        sendType: TypeInfo,
+        receiveType: TypeInfo,
+        onBeforeRequest: OnBeforeRequest<Unit>,
+    ): ApiSocket<SEND, RECEIVE> {
+        val request =
+            HttpRequestBuilder().apply {
+                url.takeFrom(urlOf(metadata))
+                url.protocol = if (url.protocol.isSecure()) URLProtocol.WSS else URLProtocol.WS
+                metadata.headers.forEach { key, value -> headers.appendAll(key, value) }
+            }
+        onBeforeRequest(metadata, request)
+        beforeRequestHooks.forEach { it(metadata, request) }
+        return ApiSocket(client.webSocketSession { takeFrom(request) }, sendType, receiveType)
+    }
+
+    private fun urlOf(metadata: RequestMetadata<*>): Url =
+        URLBuilder(baseUrl)
+            .appendEncodedPathSegments(metadata.path)
+            .apply {
+                metadata.queryParameters.forEach { (name, value) ->
+                    if (value != null) parameters.append(name, value.toString())
+                }
+            }.build()
 }
 
 @OptIn(InternalAPI::class)

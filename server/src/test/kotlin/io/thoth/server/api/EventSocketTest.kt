@@ -1,19 +1,19 @@
 package io.thoth.server.api
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.ktor.client.plugins.websocket.ClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.http.Headers
 import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.jackson.JacksonWebsocketContentConverter
 import io.ktor.server.testing.ApplicationTestBuilder
-import io.ktor.websocket.Frame
-import io.ktor.websocket.readText
+import io.thoth.client.gen.ApiSocket
+import io.thoth.client.gen.models.ChangeEvent
+import io.thoth.client.gen.models.ChangeEventBatch
+import io.thoth.client.gen.models.ChangeEventImpl
+import io.thoth.client.gen.models.ChangeType
+import io.thoth.client.gen.models.ChangedEntity
 import io.thoth.client.gen.models.LibraryPermissionLevel
-import io.thoth.models.ChangeEvent
-import io.thoth.models.ChangeEventBatch
-import io.thoth.models.ChangeType
-import io.thoth.models.ChangedEntity
 import io.thoth.models.FileScanner
+import io.thoth.server.TestThothClient
 import io.thoth.server.ThothTest
 import io.thoth.server.api
 import io.thoth.server.bearer
@@ -31,6 +31,7 @@ import io.thoth.server.repositories.BookRepository
 import io.thoth.server.revoke
 import io.thoth.server.thothServer
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
 import org.koin.mp.KoinPlatform.getKoin
 import java.nio.file.Path
@@ -52,21 +53,27 @@ class EventSocketTest : ThothTest() {
 
     private suspend fun ApplicationTestBuilder.events(
         token: String?,
-        block: suspend ClientWebSocketSession.() -> Unit,
-    ) = createClient { install(WebSockets) }.webSocket(
-        "/api/events",
-        request = { if (token != null) headers.appendAll(bearer(token)) },
-        block = block,
-    )
-
-    private suspend fun ClientWebSocketSession.nextBatch(): List<ChangeEvent> {
-        val frame = withTimeout(5.seconds) { incoming.receive() } as Frame.Text
-        return getKoin()
-            .get<JacksonSerialization>()
-            .objectMapper
-            .readValue<ChangeEventBatch>(frame.readText())
-            .events
+        block: suspend ApiSocket<Nothing, ChangeEventBatch>.() -> Unit,
+    ) {
+        val mapper = getKoin().get<JacksonSerialization>().objectMapper
+        val http = createClient { install(WebSockets) { contentConverter = JacksonWebsocketContentConverter(mapper) } }
+        val socket = TestThothClient(http).listenToEvents(headers = token?.let(::bearer) ?: Headers.Empty)
+        try {
+            socket.block()
+        } finally {
+            socket.close()
+        }
     }
+
+    private suspend fun ApiSocket<Nothing, ChangeEventBatch>.nextBatch(): List<ChangeEvent> =
+        withTimeout(5.seconds) { incoming.first() }.events
+
+    private fun changeEvent(
+        entity: ChangedEntity,
+        type: ChangeType,
+        id: UUID,
+        libraryId: UUID,
+    ): ChangeEvent = ChangeEventImpl(entity = entity, id = id, libraryId = libraryId, type = type)
 
     @Test
     fun `a commit reaches a connected client after the empty batch that says it is listening`() =
@@ -86,8 +93,8 @@ class EventSocketTest : ThothTest() {
         libraryId: UUID,
         bookId: UUID,
     ) = listOf(
-        ChangeEvent(ChangedEntity.BOOK, ChangeType.CREATED, bookId, libraryId),
-        ChangeEvent(ChangedEntity.LIBRARY, ChangeType.UPDATED, libraryId, libraryId),
+        changeEvent(ChangedEntity.BOOK, ChangeType.CREATED, bookId, libraryId),
+        changeEvent(ChangedEntity.LIBRARY, ChangeType.UPDATED, libraryId, libraryId),
     )
 
     @Test
@@ -126,7 +133,7 @@ class EventSocketTest : ThothTest() {
             }
         }
 
-    private suspend fun ClientWebSocketSession.awaitEvents(vararg expected: ChangeEvent) {
+    private suspend fun ApiSocket<Nothing, ChangeEventBatch>.awaitEvents(vararg expected: ChangeEvent) {
         val missing = expected.toMutableSet()
         while (missing.isNotEmpty()) {
             val batch =
@@ -166,8 +173,8 @@ class EventSocketTest : ThothTest() {
                 val author = getKoin().get<AuthorRepository>().findByTaggedName("Terry Pratchett", libId)!!.id
                 val book = getKoin().get<BookRepository>().findByTaggedName("Good Omens", listOf(author), libId)!!.id
                 awaitEvents(
-                    ChangeEvent(ChangedEntity.BOOK, ChangeType.CREATED, book, libId),
-                    ChangeEvent(ChangedEntity.AUTHOR, ChangeType.CREATED, author, libId),
+                    changeEvent(ChangedEntity.BOOK, ChangeType.CREATED, book, libId),
+                    changeEvent(ChangedEntity.AUTHOR, ChangeType.CREATED, author, libId),
                 )
 
                 // The rows are only hidden at this point, which to a client is the same as gone
@@ -175,16 +182,16 @@ class EventSocketTest : ThothTest() {
                 file.deleteExisting()
                 pipeline.enqueue(watched)
                 awaitEvents(
-                    ChangeEvent(ChangedEntity.BOOK, ChangeType.DELETED, book, libId),
-                    ChangeEvent(ChangedEntity.AUTHOR, ChangeType.DELETED, author, libId),
+                    changeEvent(ChangedEntity.BOOK, ChangeType.DELETED, book, libId),
+                    changeEvent(ChangedEntity.AUTHOR, ChangeType.DELETED, author, libId),
                 )
                 assertEquals(HttpStatusCode.NotFound, api.getBook(book, libId, bearer(login("admin"))).status)
 
                 sourceMp3.copyTo(file)
                 pipeline.enqueue(watched)
                 awaitEvents(
-                    ChangeEvent(ChangedEntity.BOOK, ChangeType.CREATED, book, libId),
-                    ChangeEvent(ChangedEntity.AUTHOR, ChangeType.CREATED, author, libId),
+                    changeEvent(ChangedEntity.BOOK, ChangeType.CREATED, book, libId),
+                    changeEvent(ChangedEntity.AUTHOR, ChangeType.CREATED, author, libId),
                 )
             }
         }
